@@ -20,8 +20,8 @@
 
 ## Các tính năng chính
 ### Role:
-**1. Admin:** Người quản lý của nền tảng, có thể quản lý hệ thống, quản lý tài khoản, xem số liệu thống kê.
-**2. Staff:** Nhân viên nền tảng, chịu trách nhiệm xét duyệt đồ chơi và xử lý yêu cầu từ khách hàng.
-**3. Member:** Người đóng vai trò chính trong hệ thống, có thể thuê, mua hoặc cho thuê đồ chơi giáo dục.
-**4. Toy Supplier:** Là các thương hiệu chuyên cung cấp đồ chơi để bán trên nền tảng.
+1. **Admin:** Người quản lý của nền tảng, có thể quản lý hệ thống, quản lý tài khoản, xem số liệu thống kê.
+2. **Staff:** Nhân viên nền tảng, chịu trách nhiệm xét duyệt đồ chơi và xử lý yêu cầu từ khách hàng.
+3. **Member:** Người đóng vai trò chính trong hệ thống, có thể thuê, mua hoặc cho thuê đồ chơi giáo dục.
+4. **Toy Supplier:** Là các thương hiệu chuyên cung cấp đồ chơi để bán trên nền tảng.
 ### Tính năng
