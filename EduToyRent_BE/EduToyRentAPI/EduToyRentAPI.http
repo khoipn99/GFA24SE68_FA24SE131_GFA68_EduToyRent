@@ -1,0 +1,6 @@
+@EduToyRentAPI_HostAddress = http://localhost:5052
+
+GET {{EduToyRentAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
