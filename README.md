@@ -14,7 +14,7 @@
 
 ## Công nghệ lựa chọn
 - **Back-End**: C# - Framework: ASP.NET Core 8 
-- **Front-End**: 
+- **Front-End**: React Native, Tailwind
 - **Database**: MySQL Server
 - **Others**: FireBase, VietQR,...
 
