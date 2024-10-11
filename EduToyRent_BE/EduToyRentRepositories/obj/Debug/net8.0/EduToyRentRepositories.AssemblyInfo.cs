@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EduToyRentRepositories")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dde2486e8eaa49d23d4b9772e43f1d4c62bb1a93")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5992c1391b52e8475620aa9e76734c6bb27ae500")]
 [assembly: System.Reflection.AssemblyProductAttribute("EduToyRentRepositories")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EduToyRentRepositories")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

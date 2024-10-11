@@ -1,0 +1,15 @@
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\bin\Debug\net8.0\EduToyRentRepositories.deps.json
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\bin\Debug\net8.0\EduToyRentRepositories.runtimeconfig.json
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\bin\Debug\net8.0\EduToyRentRepositories.dll
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\bin\Debug\net8.0\EduToyRentRepositories.pdb
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\EduToyRentRepositories.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\EduToyRentRepositories.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\EduToyRentRepositories.AssemblyInfoInputs.cache
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\EduToyRentRepositories.AssemblyInfo.cs
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\EduToyRentRepositories.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\EduToyRentRepositories.sourcelink.json
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\EduToyRentRepositories.dll
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\refint\EduToyRentRepositories.dll
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\EduToyRentRepositories.pdb
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\EduToyRentRepositories.genruntimeconfig.cache
+C:\Users\Admin\Desktop\SE\GFA24SE68_FA24SE131_GFA68_EduToyRent\EduToyRent_BE\EduToyRentRepositories\obj\Debug\net8.0\ref\EduToyRentRepositories.dll
