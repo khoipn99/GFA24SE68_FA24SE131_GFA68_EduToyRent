@@ -18,14 +18,13 @@ namespace EduToyRentAPI.JwtServices
 
         public async Task<User> Login(LoginRequest loginRequest)
         {
-            //var user = await _context.User.SingleOrDefaultAsync(u => u.UserEmail == loginRequest.Email && u.UserPassword == loginRequest.Password);
-            //if (user == null)
-            //{
-            //    return null;
-            //}
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == loginRequest.Email && u.Password == loginRequest.Password);
+            if (user == null)
+            {
+                return null;
+            }
 
-            //return user;
-            return null;
+            return user;
         }
     }
 }

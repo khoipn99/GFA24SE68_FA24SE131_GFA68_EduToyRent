@@ -35,7 +35,7 @@ namespace EduToyRentAPI.JwtServices
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.FullName),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
+            new Claim(ClaimTypes.Role, user.RoleId.ToString())
         };
 
             var token = new JwtSecurityToken(
