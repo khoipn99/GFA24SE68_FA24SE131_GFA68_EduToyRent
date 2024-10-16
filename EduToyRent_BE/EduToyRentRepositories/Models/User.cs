@@ -22,6 +22,5 @@ namespace EduToyRentRepositories.Models
         public string Status {  get; set; }
         [ForeignKey("Role")]
         public int RoleId { get; set; }
-        public virtual Role Role { get; set; }
     }
 }
