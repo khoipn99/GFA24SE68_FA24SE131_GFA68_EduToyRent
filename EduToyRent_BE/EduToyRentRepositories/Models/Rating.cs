@@ -1,0 +1,28 @@
+﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace EduToyRentRepositories.Models
+{
+    [PrimaryKey("Id")]
+    public class Rating
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+        public string Comment { get; set; }
+        public float Star { get; set; }
+        public int UserId { get; set; }
+        [ForeignKey(nameof(UserId))]
+        public virtual User User { get; set; } = null!;
+        public int OrderId { get; set; }
+        [ForeignKey(nameof(OrderId))]
+        public virtual Order Order { get; set; } = null!;
+
+    }
+}

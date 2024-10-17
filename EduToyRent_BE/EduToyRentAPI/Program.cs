@@ -20,7 +20,6 @@ builder.Services.AddDbContext<EduToyRentDBContext>(options =>
 // Add services to the container.
 builder.Services.AddSingleton<IJwtGeneratorTokenService, JwtGeneratorTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddCors();

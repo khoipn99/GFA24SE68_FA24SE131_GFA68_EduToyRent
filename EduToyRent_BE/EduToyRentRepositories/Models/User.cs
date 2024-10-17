@@ -19,8 +19,13 @@ namespace EduToyRentRepositories.Models
         public string Email { get; set; }
         public string Password { get; set; }
         public DateTime CreateDate { get; set; }
-        public string Status {  get; set; }
-        [ForeignKey("Role")]
+        public string Phone { get; set; }
+        public DateTime Dob { get; set; }
+        public string Address { get; set; }
+        public string AvatarUrl { get; set; }
+        public string Status { get; set; }
         public int RoleId { get; set; }
+        [ForeignKey(nameof(RoleId))]
+        public virtual Role Role { get; set; } = null!;
     }
 }
