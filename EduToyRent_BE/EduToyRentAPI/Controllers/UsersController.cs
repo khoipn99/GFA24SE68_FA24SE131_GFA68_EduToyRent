@@ -6,6 +6,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EduToyRentRepositories.Models;
+using Microsoft.AspNetCore.OData.Query;
+using EduToyRentRepositories.Interface;
+using Microsoft.AspNetCore.Authorization;
+using EduToyRentRepositories.DTO.Response;
+using EduToyRentRepositories.DTO.Request;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -13,49 +18,106 @@ namespace EduToyRentAPI.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly EduToyRentDBContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UsersController(EduToyRentDBContext context)
+        public UsersController(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         // GET: api/Users
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        [EnableQuery]
+        public ActionResult<IEnumerable<UserResponse>> GetUsers(int pageIndex = 1, int pageSize = 50)
         {
-            return await _context.Users.ToListAsync();
+            var users = _unitOfWork.UserRepository.Get(
+                includeProperties: "Role",
+                pageIndex: pageIndex,
+                pageSize: pageSize)
+                .Select(user => new UserResponse
+                {
+                    Id = user.Id,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Password = user.Password,
+                    CreateDate = user.CreateDate,
+                    Phone = user.Phone,
+                    Dob = user.Dob,
+                    Address = user.Address,
+                    AvatarUrl = user.AvatarUrl,
+                    Status = user.Status,
+                    Role = new RoleResponse
+                    {
+                        Id = user.Role.Id,
+                        Name = user.Role.Name
+                    }
+                }).ToList();
+
+            return Ok(users);
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        [EnableQuery]
+        [Authorize(Roles = "1")]
+        public async Task<ActionResult<UserResponse>> GetUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = _unitOfWork.UserRepository.GetByID(id);
 
             if (user == null)
             {
                 return NotFound();
             }
 
-            return user;
+            var userResponse = new UserResponse
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Password = user.Password,
+                CreateDate = user.CreateDate,
+                Phone = user.Phone,
+                Dob = user.Dob,
+                Address = user.Address,
+                AvatarUrl = user.AvatarUrl,
+                Status = user.Status,
+                Role = new RoleResponse
+                {
+                    Id = user.RoleId,
+                    Name = _unitOfWork.RoleRepository.GetByID(user.RoleId).Name
+                }
+            };
+
+            return Ok(userResponse);
         }
 
         // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
+        [EnableQuery]
+        [Authorize(Roles = "1")]
+        public async Task<IActionResult> PutUser(int id, UserRequest userRequest)
         {
-            if (id != user.Id)
+            var user = _unitOfWork.UserRepository.GetByID(id);
+
+            if (user == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(user).State = EntityState.Modified;
+            user.FullName = userRequest.FullName;
+            user.Email = userRequest.Email;
+            user.Password = userRequest.Password;
+            user.Phone = userRequest.Phone;
+            user.Dob = userRequest.Dob;
+            user.Address = userRequest.Address;
+            user.AvatarUrl = userRequest.AvatarUrl;
+            user.Status = userRequest.Status;
+
+            _unitOfWork.UserRepository.Update(user);
 
             try
             {
-                await _context.SaveChangesAsync();
+                _unitOfWork.Save();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -73,35 +135,103 @@ namespace EduToyRentAPI.Controllers
         }
 
         // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        [EnableQuery]
+        [Authorize(Roles = "1")]
+        public async Task<ActionResult<UserResponse>> PostUser(UserRequest userRequest)
         {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            var user = new User
+            {
+                FullName = userRequest.FullName,
+                Email = userRequest.Email,
+                Password = userRequest.Password,
+                Phone = userRequest.Phone,
+                Dob = userRequest.Dob,
+                Address = userRequest.Address,
+                AvatarUrl = userRequest.AvatarUrl,
+                Status = userRequest.Status,
+                CreateDate = DateTime.Now
+            };
 
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+            _unitOfWork.UserRepository.Insert(user);
+            _unitOfWork.Save();
+
+            var userResponse = new UserResponse
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Password = user.Password,
+                CreateDate = user.CreateDate,
+                Phone = user.Phone,
+                Dob = user.Dob,
+                Address = user.Address,
+                AvatarUrl = user.AvatarUrl,
+                Status = user.Status,
+                Role = new RoleResponse
+                {
+                    Id = user.Role.Id,
+                    Name = _unitOfWork.RoleRepository.GetByID(user.RoleId).Name
+                }
+            };
+
+            return CreatedAtAction("GetUser", new { id = user.Id }, userResponse);
         }
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
+        [EnableQuery]
+        [Authorize(Roles = "1")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = _unitOfWork.UserRepository.GetByID(id);
             if (user == null)
             {
                 return NotFound();
             }
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            _unitOfWork.UserRepository.Delete(user);
+            _unitOfWork.Save();
 
             return NoContent();
         }
 
+        // GET: api/Users/ByEmail
+        [HttpGet("ByEmail")]
+        [EnableQuery]
+        [Authorize(Roles = "1,3")]
+        public ActionResult<IEnumerable<UserResponse>> GetUserByEmail(string email, int pageIndex = 1, int pageSize = 5)
+        {
+            var users = _unitOfWork.UserRepository.Get(
+                includeProperties: "Role",
+                filter: u => u.Email.ToLower().Contains(email.ToLower()),
+                pageIndex: pageIndex,
+                pageSize: pageSize)
+                .Select(user => new UserResponse
+                {
+                    Id = user.Id,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Password = user.Password,
+                    CreateDate = user.CreateDate,
+                    Phone = user.Phone,
+                    Dob = user.Dob,
+                    Address = user.Address,
+                    AvatarUrl = user.AvatarUrl,
+                    Status = user.Status,
+                    Role = new RoleResponse
+                    {
+                        Id = user.Role.Id,
+                        Name = _unitOfWork.RoleRepository.GetByID(user.RoleId).Name
+                    }
+                }).ToList();
+
+            return Ok(users);
+        }
+
         private bool UserExists(int id)
         {
-            return _context.Users.Any(e => e.Id == id);
+            return _unitOfWork.UserRepository.Get().Any(e => e.Id == id);
         }
     }
 }

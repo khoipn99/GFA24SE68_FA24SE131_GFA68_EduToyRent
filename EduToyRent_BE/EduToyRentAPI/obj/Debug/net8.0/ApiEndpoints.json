@@ -709,10 +709,21 @@
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
-    "Parameters": [],
+    "Parameters": [
+      {
+        "Name": "pageIndex",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
     "ReturnTypes": [
       {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[EduToyRentRepositories.Models.User, EduToyRentRepositories, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[EduToyRentRepositories.DTO.Response.UserResponse, EduToyRentRepositories, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "application/json;odata.metadata=minimal;odata.streaming=true",
           "application/json;odata.metadata=minimal;odata.streaming=false",
@@ -771,14 +782,14 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "user",
-        "Type": "EduToyRentRepositories.Models.User",
+        "Name": "userRequest",
+        "Type": "EduToyRentRepositories.DTO.Request.UserRequest",
         "IsRequired": true
       }
     ],
     "ReturnTypes": [
       {
-        "Type": "EduToyRentRepositories.Models.User",
+        "Type": "EduToyRentRepositories.DTO.Response.UserResponse",
         "MediaTypes": [
           "application/json;odata.metadata=minimal;odata.streaming=true",
           "application/json;odata.metadata=minimal;odata.streaming=false",
@@ -844,7 +855,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "EduToyRentRepositories.Models.User",
+        "Type": "EduToyRentRepositories.DTO.Response.UserResponse",
         "MediaTypes": [
           "application/json;odata.metadata=minimal;odata.streaming=true",
           "application/json;odata.metadata=minimal;odata.streaming=false",
@@ -908,8 +919,8 @@
         "IsRequired": true
       },
       {
-        "Name": "user",
-        "Type": "EduToyRentRepositories.Models.User",
+        "Name": "userRequest",
+        "Type": "EduToyRentRepositories.DTO.Request.UserRequest",
         "IsRequired": true
       }
     ],
@@ -930,6 +941,82 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "EduToyRentAPI.Controllers.UsersController",
+    "Method": "GetUserByEmail",
+    "RelativePath": "api/Users/ByEmail",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "email",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageIndex",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[EduToyRentRepositories.DTO.Response.UserResponse, EduToyRentRepositories, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "application/json;odata.metadata=minimal;odata.streaming=true",
+          "application/json;odata.metadata=minimal;odata.streaming=false",
+          "application/json;odata.metadata=minimal",
+          "application/json;odata.metadata=full;odata.streaming=true",
+          "application/json;odata.metadata=full;odata.streaming=false",
+          "application/json;odata.metadata=full",
+          "application/json;odata.metadata=none;odata.streaming=true",
+          "application/json;odata.metadata=none;odata.streaming=false",
+          "application/json;odata.metadata=none",
+          "application/json;odata.streaming=true",
+          "application/json;odata.streaming=false",
+          "application/json",
+          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.metadata=minimal;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.metadata=minimal;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;odata.metadata=minimal;IEEE754Compatible=false",
+          "application/json;odata.metadata=minimal;IEEE754Compatible=true",
+          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.metadata=full;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.metadata=full;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;odata.metadata=full;IEEE754Compatible=false",
+          "application/json;odata.metadata=full;IEEE754Compatible=true",
+          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.metadata=none;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;odata.metadata=none;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.metadata=none;IEEE754Compatible=false",
+          "application/json;odata.metadata=none;IEEE754Compatible=true",
+          "application/json;odata.streaming=true;IEEE754Compatible=false",
+          "application/json;odata.streaming=true;IEEE754Compatible=true",
+          "application/json;odata.streaming=false;IEEE754Compatible=false",
+          "application/json;odata.streaming=false;IEEE754Compatible=true",
+          "application/json;IEEE754Compatible=false",
+          "application/json;IEEE754Compatible=true",
+          "application/xml",
+          "application/json",
+          "text/plain",
+          "application/octet-stream",
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "Microsoft.AspNetCore.OData.Routing.Controllers.MetadataController",
