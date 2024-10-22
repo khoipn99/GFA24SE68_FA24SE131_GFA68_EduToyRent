@@ -17,6 +17,7 @@ namespace EduToyRentRepositories.Models
         public int Id { get; set; }
         public string Comment { get; set; }
         public float Star { get; set; }
+        public DateTime RatingDate { get; set; }
         public int UserId { get; set; }
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; } = null!;
