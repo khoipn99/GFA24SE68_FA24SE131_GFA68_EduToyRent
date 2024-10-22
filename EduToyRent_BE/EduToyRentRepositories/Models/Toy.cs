@@ -37,4 +37,5 @@ namespace EduToyRentRepositories.Models
         [ForeignKey(nameof(ApproverId))]
         public virtual User Approver { get; set; } = null!;
     }
+
 }

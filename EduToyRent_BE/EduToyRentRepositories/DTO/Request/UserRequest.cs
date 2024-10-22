@@ -23,7 +23,6 @@ namespace EduToyRentRepositories.DTO.Request
         public DateTime Dob { get; set; }
         [Required]
         public string Address { get; set; }
-        [Required]
         public string AvatarUrl { get; set; }
         [Required]
         public string Status { get; set; }

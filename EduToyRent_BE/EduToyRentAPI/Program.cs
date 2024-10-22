@@ -46,18 +46,18 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
 });
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("CustomerPolicy", policy => policy.RequireRole("4"));
-});
+//builder.Services.AddAuthorization(options =>
+//{
+//    options.AddPolicy("CustomerPolicy", policy => policy.RequireRole("4"));
+//});
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("1"));
-    options.AddPolicy("ManagerPolicy", policy => policy.RequireRole("3"));
-    options.AddPolicy("StaffPolicy", policy => policy.RequireRole("2"));
-    options.AddPolicy("UserPolicy", policy => policy.RequireRole("4"));
+    options.AddPolicy("MemberPolicy", policy => policy.RequireRole("3"));
+    options.AddPolicy("SupplierPolicy", policy => policy.RequireRole("2"));
+    options.AddPolicy("StaffPolicy", policy => policy.RequireRole("4"));
 });
 builder.Services.AddSwaggerGen(option =>
 {
