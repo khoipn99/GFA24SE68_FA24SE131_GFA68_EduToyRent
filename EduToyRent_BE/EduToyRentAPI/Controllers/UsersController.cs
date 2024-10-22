@@ -14,7 +14,7 @@ using EduToyRentRepositories.DTO.Request;
 
 namespace EduToyRentAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
