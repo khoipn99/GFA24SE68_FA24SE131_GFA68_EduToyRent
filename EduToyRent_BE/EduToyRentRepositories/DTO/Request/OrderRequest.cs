@@ -18,6 +18,6 @@ namespace EduToyRentRepositories.DTO.Request
         public string ReceivePhone { get; set; }
         public string Status { get; set; }
         public int UserId { get; set; }
-        public int? RatingId { get; set; }
+        
     }
 }

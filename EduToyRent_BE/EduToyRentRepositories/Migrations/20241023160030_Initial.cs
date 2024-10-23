@@ -199,6 +199,34 @@ namespace EduToyRentRepositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Orders",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OrderDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReceiveDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TotalPrice = table.Column<int>(type: "int", nullable: false),
+                    RentPrice = table.Column<int>(type: "int", nullable: false),
+                    DepositeBackMoney = table.Column<int>(type: "int", nullable: false),
+                    ReceiveName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ReceiveAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ReceivePhone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Orders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Orders_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Toys",
                 columns: table => new
                 {
@@ -207,6 +235,7 @@ namespace EduToyRentRepositories.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Price = table.Column<int>(type: "int", nullable: false),
+                    Star = table.Column<float>(type: "real", nullable: true),
                     Origin = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Age = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Brand = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -324,12 +353,37 @@ namespace EduToyRentRepositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Transactions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ReceiveMoney = table.Column<float>(type: "real", nullable: false),
+                    PlatformFee = table.Column<float>(type: "real", nullable: false),
+                    OwnerReceiveMoney = table.Column<float>(type: "real", nullable: false),
+                    DepositBackMoney = table.Column<float>(type: "real", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OrderId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Transactions_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CartItems",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Price = table.Column<int>(type: "int", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -370,149 +424,6 @@ namespace EduToyRentRepositories.Migrations
                         name: "FK_Media_Toys_ToyId",
                         column: x => x.ToyId,
                         principalTable: "Toys",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OrderDetails",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RentPrice = table.Column<int>(type: "int", nullable: false),
-                    Deposit = table.Column<int>(type: "int", nullable: false),
-                    UnitPrice = table.Column<int>(type: "int", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrderId = table.Column<int>(type: "int", nullable: false),
-                    ToyId = table.Column<int>(type: "int", nullable: false),
-                    OrderTypeId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrderDetails", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_OrderDetails_OrderTypes_OrderTypeId",
-                        column: x => x.OrderTypeId,
-                        principalTable: "OrderTypes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_OrderDetails_Toys_ToyId",
-                        column: x => x.ToyId,
-                        principalTable: "Toys",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OrderHistories",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrderDetailId = table.Column<int>(type: "int", nullable: false),
-                    UserUpdateId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrderHistories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_OrderHistories_OrderDetails_OrderDetailId",
-                        column: x => x.OrderDetailId,
-                        principalTable: "OrderDetails",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_OrderHistories_Users_UserUpdateId",
-                        column: x => x.UserUpdateId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Orders",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    OrderDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ReceiveDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TotalPrice = table.Column<int>(type: "int", nullable: false),
-                    RentPrice = table.Column<int>(type: "int", nullable: false),
-                    DepositeBackMoney = table.Column<int>(type: "int", nullable: false),
-                    ReceiveName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ReceiveAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ReceivePhone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    RatingId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Orders", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Orders_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Ratings",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Star = table.Column<float>(type: "real", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    OrderId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Ratings", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Ratings_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Ratings_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Transactions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ReceiveMoney = table.Column<float>(type: "real", nullable: false),
-                    PlatformFee = table.Column<float>(type: "real", nullable: false),
-                    OwnerReceiveMoney = table.Column<float>(type: "real", nullable: false),
-                    DepositBackMoney = table.Column<float>(type: "real", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrderId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Transactions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Transactions_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -560,22 +471,100 @@ namespace EduToyRentRepositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RatingImages",
+                name: "OrderDetails",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MediaUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RentPrice = table.Column<int>(type: "int", nullable: false),
+                    Deposit = table.Column<int>(type: "int", nullable: false),
+                    UnitPrice = table.Column<int>(type: "int", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RatingId = table.Column<int>(type: "int", nullable: false)
+                    OrderId = table.Column<int>(type: "int", nullable: false),
+                    ToyId = table.Column<int>(type: "int", nullable: false),
+                    OrderTypeId = table.Column<int>(type: "int", nullable: false),
+                    RatingId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RatingImages", x => x.Id);
+                    table.PrimaryKey("PK_OrderDetails", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RatingImages_Ratings_RatingId",
-                        column: x => x.RatingId,
-                        principalTable: "Ratings",
+                        name: "FK_OrderDetails_OrderTypes_OrderTypeId",
+                        column: x => x.OrderTypeId,
+                        principalTable: "OrderTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_OrderDetails_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_OrderDetails_Toys_ToyId",
+                        column: x => x.ToyId,
+                        principalTable: "Toys",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderHistories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OrderDetailId = table.Column<int>(type: "int", nullable: false),
+                    UserUpdateId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderHistories_OrderDetails_OrderDetailId",
+                        column: x => x.OrderDetailId,
+                        principalTable: "OrderDetails",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_OrderHistories_Users_UserUpdateId",
+                        column: x => x.UserUpdateId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Ratings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Star = table.Column<float>(type: "real", nullable: false),
+                    RatingDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    OrderDetailId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Ratings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Ratings_OrderDetails_OrderDetailId",
+                        column: x => x.OrderDetailId,
+                        principalTable: "OrderDetails",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Ratings_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -607,6 +596,27 @@ namespace EduToyRentRepositories.Migrations
                         name: "FK_TransactionDetails_Transactions_TranSactionId",
                         column: x => x.TranSactionId,
                         principalTable: "Transactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RatingImages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    MediaUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RatingId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RatingImages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RatingImages_Ratings_RatingId",
+                        column: x => x.RatingId,
+                        principalTable: "Ratings",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -657,6 +667,11 @@ namespace EduToyRentRepositories.Migrations
                 column: "OrderTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderDetails_RatingId",
+                table: "OrderDetails",
+                column: "RatingId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OrderDetails_ToyId",
                 table: "OrderDetails",
                 column: "ToyId");
@@ -672,11 +687,6 @@ namespace EduToyRentRepositories.Migrations
                 column: "UserUpdateId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Orders_RatingId",
-                table: "Orders",
-                column: "RatingId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Orders_UserId",
                 table: "Orders",
                 column: "UserId");
@@ -687,9 +697,9 @@ namespace EduToyRentRepositories.Migrations
                 column: "RatingId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Ratings_OrderId",
+                name: "IX_Ratings_OrderDetailId",
                 table: "Ratings",
-                column: "OrderId");
+                column: "OrderDetailId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Ratings_UserId",
@@ -777,16 +787,8 @@ namespace EduToyRentRepositories.Migrations
                 column: "WalletId");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_OrderDetails_Orders_OrderId",
+                name: "FK_OrderDetails_Ratings_RatingId",
                 table: "OrderDetails",
-                column: "OrderId",
-                principalTable: "Orders",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Orders_Ratings_RatingId",
-                table: "Orders",
                 column: "RatingId",
                 principalTable: "Ratings",
                 principalColumn: "Id",
@@ -797,6 +799,10 @@ namespace EduToyRentRepositories.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
+                name: "FK_OrderDetails_Toys_ToyId",
+                table: "OrderDetails");
+
+            migrationBuilder.DropForeignKey(
                 name: "FK_Orders_Users_UserId",
                 table: "Orders");
 
@@ -805,8 +811,16 @@ namespace EduToyRentRepositories.Migrations
                 table: "Ratings");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_Ratings_Orders_OrderId",
-                table: "Ratings");
+                name: "FK_OrderDetails_OrderTypes_OrderTypeId",
+                table: "OrderDetails");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_OrderDetails_Orders_OrderId",
+                table: "OrderDetails");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_OrderDetails_Ratings_RatingId",
+                table: "OrderDetails");
 
             migrationBuilder.DropTable(
                 name: "CartItems");
@@ -845,9 +859,6 @@ namespace EduToyRentRepositories.Migrations
                 name: "Premiums");
 
             migrationBuilder.DropTable(
-                name: "OrderDetails");
-
-            migrationBuilder.DropTable(
                 name: "Transactions");
 
             migrationBuilder.DropTable(
@@ -858,9 +869,6 @@ namespace EduToyRentRepositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "Wallets");
-
-            migrationBuilder.DropTable(
-                name: "OrderTypes");
 
             migrationBuilder.DropTable(
                 name: "Toys");
@@ -875,10 +883,16 @@ namespace EduToyRentRepositories.Migrations
                 name: "Roles");
 
             migrationBuilder.DropTable(
+                name: "OrderTypes");
+
+            migrationBuilder.DropTable(
                 name: "Orders");
 
             migrationBuilder.DropTable(
                 name: "Ratings");
+
+            migrationBuilder.DropTable(
+                name: "OrderDetails");
         }
     }
 }
