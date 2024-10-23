@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduToyRentRepositories.Migrations
 {
     [DbContext(typeof(EduToyRentDBContext))]
-    [Migration("20241017205729_Initial")]
+    [Migration("20241023160030_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -65,6 +65,9 @@ namespace EduToyRentRepositories.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("Price")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("StartDate")
@@ -233,9 +236,6 @@ namespace EduToyRentRepositories.Migrations
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("RatingId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ReceiveAddress")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -266,8 +266,6 @@ namespace EduToyRentRepositories.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RatingId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("Orders");
@@ -293,6 +291,12 @@ namespace EduToyRentRepositories.Migrations
                     b.Property<int>("OrderTypeId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RatingId")
+                        .HasColumnType("int");
+
                     b.Property<int>("RentPrice")
                         .HasColumnType("int");
 
@@ -314,6 +318,8 @@ namespace EduToyRentRepositories.Migrations
                     b.HasIndex("OrderId");
 
                     b.HasIndex("OrderTypeId");
+
+                    b.HasIndex("RatingId");
 
                     b.HasIndex("ToyId");
 
@@ -439,8 +445,11 @@ namespace EduToyRentRepositories.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("OrderId")
+                    b.Property<int>("OrderDetailId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("RatingDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<float>("Star")
                         .HasColumnType("real");
@@ -450,7 +459,7 @@ namespace EduToyRentRepositories.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("OrderDetailId");
 
                     b.HasIndex("UserId");
 
@@ -549,6 +558,9 @@ namespace EduToyRentRepositories.Migrations
                     b.Property<string>("RentTime")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<float?>("Star")
+                        .HasColumnType("real");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -903,18 +915,11 @@ namespace EduToyRentRepositories.Migrations
 
             modelBuilder.Entity("EduToyRentRepositories.Models.Order", b =>
                 {
-                    b.HasOne("EduToyRentRepositories.Models.Rating", "Rating")
-                        .WithMany()
-                        .HasForeignKey("RatingId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("EduToyRentRepositories.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Rating");
 
                     b.Navigation("User");
                 });
@@ -933,6 +938,11 @@ namespace EduToyRentRepositories.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("EduToyRentRepositories.Models.Rating", "Rating")
+                        .WithMany()
+                        .HasForeignKey("RatingId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("EduToyRentRepositories.Models.Toy", "Toy")
                         .WithMany()
                         .HasForeignKey("ToyId")
@@ -942,6 +952,8 @@ namespace EduToyRentRepositories.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("OrderType");
+
+                    b.Navigation("Rating");
 
                     b.Navigation("Toy");
                 });
@@ -967,9 +979,9 @@ namespace EduToyRentRepositories.Migrations
 
             modelBuilder.Entity("EduToyRentRepositories.Models.Rating", b =>
                 {
-                    b.HasOne("EduToyRentRepositories.Models.Order", "Order")
+                    b.HasOne("EduToyRentRepositories.Models.OrderDetail", "OrderDetail")
                         .WithMany()
-                        .HasForeignKey("OrderId")
+                        .HasForeignKey("OrderDetailId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -979,7 +991,7 @@ namespace EduToyRentRepositories.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Order");
+                    b.Navigation("OrderDetail");
 
                     b.Navigation("User");
                 });

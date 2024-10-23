@@ -39,7 +39,7 @@ namespace EduToyRentAPI.Controllers
                     UserId = rating.UserId,
                     RatingDate = rating.RatingDate,
                     UserName = rating.User.FullName,
-                    OrderId = rating.OrderId
+                    OrderDetailId = rating.OrderDetailId
                 }).ToList();
 
             return Ok(ratings);
@@ -64,7 +64,7 @@ namespace EduToyRentAPI.Controllers
                 UserId = rating.UserId,
                 RatingDate = rating.RatingDate,
                 UserName = rating.User.FullName,
-                OrderId = rating.OrderId
+                OrderDetailId = rating.OrderDetailId
             };
 
             return Ok(ratingResponse);
@@ -109,18 +109,35 @@ namespace EduToyRentAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<RatingResponse>> PostRating(RatingRequest ratingRequest)
         {
+            var orderDetail = _unitOfWork.OrderDetailRepository.GetByID(ratingRequest.OrderDetailId);
+            if (orderDetail == null)
+            {
+                return BadRequest("Order detail not found");
+            }
             var rating = new Rating
             {
                 Comment = ratingRequest.Comment,
                 Star = ratingRequest.Star,
                 UserId = ratingRequest.UserId,
-                OrderId = ratingRequest.OrderId,
+                OrderDetailId = ratingRequest.OrderDetailId,
                 RatingDate = DateTime.Now
             };
-
             _unitOfWork.RatingRepository.Insert(rating);
-            _unitOfWork.Save();
 
+            var ratingsForToy = _unitOfWork.RatingRepository.Get(filter: r => r.OrderDetail.ToyId == orderDetail.ToyId);
+            int countRatingsForToy = ratingsForToy.Count();
+            float totalStarsForToy = ratingsForToy.Sum(r => r.Star);
+            float averageRating = countRatingsForToy > 0 ? (float)totalStarsForToy / countRatingsForToy : 0;
+
+            averageRating = (float)Math.Round(averageRating, 1);
+
+            var toy = _unitOfWork.ToyRepository.GetByID(orderDetail.ToyId);
+            if (toy != null)
+            {
+                toy.Star =(float) averageRating;
+                _unitOfWork.ToyRepository.Update(toy); 
+            }
+            _unitOfWork.Save();
             var ratingResponse = new RatingResponse
             {
                 Id = rating.Id,
@@ -128,8 +145,8 @@ namespace EduToyRentAPI.Controllers
                 Star = rating.Star,
                 UserId = rating.UserId,
                 RatingDate = rating.RatingDate,
-                UserName = rating.User.FullName,
-                OrderId = rating.OrderId
+                UserName = _unitOfWork.UserRepository.GetByID(rating.UserId).FullName,
+                OrderDetailId = rating.OrderDetailId
             };
 
             return CreatedAtAction("GetRating", new { id = rating.Id }, ratingResponse);

@@ -37,6 +37,7 @@ namespace EduToyRentAPI.Controllers
                     RentPrice = od.RentPrice,
                     Deposit = od.Deposit,
                     UnitPrice = od.UnitPrice,
+                    Quantity = od.Quantity,
                     StartDate = od.StartDate,
                     EndDate = od.EndDate,
                     Status = od.Status,
@@ -65,6 +66,7 @@ namespace EduToyRentAPI.Controllers
                 RentPrice = orderDetail.RentPrice,
                 Deposit = orderDetail.Deposit,
                 UnitPrice = orderDetail.UnitPrice,
+                Quantity = orderDetail.Quantity,
                 StartDate = orderDetail.StartDate,
                 EndDate = orderDetail.EndDate,
                 Status = orderDetail.Status,
@@ -90,6 +92,7 @@ namespace EduToyRentAPI.Controllers
             orderDetail.RentPrice = orderDetailRequest.RentPrice;
             orderDetail.Deposit = orderDetailRequest.Deposit;
             orderDetail.UnitPrice = orderDetailRequest.UnitPrice;
+            orderDetail.Quantity = orderDetailRequest.Quantity;
             orderDetail.StartDate = orderDetailRequest.StartDate;
             orderDetail.EndDate = orderDetailRequest.EndDate;
             orderDetail.Status = orderDetailRequest.Status;
@@ -127,6 +130,7 @@ namespace EduToyRentAPI.Controllers
                 RentPrice = orderDetailRequest.RentPrice,
                 Deposit = orderDetailRequest.Deposit,
                 UnitPrice = orderDetailRequest.UnitPrice,
+                Quantity = orderDetailRequest.Quantity,
                 StartDate = orderDetailRequest.StartDate,
                 EndDate = orderDetailRequest.EndDate,
                 Status = orderDetailRequest.Status,
@@ -137,7 +141,7 @@ namespace EduToyRentAPI.Controllers
 
             _unitOfWork.OrderDetailRepository.Insert(orderDetail);
             var order = _unitOfWork.OrderRepository.GetByID(orderDetailRequest.OrderId);
-            order.TotalPrice += orderDetailRequest.UnitPrice;
+            order.TotalPrice += (orderDetail.UnitPrice * orderDetail.Quantity);
             _unitOfWork.OrderRepository.Update(order);
             _unitOfWork.Save();
 
@@ -147,6 +151,7 @@ namespace EduToyRentAPI.Controllers
                 RentPrice = orderDetail.RentPrice,
                 Deposit = orderDetail.Deposit,
                 UnitPrice = orderDetail.UnitPrice,
+                Quantity = orderDetail.Quantity,
                 StartDate = orderDetail.StartDate,
                 EndDate = orderDetail.EndDate,
                 Status = orderDetail.Status,
@@ -172,7 +177,7 @@ namespace EduToyRentAPI.Controllers
             var order = _unitOfWork.OrderRepository.GetByID(orderDetail.OrderId);
             if (order != null)
             {
-                order.TotalPrice -= orderDetail.UnitPrice;
+                order.TotalPrice -= (orderDetail.UnitPrice * orderDetail.Quantity);
                 _unitOfWork.OrderRepository.Update(order);
             }
 
@@ -182,6 +187,37 @@ namespace EduToyRentAPI.Controllers
             return NoContent();
         }
 
+        // GET: api/OrderDetails/byToy/{toyId}
+        [HttpGet("byToy/{toyId}")]
+        public ActionResult<IEnumerable<OrderDetailResponse>> GetOrderDetailsByToyId(int toyId, int pageIndex = 1, int pageSize = 50)
+        {
+            var orderDetails = _unitOfWork.OrderDetailRepository.Get(
+                filter: od => od.ToyId == toyId,
+                includeProperties: "Order,Toy,OrderType",
+                pageIndex: pageIndex,
+                pageSize: pageSize)
+                .Select(od => new OrderDetailResponse
+                {
+                    Id = od.Id,
+                    RentPrice = od.RentPrice,
+                    Deposit = od.Deposit,
+                    UnitPrice = od.UnitPrice,
+                    Quantity = od.Quantity,
+                    StartDate = od.StartDate,
+                    EndDate = od.EndDate,
+                    Status = od.Status,
+                    OrderId = od.OrderId,
+                    ToyId = od.ToyId,
+                    OrderTypeId = od.OrderTypeId
+                }).ToList();
+
+            if (!orderDetails.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(orderDetails);
+        }
 
         private bool OrderDetailExists(int id)
         {

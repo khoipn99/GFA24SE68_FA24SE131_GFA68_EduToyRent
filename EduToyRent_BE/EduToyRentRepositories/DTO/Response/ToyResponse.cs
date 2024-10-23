@@ -14,6 +14,7 @@ namespace EduToyRentRepositories.DTO.Response
         public int Price { get; set; }
         public string Origin { get; set; }
         public string Age { get; set; }
+        public float? Star { get; set; }
         public string Brand { get; set; }
         public int RentCount { get; set; }
         public int BuyQuantity { get; set; }

@@ -28,7 +28,7 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<OrderResponse>> GetOrders(int pageIndex = 1, int pageSize = 20)
         {
             var orders = _unitOfWork.OrderRepository.Get(
-                includeProperties: "User,Rating",
+                includeProperties: "User",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(orders => orders.Id)
@@ -46,7 +46,6 @@ namespace EduToyRentAPI.Controllers
                     Status = order.Status,
                     UserId = order.UserId,
                     UserName = order.User.FullName,
-                    RatingId = order.RatingId
                 }).ToList();
 
             return Ok(orders);
@@ -77,7 +76,6 @@ namespace EduToyRentAPI.Controllers
                 Status = order.Status,
                 UserId = order.UserId,
                 UserName = order.User.FullName,
-                RatingId = order.RatingId
             };
 
             return Ok(orderResponse);
@@ -104,7 +102,6 @@ namespace EduToyRentAPI.Controllers
             order.ReceivePhone = orderRequest.ReceivePhone;
             order.Status = orderRequest.Status;
             order.UserId = orderRequest.UserId;
-            order.RatingId = orderRequest.RatingId;
 
             _unitOfWork.OrderRepository.Update(order);
 
@@ -143,7 +140,6 @@ namespace EduToyRentAPI.Controllers
                 ReceivePhone = orderRequest.ReceivePhone,
                 Status = orderRequest.Status,
                 UserId = orderRequest.UserId,
-                RatingId = orderRequest.RatingId,
             };
 
             _unitOfWork.OrderRepository.Insert(order);
@@ -163,7 +159,6 @@ namespace EduToyRentAPI.Controllers
                 Status = order.Status,
                 UserId = order.UserId,
                 UserName = order.User.FullName, 
-                RatingId = order.RatingId
             };
 
             return CreatedAtAction("GetOrder", new { id = order.Id }, orderResponse);
@@ -189,7 +184,7 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<OrderResponse>> GetOrdersByUserId(int userId, int pageIndex = 1, int pageSize = 20)
         {
             var orders = _unitOfWork.OrderRepository.Get(
-                includeProperties: "User,Rating",
+                includeProperties: "User",
                 filter: o => o.UserId == userId,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
@@ -208,7 +203,6 @@ namespace EduToyRentAPI.Controllers
                     Status = o.Status,
                     UserId = o.UserId,
                     UserName = o.User.FullName,
-                    RatingId = o.RatingId
                 }).ToList();
 
             return Ok(orders);

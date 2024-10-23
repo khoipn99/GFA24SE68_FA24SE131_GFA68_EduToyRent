@@ -20,6 +20,6 @@ namespace EduToyRentRepositories.DTO.Response
         public string Status { get; set; }
         public int UserId { get; set; }
         public string UserName { get; set; } 
-        public int? RatingId { get; set; }
+        
     }
 }

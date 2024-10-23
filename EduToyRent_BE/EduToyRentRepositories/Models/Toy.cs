@@ -19,6 +19,7 @@ namespace EduToyRentRepositories.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public int Price { get; set; }
+        public float? Star { get; set; }
         public string Origin { get; set; }
         public string Age { get; set; }
         public string Brand { get; set; }

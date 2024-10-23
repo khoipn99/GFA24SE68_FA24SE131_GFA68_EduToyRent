@@ -11,6 +11,6 @@ namespace EduToyRentRepositories.DTO.Request
         public string Comment { get; set; }
         public float Star { get; set; }
         public int UserId { get; set; }
-        public int OrderId { get; set; }
+        public int OrderDetailId { get; set; }
     }
 }

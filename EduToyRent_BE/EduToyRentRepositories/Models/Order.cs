@@ -27,8 +27,6 @@ namespace EduToyRentRepositories.Models
         public int UserId { get; set; }
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; } = null!;
-        public int? RatingId { get; set; }
-        [ForeignKey(nameof(RatingId))]
-        public virtual Rating Rating { get; set; } = null!;
+        
     }
 }

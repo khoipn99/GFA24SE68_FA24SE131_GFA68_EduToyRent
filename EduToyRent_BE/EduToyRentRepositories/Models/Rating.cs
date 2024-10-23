@@ -21,9 +21,9 @@ namespace EduToyRentRepositories.Models
         public int UserId { get; set; }
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; } = null!;
-        public int OrderId { get; set; }
-        [ForeignKey(nameof(OrderId))]
-        public virtual Order Order { get; set; } = null!;
+        public int OrderDetailId { get; set; }
+        [ForeignKey(nameof(OrderDetailId))]
+        public virtual OrderDetail OrderDetail { get; set; } = null!;
 
     }
 }

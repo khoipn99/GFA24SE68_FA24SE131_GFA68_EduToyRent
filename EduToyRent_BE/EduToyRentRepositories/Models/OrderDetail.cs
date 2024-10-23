@@ -18,6 +18,7 @@ namespace EduToyRentRepositories.Models
         public int RentPrice { get; set; }
         public int Deposit {  get; set; }
         public int UnitPrice { get; set; }
+        public int Quantity { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string Status { get; set; }
@@ -30,5 +31,8 @@ namespace EduToyRentRepositories.Models
         public int OrderTypeId { get; set; }
         [ForeignKey(nameof(OrderTypeId))]
         public virtual OrderType OrderType { get; set; } = null!;
+        public int? RatingId { get; set; }
+        [ForeignKey(nameof(RatingId))]
+        public virtual Rating Rating { get; set; } = null!;
     }
 }
