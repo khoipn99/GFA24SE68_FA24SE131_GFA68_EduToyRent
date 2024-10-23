@@ -1,31 +1,75 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
 const HeaderForCustomer = () => {
   const [cartVisible, setCartVisible] = useState(false);
-  const [rentItems, setRentItems] = useState([]);
-  const [buyItems, setBuyItems] = useState([]);
+  const [rentItems, setRentItems] = useState([
+    // Danh sách sản phẩm thuê (giữ mã cũ ở đây)
+    {
+      id: 1,
+      name: "Sản phẩm 1",
+      price: 100,
+      quantity: 1,
+      image:
+        "https://product.hstatic.net/1000300281/product/bap_benh_ca_thien_than_step2__2__f587e222b82242c4905775845b79644f_small.png",
+    },
+    {
+      id: 2,
+      name: "Sản phẩm 2",
+      price: 200,
+      quantity: 1,
+      image:
+        "https://product.hstatic.net/1000300281/product/bap_benh_ca_thien_than_step2__2__f587e222b82242c4905775845b79644f_small.png",
+    },
+    {
+      id: 3,
+      name: "Sản phẩm 3",
+      price: 300,
+      quantity: 1,
+      image:
+        "https://product.hstatic.net/1000300281/product/bap_benh_ca_thien_than_step2__2__f587e222b82242c4905775845b79644f_small.png",
+    },
+    {
+      id: 4,
+      name: "Sản phẩm 3",
+      price: 300,
+      quantity: 1,
+      image:
+        "https://product.hstatic.net/1000300281/product/bap_benh_ca_thien_than_step2__2__f587e222b82242c4905775845b79644f_small.png",
+    },
+  ]);
+  const [buyItems, setBuyItems] = useState([
+    // Danh sách sản phẩm mua (giữ mã cũ ở đây)
+    {
+      id: 1,
+      name: "Sản phẩm 1",
+      price: 100,
+      quantity: 1,
+      image:
+        "https://product.hstatic.net/1000300281/product/bap_benh_ca_thien_than_step2__2__f587e222b82242c4905775845b79644f_small.png",
+    },
+    {
+      id: 2,
+      name: "Sản phẩm 2",
+      price: 200,
+      quantity: 1,
+      image:
+        "https://product.hstatic.net/1000300281/product/bap_benh_ca_thien_than_step2__2__f587e222b82242c4905775845b79644f_small.png",
+    },
+    {
+      id: 3,
+      name: "Sản phẩm 3",
+      price: 300,
+      quantity: 1,
+      image:
+        "https://product.hstatic.net/1000300281/product/bap_benh_ca_thien_than_step2__2__f587e222b82242c4905775845b79644f_small.png",
+    },
+  ]);
   const [totalRentPrice, setTotalRentPrice] = useState(0);
   const [totalBuyPrice, setTotalBuyPrice] = useState(0);
 
   const toggleCart = () => {
-    // Mở hoặc đóng giỏ hàng
     setCartVisible(!cartVisible);
-    if (!cartVisible) {
-      loadCartFromCookies(); // Tải lại giỏ hàng từ cookie khi mở giỏ hàng
-    }
-  };
-
-  const loadCartFromCookies = () => {
-    // Lấy sản phẩm thuê từ cookie
-    const rentalCart = JSON.parse(Cookies.get("cart") || "[]");
-    console.log("Rental Cart:", rentalCart);
-    setRentItems(rentalCart);
-
-    //Lấy sản phẩm mua từ cookie (giả sử bạn lưu chúng trong cookie khác hoặc sử dụng cùng một cookie)
-    const buyCart = JSON.parse(Cookies.get("purchases") || "[]");
-    setBuyItems(buyCart);
   };
 
   const updateQuantity = (id, newQuantity, type) => {
@@ -46,6 +90,7 @@ const HeaderForCustomer = () => {
 
   useEffect(() => {
     const newTotalRentPrice = rentItems.reduce((total, item) => {
+      // Tính giá thuê cho từng sản phẩm dựa trên thời gian thuê
       const rentalPrice = calculateRentalPrice(item.price, item.rentalDuration);
       return total + rentalPrice;
     }, 0);
@@ -60,34 +105,13 @@ const HeaderForCustomer = () => {
     setTotalBuyPrice(newTotalBuyPrice);
   }, [buyItems]);
 
-  useEffect(() => {
-    // Tải giỏ hàng từ cookie khi component được mount lần đầu
-    loadCartFromCookies();
-  }, []);
-
   function removeItem(itemId, type) {
     if (type === "rent") {
-      // Xóa sản phẩm khỏi danh sách giỏ hàng "rent"
-      const updatedRentItems = rentItems.filter((item) => item.id !== itemId);
-      setRentItems(updatedRentItems);
-
-      // Cập nhật lại cookie sau khi xóa sản phẩm
-      Cookies.set("cart", JSON.stringify(updatedRentItems));
-      console.log(`Đã xoá sản phẩm thuê khỏi giỏ hàng`);
+      setRentItems(rentItems.filter((item) => item.id !== itemId));
     } else {
-      // Xóa sản phẩm khỏi danh sách giỏ hàng "buy"
-      const updatedBuyItems = buyItems.filter((item) => item.id !== itemId);
-      setBuyItems(updatedBuyItems);
-
-      // Cập nhật lại cookie sau khi xóa sản phẩm
-      Cookies.set("purchases", JSON.stringify(updatedBuyItems));
-      console.log(`Đã xoá sản phẩm bán khỏi giỏ hàng`);
+      setBuyItems(buyItems.filter((item) => item.id !== itemId));
     }
-
-    // Sau khi xóa, tải lại giỏ hàng từ cookie để hiển thị thông tin chính xác
-    loadCartFromCookies();
   }
-
   const calculateRentalPrice = (price, duration) => {
     let rentalPrice = 0;
     switch (duration) {
@@ -105,7 +129,6 @@ const HeaderForCustomer = () => {
     }
     return rentalPrice;
   };
-
   const updateRentalDuration = (itemId, duration) => {
     setRentItems((prevItems) =>
       prevItems.map((item) =>
@@ -229,7 +252,7 @@ const HeaderForCustomer = () => {
                           <img
                             src={item.image}
                             alt={item.name}
-                            className="w-20 h-20 object-cover mr-4"
+                            className="w-30 h-30 object-cover mr-4"
                           />
                           <div className="flex-grow">
                             <h3 className="font-bold">{item.name}</h3>
@@ -293,15 +316,7 @@ const HeaderForCustomer = () => {
                           </div>
                           <button
                             className="absolute top-0 right-0 text-red-500 hover:text-red-700 text-xl font-bold"
-                            onClick={() => {
-                              if (
-                                window.confirm(
-                                  "Bạn có chắc chắn muốn xóa sản phẩm này không?"
-                                )
-                              ) {
-                                removeItem(item.id, "rent"); // Xóa item với id tương ứng
-                              }
-                            }}
+                            onClick={() => removeItem(item.id, "rent")}
                           >
                             &times;
                           </button>
@@ -322,7 +337,7 @@ const HeaderForCustomer = () => {
                           <img
                             src={item.image}
                             alt={item.name}
-                            className="w-20 h-20 object-cover mr-4"
+                            className="w-30 h-30 object-cover mr-4"
                           />
                           <div className="flex-grow">
                             <h3 className="font-bold">{item.name}</h3>
@@ -360,15 +375,7 @@ const HeaderForCustomer = () => {
                           </div>
                           <button
                             className="absolute top-0 right-0 text-red-500 hover:text-red-700 text-xl font-bold"
-                            onClick={() => {
-                              if (
-                                window.confirm(
-                                  "Bạn có chắc chắn muốn xóa sản phẩm này không?"
-                                )
-                              ) {
-                                removeItem(item.id, "buy"); // Xóa item với id tương ứng
-                              }
-                            }}
+                            onClick={() => removeItem(item.id, "buy")}
                           >
                             &times;
                           </button>

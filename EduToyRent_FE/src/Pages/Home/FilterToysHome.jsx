@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
+import apiToys from "../../service/ApiToys";
 
 // Giả sử bạn đã có danh sách đồ chơi
 const toys = [
@@ -68,11 +69,18 @@ const FilterToys = () => {
   const [searchTerm, setSearchTerm] = useState(""); // Trạng thái cho tìm kiếm
   const [toyType, setToyType] = useState(""); // Trạng thái để lọc giữa đồ chơi bán và cho thuê
   const [filteredToys, setFilteredToys] = useState(toys); // Trạng thái cho đồ chơi đã lọc
+  const [Toys, setToys] = useState([]);
 
   // Thêm trạng thái cho phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4; // Số lượng đồ chơi mỗi trang
 
+  useEffect(() => {
+    apiToys.get("?pageIndex=1&pageSize=20").then((response) => {
+      console.log(response.data);
+      setToys(response.data);
+    });
+  }, []);
   // Lọc đồ chơi theo tiêu chí
   const handleSearch = () => {
     const newFilteredToys = toys.filter((toy) => {
@@ -206,19 +214,21 @@ const FilterToys = () => {
               Kết quả tìm kiếm cho từ khóa '{searchTerm}'
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {currentItems.length > 0 ? (
-                currentItems.map((toy, index) => (
+              {Toys.length > 0 ? (
+                Toys.map((toy, index) => (
                   <div key={index} className="flex flex-col gap-3 pb-3">
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                      style={{ backgroundImage: `url(${toy.image})` }}
+                      style={{
+                        backgroundImage: `url(https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png)`,
+                      }}
                     ></div>
                     <div>
                       <p className="text-[#0e161b] text-base font-medium">
                         {toy.name}
                       </p>
                       <p className="text-[#507a95] text-sm">
-                        Age group: {toy.ageGroup}
+                        Age group: {toy.age}
                       </p>
                       <p className="text-[#0e161b] text-sm">
                         Brand: {toy.brand}

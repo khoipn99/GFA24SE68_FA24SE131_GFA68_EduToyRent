@@ -15,6 +15,9 @@ import ToysDetails from "./Pages/Home/ToysDetails";
 import ToysSaleDetails from "./Pages/Home/ToysSaleDetails";
 import LessorToysDetails from "./Pages/Home/LessorToysDetails";
 import ToyStoreDetails from "./Pages/Home/ToyStoreDetails";
+import TopUp from "./Pages/TopUp/TopUp";
+import InformationCustomer from "./Pages/InformationCustomer/InformationCustomer";
+import InformationLessor from "./Pages/InformationLessor/InformationLessor";
 
 const router = createBrowserRouter([
   {
@@ -24,6 +27,18 @@ const router = createBrowserRouter([
   {
     path: "/filter-toys",
     element: <FilterToys />,
+  },
+  {
+    path: "/information-customer",
+    element: <InformationCustomer />,
+  },
+  {
+    path: "/information-lessor",
+    element: <InformationLessor />,
+  },
+  {
+    path: "/top-up",
+    element: <TopUp />,
   },
   {
     path: "/toys-rent-details",
