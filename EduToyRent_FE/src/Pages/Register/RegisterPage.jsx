@@ -1,10 +1,50 @@
-import LoginBG from "../../assets/bg.png";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import LoginBG from "../../assets/bg.png";
+
 const RegisterPage = () => {
-  const [errorMessage, setErrorMessage] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordValidations, setPasswordValidations] = useState({
+    length: false,
+    letter: false,
+    number: false,
+    specialChar: false,
+  });
+  const [passwordsMatch, setPasswordsMatch] = useState(true);
 
   const navigate = useNavigate();
+
+  // Function to check password rules
+  const validatePassword = (password) => {
+    const lengthValid = password.length >= 8;
+    const letterValid = /[a-zA-Z]/.test(password);
+    const numberValid = /\d/.test(password);
+    const specialCharValid = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    setPasswordValidations({
+      length: lengthValid,
+      letter: letterValid,
+      number: numberValid,
+      specialChar: specialCharValid,
+    });
+  };
+
+  // Handle password input change
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    validatePassword(newPassword);
+    setPasswordsMatch(newPassword === confirmPassword);
+  };
+
+  // Handle confirm password input change
+  const handleConfirmPasswordChange = (e) => {
+    const newConfirmPassword = e.target.value;
+    setConfirmPassword(newConfirmPassword);
+    setPasswordsMatch(password === newConfirmPassword);
+  };
+
   return (
     <div className="relative flex items-center justify-center min-h-screen">
       <img
@@ -13,37 +53,18 @@ const RegisterPage = () => {
         className="absolute inset-0 object-cover w-full h-full"
       />
       <div className="relative z-10 bg-gray-100 bg-opacity-80 flex flex-col items-center justify-center h-full w-full max-w-md p-8 rounded-lg shadow-lg">
-        <div className="flex items-center justify-center mb-6">
-          {/* <img className="w-[380px]" src={Logo2} alt="Logo" /> */}
-        </div>
         <h1 className="text-2xl font-semibold mb-4">Đăng ký tài khoản</h1>
-        {/* Username Input */}
-        <div className="mb-4 w-full">
-          <label htmlFor="firstname" className="block text-gray-600">
-            Họ, tên đệm
-          </label>
-          <input
-            type="text"
-            id="firstname"
-            name="firstname"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            // value={firstname}
-            // onChange={(e) => handleInputChange(e, "firstname")}
-          />
-        </div>
+
         <div className="mb-4 w-full">
           <label htmlFor="lastname" className="block text-gray-600">
             Tên
           </label>
           <input
             type="text"
-            id="lastname"
-            name="lastname"
+            id="name"
+            name="name"
             className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
             autoComplete="off"
-            // value={lastname}
-            // onChange={(e) => handleInputChange(e, "lastname")}
           />
         </div>
         <div className="mb-4 w-full">
@@ -56,53 +77,8 @@ const RegisterPage = () => {
             name="phone"
             className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
             autoComplete="off"
-            // value={phone}
-            // onChange={(e) => handleInputChange(e, "phone")}
           />
         </div>
-        <div className="mb-4 w-full">
-          <label htmlFor="address" className="block text-gray-600">
-            Địa chỉ
-          </label>
-          <input
-            type="text"
-            id="address"
-            name="address"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            // value={address}
-            // onChange={(e) => handleInputChange(e, "address")}
-          />
-        </div>
-        <div className="mb-4 w-full">
-          <label htmlFor="dob" className="block text-gray-600">
-            Ngày sinh
-          </label>
-          <input
-            type="date"
-            id="dob"
-            name="dob"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            // value={dob}
-            // onChange={(e) => handleInputChange(e, "dob")}
-          />
-        </div>
-        <div className="mb-4 w-full">
-          <label htmlFor="gender" className="block text-gray-600">
-            Giới tính
-          </label>
-          <input
-            type="text"
-            id="gender"
-            name="gender"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            // value={gender}
-            // onChange={(e) => handleInputChange(e, "gender")}
-          />
-        </div>
-        {/* Email Input */}
         <div className="mb-4 w-full">
           <label htmlFor="email" className="block text-gray-600">
             Email
@@ -113,10 +89,9 @@ const RegisterPage = () => {
             name="email"
             className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
             autoComplete="off"
-            // value={email}
-            // onChange={(e) => handleInputChange(e, "email")}
           />
         </div>
+
         {/* Password Input */}
         <div className="mb-4 w-full">
           <label htmlFor="password" className="block text-gray-600">
@@ -128,12 +103,48 @@ const RegisterPage = () => {
             name="password"
             className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
             autoComplete="off"
-            // value={password}
-            // onChange={(e) => handleInputChange(e, "password")}
+            value={password}
+            onChange={handlePasswordChange}
           />
+          {/* Password Validation */}
+          <ul className="text-sm">
+            <li
+              className={
+                passwordValidations.length ? "text-green-500" : "text-red-500"
+              }
+            >
+              {passwordValidations.length ? "✔" : "✖"} Có ít nhất 8 kí tự
+            </li>
+            <li
+              className={
+                passwordValidations.letter ? "text-green-500" : "text-red-500"
+              }
+            >
+              {passwordValidations.letter ? "✔" : "✖"} Có ít nhất 1 ký tự chữ
+              (a-z hoặc A-Z)
+            </li>
+            <li
+              className={
+                passwordValidations.number ? "text-green-500" : "text-red-500"
+              }
+            >
+              {passwordValidations.number ? "✔" : "✖"} Có ít nhất 1 chữ số (0-9)
+            </li>
+            <li
+              className={
+                passwordValidations.specialChar
+                  ? "text-green-500"
+                  : "text-red-500"
+              }
+            >
+              {passwordValidations.specialChar ? "✔" : "✖"} Có ít nhất 1 kí tự
+              đặc biệt
+            </li>
+          </ul>
         </div>
+
         {/* Confirm Password Input */}
-        <div className="mb-6 w-full">
+        <div className="mb-4 w-full">
           <label htmlFor="confirmPassword" className="block text-gray-600">
             Xác nhận mật khẩu
           </label>
@@ -143,22 +154,18 @@ const RegisterPage = () => {
             name="confirmPassword"
             className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
             autoComplete="off"
-            // value={confirmPassword}
-            // onChange={(e) => handleInputChange(e, "confirmPassword")}
+            value={confirmPassword}
+            onChange={handleConfirmPasswordChange}
           />
+          {!passwordsMatch && (
+            <p className="text-red-500">Mật khẩu không khớp!</p>
+          )}
         </div>
-        {/* Error Message */}
-        {errorMessage && (
-          <p className="text-red-500 text-center mb-4">{errorMessage}</p>
-        )}
-        {/* Register Button */}
-        <button
-          //   onClick={handleRegister}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md py-2 px-4 w-full"
-        >
+
+        <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md py-2 px-4 w-full">
           Đăng ký
         </button>
-        {/* Back to Login Link */}
+
         <div className="flex justify-center items-center mt-4">
           <p className="text-gray-600">
             Đã có tài khoản?{" "}
@@ -179,4 +186,5 @@ const RegisterPage = () => {
     </div>
   );
 };
+
 export default RegisterPage;

@@ -18,6 +18,7 @@ import ToyStoreDetails from "./Pages/Home/ToyStoreDetails";
 import TopUp from "./Pages/TopUp/TopUp";
 import InformationCustomer from "./Pages/InformationCustomer/InformationCustomer";
 import InformationLessor from "./Pages/InformationLessor/InformationLessor";
+import CartPage from "./Pages/Cart/CartPage";
 
 const router = createBrowserRouter([
   {
@@ -63,6 +64,10 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: <RegisterPage />,
+  },
+  {
+    path: "/cart",
+    element: <CartPage />,
   },
   {
     path: "/dashboard",
