@@ -662,7 +662,7 @@ const Home = () => {
               ))}
             </div>
             <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e8eef3] text-[#0e161b] text-sm font-bold">
-              <span className="truncate">Xem tất cả</span>
+              <span className="truncate">Xem tất cả </span>
             </button>
           </div>
         </div>
