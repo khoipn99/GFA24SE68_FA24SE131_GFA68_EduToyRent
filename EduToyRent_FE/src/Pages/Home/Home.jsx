@@ -528,11 +528,11 @@ const Home = () => {
 
             {isModalOpen && (
               <div
-                className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+                className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
                 onClick={closeModal}
               >
                 <div
-                  className="cart-modal bg-white p-4 shadow-md rounded-lg w-[700px] h-[500px] flex relative" // Thêm "relative" để định vị nút "x"
+                  className="cart-modal bg-white p-4 shadow-md rounded-lg w-[700px] h-[500px] flex relative z-50" // Thêm "relative" để định vị nút "x"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button

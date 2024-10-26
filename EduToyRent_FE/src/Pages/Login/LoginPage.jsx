@@ -10,9 +10,10 @@ const LoginPage = () => {
   const handleGoogleSuccess = (response) => {
     try {
       const decoded = jwtDecode(response.credential); // Giải mã JWT từ Google để lấy thông tin người dùng
-      console.log(decoded); // Hiển thị dữ liệu đã giải mã, xử lý theo ý bạn
+      // Hiển thị dữ liệu đã giải mã, xử lý theo ý bạn
       // Điều hướng sau khi đăng nhập thành công
       navigate("/");
+      console.log(decoded);
     } catch (error) {
       console.error("JWT Decode Error:", error);
     }
@@ -23,7 +24,7 @@ const LoginPage = () => {
   };
 
   return (
-    <GoogleOAuthProvider clientId="746956711747-sjibai61a311v1ej9q0esii9ch03r6es.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId="695962570544-hia41gl00ujfg9hkc703jse7t3q9kpco.apps.googleusercontent.com">
       <div className="relative">
         <img
           src={LoginBG}
