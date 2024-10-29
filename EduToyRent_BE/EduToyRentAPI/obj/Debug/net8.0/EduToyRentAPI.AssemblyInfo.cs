@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EduToyRentAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1647f4fac82c5a1a1841463c6101aedb26cd72d8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3f3bc8628f4dc99cca012ea0ba3aa8e5681f2315")]
 [assembly: System.Reflection.AssemblyProductAttribute("EduToyRentAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EduToyRentAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

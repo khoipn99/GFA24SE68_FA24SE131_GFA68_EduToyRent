@@ -2334,8 +2334,7 @@
         ],
         "StatusCode": 200
       }
-    ],
-    "EndpointName": "odata/"
+    ]
   },
   {
     "ContainingType": "Microsoft.AspNetCore.OData.Routing.Controllers.MetadataController",
@@ -2395,8 +2394,7 @@
         ],
         "StatusCode": 200
       }
-    ],
-    "EndpointName": "odata/$metadata"
+    ]
   },
   {
     "ContainingType": "EduToyRentAPI.Controllers.WeatherForecastController",
@@ -2456,7 +2454,6 @@
         ],
         "StatusCode": 200
       }
-    ],
-    "EndpointName": "GetWeatherForecast"
+    ]
   }
 ]
