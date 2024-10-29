@@ -11,29 +11,167 @@ const InformationCustomer = () => {
     phone: "0123456789",
   });
 
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
   // Dữ liệu mẫu cho đơn hàng
   const [orders, setOrders] = useState([
     {
       id: 1,
-      product: "Sản phẩm A",
-      store: "Cửa hàng A",
+      product: "Người dùng A",
+      store: "Người dùng A",
       price: 100000,
       quantity: 2,
       total: 200000,
-      status: "Đang xử lý",
-      imageUrl: "https://via.placeholder.com/150", // Hình ảnh sản phẩm
+      status: "Chờ xác nhận",
+      address: "Quận 9",
       date: "2024-01-01",
+      numbers: "1234567890",
+      items: [
+        {
+          id: 1,
+          name: "Sản phẩm 1",
+          price: 50000,
+          quantity: 2,
+          image: "path_to_image_1.jpg",
+          status: "Chờ xác nhận",
+        },
+        {
+          id: 2,
+          name: "Sản phẩm 2",
+          price: 50000,
+          quantity: 1,
+          image: "path_to_image_2.jpg",
+          status: "Chờ xác nhận",
+        },
+      ],
     },
     {
       id: 2,
-      product: "Sản phẩm B",
-      store: "Cửa hàng B",
+      product: "Người dùng B",
+      store: "Người dùng B",
       price: 150000,
       quantity: 1,
       total: 150000,
-      status: "Đã giao",
-      imageUrl: "https://via.placeholder.com/150", // Hình ảnh sản phẩm
+      status: "Đang vận chuyển",
+      address: "Quận 1",
       date: "2024-01-02",
+      numbers: "1234567890",
+      items: [
+        {
+          id: 3,
+          name: "Sản phẩm 3",
+          price: 150000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Đang vận chuyển",
+        },
+      ],
+    },
+    {
+      id: 3,
+      product: "Người dùng C",
+      store: "Người dùng C",
+      price: 150000,
+      quantity: 1,
+      total: 150000,
+      status: "Đang thuê",
+      address: "Quận 1",
+      date: "2024-01-02",
+      numbers: "1234567890",
+      items: [
+        {
+          id: 4,
+          name: "Sản phẩm 3",
+          price: 150000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Đang thuê",
+        },
+      ],
+    },
+    {
+      id: 4,
+      product: "Người dùng D",
+      store: "Người dùng D",
+      price: 150000,
+      quantity: 1,
+      total: 150000,
+      status: "Chờ trả hàng",
+      address: "Quận 1",
+      date: "2024-01-02",
+      numbers: "1234567890",
+      items: [
+        {
+          id: 5,
+          name: "Sản phẩm 3",
+          price: 150000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Đang trả hàng",
+        },
+        {
+          id: 6,
+          name: "Sản phẩm 6",
+          price: 1500000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Chờ trả hàng",
+        },
+        {
+          id: 6,
+          name: "Sản phẩm 7",
+          price: 1700000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Hoàn thành",
+        },
+      ],
+    },
+
+    {
+      id: 5,
+      product: "Người dùng E",
+      store: "Người dùng E",
+      price: 150000,
+      quantity: 1,
+      total: 150000,
+      status: "Hoàn thành",
+      address: "Quận 1",
+      date: "2024-01-02",
+      numbers: "1234567890",
+      items: [
+        {
+          id: 5,
+          name: "Sản phẩm 3",
+          price: 150000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Hoàn thành",
+        },
+      ],
+    },
+
+    {
+      id: 6,
+      product: "Người dùng F",
+      store: "Người dùng F",
+      price: 150000,
+      quantity: 1,
+      total: 150000,
+      status: "Đã hủy",
+      address: "Quận 1",
+      date: "2024-01-02",
+      numbers: "1234567890",
+      items: [
+        {
+          id: 5,
+          name: "Sản phẩm 3",
+          price: 150000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Đã hủy",
+        },
+      ],
     },
   ]);
 
@@ -60,9 +198,21 @@ const InformationCustomer = () => {
     setFilterStatus(status);
   };
 
+  const handleViewDetails = (order) => {
+    setSelectedOrder(order);
+  };
+
+  const closeDetails = () => {
+    setSelectedOrder(null);
+  };
+
   const filteredOrders = orders.filter((order) => {
     return filterStatus === "all" || order.status === filterStatus;
   });
+
+  const handleExtendRental = (order) => {};
+  const handleReturnOrder = (order) => {};
+  const handleReBuy = (order) => {};
 
   const renderContent = () => {
     switch (selectedTab) {
@@ -140,24 +290,65 @@ const InformationCustomer = () => {
                 Tất cả
               </button>
               <button
-                onClick={() => handleFilterChange("Đang xử lý")}
+                onClick={() => handleFilterChange("Chờ xác nhận")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đang xử lý"
+                  filterStatus === "Chờ xác nhận"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
               >
-                Đang xử lý
+                Chờ xác nhận
               </button>
               <button
-                onClick={() => handleFilterChange("Đã giao")}
+                onClick={() => handleFilterChange("Đang vận chuyển")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đã giao"
+                  filterStatus === "Đang vận chuyển"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
               >
-                Đã giao
+                Đang vận chuyển
+              </button>
+              <button
+                onClick={() => handleFilterChange("Đang thuê")}
+                className={`p-2 rounded ${
+                  filterStatus === "Đang thuê"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Đang thuê
+              </button>
+              <button
+                onClick={() => handleFilterChange("Chờ trả hàng")}
+                className={`p-2 rounded ${
+                  filterStatus === "Chờ trả hàng"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Chờ trả hàng
+              </button>
+
+              <button
+                onClick={() => handleFilterChange("Hoàn thành")}
+                className={`p-2 rounded ${
+                  filterStatus === "Hoàn thành"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Hoàn thành
+              </button>
+              <button
+                onClick={() => handleFilterChange("Đã hủy")}
+                className={`p-2 rounded ${
+                  filterStatus === "Đã hủy"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Đã hủy
               </button>
             </div>
             <ul className="space-y-4">
@@ -166,32 +357,54 @@ const InformationCustomer = () => {
                   key={order.id}
                   className="p-4 border border-gray-300 rounded-lg"
                 >
-                  {/* Phần đầu - Tên cửa hàng và trạng thái */}
                   <div className="flex justify-between mb-2">
-                    <h4 className="font-semibold">{order.store}</h4>
+                    <h4 className="font-semibold">
+                      Đặt hàng từ: {order.store}
+                    </h4>
                     <span className="font-medium">{order.status}</span>
                   </div>
-                  <hr className="border-gray-300 mb-2" />{" "}
-                  {/* Đường kẻ ngăn cách */}
-                  {/* Phần giữa - Hình ảnh, tên sản phẩm, số lượng và giá */}
+                  <hr className="border-gray-300 mb-2" />
                   <div className="flex items-center mb-2">
-                    <img
-                      src={order.imageUrl}
-                      alt={order.product}
-                      className="w-24 h-24 object-cover mr-4"
-                    />
                     <div className="flex-grow">
-                      <p className="font-semibold">{order.product}</p>
-                      <p>Số lượng: {order.quantity}</p>
-                      <p>Giá: {order.price.toLocaleString()} VNĐ</p>
+                      <p className="font-semibold">
+                        Ngày đặt hàng: {order.date}
+                      </p>
+                      <p>Địa chỉ giao hàng: {order.address}</p>
+                      <p>Tên người nhận: {order.store}</p>
+                      <p>Số điện thoại: {order.numbers}</p>
                     </div>
+                    <button
+                      onClick={() => handleViewDetails(order)}
+                      className="ml-4 p-2 bg-blue-500 text-white rounded"
+                    >
+                      Xem chi tiết đơn hàng
+                    </button>
                   </div>
-                  <hr className="border-gray-300 mb-2" />{" "}
-                  {/* Đường kẻ ngăn cách */}
-                  {/* Phần cuối - Tổng tiền */}
+                  <hr className="border-gray-300 mb-2" />
                   <p className="font-semibold">
                     Tổng tiền: {order.total.toLocaleString()} VNĐ
                   </p>
+
+                  {order.status === "Đã hủy" && (
+                    <div className="flex space-x-2 mt-2">
+                      <button
+                        onClick={() => handleReBuy(order)}
+                        className="p-2 bg-green-500 text-white rounded"
+                      >
+                        Đặt hàng lại
+                      </button>
+                    </div>
+                  )}
+                  {order.status === "Đang trả hàng" && (
+                    <div className="flex space-x-2 mt-2">
+                      <button
+                        onClick={() => handleReBuy(order)}
+                        className="p-2 bg-green-500 text-white rounded"
+                      >
+                        Đã trả
+                      </button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
@@ -202,15 +415,77 @@ const InformationCustomer = () => {
     }
   };
 
+  const renderOrderDetails = () => {
+    if (!selectedOrder) return null;
+
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center">
+        <div className="bg-white p-6 rounded shadow-lg relative">
+          <button
+            onClick={closeDetails}
+            className="absolute top-2 right-2 text-red-500"
+          >
+            Đóng
+          </button>
+          <h3 className="text-lg font-semibold">Chi tiết đơn hàng</h3>
+          <ul className="space-y-4 mt-4">
+            {selectedOrder.items.map((item) => (
+              <li
+                key={item.id}
+                className="p-4 border border-gray-300 rounded-lg flex"
+              >
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-20 h-20 object-cover mr-4"
+                />
+                <div className="flex-grow">
+                  <h4 className="font-semibold">{item.name}</h4>
+                  <p>Giá: {item.price.toLocaleString()} VNĐ</p>
+                  <p>Số lượng: {item.quantity}</p>
+                  <p>
+                    Tổng: {(item.price * item.quantity).toLocaleString()} VNĐ
+                  </p>
+                  <h4 className="font-semibold">{item.status}</h4>
+                </div>
+                {item.status === "Chờ trả hàng" && (
+                  <div className="flex space-x-2 mt-2">
+                    <button
+                      onClick={() => handleExtendRental(item)}
+                      className="p-2 bg-green-500 text-white rounded"
+                    >
+                      Tiếp tục thuê
+                    </button>
+                    <button
+                      onClick={() => handleReturnOrder(item)}
+                      className="p-2 bg-red-500 text-white rounded"
+                    >
+                      Trả hàng
+                    </button>
+                  </div>
+                )}
+                {item.status === "Đang trả hàng" && (
+                  <div className="flex space-x-2 mt-2">
+                    <button className="p-2 bg-green-500 text-white rounded">
+                      Đã trả hàng
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
       <header>
         <HeaderForCustomer />
       </header>
-
       <main className="flex flex-grow justify-center py-4">
         <div className="flex w-3/4 bg-white shadow-md rounded-lg">
-          {/* Phần bên trái - danh mục thông tin */}
           <div className="w-1/4 p-4">
             <h2 className="text-lg font-semibold mb-4">Tài khoản</h2>
             <button
@@ -219,7 +494,7 @@ const InformationCustomer = () => {
                 selectedTab === "info" ? "bg-gray-300" : ""
               }`}
             >
-              Thông tin khách hàng
+              Thông tin cá nhân
             </button>
             <button
               onClick={() => setSelectedTab("orders")}
@@ -227,15 +502,13 @@ const InformationCustomer = () => {
                 selectedTab === "orders" ? "bg-gray-300" : ""
               }`}
             >
-              Đơn hàng đã mua
+              Đơn hàng đã đặt
             </button>
           </div>
-
-          {/* Phần bên phải - thông tin chi tiết */}
           <div className="w-3/4 p-4 border-l">{renderContent()}</div>
         </div>
       </main>
-
+      {renderOrderDetails()} {/* Render order details modal */}
       <footer>
         <FooterForCustomer />
       </footer>
