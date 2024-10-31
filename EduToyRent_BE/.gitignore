@@ -482,3 +482,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+*.vsidx
+/EduToyRent_BE/EduToyRentAPI/obj
+/EduToyRent_BE/EduToyRentRepositories/obj
+/EduToyRent_BE/.vs
