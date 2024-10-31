@@ -15,7 +15,7 @@ const InformationLessor = () => {
       price: 100000,
       quantity: 2,
       total: 200000,
-      status: "Đang xử lý",
+      status: "Chờ xác nhận",
       address: "Quận 9",
       date: "2024-01-01",
       numbers: "1234567890",
@@ -26,6 +26,7 @@ const InformationLessor = () => {
           price: 50000,
           quantity: 2,
           image: "path_to_image_1.jpg",
+          status: "Chờ xác nhận",
         },
         {
           id: 2,
@@ -33,6 +34,7 @@ const InformationLessor = () => {
           price: 50000,
           quantity: 1,
           image: "path_to_image_2.jpg",
+          status: "Chờ xác nhận",
         },
       ],
     },
@@ -43,7 +45,7 @@ const InformationLessor = () => {
       price: 150000,
       quantity: 1,
       total: 150000,
-      status: "Đã giao",
+      status: "Đang vận chuyển",
       address: "Quận 1",
       date: "2024-01-02",
       numbers: "1234567890",
@@ -54,12 +56,179 @@ const InformationLessor = () => {
           price: 150000,
           quantity: 1,
           image: "path_to_image_3.jpg",
+          status: "Đang vận chuyển",
+        },
+      ],
+    },
+    {
+      id: 3,
+      product: "Người dùng C",
+      store: "Người dùng C",
+      price: 150000,
+      quantity: 1,
+      total: 150000,
+      status: "Đang thuê",
+      address: "Quận 1",
+      date: "2024-01-02",
+      numbers: "1234567890",
+      items: [
+        {
+          id: 4,
+          name: "Sản phẩm 3",
+          price: 150000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Đang thuê",
+        },
+      ],
+    },
+    {
+      id: 4,
+      product: "Người dùng D",
+      store: "Người dùng D",
+      price: 150000,
+      quantity: 1,
+      total: 150000,
+      status: "Chờ trả hàng",
+      address: "Quận 1",
+      date: "2024-01-02",
+      numbers: "1234567890",
+      items: [
+        {
+          id: 5,
+          name: "Sản phẩm 3",
+          price: 150000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Đang trả hàng",
+        },
+        {
+          id: 6,
+          name: "Sản phẩm 6",
+          price: 1500000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Chờ trả hàng",
+        },
+        {
+          id: 6,
+          name: "Sản phẩm 7",
+          price: 1700000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Hoàn thành",
+        },
+      ],
+    },
+
+    {
+      id: 5,
+      product: "Người dùng E",
+      store: "Người dùng E",
+      price: 150000,
+      quantity: 1,
+      total: 150000,
+      status: "Hoàn thành",
+      address: "Quận 1",
+      date: "2024-01-02",
+      numbers: "1234567890",
+      items: [
+        {
+          id: 5,
+          name: "Sản phẩm 3",
+          price: 150000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Hoàn thành",
+        },
+      ],
+    },
+
+    {
+      id: 6,
+      product: "Người dùng F",
+      store: "Người dùng F",
+      price: 150000,
+      quantity: 1,
+      total: 150000,
+      status: "Đã hủy",
+      address: "Quận 1",
+      date: "2024-01-02",
+      numbers: "1234567890",
+      items: [
+        {
+          id: 5,
+          name: "Sản phẩm 3",
+          price: 150000,
+          quantity: 1,
+          image: "path_to_image_3.jpg",
+          status: "Đã hủy",
         },
       ],
     },
   ]);
 
+  const [products, setProducts] = useState([
+    {
+      id: 1,
+      name: "Sản phẩm 1",
+      price: 50000,
+      status: "Đang cho thuê",
+      image: "path_to_image_1.jpg",
+    },
+    {
+      id: 2,
+      name: "Sản phẩm 2",
+      price: 75000,
+      status: "Chờ duyệt",
+      image: "path_to_image_2.jpg",
+    },
+    {
+      id: 3,
+      name: "Sản phẩm 3",
+      price: 60000,
+      status: "Đã duyệt",
+      image: "path_to_image_3.jpg",
+    },
+    {
+      id: 4,
+      name: "Sản phẩm 4",
+      price: 80000,
+      status: "Bị cấm",
+      image: "path_to_image_4.jpg",
+    },
+    {
+      id: 5,
+      name: "Sản phẩm 5",
+      price: 90000,
+      status: "Đang cho thuê",
+      image: "path_to_image_5.jpg",
+    },
+  ]);
+
   const [filterStatus, setFilterStatus] = useState("all");
+  const [productFilter, setProductFilter] = useState("all");
+
+  const handleProductFilterChange = (filter) => {
+    setProductFilter(filter);
+  };
+
+  const filteredProducts = products.filter((product) => {
+    switch (productFilter) {
+      case "all":
+        return true;
+      case "rented":
+        return product.status === "Đang cho thuê";
+      case "pending":
+        return product.status === "Chờ duyệt";
+      case "approved":
+        return product.status === "Đã duyệt";
+      case "banned":
+        return product.status === "Bị cấm";
+      default:
+        return true;
+    }
+  });
 
   const handleFilterChange = (status) => {
     setFilterStatus(status);
@@ -95,24 +264,65 @@ const InformationLessor = () => {
                 Tất cả
               </button>
               <button
-                onClick={() => handleFilterChange("Đang xử lý")}
+                onClick={() => handleFilterChange("Chờ xác nhận")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đang xử lý"
+                  filterStatus === "Chờ xác nhận"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
               >
-                Đang xử lý
+                Chờ xác nhận
               </button>
               <button
-                onClick={() => handleFilterChange("Đã giao")}
+                onClick={() => handleFilterChange("Đang vận chuyển")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đã giao"
+                  filterStatus === "Đang vận chuyển"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
               >
-                Đã giao
+                Đang vận chuyển
+              </button>
+              <button
+                onClick={() => handleFilterChange("Đang thuê")}
+                className={`p-2 rounded ${
+                  filterStatus === "Đang thuê"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Đang thuê
+              </button>
+              <button
+                onClick={() => handleFilterChange("Chờ trả hàng")}
+                className={`p-2 rounded ${
+                  filterStatus === "Chờ trả hàng"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Chờ trả hàng
+              </button>
+
+              <button
+                onClick={() => handleFilterChange("Hoàn thành")}
+                className={`p-2 rounded ${
+                  filterStatus === "Hoàn thành"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Hoàn thành
+              </button>
+              <button
+                onClick={() => handleFilterChange("Đã hủy")}
+                className={`p-2 rounded ${
+                  filterStatus === "Đã hủy"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Đã hủy
               </button>
             </div>
             <ul className="space-y-4">
@@ -122,13 +332,17 @@ const InformationLessor = () => {
                   className="p-4 border border-gray-300 rounded-lg"
                 >
                   <div className="flex justify-between mb-2">
-                    <h4 className="font-semibold">{order.store}</h4>
+                    <h4 className="font-semibold">
+                      Người đặt hàng: {order.store}
+                    </h4>
                     <span className="font-medium">{order.status}</span>
                   </div>
                   <hr className="border-gray-300 mb-2" />
                   <div className="flex items-center mb-2">
                     <div className="flex-grow">
-                      <p className="font-semibold">{order.date}</p>
+                      <p className="font-semibold">
+                        Ngày đặt hàng: {order.date}
+                      </p>
                       <p>Địa chỉ giao hàng: {order.address}</p>
                       <p>Tên người nhận: {order.store}</p>
                       <p>Số điện thoại: {order.numbers}</p>
@@ -144,6 +358,23 @@ const InformationLessor = () => {
                   <p className="font-semibold">
                     Tổng tiền: {order.total.toLocaleString()} VNĐ
                   </p>
+                  {order.status === "Chờ xác nhận" && (
+                    <div className="flex space-x-2 mt-2">
+                      <button className="p-2 bg-green-500 text-white rounded">
+                        Xác nhận đơn hàng
+                      </button>
+                      <button className="p-2 bg-red-500 text-white rounded">
+                        Không nhận đơn hàng
+                      </button>
+                    </div>
+                  )}
+                  {order.status === "Đang vận chuyển" && (
+                    <div className="flex space-x-2 mt-2">
+                      <button className="p-2 bg-green-500 text-white rounded">
+                        Đã giao hàng
+                      </button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
@@ -155,7 +386,70 @@ const InformationLessor = () => {
             <h3 className="text-lg font-semibold">
               Các sản phẩm trong cửa hàng
             </h3>
-            <p>Danh sách các sản phẩm sẽ được hiển thị ở đây.</p>
+            <div className="flex mb-4">
+              <button
+                onClick={() => handleProductFilterChange("all")}
+                className={`p-2 rounded ${
+                  productFilter === "all"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Tất cả sản phẩm
+              </button>
+              <button
+                onClick={() => handleProductFilterChange("rented")}
+                className={`p-2 rounded ${
+                  productFilter === "rented"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Đang cho thuê
+              </button>
+              <button
+                onClick={() => handleProductFilterChange("pending")}
+                className={`p-2 rounded ${
+                  productFilter === "pending"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Chờ duyệt
+              </button>
+              <button
+                onClick={() => handleProductFilterChange("approved")}
+                className={`p-2 rounded ${
+                  productFilter === "approved"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Đã duyệt
+              </button>
+              <button
+                onClick={() => handleProductFilterChange("banned")}
+                className={`p-2 rounded ${
+                  productFilter === "banned"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Bị cấm
+              </button>
+            </div>
+            <ul className="space-y-4">
+              {filteredProducts.map((product) => (
+                <li
+                  key={product.id}
+                  className="p-4 border border-gray-300 rounded-lg"
+                >
+                  <h4 className="font-semibold">{product.name}</h4>
+                  <p>Giá: {product.price.toLocaleString()} VNĐ</p>
+                  <p>Trạng thái: {product.status}</p>
+                </li>
+              ))}
+            </ul>
             <button className="mt-4 p-2 bg-green-500 text-white rounded">
               Thêm sản phẩm mới
             </button>
@@ -204,6 +498,7 @@ const InformationLessor = () => {
                   <p>
                     Tổng: {(item.price * item.quantity).toLocaleString()} VNĐ
                   </p>
+                  <h4 className="font-semibold">{item.status}</h4>
                 </div>
               </li>
             ))}

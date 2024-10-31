@@ -1,28 +1,28 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\EduToyRentRepositories.csproj": {}
+    "C:\\Users\\THANH\\Desktop\\SECA\\EduToyRent_BE\\EduToyRentRepositories\\EduToyRentRepositories.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\EduToyRentRepositories.csproj": {
+    "C:\\Users\\THANH\\Desktop\\SECA\\EduToyRent_BE\\EduToyRentRepositories\\EduToyRentRepositories.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\EduToyRentRepositories.csproj",
+        "projectUniqueName": "C:\\Users\\THANH\\Desktop\\SECA\\EduToyRent_BE\\EduToyRentRepositories\\EduToyRentRepositories.csproj",
         "projectName": "EduToyRentRepositories",
-        "projectPath": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\EduToyRentRepositories.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\obj\\",
+        "projectPath": "C:\\Users\\THANH\\Desktop\\SECA\\EduToyRent_BE\\EduToyRentRepositories\\EduToyRentRepositories.csproj",
+        "packagesPath": "C:\\Users\\THANH\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\THANH\\Desktop\\SECA\\EduToyRent_BE\\EduToyRentRepositories\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\THANH\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net8.0"
+          "net5.0.408"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
@@ -31,7 +31,7 @@
         },
         "frameworks": {
           "net8.0": {
-            "targetAlias": "net8.0",
+            "targetAlias": "net5.0.408",
             "projectReferences": {}
           }
         },
@@ -48,7 +48,7 @@
       },
       "frameworks": {
         "net8.0": {
-          "targetAlias": "net8.0",
+          "targetAlias": "net5.0.408",
           "dependencies": {
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
@@ -95,7 +95,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.403/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
