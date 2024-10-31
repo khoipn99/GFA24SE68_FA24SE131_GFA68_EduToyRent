@@ -6,7 +6,7 @@ import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustom
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import { Link } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import các biểu tượng sao
-
+import { useNavigate } from "react-router-dom";
 const featuredToys = [
   {
     id: 1,
@@ -206,35 +206,29 @@ const Home = () => {
   const [rentalDuration, setRentalDuration] = useState(); // Giá trị mặc định là "1 tuần"
   const [calculatedPrice, setCalculatedPrice] = useState(0);
   const [rentItems, setRentItems] = useState([]); // Khởi tạo giỏ hàng
+  const navigate = useNavigate();
+  const [userData, setUserData] = useState("");
 
-  const setCookie = (cname, cvalue, exdays) => {
-    const d = new Date();
-    d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
-    const expires = "expires=" + d.toUTCString();
-    document.cookie = cname + "=" + cvalue + "; " + expires;
-  };
-
-  const getCookie = (cname) => {
-    const name = cname + "=";
-    const ca = document.cookie.split(";");
-    for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) === " ") {
-        c = c.substring(1);
+  useEffect(() => {
+    try {
+      const userDataCookie = Cookies.get("userData");
+      if (userDataCookie) {
+        const parsedUserData = JSON.parse(userDataCookie);
+        setUserData(parsedUserData);
+      } else {
+        console.error("User data not found in cookies");
       }
-      if (c.indexOf(name) === 0) {
-        return c.substring(name.length, c.length);
-      }
+    } catch (error) {
+      console.error("Error parsing user data:", error);
     }
-    return "";
-  };
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) =>
         prevIndex === images.length - 1 ? 0 : prevIndex + 1
       );
-    }, 5000); // Thay đổi hình ảnh mỗi 3 giây
+    }, 5000); // Thay đổi hình ảnh mỗi 3 giâya
 
     return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
   }, []);

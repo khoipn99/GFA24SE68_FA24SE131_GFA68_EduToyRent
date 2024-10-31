@@ -19,7 +19,7 @@ import TopUp from "./Pages/TopUp/TopUp";
 import InformationCustomer from "./Pages/InformationCustomer/InformationCustomer";
 import InformationLessor from "./Pages/InformationLessor/InformationLessor";
 import CartPage from "./Pages/Cart/CartPage";
-
+import ToySupplierPage from "./Pages/ToySupplier/ToySupplierPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -68,6 +68,10 @@ const router = createBrowserRouter([
   {
     path: "/cart",
     element: <CartPage />,
+  },
+  {
+    path: "/toySupplier",
+    element: <ToySupplierPage />,
   },
   {
     path: "/dashboard",

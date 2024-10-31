@@ -546,7 +546,7 @@ const InformationLessor = () => {
           <div className="w-3/4 p-4 border-l">{renderContent()}</div>
         </div>
       </main>
-      {renderOrderDetails()} {/* Render order details modal */}
+      {renderOrderDetails()} {/* Render order details modal a*/}
       <footer>
         <FooterForCustomer />
       </footer>
