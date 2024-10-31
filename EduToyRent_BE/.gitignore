@@ -486,4 +486,6 @@ $RECYCLE.BIN/
 *.vsidx
 /EduToyRent_BE/EduToyRentAPI/obj
 /EduToyRent_BE/EduToyRentRepositories/obj
+/EduToyRent_BE/EduToyRentAPI/bin
+/EduToyRent_BE/EduToyRentRepositories/bin
 /EduToyRent_BE/.vs
