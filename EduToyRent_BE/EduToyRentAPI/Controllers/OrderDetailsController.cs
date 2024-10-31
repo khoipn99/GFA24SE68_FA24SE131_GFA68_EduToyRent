@@ -218,6 +218,62 @@ namespace EduToyRentAPI.Controllers
 
             return Ok(orderDetails);
         }
+        // GET: api/OrderDetails/Order/5
+        [HttpGet("Order/{orderId}")]
+        public async Task<ActionResult<IEnumerable<OrderDetailResponse>>> GetOrderDetailsByOrderId(int orderId)
+        {
+            var orderDetails = _unitOfWork.OrderDetailRepository.Get(filter: od => od.OrderId == orderId);
+
+            if (orderDetails == null || !orderDetails.Any())
+            {
+                return NotFound("Not found!!!");
+            }
+
+            var orderDetailResponses = orderDetails.Select(orderDetail => new OrderDetailResponse
+            {
+                Id = orderDetail.Id,
+                RentPrice = orderDetail.RentPrice,
+                Deposit = orderDetail.Deposit,
+                UnitPrice = orderDetail.UnitPrice,
+                Quantity = orderDetail.Quantity,
+                StartDate = orderDetail.StartDate,
+                EndDate = orderDetail.EndDate,
+                Status = orderDetail.Status,
+                OrderId = orderDetail.OrderId,
+                ToyId = orderDetail.ToyId,
+                OrderTypeId = orderDetail.OrderTypeId
+            }).ToList();
+
+            return Ok(orderDetailResponses);
+        }
+        // GET: api/OrderDetails/User/{userId}
+        [HttpGet("User/{userId}")]
+        public async Task<ActionResult<IEnumerable<OrderDetailResponse>>> GetOrderDetailsByUserId(int userId)
+        {
+            var orderDetails = _unitOfWork.OrderDetailRepository.Get(filter: od => od.Toy.UserId == userId);
+
+            if (orderDetails == null || !orderDetails.Any())
+            {
+                return NotFound("No order details found own by this user.");
+            }
+
+            var orderDetailResponses = orderDetails.Select(orderDetail => new OrderDetailResponse
+            {
+                Id = orderDetail.Id,
+                RentPrice = orderDetail.RentPrice,
+                Deposit = orderDetail.Deposit,
+                UnitPrice = orderDetail.UnitPrice,
+                Quantity = orderDetail.Quantity,
+                StartDate = orderDetail.StartDate,
+                EndDate = orderDetail.EndDate,
+                Status = orderDetail.Status,
+                OrderId = orderDetail.OrderId,
+                ToyId = orderDetail.ToyId,
+                OrderTypeId = orderDetail.OrderTypeId
+            }).ToList();
+
+            return Ok(orderDetailResponses);
+        }
 
         private bool OrderDetailExists(int id)
         {

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduToyRentRepositories.Migrations
 {
     [DbContext(typeof(EduToyRentDBContext))]
-    [Migration("20241023160030_Initial")]
+    [Migration("20241031002655_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -741,9 +741,14 @@ namespace EduToyRentRepositories.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("WalletId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("RoleId");
+
+                    b.HasIndex("WalletId");
 
                     b.ToTable("Users");
                 });
@@ -1090,7 +1095,14 @@ namespace EduToyRentRepositories.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("EduToyRentRepositories.Models.Wallet", "Wallet")
+                        .WithMany()
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Role");
+
+                    b.Navigation("Wallet");
                 });
 
             modelBuilder.Entity("EduToyRentRepositories.Models.UserConversation", b =>

@@ -207,6 +207,65 @@ namespace EduToyRentAPI.Controllers
 
             return Ok(orders);
         }
+        // GET: api/Orders/User/5
+        [HttpGet("User/{userId}")]
+        public ActionResult<IEnumerable<OrderResponse>> GetOrdersByUserId(int userId)
+        {
+            var orders = _unitOfWork.OrderRepository.Get(filter: o => o.UserId == userId);
+
+            if (orders == null || !orders.Any())
+            {
+                return NotFound("No orders found for this user.");
+            }
+
+            var orderResponses = orders.Select(order => new OrderResponse
+            {
+                Id = order.Id,
+                OrderDate = order.OrderDate,
+                ReceiveDate = order.ReceiveDate,
+                TotalPrice = order.TotalPrice,
+                RentPrice = order.RentPrice,
+                DepositeBackMoney = order.DepositeBackMoney,
+                ReceiveName = order.ReceiveName,
+                ReceiveAddress = order.ReceiveAddress,
+                ReceivePhone = order.ReceivePhone,
+                Status = order.Status,
+                UserId = order.UserId,
+                UserName = order.User.FullName,
+            }).ToList();
+
+            return Ok(orderResponses);
+        }
+        // GET: api/Orders/Status/{status}
+        [HttpGet("Status/{status}")]
+        public ActionResult<IEnumerable<OrderResponse>> GetOrdersByStatus(string status)
+        {
+            var orders = _unitOfWork.OrderRepository.Get(filter: o => o.Status == status);
+
+            if (orders == null || !orders.Any())
+            {
+                return NotFound("No orders found with the specified status.");
+            }
+
+            var orderResponses = orders.Select(order => new OrderResponse
+            {
+                Id = order.Id,
+                OrderDate = order.OrderDate,
+                ReceiveDate = order.ReceiveDate,
+                TotalPrice = order.TotalPrice,
+                RentPrice = order.RentPrice,
+                DepositeBackMoney = order.DepositeBackMoney,
+                ReceiveName = order.ReceiveName,
+                ReceiveAddress = order.ReceiveAddress,
+                ReceivePhone = order.ReceivePhone,
+                Status = order.Status,
+                UserId = order.UserId,
+                UserName = order.User.FullName,
+            }).ToList();
+
+            return Ok(orderResponses);
+        }
+
         private bool OrderExists(int id)
         {
             return _unitOfWork.OrderRepository.Get().Any(e => e.Id == id);

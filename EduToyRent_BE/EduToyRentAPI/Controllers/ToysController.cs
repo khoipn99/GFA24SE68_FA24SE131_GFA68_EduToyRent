@@ -376,39 +376,28 @@ namespace EduToyRentAPI.Controllers
             return NoContent();
         }
 
-        [HttpPatch("{id}/toggle-status")]
-        public ActionResult ToggleToyStatus(int id)
+        [HttpPatch("{id}/update-status")]
+        public ActionResult UpdateToyStatus(int id, [FromBody] string newStatus)
         {
             var toy = _unitOfWork.ToyRepository.GetByID(id);
             if (toy == null)
             {
-                return NotFound();
+                return NotFound(new { Message = "Toy not found." });
             }
 
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
+            var validStatuses = new List<string> { "Active", "Inactive", "Pending", "Sold", "Banned" }; 
+            if (!validStatuses.Contains(newStatus))
             {
-                return Unauthorized();
+                return BadRequest(new { Message = "Invalid status value." });
             }
 
-            var userId = int.Parse(userIdClaim.Value);
-            var userRole = _unitOfWork.UserRepository.GetByID(userId).RoleId;
-            if (userRole == 4 || userRole == 1)
-            {
-                toy.ApproverId = userId;
+            toy.Status = newStatus;
+            _unitOfWork.ToyRepository.Update(toy);
+            _unitOfWork.Save();
 
-                toy.Status = toy.Status == "Inactive" ? "Active" : "Inactive";
-
-                _unitOfWork.ToyRepository.Update(toy);
-                _unitOfWork.Save();
-
-                return Ok(toy); 
-            }
-            else
-            {
-                return Unauthorized(new { Message = "You don't have permission." });
-            }
+            return Ok(new { Message = "Toy status updated successfully.", Toy = toy });
         }
+
         // GET: api/Toy/category/{categoryId}
         [HttpGet("category/{categoryId}")]
         public ActionResult<IEnumerable<ToyResponse>> GetToysByCategory(int categoryId, int pageIndex = 1, int pageSize = 20)
@@ -702,6 +691,146 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null
                 }).ToList();
+
+            return Ok(toys);
+        }
+        // GET: api/Toys/AvailableForPurchase
+        [HttpGet("AvailableForPurchase")]
+        [EnableQuery]
+        public ActionResult<IEnumerable<ToyResponse>> GetToysAvailableForPurchase(int pageIndex = 1, int pageSize = 20)
+        {
+            var toys = _unitOfWork.ToyRepository.Get(
+                filter: t => t.BuyQuantity > 0,
+                includeProperties: "Category,User,User.Role",
+                pageIndex: pageIndex,
+                pageSize: pageSize)
+                .OrderByDescending(toy => toy.Id)
+                .Select(toy => new ToyResponse
+                {
+                    Id = toy.Id,
+                    Name = toy.Name,
+                    Description = toy.Description,
+                    Price = toy.Price,
+                    Origin = toy.Origin,
+                    Age = toy.Age,
+                    Brand = toy.Brand,
+                    Star = (float?)toy.Star,
+                    RentCount = toy.RentCount,
+                    BuyQuantity = toy.BuyQuantity,
+                    CreateDate = toy.CreateDate,
+                    RentTime = toy.RentTime,
+                    Status = toy.Status,
+                    Owner = new UserResponse
+                    {
+                        Id = toy.UserId,
+                        FullName = toy.User.FullName,
+                        Email = toy.User.Email,
+                        CreateDate = toy.User.CreateDate,
+                        Phone = toy.User.Phone,
+                        Dob = toy.User.Dob,
+                        Address = toy.User.Address,
+                        AvatarUrl = toy.User.AvatarUrl,
+                        Status = toy.User.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = toy.User.Role.Id,
+                            Name = toy.User.Role.Name
+                        }
+                    },
+                    Category = new CategoryResponse
+                    {
+                        Id = toy.Category.Id,
+                        Name = toy.Category.Name
+                    },
+                    Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
+                    {
+                        Id = (int)toy.ApproverId,
+                        FullName = toy.Approver.FullName,
+                        Email = toy.Approver.Email,
+                        CreateDate = toy.Approver.CreateDate,
+                        Phone = toy.Approver.Phone,
+                        Dob = toy.Approver.Dob,
+                        Address = toy.Approver.Address,
+                        AvatarUrl = toy.Approver.AvatarUrl,
+                        Status = toy.Approver.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = toy.Approver.Role.Id,
+                            Name = toy.Approver.Role.Name
+                        }
+                    } : null
+                })
+                .ToList();
+
+            return Ok(toys);
+        }
+        // GET: api/Toys/AvailableForRent
+        [HttpGet("AvailableForRent")]
+        [EnableQuery]
+        public ActionResult<IEnumerable<ToyResponse>> GetToysAvailableForRent(int pageIndex = 1, int pageSize = 20)
+        {
+            var toys = _unitOfWork.ToyRepository.Get(
+                filter: t => t.RentCount > 0,
+                includeProperties: "Category,User,User.Role",
+                pageIndex: pageIndex,
+                pageSize: pageSize)
+                .OrderByDescending(toy => toy.Id)
+                .Select(toy => new ToyResponse
+                {
+                    Id = toy.Id,
+                    Name = toy.Name,
+                    Description = toy.Description,
+                    Price = toy.Price,
+                    Origin = toy.Origin,
+                    Age = toy.Age,
+                    Brand = toy.Brand,
+                    Star = (float?)toy.Star,
+                    RentCount = toy.RentCount,
+                    BuyQuantity = toy.BuyQuantity,
+                    CreateDate = toy.CreateDate,
+                    RentTime = toy.RentTime,
+                    Status = toy.Status,
+                    Owner = new UserResponse
+                    {
+                        Id = toy.UserId,
+                        FullName = toy.User.FullName,
+                        Email = toy.User.Email,
+                        CreateDate = toy.User.CreateDate,
+                        Phone = toy.User.Phone,
+                        Dob = toy.User.Dob,
+                        Address = toy.User.Address,
+                        AvatarUrl = toy.User.AvatarUrl,
+                        Status = toy.User.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = toy.User.Role.Id,
+                            Name = toy.User.Role.Name
+                        }
+                    },
+                    Category = new CategoryResponse
+                    {
+                        Id = toy.Category.Id,
+                        Name = toy.Category.Name
+                    },
+                    Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
+                    {
+                        Id = (int)toy.ApproverId,
+                        FullName = toy.Approver.FullName,
+                        Email = toy.Approver.Email,
+                        CreateDate = toy.Approver.CreateDate,
+                        Phone = toy.Approver.Phone,
+                        Dob = toy.Approver.Dob,
+                        Address = toy.Approver.Address,
+                        AvatarUrl = toy.Approver.AvatarUrl,
+                        Status = toy.Approver.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = toy.Approver.Role.Id,
+                            Name = toy.Approver.Role.Name
+                        }
+                    } : null
+                })
+                .ToList();
 
             return Ok(toys);
         }

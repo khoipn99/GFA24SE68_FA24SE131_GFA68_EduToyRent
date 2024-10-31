@@ -27,5 +27,8 @@ namespace EduToyRentRepositories.Models
         public int RoleId { get; set; }
         [ForeignKey(nameof(RoleId))]
         public virtual Role Role { get; set; } = null!;
+        public int? WalletId { get; set; }
+        [ForeignKey(nameof(WalletId))]
+        public virtual Wallet Wallet { get; set; } = null!;
     }
 }
