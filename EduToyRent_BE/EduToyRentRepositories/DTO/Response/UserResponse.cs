@@ -18,6 +18,7 @@ namespace EduToyRentRepositories.DTO.Response
         public string Address { get; set; }
         public string AvatarUrl { get; set; }
         public string Status { get; set; }
+        public int WalletId { get; set; }
         public RoleResponse Role { get; set; }
     }
 }
