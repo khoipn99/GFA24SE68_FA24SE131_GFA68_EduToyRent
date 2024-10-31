@@ -630,7 +630,7 @@ const ToySupplierPage = () => {
                     />
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold">
-                        Cửa Hàng Đồ Chơi : TCS
+                        Cửa Hàng Đồ Chơi : TCSa
                       </h3>
 
                       <div className="flex space-x-2 mt-2">

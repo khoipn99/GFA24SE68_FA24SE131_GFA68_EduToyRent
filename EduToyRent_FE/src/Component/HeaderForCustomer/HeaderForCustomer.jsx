@@ -147,7 +147,7 @@ const HeaderForCustomer = () => {
         <div className="bg-white shadow-md">
           <div className="flex items-center justify-between gap-8 p-6">
             <div className="flex items-center gap-4 text-[#0e161b]">
-              {/* Nội dung cho người dùng đã đăng nhập */}
+              {/* Nội dung cho người dùng đã đăng nhập a*/}
               <Link to="/">
                 <div className="size-4">
                   <svg

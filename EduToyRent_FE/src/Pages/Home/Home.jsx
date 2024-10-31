@@ -228,7 +228,7 @@ const Home = () => {
       setCurrentImageIndex((prevIndex) =>
         prevIndex === images.length - 1 ? 0 : prevIndex + 1
       );
-    }, 5000); // Thay đổi hình ảnh mỗi 3 giây
+    }, 5000); // Thay đổi hình ảnh mỗi 3 giâya
 
     return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
   }, []);
