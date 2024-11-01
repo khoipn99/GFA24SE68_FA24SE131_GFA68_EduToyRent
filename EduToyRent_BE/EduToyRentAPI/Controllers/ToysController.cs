@@ -704,6 +704,7 @@ namespace EduToyRentAPI.Controllers
                 includeProperties: "Category,User,User.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
+                .Where(toy => toy.Status == "Active")
                 .OrderByDescending(toy => toy.Id)
                 .Select(toy => new ToyResponse
                 {
@@ -774,6 +775,7 @@ namespace EduToyRentAPI.Controllers
                 includeProperties: "Category,User,User.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
+                .Where(toy => toy.Status == "Active")
                 .OrderByDescending(toy => toy.Id)
                 .Select(toy => new ToyResponse
                 {
