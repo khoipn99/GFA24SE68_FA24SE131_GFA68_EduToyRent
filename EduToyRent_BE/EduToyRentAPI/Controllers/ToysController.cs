@@ -700,7 +700,7 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<ToyResponse>> GetToysAvailableForPurchase(int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get(
-                filter: t => t.BuyQuantity > 0,
+                filter: t => t.BuyQuantity > -1,
                 includeProperties: "Category,User,User.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
@@ -771,7 +771,7 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<ToyResponse>> GetToysAvailableForRent(int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get(
-                filter: t => t.RentCount > 0,
+                filter: t => t.RentCount > -1,
                 includeProperties: "Category,User,User.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
