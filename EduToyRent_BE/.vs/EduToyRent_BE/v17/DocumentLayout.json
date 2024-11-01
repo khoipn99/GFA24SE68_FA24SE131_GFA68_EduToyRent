@@ -3,8 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\Migrations\\20241031002655_Initial.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EduToyRentRepositories\\Migrations\\20241031002655_Initial.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{ED240AEB-AE2B-41D4-87B5-2B2FDB7B6896}|EduToyRentAPI\\EduToyRentAPI.csproj|c:\\users\\admin\\desktop\\se\\gfa24se68_fa24se131_gfa68_edutoyrent\\edutoyrent_be\\edutoyrentapi\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ED240AEB-AE2B-41D4-87B5-2B2FDB7B6896}|EduToyRentAPI\\EduToyRentAPI.csproj|solutionrelative:edutoyrentapi\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17CE5CA3-D7BD-4112-81EC-C4DCC3EC8B19}|EduToyRentRepositories\\EduToyRentRepositories.csproj|c:\\users\\admin\\desktop\\se\\gfa24se68_fa24se131_gfa68_edutoyrent\\edutoyrent_be\\edutoyrentrepositories\\dto\\response\\userresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{17CE5CA3-D7BD-4112-81EC-C4DCC3EC8B19}|EduToyRentRepositories\\EduToyRentRepositories.csproj|solutionrelative:edutoyrentrepositories\\dto\\response\\userresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{17CE5CA3-D7BD-4112-81EC-C4DCC3EC8B19}|EduToyRentRepositories\\EduToyRentRepositories.csproj|c:\\users\\admin\\desktop\\se\\gfa24se68_fa24se131_gfa68_edutoyrent\\edutoyrent_be\\edutoyrentrepositories\\migrations\\20241031002655_initial.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{17CE5CA3-D7BD-4112-81EC-C4DCC3EC8B19}|EduToyRentRepositories\\EduToyRentRepositories.csproj|solutionrelative:edutoyrentrepositories\\migrations\\20241031002655_initial.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{ED240AEB-AE2B-41D4-87B5-2B2FDB7B6896}|EduToyRentAPI\\EduToyRentAPI.csproj|c:\\users\\admin\\desktop\\se\\gfa24se68_fa24se131_gfa68_edutoyrent\\edutoyrent_be\\edutoyrentapi\\controllers\\toyscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -31,16 +39,8 @@
       "RelativeMoniker": "D:0:0:{17CE5CA3-D7BD-4112-81EC-C4DCC3EC8B19}|EduToyRentRepositories\\EduToyRentRepositories.csproj|solutionrelative:edutoyrentrepositories\\models\\toy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{ED240AEB-AE2B-41D4-87B5-2B2FDB7B6896}|EduToyRentAPI\\EduToyRentAPI.csproj|c:\\users\\admin\\desktop\\se\\gfa24se68_fa24se131_gfa68_edutoyrent\\edutoyrent_be\\edutoyrentapi\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{ED240AEB-AE2B-41D4-87B5-2B2FDB7B6896}|EduToyRentAPI\\EduToyRentAPI.csproj|solutionrelative:edutoyrentapi\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{17CE5CA3-D7BD-4112-81EC-C4DCC3EC8B19}|EduToyRentRepositories\\EduToyRentRepositories.csproj|c:\\users\\admin\\desktop\\se\\gfa24se68_fa24se131_gfa68_edutoyrent\\edutoyrent_be\\edutoyrentrepositories\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{17CE5CA3-D7BD-4112-81EC-C4DCC3EC8B19}|EduToyRentRepositories\\EduToyRentRepositories.csproj|solutionrelative:edutoyrentrepositories\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{17CE5CA3-D7BD-4112-81EC-C4DCC3EC8B19}|EduToyRentRepositories\\EduToyRentRepositories.csproj|c:\\users\\admin\\desktop\\se\\gfa24se68_fa24se131_gfa68_edutoyrent\\edutoyrent_be\\edutoyrentrepositories\\dto\\response\\userresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{17CE5CA3-D7BD-4112-81EC-C4DCC3EC8B19}|EduToyRentRepositories\\EduToyRentRepositories.csproj|solutionrelative:edutoyrentrepositories\\dto\\response\\userresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{17CE5CA3-D7BD-4112-81EC-C4DCC3EC8B19}|EduToyRentRepositories\\EduToyRentRepositories.csproj|c:\\users\\admin\\desktop\\se\\gfa24se68_fa24se131_gfa68_edutoyrent\\edutoyrent_be\\edutoyrentrepositories\\models\\wallet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -178,7 +178,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 21,
+          "SelectedChildIndex": 33,
           "Children": [
             {
               "$type": "Bookmark",
@@ -266,7 +266,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "20241031002655_Initial.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\Migrations\\20241031002655_Initial.cs",
               "RelativeDocumentMoniker": "EduToyRentRepositories\\Migrations\\20241031002655_Initial.cs",
@@ -303,7 +303,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "User.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\Models\\User.cs",
               "RelativeDocumentMoniker": "EduToyRentRepositories\\Models\\User.cs",
@@ -315,7 +315,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "ToysController.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentAPI\\Controllers\\ToysController.cs",
               "RelativeDocumentMoniker": "EduToyRentAPI\\Controllers\\ToysController.cs",
@@ -323,8 +323,7 @@
               "RelativeToolTip": "EduToyRentAPI\\Controllers\\ToysController.cs",
               "ViewState": "AgIAAHUBAAAAAAAAAAAqwHkBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-10-17T21:02:47.837Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-10-17T21:02:47.837Z"
             },
             {
               "$type": "Document",
@@ -340,7 +339,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 8,
               "Title": "Toy.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\Models\\Toy.cs",
               "RelativeDocumentMoniker": "EduToyRentRepositories\\Models\\Toy.cs",
@@ -352,7 +351,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 7,
               "Title": "ToyRequest.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\DTO\\Request\\ToyRequest.cs",
               "RelativeDocumentMoniker": "EduToyRentRepositories\\DTO\\Request\\ToyRequest.cs",
@@ -364,7 +363,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "ToyResponse.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\DTO\\Response\\ToyResponse.cs",
               "RelativeDocumentMoniker": "EduToyRentRepositories\\DTO\\Response\\ToyResponse.cs",
@@ -400,7 +399,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 1,
               "Title": "UserResponse.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentRepositories\\DTO\\Response\\UserResponse.cs",
               "RelativeDocumentMoniker": "EduToyRentRepositories\\DTO\\Response\\UserResponse.cs",
@@ -408,19 +407,21 @@
               "RelativeToolTip": "EduToyRentRepositories\\DTO\\Response\\UserResponse.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAA8AAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-10-22T17:40:24.088Z"
+              "WhenOpened": "2024-10-22T17:40:24.088Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 0,
               "Title": "UsersController.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentAPI\\Controllers\\UsersController.cs",
               "RelativeDocumentMoniker": "EduToyRentAPI\\Controllers\\UsersController.cs",
               "ToolTip": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentAPI\\Controllers\\UsersController.cs",
               "RelativeToolTip": "EduToyRentAPI\\Controllers\\UsersController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAA2AAAAAAAAAA==",
+              "ViewState": "AgIAAMAAAAAAAAAAAAAmwN4AAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-10-17T21:01:38.94Z"
+              "WhenOpened": "2024-10-17T21:01:38.94Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -436,7 +437,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "OrdersController.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentAPI\\Controllers\\OrdersController.cs",
               "RelativeDocumentMoniker": "EduToyRentAPI\\Controllers\\OrdersController.cs",
@@ -448,7 +449,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "OrderDetailsController.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\SE\\GFA24SE68_FA24SE131_GFA68_EduToyRent\\EduToyRent_BE\\EduToyRentAPI\\Controllers\\OrderDetailsController.cs",
               "RelativeDocumentMoniker": "EduToyRentAPI\\Controllers\\OrderDetailsController.cs",
