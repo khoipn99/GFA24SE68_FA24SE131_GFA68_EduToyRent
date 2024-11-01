@@ -45,7 +45,7 @@ namespace EduToyRentAPI.Controllers
                     Dob = user.Dob,
                     Address = user.Address,
                     AvatarUrl = user.AvatarUrl,
-                    WalletId = (int)user.WalletId,
+                    WalletId = (int?)user.WalletId,
                     Status = user.Status,
                     Role = new RoleResponse
                     {
@@ -81,7 +81,7 @@ namespace EduToyRentAPI.Controllers
                 Dob = user.Dob,
                 Address = user.Address,
                 AvatarUrl = user.AvatarUrl,
-                WalletId = (int)user.WalletId,
+                WalletId = (int?)user.WalletId,
                 Status = user.Status,
                 Role = new RoleResponse
                 {
@@ -220,7 +220,7 @@ namespace EduToyRentAPI.Controllers
                     Dob = user.Dob,
                     Address = user.Address,
                     AvatarUrl = user.AvatarUrl,
-                    WalletId = (int)user.WalletId,
+                    WalletId = (int?)user.WalletId,
                     Status = user.Status,
                     Role = new RoleResponse
                     {
