@@ -44,7 +44,7 @@ const LoginPage = () => {
             navigate("/");
             break;
           case 4:
-            navigate("/StaffPolicy");
+            navigate("/staff");
             break;
           default:
             navigate("/"); // Chuyển hướng về trang chính nếu không khớp với vai trò

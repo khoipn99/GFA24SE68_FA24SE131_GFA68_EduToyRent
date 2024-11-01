@@ -4,7 +4,7 @@ import "./index.css";
 import reportWebVitals from "./reportWebVitals";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import Home from "./Pages/Home/Home";
-import StaffPage from "./Pages/StaffPage/StaffPage";
+import StaffPage from "./Pages/Staff/StaffPage";
 import DashBoard from "./Pages/DashBoard/DashBoard";
 import Detail from "./Pages/Detail/Detail";
 import Detail2 from "./Pages/Detail/Detail2";
@@ -72,6 +72,10 @@ const router = createBrowserRouter([
   {
     path: "/toySupplier",
     element: <ToySupplierPage />,
+  },
+  {
+    path: "/staff",
+    element: <StaffPage />,
   },
   {
     path: "/dashboard",
