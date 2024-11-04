@@ -770,7 +770,7 @@ namespace EduToyRentAPI.Controllers
         [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> GetToysAvailableForRent(int pageIndex = 1, int pageSize = 20)
         {
-            var toys = _unitOfWork.ToyRepository.Get(
+            var toys = _unitOfWork.ToyRepository.Get( 
                 filter: t => t.RentCount > -1,
                 includeProperties: "Category,User,User.Role",
                 pageIndex: pageIndex,
