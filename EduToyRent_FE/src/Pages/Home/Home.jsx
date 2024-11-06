@@ -7,6 +7,8 @@ import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustom
 import { Link } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import các biểu tượng sao
 import { useNavigate } from "react-router-dom";
+import apiToys from "../../service/ApiToys";
+
 const featuredToys = [
   {
     id: 1,
@@ -208,6 +210,24 @@ const Home = () => {
   const [rentItems, setRentItems] = useState([]); // Khởi tạo giỏ hàng
   const navigate = useNavigate();
   const [userData, setUserData] = useState("");
+  const [toysForRent, setToysForRent] = useState([]);
+  const [toysForSale, setToysForSale] = useState([]);
+
+  useEffect(() => {
+    apiToys
+      .get("/AvailableForPurchase?pageIndex=1&pageSize=18")
+      .then((response) => {
+        console.log(response.data);
+        setToysForSale(response.data);
+      });
+
+    apiToys
+      .get("/AvailableForRent?pageIndex=1&pageSize=18")
+      .then((response) => {
+        console.log(response.data);
+        setToysForRent(response.data);
+      });
+  }, []);
 
   useEffect(() => {
     try {
@@ -620,7 +640,7 @@ const Home = () => {
             <div className="grid grid-cols-6 gap-3 p-4">
               {" "}
               {/* Thay đổi thành 6 cột */}
-              {SaleToys.map((toy) => (
+              {toysForSale.map((toy) => (
                 <div
                   key={toy.id}
                   className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
@@ -628,7 +648,9 @@ const Home = () => {
                   <Link to="/toys-sale-details">
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                      style={{ backgroundImage: `url(${toy.image})` }}
+                      style={{
+                        backgroundImage: `url(https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png)`,
+                      }}
                     ></div>
                   </Link>
                   <div>
@@ -636,10 +658,10 @@ const Home = () => {
                       {toy.name}
                     </p>
                     <p className="text-[#507a95] text-sm">
-                      Age group: {toy.ageGroup}
+                      Age group: {toy.age}
                     </p>
                     <div className="flex items-center gap-1">
-                      {renderStars(toy.rating)}
+                      {renderStars(toy.star)}
                     </div>
                     <p className="text-[#0e161b] text-lg font-bold">
                       ${toy.price}
