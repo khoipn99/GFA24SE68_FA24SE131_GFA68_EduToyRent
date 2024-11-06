@@ -381,30 +381,32 @@ const InformationCustomer = () => {
                     </button>
                   </div>
                   <hr className="border-gray-300 mb-2" />
-                  <p className="font-semibold">
-                    Tổng tiền: {order.total.toLocaleString()} VNĐ
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold">
+                      Tổng tiền: {order.total.toLocaleString()} VNĐ
+                    </p>
 
-                  {order.status === "Đã hủy" && (
-                    <div className="flex space-x-2 mt-2">
-                      <button
-                        onClick={() => handleReBuy(order)}
-                        className="p-2 bg-green-500 text-white rounded"
-                      >
-                        Đặt hàng lại
-                      </button>
-                    </div>
-                  )}
-                  {order.status === "Đang trả hàng" && (
-                    <div className="flex space-x-2 mt-2">
-                      <button
-                        onClick={() => handleReBuy(order)}
-                        className="p-2 bg-green-500 text-white rounded"
-                      >
-                        Đã trả
-                      </button>
-                    </div>
-                  )}
+                    {order.status === "Đã hủy" && (
+                      <div className="flex space-x-2 mt-2">
+                        <button
+                          onClick={() => handleReBuy(order)}
+                          className="p-2 bg-green-500 text-white rounded"
+                        >
+                          Đặt hàng lại
+                        </button>
+                      </div>
+                    )}
+                    {order.status === "Chờ xác nhận" && (
+                      <div className="flex space-x-2 mt-2">
+                        <button
+                          //onClick={() => handleReBuy(order)}
+                          className="p-2 bg-red-500 text-white rounded"
+                        >
+                          Hủy đơn hàng
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

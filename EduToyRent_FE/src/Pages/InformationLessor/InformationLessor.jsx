@@ -174,43 +174,59 @@ const InformationLessor = () => {
       name: "Sản phẩm 1",
       price: 50000,
       status: "Đang cho thuê",
-      image: "path_to_image_1.jpg",
+      image:
+        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
     },
     {
       id: 2,
       name: "Sản phẩm 2",
       price: 75000,
       status: "Chờ duyệt",
-      image: "path_to_image_2.jpg",
+      image:
+        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
     },
     {
       id: 3,
       name: "Sản phẩm 3",
       price: 60000,
       status: "Đã duyệt",
-      image: "path_to_image_3.jpg",
+      image:
+        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
     },
     {
       id: 4,
       name: "Sản phẩm 4",
       price: 80000,
       status: "Bị cấm",
-      image: "path_to_image_4.jpg",
+      image:
+        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
     },
     {
       id: 5,
       name: "Sản phẩm 5",
       price: 90000,
       status: "Đang cho thuê",
-      image: "path_to_image_5.jpg",
+      image:
+        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+    },
+    {
+      id: 6,
+      name: "Sản phẩm 5",
+      price: 90000,
+      status: "Đang cho thuê",
+      image:
+        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
     },
   ]);
 
   const [filterStatus, setFilterStatus] = useState("all");
   const [productFilter, setProductFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const handleProductFilterChange = (filter) => {
     setProductFilter(filter);
+    setCurrentPage(1);
   };
 
   const filteredProducts = products.filter((product) => {
@@ -230,6 +246,24 @@ const InformationLessor = () => {
     }
   });
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
   const handleFilterChange = (status) => {
     setFilterStatus(status);
   };
@@ -245,6 +279,72 @@ const InformationLessor = () => {
   const filteredOrders = orders.filter((order) => {
     return filterStatus === "all" || order.status === filterStatus;
   });
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    details: "",
+    price: "",
+    origin: "",
+    age: "",
+    brand: "",
+    category: "",
+    image: null,
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewProduct((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    setNewProduct((prev) => ({ ...prev, image: e.target.files[0] }));
+  };
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Here you would normally send the newProduct data to the server
+    console.log("New product:", newProduct);
+    closeModal();
+  };
+
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [editedProduct, setEditedProduct] = useState(null);
+
+  const openDetailModal = (product) => {
+    setSelectedProduct(product);
+    setEditedProduct(product);
+    setIsDetailModalOpen(true);
+  };
+
+  const closeDetailModal = () => {
+    setSelectedProduct(null);
+    setIsDetailModalOpen(false);
+    setIsEditMode(false);
+  };
+
+  const handleEditClick = () => {
+    setIsEditMode(true);
+  };
+
+  const handleSaveClick = () => {
+    //onSaveProduct(editedProduct); // Call a function to save the edited product
+    setIsEditMode(false);
+    setSelectedProduct(editedProduct); // Update the displayed details with saved changes
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditedProduct((prevProduct) => ({
+      ...prevProduct,
+      [name]: value,
+    }));
+  };
 
   const renderContent = () => {
     switch (selectedTab) {
@@ -383,9 +483,119 @@ const InformationLessor = () => {
       case "products":
         return (
           <div>
-            <h3 className="text-lg font-semibold">
-              Các sản phẩm trong cửa hàng
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                Các sản phẩm trong cửa hàng
+              </h3>
+              <button
+                onClick={openModal}
+                className="p-2 bg-green-500 text-white rounded"
+              >
+                Thêm sản phẩm mới
+              </button>
+            </div>
+            {isModalOpen && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white p-6 rounded shadow-lg w-96">
+                  <h3 className="text-lg font-semibold mb-4">
+                    Thêm Sản Phẩm Mới
+                  </h3>
+                  <form onSubmit={handleSubmit}>
+                    <label className="block mb-2">
+                      Tên đồ chơi:
+                      <input
+                        type="text"
+                        name="name"
+                        value={newProduct.name}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded p-1 w-full"
+                        required
+                      />
+                    </label>
+                    <label className="block mb-2">
+                      Chi tiết:
+                      <textarea
+                        name="details"
+                        value={newProduct.details}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded p-1 w-full"
+                      />
+                    </label>
+                    <label className="block mb-2">
+                      Giá:
+                      <input
+                        type="number"
+                        name="price"
+                        value={newProduct.price}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded p-1 w-full"
+                      />
+                    </label>
+                    <label className="block mb-2">
+                      Nguồn gốc:
+                      <input
+                        type="text"
+                        name="origin"
+                        value={newProduct.origin}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded p-1 w-full"
+                      />
+                    </label>
+                    <label className="block mb-2">
+                      Tuổi:
+                      <input
+                        type="number"
+                        name="age"
+                        value={newProduct.age}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded p-1 w-full"
+                      />
+                    </label>
+                    <label className="block mb-2">
+                      Hãng:
+                      <input
+                        type="text"
+                        name="brand"
+                        value={newProduct.brand}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded p-1 w-full"
+                      />
+                    </label>
+                    <label className="block mb-2">
+                      Loại đồ chơi:
+                      <input
+                        type="text"
+                        name="category"
+                        value={newProduct.category}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded p-1 w-full"
+                      />
+                    </label>
+                    <label className="block mb-2">
+                      Hình ảnh:
+                      <input
+                        type="file"
+                        onChange={handleImageChange}
+                        className="border border-gray-300 rounded p-1 w-full"
+                        accept="image/*"
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      className="mt-4 p-2 bg-blue-500 text-white rounded"
+                    >
+                      Tạo sản phẩm
+                    </button>
+                    <button
+                      onClick={closeModal}
+                      className="mt-4 p-2 bg-red-500 text-white rounded ml-2"
+                    >
+                      Đóng
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
             <div className="flex mb-4">
               <button
                 onClick={() => handleProductFilterChange("all")}
@@ -438,21 +648,185 @@ const InformationLessor = () => {
                 Bị cấm
               </button>
             </div>
+
             <ul className="space-y-4">
               {filteredProducts.map((product) => (
                 <li
                   key={product.id}
-                  className="p-4 border border-gray-300 rounded-lg"
+                  className="p-4 border border-gray-300 rounded-lg flex items-center"
                 >
-                  <h4 className="font-semibold">{product.name}</h4>
-                  <p>Giá: {product.price.toLocaleString()} VNĐ</p>
-                  <p>Trạng thái: {product.status}</p>
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-24 h-24 object-cover mr-4"
+                  />
+                  <div className="flex-grow">
+                    <h4 className="font-semibold">{product.name}</h4>
+                    <p>Giá: {product.price.toLocaleString()} VNĐ</p>
+                    <p>Trạng thái: {product.status}</p>
+                  </div>
+                  <button
+                    onClick={() => openDetailModal(product)}
+                    className="p-2 bg-blue-500 text-white rounded ml-4"
+                  >
+                    Xem chi tiết
+                  </button>
                 </li>
               ))}
             </ul>
-            <button className="mt-4 p-2 bg-green-500 text-white rounded">
-              Thêm sản phẩm mới
-            </button>
+
+            {isDetailModalOpen && selectedProduct && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white p-6 rounded shadow-lg w-96">
+                  <h3 className="text-lg font-semibold mb-4">
+                    {isEditMode ? "Sửa sản phẩm" : "Chi tiết sản phẩm"}
+                  </h3>
+                  <img
+                    src={editedProduct.image}
+                    alt={editedProduct.name}
+                    className="w-full h-48 object-cover mb-4"
+                  />
+                  {isEditMode ? (
+                    <>
+                      <input
+                        name="name"
+                        value={editedProduct.name}
+                        onChange={handleChange}
+                        className="mb-2 w-full p-2 border border-gray-300 rounded"
+                        placeholder="Tên đồ chơi"
+                      />
+                      <input
+                        name="price"
+                        value={editedProduct.price}
+                        onChange={handleChange}
+                        className="mb-2 w-full p-2 border border-gray-300 rounded"
+                        placeholder="Giá"
+                        type="number"
+                      />
+                      <input
+                        name="status"
+                        value={editedProduct.status}
+                        onChange={handleChange}
+                        className="mb-2 w-full p-2 border border-gray-300 rounded"
+                        placeholder="Trạng thái"
+                      />
+                      <textarea
+                        name="details"
+                        value={editedProduct.details}
+                        onChange={handleChange}
+                        className="mb-2 w-full p-2 border border-gray-300 rounded"
+                        placeholder="Chi tiết"
+                      />
+                      <input
+                        name="age"
+                        value={editedProduct.age}
+                        onChange={handleChange}
+                        className="mb-2 w-full p-2 border border-gray-300 rounded"
+                        placeholder="Tuổi"
+                        type="number"
+                      />
+                      <input
+                        name="brand"
+                        value={editedProduct.brand}
+                        onChange={handleChange}
+                        className="mb-2 w-full p-2 border border-gray-300 rounded"
+                        placeholder="Hãng"
+                      />
+                      <input
+                        name="category"
+                        value={editedProduct.category}
+                        onChange={handleChange}
+                        className="mb-2 w-full p-2 border border-gray-300 rounded"
+                        placeholder="Loại đồ chơi"
+                      />
+                      <input
+                        name="origin"
+                        value={editedProduct.origin}
+                        onChange={handleChange}
+                        className="mb-2 w-full p-2 border border-gray-300 rounded"
+                        placeholder="Nguồn gốc"
+                      />
+                      <button
+                        onClick={handleSaveClick}
+                        className="mt-4 p-2 bg-green-500 text-white rounded"
+                      >
+                        Lưu
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        <strong>Tên đồ chơi:</strong> {selectedProduct.name}
+                      </p>
+                      <p>
+                        <strong>Giá:</strong>{" "}
+                        {selectedProduct.price.toLocaleString()} VNĐ
+                      </p>
+                      <p>
+                        <strong>Trạng thái:</strong> {selectedProduct.status}
+                      </p>
+                      <p>
+                        <strong>Chi tiết:</strong> {selectedProduct.details}
+                      </p>
+                      <p>
+                        <strong>Tuổi:</strong> {selectedProduct.age}
+                      </p>
+                      <p>
+                        <strong>Hãng:</strong> {selectedProduct.brand}
+                      </p>
+                      <p>
+                        <strong>Loại đồ chơi:</strong>{" "}
+                        {selectedProduct.category}
+                      </p>
+                      <p>
+                        <strong>Nguồn gốc:</strong> {selectedProduct.origin}
+                      </p>
+                      {(selectedProduct.status === "Chờ duyệt" ||
+                        selectedProduct.status === "Đã duyệt") && (
+                        <button
+                          onClick={handleEditClick}
+                          className="mt-4 p-2 bg-yellow-500 text-white rounded"
+                        >
+                          Sửa sản phẩm
+                        </button>
+                      )}
+                    </>
+                  )}
+                  <button
+                    onClick={closeDetailModal}
+                    className="mt-4 p-2 bg-red-500 text-white rounded"
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center mt-4">
+              <button
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                className={`p-2 rounded ${
+                  currentPage === 1 ? "bg-gray-300" : "bg-blue-500 text-white"
+                }`}
+              >
+                Trang trước
+              </button>
+              <span>
+                Trang {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded ${
+                  currentPage === totalPages
+                    ? "bg-gray-300"
+                    : "bg-blue-500 text-white"
+                }`}
+              >
+                Trang sau
+              </button>
+            </div>
           </div>
         );
       case "dashboard":
@@ -531,7 +905,7 @@ const InformationLessor = () => {
                 selectedTab === "products" ? "bg-gray-300" : ""
               }`}
             >
-              Các sản phẩm đang cho thuê
+              Các sản phẩm trong cửa hàng
             </button>
             <button
               onClick={() => setSelectedTab("dashboard")}
