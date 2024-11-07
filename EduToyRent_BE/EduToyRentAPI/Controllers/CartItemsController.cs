@@ -26,7 +26,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/CartItems
         [HttpGet]
-        [Authorize(Roles = "1")]
+      //  [Authorize(Roles = "1")]
         public ActionResult<IEnumerable<CartItemResponse>> GetCartItems(int pageIndex = 1, int pageSize = 50)
         {
             var cartItems = _unitOfWork.CartItemRepository.Get(pageIndex: pageIndex, pageSize: pageSize)
@@ -47,7 +47,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/CartItems/5
         [HttpGet("{id}")]
-        [Authorize(Roles = "1,3")]
+       // [Authorize(Roles = "1,3")]
         public async Task<ActionResult<CartItemResponse>> GetCartItem(int id)
         {
             var cartItem = _unitOfWork.CartItemRepository.GetByID(id);
@@ -100,7 +100,7 @@ namespace EduToyRentAPI.Controllers
 
         // POST: api/CartItems
         [HttpPost]
-        [Authorize(Roles = "1")]
+        //[Authorize(Roles = "1")]
         public async Task<ActionResult<CartItemResponse>> PostCartItem(CartItemRequest cartItemRequest)
         {
             // Lấy thông tin Toy từ ToyRepository
