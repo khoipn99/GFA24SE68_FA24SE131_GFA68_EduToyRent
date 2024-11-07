@@ -379,19 +379,26 @@ namespace EduToyRentAPI.Controllers
         [HttpPatch("{id}/update-status")]
         public ActionResult UpdateToyStatus(int id, [FromBody] string newStatus)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int approverId))
+            {
+                return Unauthorized(new { Message = "Invalid or missing user ID from token." });
+            }
+
             var toy = _unitOfWork.ToyRepository.GetByID(id);
             if (toy == null)
             {
                 return NotFound(new { Message = "Toy not found." });
             }
 
-            var validStatuses = new List<string> { "Active", "Inactive", "Pending", "Sold", "Banned" }; 
+            var validStatuses = new List<string> { "Active", "Inactive", "Renting", "Sold", "Banned" }; 
             if (!validStatuses.Contains(newStatus))
             {
                 return BadRequest(new { Message = "Invalid status value." });
             }
 
             toy.Status = newStatus;
+            toy.ApproverId = approverId;
             _unitOfWork.ToyRepository.Update(toy);
             _unitOfWork.Save();
 
@@ -627,11 +634,11 @@ namespace EduToyRentAPI.Controllers
             return Ok(toys);
         }
         // GET: api/Toy/user/{userId}
-        [HttpGet("user/{OwnerId}")]
-        public ActionResult<IEnumerable<ToyResponse>> GetToysByOwnerId(int OwnerId, int pageIndex = 1, int pageSize = 20)
+        [HttpGet("user/{userId}")]
+        public ActionResult<IEnumerable<ToyResponse>> GetToysByOwnerId(int userId, int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get(
-                toy => toy.UserId == OwnerId,
+                toy => toy.UserId == userId,
                 includeProperties: "Category,User,User.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
