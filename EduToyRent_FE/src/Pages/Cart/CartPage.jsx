@@ -3,7 +3,7 @@ import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustom
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-
+import axios from "axios";
 import Cookies from "js-cookie";
 const CartPage = () => {
   const [cartVisible, setCartVisible] = useState(false);
@@ -12,6 +12,107 @@ const CartPage = () => {
   const [totalRentPrice, setTotalRentPrice] = useState(0);
   const [totalBuyPrice, setTotalBuyPrice] = useState(0);
   const [orderNote, setOrderNote] = useState(""); // State để lưu ghi chú
+  const [userData, setUserData] = useState("");
+  const [editedData, setEditedData] = useState({});
+  const [userId, setUserId] = useState(null);
+  useEffect(() => {
+    const userDataCookie = Cookies.get("userData");
+    if (userDataCookie) {
+      const parsedUserData = JSON.parse(userDataCookie);
+      setUserData(parsedUserData);
+      const email = parsedUserData.email;
+
+      const fetchUserData = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            console.error("Token không hợp lệ hoặc hết hạn.");
+            return;
+          }
+
+          // Gọi API lấy thông tin người dùng dựa trên email
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/Users/ByEmail?email=${encodeURIComponent(
+              email
+            )}&pageIndex=1&pageSize=5`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          console.log("Dữ liệu trả về:", response.data);
+
+          if (response.data && response.data.length > 0) {
+            const user = response.data[0]; // Lấy đối tượng người dùng đầu tiên trong mảng
+            setUserData(user);
+            setUserId(user.id);
+            setEditedData(user); // Cập nhật dữ liệu chỉnh sửa với thông tin của người dùng
+
+            // Sau khi có userId, gọi API giỏ hàng
+            fetchUserCart(user.id);
+          } else {
+            console.error("Không tìm thấy thông tin người dùng.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+        }
+      };
+
+      // Hàm lấy giỏ hàng của người dùng theo userId
+      const fetchUserCart = async (userId) => {
+        try {
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/Carts?userId=${userId}&pageIndex=1&pageSize=5`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          console.log("Giỏ hàng của người dùng:", response.data);
+
+          if (response.data && response.data.length > 0) {
+            const cart = response.data[0]; // Lấy giỏ hàng đầu tiên trong danh sách giỏ hàng
+            const cartId = cart.id;
+
+            // Sau khi có cartId, gọi API CartItems
+            fetchCartItems(cartId);
+          } else {
+            console.error("Không tìm thấy giỏ hàng cho người dùng.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy giỏ hàng của người dùng:", error);
+        }
+      };
+
+      // Hàm lấy các mục trong giỏ hàng theo cartId
+      const fetchCartItems = async (cartId) => {
+        try {
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          console.log("Các mục trong giỏ hàng:", response.data);
+          // Thực hiện thêm các bước xử lý với dữ liệu CartItems (ví dụ: setCartItems(response.data))
+        } catch (error) {
+          console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
+        }
+      };
+
+      fetchUserData();
+    } else {
+      console.error("Không tìm thấy thông tin người dùng trong cookie.");
+    }
+  }, []);
+
   const toggleCart = () => {
     // Mở hoặc đóng giỏ hàng
     setCartVisible(!cartVisible);

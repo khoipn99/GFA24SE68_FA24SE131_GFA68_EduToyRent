@@ -201,7 +201,7 @@ namespace EduToyRentAPI.Controllers
         // GET: api/Users/ByEmail
         [HttpGet("ByEmail")]
         [EnableQuery]
-        [Authorize(Roles = "1,3")]
+       // [Authorize(Roles = "1,3")]
         public ActionResult<IEnumerable<UserResponse>> GetUserByEmail(string email, int pageIndex = 1, int pageSize = 5)
         {
             var users = _unitOfWork.UserRepository.Get(
