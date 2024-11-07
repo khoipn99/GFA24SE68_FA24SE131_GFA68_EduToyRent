@@ -34,6 +34,7 @@ namespace EduToyRentRepositories.Implement
         private IGenericRepository<User> userRepository;
         private IGenericRepository<UserConversation> userConversationRepository;
         private IGenericRepository<WalletTransaction> walletTransactionRepository;
+        private IGenericRepository<Wallet> walletRepository;
 
         public UnitOfWork(EduToyRentDBContext context)
         {
@@ -223,7 +224,13 @@ namespace EduToyRentRepositories.Implement
                 return walletTransactionRepository ??= new GenericRepository<WalletTransaction>(_context);
             }
         }
-
+        public IGenericRepository<Wallet> WalletRepository
+        {
+            get
+            {
+                return walletRepository ??= new GenericRepository<Wallet>(_context);
+            }
+        }
 
         public void Save()
         {
