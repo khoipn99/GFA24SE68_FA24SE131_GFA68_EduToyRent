@@ -169,12 +169,6 @@ const ToySupplierPage = () => {
                   </label>
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-medium">
-                    <p>Số tiền trong ví: {userData.walletId}</p>
-                  </label>
-                </div>
-
                 <button
                   onClick={handleEditClick}
                   className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none"
@@ -278,8 +272,7 @@ const ToySupplierPage = () => {
                       alt="Avatar"
                       className="w-full h-full rounded-full object-cover"
                     />
-                  ) : // Nếu không có ảnh, hiển thị chữ cái đầu tiên từ fullName
-                  file ? (
+                  ) : file ? (
                     <img
                       src={URL.createObjectURL(file)}
                       alt="Avatar"
@@ -287,12 +280,12 @@ const ToySupplierPage = () => {
                     />
                   ) : userData && userData.avatarUrl ? (
                     <img
-                      src={userData.avatarUrl}
+                      src={userData.avatarUrl} // Hiển thị ảnh từ URL lưu trong userData
                       alt="Avatar"
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : userData && userData.fullName ? (
-                    userData.fullName.charAt(0)
+                    userData.fullName.charAt(0) // Hiển thị chữ cái đầu tiên từ fullName nếu không có ảnh
                   ) : (
                     ""
                   )}
@@ -301,7 +294,7 @@ const ToySupplierPage = () => {
                 <input
                   type="file"
                   accept=".jpeg, .png"
-                  onChange={handleFileChange}
+                  //onChange={handleFileChange}
                   className="hidden"
                   id="fileInput"
                 />
