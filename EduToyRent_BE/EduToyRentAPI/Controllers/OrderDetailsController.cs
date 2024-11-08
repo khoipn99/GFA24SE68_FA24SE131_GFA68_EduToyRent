@@ -222,28 +222,37 @@ namespace EduToyRentAPI.Controllers
         [HttpGet("Order/{orderId}")]
         public async Task<ActionResult<IEnumerable<OrderDetailResponse>>> GetOrderDetailsByOrderId(int orderId)
         {
-            var orderDetails = _unitOfWork.OrderDetailRepository.Get(filter: od => od.OrderId == orderId);
+            var orderDetails = _unitOfWork.OrderDetailRepository.Get(filter: od => od.OrderId == orderId, includeProperties: "Toy").ToList();
 
             if (orderDetails == null || !orderDetails.Any())
             {
                 return NotFound("Not found!!!");
             }
 
-            var orderDetailResponses = orderDetails.Select(orderDetail => new OrderDetailResponse
+            var orderDetailResponses = orderDetails.Select(orderDetail =>
             {
-                Id = orderDetail.Id,
-                RentPrice = orderDetail.RentPrice,
-                Deposit = orderDetail.Deposit,
-                UnitPrice = orderDetail.UnitPrice,
-                Quantity = orderDetail.Quantity,
-                StartDate = orderDetail.StartDate,
-                EndDate = orderDetail.EndDate,
-                Status = orderDetail.Status,
-                OrderId = orderDetail.OrderId,
-                ToyId = orderDetail.ToyId,
-                OrderTypeId = orderDetail.OrderTypeId
+                var mediaList = _unitOfWork.MediaRepository
+                        .GetV2(m => m.ToyId == orderDetail.ToyId)
+                        .Select(m => m.MediaUrl)
+                        .ToList();
+                return new OrderDetailResponse
+                {
+                    Id = orderDetail.Id,
+                    RentPrice = orderDetail.RentPrice,
+                    Deposit = orderDetail.Deposit,
+                    UnitPrice = orderDetail.UnitPrice,
+                    Quantity = orderDetail.Quantity,
+                    StartDate = orderDetail.StartDate,
+                    EndDate = orderDetail.EndDate,
+                    Status = orderDetail.Status,
+                    OrderId = orderDetail.OrderId,
+                    ToyId = orderDetail.ToyId,
+                    ToyName = orderDetail.Toy.Name,
+                    ToyPrice = orderDetail.Toy.Price,
+                    ToyImgUrls = mediaList,
+                    OrderTypeId = orderDetail.OrderTypeId
+                };
             }).ToList();
-
             return Ok(orderDetailResponses);
         }
         // GET: api/OrderDetails/User/{userId}

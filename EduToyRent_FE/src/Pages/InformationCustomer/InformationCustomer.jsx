@@ -67,28 +67,7 @@ const InformationCustomer = () => {
         },
       ],
     },
-    {
-      id: 3,
-      product: "Người dùng C",
-      store: "Người dùng C",
-      price: 150000,
-      quantity: 1,
-      total: 150000,
-      status: "Đang thuê",
-      address: "Quận 1",
-      date: "2024-01-02",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 4,
-          name: "Sản phẩm 3",
-          price: 150000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Đang thuê",
-        },
-      ],
-    },
+
     {
       id: 4,
       product: "Người dùng D",
@@ -96,7 +75,7 @@ const InformationCustomer = () => {
       price: 150000,
       quantity: 1,
       total: 150000,
-      status: "Chờ trả hàng",
+      status: "Đang thực hiện",
       address: "Quận 1",
       date: "2024-01-02",
       numbers: "1234567890",
@@ -310,24 +289,14 @@ const InformationCustomer = () => {
                 Đang vận chuyển
               </button>
               <button
-                onClick={() => handleFilterChange("Đang thuê")}
+                onClick={() => handleFilterChange("Đang thực hiện")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đang thuê"
+                  filterStatus === "Đang thực hiện"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
               >
-                Đang thuê
-              </button>
-              <button
-                onClick={() => handleFilterChange("Chờ trả hàng")}
-                className={`p-2 rounded ${
-                  filterStatus === "Chờ trả hàng"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-300"
-                }`}
-              >
-                Chờ trả hàng
+                Đang thực hiện
               </button>
 
               <button
@@ -381,30 +350,32 @@ const InformationCustomer = () => {
                     </button>
                   </div>
                   <hr className="border-gray-300 mb-2" />
-                  <p className="font-semibold">
-                    Tổng tiền: {order.total.toLocaleString()} VNĐ
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold">
+                      Tổng tiền: {order.total.toLocaleString()} VNĐ
+                    </p>
 
-                  {order.status === "Đã hủy" && (
-                    <div className="flex space-x-2 mt-2">
-                      <button
-                        onClick={() => handleReBuy(order)}
-                        className="p-2 bg-green-500 text-white rounded"
-                      >
-                        Đặt hàng lại
-                      </button>
-                    </div>
-                  )}
-                  {order.status === "Đang trả hàng" && (
-                    <div className="flex space-x-2 mt-2">
-                      <button
-                        onClick={() => handleReBuy(order)}
-                        className="p-2 bg-green-500 text-white rounded"
-                      >
-                        Đã trả
-                      </button>
-                    </div>
-                  )}
+                    {order.status === "Đã hủy" && (
+                      <div className="flex space-x-2 mt-2">
+                        <button
+                          onClick={() => handleReBuy(order)}
+                          className="p-2 bg-green-500 text-white rounded"
+                        >
+                          Đặt hàng lại
+                        </button>
+                      </div>
+                    )}
+                    {order.status === "Chờ xác nhận" && (
+                      <div className="flex space-x-2 mt-2">
+                        <button
+                          //onClick={() => handleReBuy(order)}
+                          className="p-2 bg-red-500 text-white rounded"
+                        >
+                          Hủy đơn hàng
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -418,62 +389,107 @@ const InformationCustomer = () => {
   const renderOrderDetails = () => {
     if (!selectedOrder) return null;
 
+    const stages = ["Chờ trả hàng", "Đang trả hàng", "Hoàn thành"];
+
+    // Determine the current stage index based on status
+    const getStatusIndex = (status) => stages.indexOf(status);
+
+    const handleStageClick = (item, stage) => {
+      // Function to handle status change
+      item.status = stage;
+      setSelectedOrder({ ...selectedOrder }); // Update state to trigger re-render
+    };
+
     return (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center">
-        <div className="bg-white p-6 rounded shadow-lg relative">
-          <button
-            onClick={closeDetails}
-            className="absolute top-2 right-2 text-red-500"
-          >
-            Đóng
-          </button>
-          <h3 className="text-lg font-semibold">Chi tiết đơn hàng</h3>
-          <ul className="space-y-4 mt-4">
-            {selectedOrder.items.map((item) => (
-              <li
-                key={item.id}
-                className="p-4 border border-gray-300 rounded-lg flex"
-              >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-20 h-20 object-cover mr-4"
-                />
-                <div className="flex-grow">
-                  <h4 className="font-semibold">{item.name}</h4>
-                  <p>Giá: {item.price.toLocaleString()} VNĐ</p>
-                  <p>Số lượng: {item.quantity}</p>
-                  <p>
-                    Tổng: {(item.price * item.quantity).toLocaleString()} VNĐ
-                  </p>
-                  <h4 className="font-semibold">{item.status}</h4>
-                </div>
-                {item.status === "Chờ trả hàng" && (
-                  <div className="flex space-x-2 mt-2">
-                    <button
-                      onClick={() => handleExtendRental(item)}
-                      className="p-2 bg-green-500 text-white rounded"
-                    >
-                      Tiếp tục thuê
-                    </button>
-                    <button
-                      onClick={() => handleReturnOrder(item)}
-                      className="p-2 bg-red-500 text-white rounded"
-                    >
-                      Trả hàng
-                    </button>
-                  </div>
-                )}
-                {item.status === "Đang trả hàng" && (
-                  <div className="flex space-x-2 mt-2">
-                    <button className="p-2 bg-green-500 text-white rounded">
-                      Đã trả hàng
-                    </button>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
+        <div className="bg-white p-6 rounded shadow-lg relative w-3/4 flex">
+          {/* Left side: Order information */}
+          <div className="w-1/2 p-4 border-r border-gray-300">
+            <button
+              onClick={closeDetails}
+              className="absolute top-2 right-2 text-red-500"
+            >
+              Đóng
+            </button>
+            <h3 className="text-lg font-semibold">Thông tin đơn hàng</h3>
+            <div className="mt-4 space-y-2">
+              <p>
+                <strong>Mã đơn hàng:</strong> {selectedOrder.id}
+              </p>
+              <p>
+                <strong>Ngày đặt:</strong> {selectedOrder.orderDate}
+              </p>
+              <p>
+                <strong>Tình trạng:</strong> {selectedOrder.status}
+              </p>
+              <p>
+                <strong>Tổng tiền:</strong>{" "}
+                {(selectedOrder.totalAmount || 0).toLocaleString()} VNĐ
+              </p>
+              <p>
+                <strong>Địa chỉ giao hàng:</strong>{" "}
+                {selectedOrder.shippingAddress}
+              </p>
+            </div>
+          </div>
+
+          {/* Right side: OrderDetails */}
+          <div className="w-1/2 p-4">
+            <h3 className="text-lg font-semibold">Chi tiết sản phẩm</h3>
+            <ul className="space-y-4 mt-4">
+              {selectedOrder.items.map((item) => {
+                const currentIndex = getStatusIndex(item.status);
+
+                return (
+                  <li
+                    key={item.id}
+                    className="p-4 border border-gray-300 rounded-lg flex flex-col"
+                  >
+                    <div className="flex items-center mb-2">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-20 h-20 object-cover mr-4"
+                      />
+                      <div className="flex-grow">
+                        <h4 className="font-semibold">{item.name}</h4>
+                        <p>Giá: {(item.price || 0).toLocaleString()} VNĐ</p>
+                        <p>Số lượng: {item.quantity}</p>
+                        <p>
+                          Tổng:{" "}
+                          {(item.price * item.quantity || 0).toLocaleString()}{" "}
+                          VNĐ
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gray-300"></div>
+                      <div className="flex justify-between relative z-10">
+                        {stages.map((stage, index) => (
+                          <div
+                            key={stage}
+                            className="flex items-center justify-center space-x-2"
+                          >
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                index <= currentIndex
+                                  ? "bg-green-500 text-white"
+                                  : "bg-gray-300 text-gray-600"
+                              }`}
+                            >
+                              {index + 1}
+                            </div>
+                            <div className="text-sm">{stage}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
       </div>
     );

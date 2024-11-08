@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace EduToyRentRepositories.DTO.Response
 {
-    public class CategoryResponse
+    public class CartResponse
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string Status { get; set; }
+        public int TotalPrice { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public int UserId { get; set; }
     }
 }

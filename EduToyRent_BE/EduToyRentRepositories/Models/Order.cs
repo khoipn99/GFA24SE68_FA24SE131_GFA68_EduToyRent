@@ -27,6 +27,7 @@ namespace EduToyRentRepositories.Models
         public int UserId { get; set; }
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; } = null!;
-        
+        public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+
     }
 }

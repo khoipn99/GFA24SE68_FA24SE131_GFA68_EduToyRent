@@ -49,7 +49,6 @@ namespace EduToyRentAPI.Controllers
                 Console.WriteLine(exception);
                 return Redirect("http://localhost:3000");
             }
-
         }
 
 

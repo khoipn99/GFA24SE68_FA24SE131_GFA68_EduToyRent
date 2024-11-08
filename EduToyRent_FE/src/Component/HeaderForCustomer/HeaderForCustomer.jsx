@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
+import axios from "axios";
+
 const HeaderForCustomer = () => {
   const [cartVisible, setCartVisible] = useState(false);
   const [rentItems, setRentItems] = useState([]);
@@ -9,18 +11,127 @@ const HeaderForCustomer = () => {
   const [totalRentPrice, setTotalRentPrice] = useState(0);
   const [totalBuyPrice, setTotalBuyPrice] = useState(0);
   const [userData, setUserData] = useState("");
+  const [userWallets, setUserWallets] = useState();
   const navigate = useNavigate();
+  const [editedData, setEditedData] = useState({});
+  const [userId, setUserId] = useState(null);
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleMouseEnter = () => setIsDropdownOpen(true);
+  const handleMouseLeave = () => setIsDropdownOpen(false);
+
+  const navigateTo = (url) => {
+    navigate(url);
+  };
+
+  const handleTopUp = () => {
+    navigate("/top-up");
+  };
+
   useEffect(() => {
-    try {
-      const userDataCookie = Cookies.get("userData");
-      if (userDataCookie) {
-        const parsedUserData = JSON.parse(userDataCookie);
-        setUserData(parsedUserData);
-      } else {
-        console.error("User data not found in cookies");
-      }
-    } catch (error) {
-      console.error("Error parsing user data:", error);
+    const userDataCookie = Cookies.get("userData");
+    if (userDataCookie) {
+      const parsedUserData = JSON.parse(userDataCookie);
+      setUserData(parsedUserData);
+      const email = parsedUserData.email;
+
+      const fetchUserData = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            console.error("Token không hợp lệ hoặc hết hạn.");
+            return;
+          }
+
+          // Gọi API lấy thông tin người dùng dựa trên email
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/Users/ByEmail?email=${encodeURIComponent(
+              email
+            )}&pageIndex=1&pageSize=5`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          console.log("Dữ liệu trả về:", response.data);
+
+          if (response.data && response.data.length > 0) {
+            const user = response.data[0]; // Lấy đối tượng người dùng đầu tiên trong mảng
+            setUserData(user);
+            setUserId(user.id);
+            setEditedData(user); // Cập nhật dữ liệu chỉnh sửa với thông tin của người dùng
+
+            // Sau khi có userId, gọi API giỏ hàng
+            fetchUserCart(user.id);
+          } else {
+            console.error("Không tìm thấy thông tin người dùng.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+        }
+      };
+
+      // Hàm lấy giỏ hàng của người dùng theo userId
+      const fetchUserCart = async (userId) => {
+        try {
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/Carts?userId=${userId}&pageIndex=1&pageSize=5`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          console.log("Giỏ hàng của người dùng:", response.data);
+
+          if (response.data && response.data.length > 0) {
+            const cart = response.data[0]; // Lấy giỏ hàng đầu tiên trong danh sách giỏ hàng
+            const cartId = cart.id;
+
+            // Sau khi có cartId, gọi API CartItems
+            fetchCartItems(cartId);
+          } else {
+            console.error("Không tìm thấy giỏ hàng cho người dùng.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy giỏ hàng của người dùng:", error);
+        }
+      };
+
+      // Hàm lấy các mục trong giỏ hàng theo cartId
+      const fetchCartItems = async (cartId) => {
+        try {
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          console.log("Các mục trong giỏ hàng:", response.data);
+          // Thực hiện thêm các bước xử lý với dữ liệu CartItems (ví dụ: setCartItems(response.data))
+        } catch (error) {
+          console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
+        }
+      };
+
+      fetchUserData();
+    } else {
+      console.error("Không tìm thấy thông tin người dùng trong cookie.");
+    }
+
+    const userWalletsCookie = Cookies.get("userWallets");
+    if (userWalletsCookie) {
+      const parsedUserWallets = JSON.parse(userWalletsCookie);
+      setUserWallets(parsedUserWallets);
+    } else {
+      console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
   }, []);
   const logOut = () => {
@@ -189,10 +300,13 @@ const HeaderForCustomer = () => {
             </div>
           </label> */}
             <div className="flex gap-2">
-              <div>
-                <p> {userData.fullName || userData.name}</p>
+              <div className="flex justify-center items-center">
+                <p>Số dư : {userWallets} VND</p>
               </div>
-              <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5">
+              <button
+                className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"
+                onClick={handleTopUp} // Hàm xử lý khi nhấn vào nút
+              >
                 <div className="text-[#0e161b]">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -201,9 +315,11 @@ const HeaderForCustomer = () => {
                     fill="currentColor"
                     viewBox="0 0 256 256"
                   >
-                    <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path>
+                    {/* SVG biểu tượng phù hợp cho "Nạp tiền" */}
+                    <path d="M128,8a120,120,0,1,0,120,120A120.14,120.14,0,0,0,128,8Zm56,120a8,8,0,0,1-8,8H136v40a8,8,0,0,1-16,0V136H88a8,8,0,0,1,0-16h32V80a8,8,0,0,1,16,0v40h40A8,8,0,0,1,184,128Z"></path>
                   </svg>
                 </div>
+                <span>Nạp tiền</span>
               </button>
               <button
                 className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"
@@ -221,6 +337,51 @@ const HeaderForCustomer = () => {
                   </svg>
                 </div>
               </button>
+              <div
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                className="relative flex items-center space-x-2"
+              >
+                <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5">
+                  <div className="text-[#0e161b]">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20px"
+                      height="20px"
+                      fill="currentColor"
+                      viewBox="0 0 256 256"
+                    >
+                      <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path>
+                    </svg>
+                  </div>
+                </button>
+                <div className="flex justify-center items-center">
+                  <p>{userData.fullName || userData.name}</p>
+                </div>
+
+                {isDropdownOpen && (
+                  <div className="absolute top-full mt-0 right-0 w-48 bg-white border border-gray-200 rounded-lg shadow-lg p-2">
+                    <button
+                      onClick={() => navigateTo("/information-customer")}
+                      className="block w-full text-left p-2 hover:bg-gray-100"
+                    >
+                      Thông tin người dùng
+                    </button>
+                    <button
+                      onClick={() => navigateTo("/information-lessor")}
+                      className="block w-full text-left p-2 hover:bg-gray-100"
+                    >
+                      Cửa hàng của tôi
+                    </button>
+                    <button
+                      onClick={logOut}
+                      className="block w-full text-left p-2 hover:bg-gray-100"
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                )}
+              </div>
               {cartVisible && (
                 <div
                   className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50"
@@ -425,14 +586,6 @@ const HeaderForCustomer = () => {
                   </div>
                 </div>
               )}{" "}
-              <div>
-                <button
-                  onClick={logOut}
-                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e8eef3] text-[#0e161b] text-sm font-bold leading-normal tracking-[0.015em]"
-                >
-                  <span className="truncate">Thoát</span>
-                </button>
-              </div>
             </div>{" "}
           </div>{" "}
         </div>

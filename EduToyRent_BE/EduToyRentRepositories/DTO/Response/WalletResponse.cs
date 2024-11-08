@@ -6,11 +6,13 @@ using System.Threading.Tasks;
 
 namespace EduToyRentRepositories.DTO.Response
 {
-    public class CategoryResponse
+    public class WalletResponse
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public float Balance { get; set; }
+        public string WithdrawMethod { get; set; }
+        public string WithdrawInfo { get; set; }
         public string Status { get; set; }
+        public int UserId { get; set; }
     }
 }

@@ -7,6 +7,9 @@ import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustom
 import { Link } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import các biểu tượng sao
 import { useNavigate } from "react-router-dom";
+import apiToys from "../../service/ApiToys";
+import axios from "axios";
+
 const featuredToys = [
   {
     id: 1,
@@ -132,66 +135,6 @@ const dealsOfTheDay = [
   },
 ];
 
-const recommendedToys = [
-  {
-    id: 1,
-    name: "Kids Play Kitchen",
-    ageGroup: "Ages 4-6",
-    price: "49.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    id: 2,
-    name: "Outdoor Adventure Set",
-    ageGroup: "Ages 5-8",
-    price: "34.99",
-    rating: 5,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    id: 3,
-    name: "Musical Instruments",
-    ageGroup: "Ages 6-9",
-    price: "59.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-];
-
-const SaleToys = [
-  {
-    id: 1,
-    name: "Kids Play Kitchen",
-    ageGroup: "Ages 4-6",
-    price: "49.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    id: 2,
-    name: "Outdoor Adventure Set",
-    ageGroup: "Ages 5-8",
-    price: "34.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    id: 3,
-    name: "Musical Instruments",
-    ageGroup: "Ages 6-9",
-    price: "59.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-];
-
 const images = [
   "https://cdn.usegalileo.ai/sdxl10/53c88725-ec48-4320-81f5-e34d4c105caf.png",
   "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
@@ -208,18 +151,122 @@ const Home = () => {
   const [rentItems, setRentItems] = useState([]); // Khởi tạo giỏ hàng
   const navigate = useNavigate();
   const [userData, setUserData] = useState("");
+  const [toysForRent, setToysForRent] = useState([]);
+  const [toysForSale, setToysForSale] = useState([]);
+  const [editedData, setEditedData] = useState({});
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    try {
-      const userDataCookie = Cookies.get("userData");
-      if (userDataCookie) {
-        const parsedUserData = JSON.parse(userDataCookie);
-        setUserData(parsedUserData);
-      } else {
-        console.error("User data not found in cookies");
-      }
-    } catch (error) {
-      console.error("Error parsing user data:", error);
+    apiToys
+      .get("/AvailableForPurchase?pageIndex=1&pageSize=50000")
+      .then((response) => {
+        console.log(response.data);
+        setToysForSale(response.data);
+      });
+
+    apiToys
+      .get("/AvailableForRent?pageIndex=1&pageSize=50000")
+      .then((response) => {
+        console.log(response.data);
+        setToysForRent(response.data);
+      });
+  }, []);
+
+  useEffect(() => {
+    const userDataCookie = Cookies.get("userData");
+    if (userDataCookie) {
+      const parsedUserData = JSON.parse(userDataCookie);
+      setUserData(parsedUserData);
+      const email = parsedUserData.email;
+
+      const fetchUserData = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            console.error("Token không hợp lệ hoặc hết hạn.");
+            return;
+          }
+
+          // Gọi API lấy thông tin người dùng dựa trên email
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/Users/ByEmail?email=${encodeURIComponent(
+              email
+            )}&pageIndex=1&pageSize=5`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          console.log("Dữ liệu trả về:", response.data);
+
+          if (response.data && response.data.length > 0) {
+            const user = response.data[0]; // Lấy đối tượng người dùng đầu tiên trong mảng
+            setUserData(user);
+            setUserId(user.id);
+            setEditedData(user); // Cập nhật dữ liệu chỉnh sửa với thông tin của người dùng
+
+            // Sau khi có userId, gọi API giỏ hàng
+            fetchUserCart(user.id);
+          } else {
+            console.error("Không tìm thấy thông tin người dùng.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+        }
+      };
+
+      // Hàm lấy giỏ hàng của người dùng theo userId
+      const fetchUserCart = async (userId) => {
+        try {
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/Carts?userId=${userId}&pageIndex=1&pageSize=5`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          console.log("Giỏ hàng của người dùng:", response.data);
+
+          if (response.data && response.data.length > 0) {
+            const cart = response.data[0]; // Lấy giỏ hàng đầu tiên trong danh sách giỏ hàng
+            const cartId = cart.id;
+
+            // Sau khi có cartId, gọi API CartItems
+            fetchCartItems(cartId);
+          } else {
+            console.error("Không tìm thấy giỏ hàng cho người dùng.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy giỏ hàng của người dùng:", error);
+        }
+      };
+
+      // Hàm lấy các mục trong giỏ hàng theo cartId
+      const fetchCartItems = async (cartId) => {
+        try {
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          console.log("Các mục trong giỏ hàng:", response.data);
+          // Thực hiện thêm các bước xử lý với dữ liệu CartItems (ví dụ: setCartItems(response.data))
+        } catch (error) {
+          console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
+        }
+      };
+
+      fetchUserData();
+    } else {
+      console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
   }, []);
 
@@ -485,7 +532,7 @@ const Home = () => {
               Sản phẩm cho thuê mới nhất
             </h2>
             <div className="grid grid-cols-6 gap-3 p-4">
-              {recommendedToys.map((toy) => (
+              {toysForRent.map((toy) => (
                 <div
                   key={toy.id}
                   className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
@@ -493,7 +540,9 @@ const Home = () => {
                   <Link to="/toys-rent-details">
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                      style={{ backgroundImage: `url(${toy.image})` }}
+                      style={{
+                        backgroundImage: `url(https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png)`,
+                      }}
                     ></div>
                   </Link>
                   <div>
@@ -620,7 +669,7 @@ const Home = () => {
             <div className="grid grid-cols-6 gap-3 p-4">
               {" "}
               {/* Thay đổi thành 6 cột */}
-              {SaleToys.map((toy) => (
+              {toysForSale.map((toy) => (
                 <div
                   key={toy.id}
                   className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
@@ -628,7 +677,9 @@ const Home = () => {
                   <Link to="/toys-sale-details">
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                      style={{ backgroundImage: `url(${toy.image})` }}
+                      style={{
+                        backgroundImage: `url(https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png)`,
+                      }}
                     ></div>
                   </Link>
                   <div>
@@ -636,10 +687,10 @@ const Home = () => {
                       {toy.name}
                     </p>
                     <p className="text-[#507a95] text-sm">
-                      Age group: {toy.ageGroup}
+                      Age group: {toy.age}
                     </p>
                     <div className="flex items-center gap-1">
-                      {renderStars(toy.rating)}
+                      {renderStars(toy.star)}
                     </div>
                     <p className="text-[#0e161b] text-lg font-bold">
                       ${toy.price}

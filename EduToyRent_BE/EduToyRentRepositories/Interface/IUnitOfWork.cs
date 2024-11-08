@@ -32,6 +32,7 @@ namespace EduToyRentRepositories.Interface
         IGenericRepository<User> UserRepository { get; }
         IGenericRepository<UserConversation> UserConversationRepository { get; }
         IGenericRepository<WalletTransaction> WalletTransactionRepository { get; }
+        IGenericRepository<Wallet> WalletRepository { get; }
 
         void Save();
     }
