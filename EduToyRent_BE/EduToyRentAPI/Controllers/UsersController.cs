@@ -11,6 +11,7 @@ using EduToyRentRepositories.Interface;
 using Microsoft.AspNetCore.Authorization;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.DTO.Request;
+using EduToyRentAPI.FireBaseService;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -20,9 +21,12 @@ namespace EduToyRentAPI.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        public UsersController(IUnitOfWork unitOfWork)
+        private readonly IFireBaseService _fireBaseService;
+
+        public UsersController(IUnitOfWork unitOfWork, IFireBaseService fireBaseService)
         {
             _unitOfWork = unitOfWork;
+            _fireBaseService = fireBaseService;
         }
 
         // GET: api/Users
@@ -112,7 +116,7 @@ namespace EduToyRentAPI.Controllers
             user.Phone = userRequest.Phone;
             user.Dob = userRequest.Dob;
             user.Address = userRequest.Address;
-            user.AvatarUrl = userRequest.AvatarUrl;
+            //user.AvatarUrl = userRequest.AvatarUrl;
             user.Status = userRequest.Status;
 
             _unitOfWork.UserRepository.Update(user);
@@ -139,8 +143,8 @@ namespace EduToyRentAPI.Controllers
         // POST: api/Users
         [HttpPost]
         [EnableQuery]
-        [Authorize(Roles = "1")]
-        public async Task<ActionResult<UserResponse>> PostUser(UserRequest userRequest)
+        //[Authorize(Roles = "1")]
+        public async Task<ActionResult<UserResponse>> PostUser([FromForm] UserRequest userRequest)
         {
             var user = new User
             {
@@ -150,10 +154,16 @@ namespace EduToyRentAPI.Controllers
                 Phone = userRequest.Phone,
                 Dob = userRequest.Dob,
                 Address = userRequest.Address,
-                AvatarUrl = userRequest.AvatarUrl,
+                //AvatarUrl = userRequest.AvatarUrl,
                 Status = userRequest.Status,
-                CreateDate = DateTime.Now
+                CreateDate = DateTime.Now,
+                RoleId = userRequest.RoleId
             };
+
+            if (userRequest.AvatarUrl != null)
+            {
+                user.AvatarUrl = await _fireBaseService.UploadImageAsync(userRequest.AvatarUrl);
+            }
 
             _unitOfWork.UserRepository.Insert(user);
             _unitOfWork.Save();
@@ -172,7 +182,7 @@ namespace EduToyRentAPI.Controllers
                 Status = user.Status,
                 Role = new RoleResponse
                 {
-                    Id = user.Role.Id,
+                    Id = user.RoleId,
                     Name = _unitOfWork.RoleRepository.GetByID(user.RoleId).Name
                 }
             };
