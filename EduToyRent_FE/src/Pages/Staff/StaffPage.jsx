@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
+import HeaderForStaff from "../../Component/HeaderForStaff/HeaderForStaff";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import Cookies from "js-cookie"; // Import thư viện Cookies
 const StaffPage = () => {
@@ -458,7 +458,7 @@ const StaffPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       <header className="bg-white shadow-md p-4">
-        <HeaderForCustomer />
+        <HeaderForStaff />
       </header>
 
       <div className="flex flex-grow">
