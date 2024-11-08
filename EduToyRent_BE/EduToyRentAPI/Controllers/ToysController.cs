@@ -108,6 +108,8 @@ namespace EduToyRentAPI.Controllers
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(toy => toy.Id)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
                 .Select(toy => new ToyResponse
                 {
                     Id = toy.Id,
@@ -782,10 +784,6 @@ namespace EduToyRentAPI.Controllers
                 includeProperties: "Category,User,User.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
-<<<<<<< Updated upstream
-                .Where(toy => toy.Status == "Active")
-=======
->>>>>>> Stashed changes
                 .OrderByDescending(toy => toy.Id)
                 .Select(toy => new ToyResponse
                 {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie"; // Import thư viện Cookies
 import axios from "axios";
-import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
+import HeaderForToySupplier from "../../Component/HeaderForToySupplier/HeaderForToySupplier";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import { data } from "autoprefixer";
 
@@ -615,7 +615,7 @@ const ToySupplierPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       <header className="bg-white shadow-md p-4">
-        <HeaderForCustomer />
+        <HeaderForToySupplier />
       </header>
 
       <div className="flex flex-grow">

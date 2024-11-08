@@ -9,136 +9,47 @@ import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import cá
 import { useNavigate } from "react-router-dom";
 import apiToys from "../../service/ApiToys";
 import axios from "axios";
+import apiCategory from "../../service/ApiCategory";
 
-const featuredToys = [
+const PictureCategory = [
   {
-    id: 1,
-    name: "Đồ chơi phát triển tư duy",
-    ageGroup: "Ages 3-5",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://dathangsi.vn/upload/products/2024/09/0832-do-choi-xep-hinh-cho-be,-lap-ghep-nha-khoi-3d-210-chi-tiet.jpg",
   },
   {
-    id: 2,
-    name: "Đồ chơi STEM",
-    ageGroup: "Ages 6-8",
     image:
-      "https://cdn.usegalileo.ai/stability/600f7d73-b2c4-4ef5-a065-4968a5ee23d4.png",
+      "https://product.hstatic.net/1000319165/product/dk81163_01_b9ab24c40753428b97cff3a2f894211d_1024x1024.jpg",
   },
   {
-    id: 3,
-    name: "Đồ chơi ngôn ngữ",
-    ageGroup: "Ages 9-12",
     image:
-      "https://cdn.usegalileo.ai/stability/94e0bca4-abc6-4700-8e82-cf72b95d7a27.png",
+      "https://bizweb.dktcdn.net/100/004/338/files/my-thuat-thu-cong-1.jpg?v=1466155461550",
   },
   {
-    name: "Đồ chơi nghệ thuật và sáng tạo",
-    ageGroup: "Ages 10+",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://sudo.vn1.vdrive.vn/babycuatoi/2023/08/clb-4-do-choi-xep-hinh-nam-cham-64-chi-tiet-cho-be.jpg",
   },
   {
-    name: "Đồ chơi toán học",
-    ageGroup: "Ages 10+",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://down-vn.img.susercontent.com/file/e0653c8ef2185cdf98abb34da05f7827",
   },
   {
-    name: "Đồ chơi cho thuê",
-    ageGroup: "Ages 10+",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://bizweb.dktcdn.net/thumb/1024x1024/100/226/134/products/5-3f4c04bb-20fa-4d98-b8e2-7647b4cda531.jpg?v=1658474391327",
   },
   {
-    name: "Đồ chơi bán",
-    ageGroup: "Ages 10+",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://bizweb.dktcdn.net/100/462/711/products/pothehk-60ad384c-5e3c-4948-a00e-0ef294800393.png?v=1669113673947",
   },
   {
-    name: "",
-    ageGroup: "Ages 10+",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-];
-
-const dealsOfTheDay = [
-  {
-    name: "Remote Control Car",
-    ageGroup: "Ages 4-6",
-    price: "29.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Magic Markers",
-    ageGroup: "Ages 5-7",
-    price: "14.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Dinosaur Play Set",
-    ageGroup: "Ages 3-6",
-    price: "39.99",
-    rating: 5,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Remote Control Car",
-    ageGroup: "Ages 4-6",
-    price: "29.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Magic Markers",
-    ageGroup: "Ages 5-7",
-    price: "14.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Dinosaur Play Set",
-    ageGroup: "Ages 3-6",
-    price: "39.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Remote Control Car",
-    ageGroup: "Ages 4-6",
-    price: "29.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Magic Markers",
-    ageGroup: "Ages 5-7",
-    price: "14.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Dinosaur Play Set",
-    ageGroup: "Ages 3-6",
-    price: "39.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://mebi.vn/wp-content/uploads/2023/04/bang-viet-xoa-tu-dong-thong-minh-3.jpg",
   },
 ];
 
 const images = [
-  "https://cdn.usegalileo.ai/sdxl10/53c88725-ec48-4320-81f5-e34d4c105caf.png",
-  "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  "https://cdn.usegalileo.ai/stability/94e0bca4-abc6-4700-8e82-cf72b95d7a27.png",
+  "https://cafefcdn.com/2018/12/17/banner-hinh-do-choi-1545016993587208100840.jpg",
+  "https://dochoigohanoi.com/public/media/media/files/slide/slider-2.jpg",
+  "https://salt.tikicdn.com/ts/tmp/ea/08/af/baea61f75fdcb77f0d88bbec3ecc0ca8.jpg",
   // Thay thế bằng URL hình ảnh thứ ba
 ];
 
@@ -155,21 +66,33 @@ const Home = () => {
   const [toysForSale, setToysForSale] = useState([]);
   const [editedData, setEditedData] = useState({});
   const [userId, setUserId] = useState(null);
+  const [featuredToys, setFeaturedToys] = useState([]);
+  const [dealsOfTheDay, setdealsOfTheDay] = useState([]);
 
   useEffect(() => {
     apiToys
-      .get("/AvailableForPurchase?pageIndex=1&pageSize=50000")
+      .get("/AvailableForPurchase?pageIndex=1&pageSize=18")
       .then((response) => {
         console.log(response.data);
         setToysForSale(response.data);
       });
 
     apiToys
-      .get("/AvailableForRent?pageIndex=1&pageSize=50000")
+      .get("/AvailableForRent?pageIndex=1&pageSize=18")
       .then((response) => {
         console.log(response.data);
         setToysForRent(response.data);
       });
+
+    apiToys.get("/active?pageIndex=1&pageSize=18").then((response) => {
+      console.log(response.data);
+      setdealsOfTheDay(response.data);
+    });
+
+    apiCategory.get("?pageIndex=1&pageSize=8").then((response) => {
+      console.log(response.data);
+      setFeaturedToys(response.data);
+    });
   }, []);
 
   useEffect(() => {
@@ -407,6 +330,10 @@ const Home = () => {
     );
   };
 
+  const FilterCategory = (category) => {
+    navigate("/filter-toys");
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
       <header>
@@ -426,24 +353,23 @@ const Home = () => {
                 className="flex transition-transform duration-500 ease-in-out"
                 style={{
                   transform: `translateX(${-currentImageIndex * 100}%)`,
-                  width: `${images.length * 100}%`,
+                  width: `${images.length * 40}%`,
                 }}
               >
                 {images.map((image, index) => (
                   <div
                     key={index}
-                    className="min-w-full flex-shrink-0"
+                    className="min-w-full flex-shrink-0 h-[480px]"
                     style={{
-                      backgroundImage: `url("${image}")`,
-                      backgroundSize: "cover", // Thay đổi thành cover
+                      backgroundImage: `url(${image})`,
+                      backgroundSize: "contain", // Show the full image
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
-                      height: "480px",
-                      width: "100%",
                     }}
                   ></div>
                 ))}
               </div>
+
               {/* Nút Previous Image */}
               <button
                 onClick={previousImage}
@@ -471,22 +397,23 @@ const Home = () => {
 
             <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="flex items-stretch p-4 gap-3">
-                {featuredToys.map((toy, index) => (
+                {featuredToys.map((category, index) => (
                   <div
                     key={index}
-                    className="flex h-full flex-1 flex-col gap-4 rounded-lg"
+                    className="flex h-full flex-1 flex-col gap-4 rounded-lg hover:shadow-lg hover:bg-gray-100 transition duration-300"
+                    onClick={() => FilterCategory(category.id)}
                   >
-                    <Link to="/filter-toys">
-                      <div
-                        className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                        style={{ backgroundImage: `url(${toy.image})` }}
-                      ></div>
-                    </Link>
+                    <div
+                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
+                      style={{
+                        backgroundImage: `url(${PictureCategory[index].image})`,
+                      }}
+                    ></div>
+
                     <div>
                       <p className="text-[#0e161b] text-base font-medium">
-                        {toy.name}
+                        {category.name}
                       </p>
-                      <p className="text-[#507a95] text-sm">{toy.ageGroup}</p>
                     </div>
                   </div>
                 ))}
@@ -504,25 +431,55 @@ const Home = () => {
                 >
                   <div
                     className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                    style={{ backgroundImage: `url(${deal.image})` }}
+                    style={{
+                      backgroundImage: `url(https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png)`,
+                    }}
                   ></div>
                   <div>
-                    <p className="text-[#0e161b] text-base font-medium">
+                    <p
+                      className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2,
+                        lineClamp: 2,
+                        maxHeight: "3rem", // Ensures space for two lines
+                        lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                      }}
+                    >
                       {deal.name}
                     </p>
+
                     <p className="text-[#507a95] text-sm">
-                      Age group: {deal.ageGroup}
+                      Age group: {deal.age}
                     </p>
                     <div className="flex items-center gap-1">
-                      {renderStars(deal.rating)}
+                      {renderStars(deal.star)}
                     </div>
-                    <p className="text-[#0e161b] text-lg font-bold">
-                      ${deal.price}
-                    </p>
-
-                    <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e8eef3] text-[#0e161b] text-sm font-bold">
-                      Thêm vào giỏ
-                    </button>
+                    {deal.buyQuantity >= 0 ? (
+                      <p className="text-[#0e161b] text-lg font-bold">
+                        {deal.price} VNĐ
+                      </p>
+                    ) : (
+                      <p className="text-[#0e161b] text-lg font-bold">
+                        {deal.price} VNĐ
+                      </p>
+                    )}
+                    {deal.buyQuantity >= 0 ? (
+                      <button
+                        onClick={() => addToPurchase(deal)}
+                        className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                      >
+                        Mua
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => openModal(deal)}
+                        className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                      >
+                        Thuê
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -546,24 +503,34 @@ const Home = () => {
                     ></div>
                   </Link>
                   <div>
-                    <p className="text-[#0e161b] text-base font-medium">
+                    <p
+                      className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2,
+                        lineClamp: 2,
+                        maxHeight: "3rem", // Ensures space for two lines
+                        lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                      }}
+                    >
                       {toy.name}
                     </p>
                     <p className="text-[#507a95] text-sm">
                       Age group: {toy.ageGroup}
                     </p>
                     <div className="flex items-center gap-1">
-                      {renderStars(toy.rating)}
+                      {renderStars(toy.star)}
                     </div>
                     <p className="text-[#0e161b] text-lg font-bold">
-                      ${toy.price}
+                      {toy.price} VNĐ
                     </p>
                   </div>
                   <button
-                    className="bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                    className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
                     onClick={() => openModal(toy)}
                   >
-                    Thêm vào giỏ hàng
+                    Thuê
                   </button>
                 </div>
               ))}
@@ -599,7 +566,7 @@ const Home = () => {
                       Nhóm tuổi: {selectedToy.ageGroup}
                     </p>
                     <div className="flex items-center gap-1 mb-2">
-                      {renderStars(selectedToy.rating)}
+                      {renderStars(selectedToy.star)}
                     </div>
                     <p className="text-lg font-bold text-[#0e161b] mb-2">
                       Giá: {selectedToy.price} VNĐ
@@ -683,7 +650,17 @@ const Home = () => {
                     ></div>
                   </Link>
                   <div>
-                    <p className="text-[#0e161b] text-base font-medium">
+                    <p
+                      className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2,
+                        lineClamp: 2,
+                        maxHeight: "3rem", // Ensures space for two lines
+                        lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                      }}
+                    >
                       {toy.name}
                     </p>
                     <p className="text-[#507a95] text-sm">
@@ -693,15 +670,15 @@ const Home = () => {
                       {renderStars(toy.star)}
                     </div>
                     <p className="text-[#0e161b] text-lg font-bold">
-                      ${toy.price}
+                      {toy.price} VNĐ
                     </p>
                   </div>
                   {/* Nút thêm vào giỏ hàng */}
                   <button
-                    className="bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                    className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
                     onClick={() => addToPurchase(toy)} // Gọi hàm addToCart khi bấm nút
                   >
-                    Thêm vào giỏ hàng
+                    Mua
                   </button>
                 </div>
               ))}

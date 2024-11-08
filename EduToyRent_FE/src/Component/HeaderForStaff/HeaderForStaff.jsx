@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
 import axios from "axios";
 
-const HeaderForCustomer = () => {
+const HeaderForStaff = () => {
   const [cartVisible, setCartVisible] = useState(false);
   const [rentItems, setRentItems] = useState([]);
   const [buyItems, setBuyItems] = useState([]);
@@ -285,7 +285,7 @@ const HeaderForCustomer = () => {
           <div className="flex items-center justify-between gap-8 p-6">
             <div className="flex items-center gap-4 text-[#0e161b]">
               {/* Nội dung cho người dùng đã đăng nhập a*/}
-              <Link to="/">
+              <Link to="#">
                 <div className="size-4">
                   <svg
                     viewBox="0 0 48 48"
@@ -299,7 +299,7 @@ const HeaderForCustomer = () => {
                   </svg>
                 </div>
               </Link>
-              <Link to="/">
+              <Link to="#">
                 <h2 className="text-[#0e161b] text-lg font-bold leading-tight tracking-[-0.015em]">
                   Edutoys
                 </h2>
@@ -326,43 +326,6 @@ const HeaderForCustomer = () => {
             </div>
           </label> */}
             <div className="flex gap-2">
-              <div className="flex justify-center items-center">
-                <p>Số dư : {userWallet.balance} VND</p>
-              </div>
-              <button
-                className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"
-                onClick={handleTopUp} // Hàm xử lý khi nhấn vào nút
-              >
-                <div className="text-[#0e161b]">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20px"
-                    height="20px"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                  >
-                    {/* SVG biểu tượng phù hợp cho "Nạp tiền" */}
-                    <path d="M128,8a120,120,0,1,0,120,120A120.14,120.14,0,0,0,128,8Zm56,120a8,8,0,0,1-8,8H136v40a8,8,0,0,1-16,0V136H88a8,8,0,0,1,0-16h32V80a8,8,0,0,1,16,0v40h40A8,8,0,0,1,184,128Z"></path>
-                  </svg>
-                </div>
-                <span>Nạp tiền</span>
-              </button>
-              <button
-                className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"
-                onClick={toggleCart}
-              >
-                <div className="text-[#0e161b]">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20px"
-                    height="20px"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                  >
-                    <path d="M222.14,58.87A8,8,0,0,0,216,56H54.68L49.79,29.14A16,16,0,0,0,34.05,16H16a8,8,0,0,0,0,16h18L59.56,172.29a24,24,0,0,0,5.33,11.27,28,28,0,1,0,44.4,8.44h45.42A27.75,27.75,0,0,0,152,204a28,28,0,1,0,28-28H83.17a8,8,0,0,1-7.87-6.57L72.13,152h116a24,24,0,0,0,23.61-19.71l12.16-66.86A8,8,0,0,0,222.14,58.87ZM96,204a12,12,0,1,1-12-12A12,12,0,0,1,96,204Zm96,0a12,12,0,1,1-12-12A12,12,0,0,1,192,204Zm4-74.57A8,8,0,0,1,188.1,136H69.22L57.59,72H206.41Z"></path>
-                  </svg>
-                </div>
-              </button>
               <div
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
@@ -387,18 +350,6 @@ const HeaderForCustomer = () => {
 
                 {isDropdownOpen && (
                   <div className="absolute top-full mt-0 right-0 w-48 bg-white border border-gray-200 rounded-lg shadow-lg p-2">
-                    <button
-                      onClick={() => navigateTo("/information-customer")}
-                      className="block w-full text-left p-2 hover:bg-gray-100"
-                    >
-                      Thông tin người dùng
-                    </button>
-                    <button
-                      onClick={() => navigateTo("/information-lessor")}
-                      className="block w-full text-left p-2 hover:bg-gray-100"
-                    >
-                      Cửa hàng của tôi
-                    </button>
                     <button
                       onClick={logOut}
                       className="block w-full text-left p-2 hover:bg-gray-100"
@@ -912,4 +863,4 @@ const HeaderForCustomer = () => {
   );
 };
 
-export default HeaderForCustomer;
+export default HeaderForStaff;
