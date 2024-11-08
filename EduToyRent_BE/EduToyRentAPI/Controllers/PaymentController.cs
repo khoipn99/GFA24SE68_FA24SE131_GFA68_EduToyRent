@@ -27,8 +27,8 @@ namespace EduToyRentAPI.Controllers
                 items: [new("" + orderId, 1, totalAmount)],
                 //returnUrl: domain + "?success=true",
                 //cancelUrl: domain + "?canceled=true"
-                returnUrl: domain ,
-                cancelUrl: domain + "/login"
+                returnUrl: domain + "/top-up-success",
+                cancelUrl: domain + "/top-up"
             );
             var response = await payOS.createPaymentLink(paymentLinkRequest);
 
