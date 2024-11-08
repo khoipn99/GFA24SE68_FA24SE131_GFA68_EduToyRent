@@ -108,8 +108,6 @@ namespace EduToyRentAPI.Controllers
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(toy => toy.Id)
-                .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
                 .Select(toy => new ToyResponse
                 {
                     Id = toy.Id,
