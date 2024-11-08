@@ -11,13 +11,13 @@ const HeaderForCustomer = () => {
   const [totalRentPrice, setTotalRentPrice] = useState(0);
   const [totalBuyPrice, setTotalBuyPrice] = useState(0);
   const [userData, setUserData] = useState("");
+  const [userWallets, setUserWallets] = useState();
   const navigate = useNavigate();
   const [editedData, setEditedData] = useState({});
   const [userId, setUserId] = useState(null);
-  const [walletId, setWalletId] = useState(null); // Declare walletId state
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const [walletBalance, setWalletBalance] = useState(null);
   const handleMouseEnter = () => setIsDropdownOpen(true);
   const handleMouseLeave = () => setIsDropdownOpen(false);
 
@@ -66,7 +66,6 @@ const HeaderForCustomer = () => {
 
             // Sau khi có userId, gọi API giỏ hàng
             fetchUserCart(user.id);
-            fetchUserWallet(user.walletId); // Gọi API để lấy thông tin ví
           } else {
             console.error("Không tìm thấy thông tin người dùng.");
           }
@@ -122,33 +121,19 @@ const HeaderForCustomer = () => {
         }
       };
 
-      // Hàm lấy thông tin ví của người dùng theo walletId
-      const fetchUserWallet = async (walletId) => {
-        try {
-          const response = await axios.get(
-            `https://localhost:44350/api/v1/Wallets/${walletId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          );
-
-          console.log("Thông tin ví của người dùng:", response.data);
-          const walletData = response.data; // Lấy dữ liệu ví từ API
-          setWalletId(walletData.id); // Cập nhật walletId vào state
-          setWalletBalance(walletData.balance); // Cập nhật số dư ví
-        } catch (error) {
-          console.error("Lỗi khi lấy thông tin ví của người dùng:", error);
-        }
-      };
-
       fetchUserData();
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
-  }, []);
 
+    const userWalletsCookie = Cookies.get("userWallets");
+    if (userWalletsCookie) {
+      const parsedUserWallets = JSON.parse(userWalletsCookie);
+      setUserWallets(parsedUserWallets);
+    } else {
+      console.error("Không tìm thấy thông tin người dùng trong cookie.");
+    }
+  }, []);
   const logOut = () => {
     // Log cookie trước khi xóa
     console.log("Trước khi xóa:", Cookies.get("userData"));
@@ -316,7 +301,7 @@ const HeaderForCustomer = () => {
           </label> */}
             <div className="flex gap-2">
               <div className="flex justify-center items-center">
-                <p>Số dư : {walletBalance} VND</p>
+                <p>Số dư : {userWallets} VND</p>
               </div>
               <button
                 className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"

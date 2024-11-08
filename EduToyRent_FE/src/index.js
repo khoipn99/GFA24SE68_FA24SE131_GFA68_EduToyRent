@@ -20,6 +20,8 @@ import InformationCustomer from "./Pages/InformationCustomer/InformationCustomer
 import InformationLessor from "./Pages/InformationLessor/InformationLessor";
 import CartPage from "./Pages/Cart/CartPage";
 import ToySupplierPage from "./Pages/ToySupplier/ToySupplierPage";
+import TopUpSuccess from "./Pages/TopUp/TopUpSuccess";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -36,6 +38,10 @@ const router = createBrowserRouter([
   {
     path: "/information-lessor",
     element: <InformationLessor />,
+  },
+  {
+    path: "/top-up-success",
+    element: <TopUpSuccess />,
   },
   {
     path: "/top-up",
