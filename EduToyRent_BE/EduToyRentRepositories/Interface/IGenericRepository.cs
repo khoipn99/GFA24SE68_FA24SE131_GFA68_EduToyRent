@@ -15,7 +15,12 @@ namespace EduToyRentRepositories.Interface
             string includeProperties = "",
             int? pageIndex = null,
             int? pageSize = null);
-
+        IQueryable<TEntity> GetV2(
+            Expression<Func<TEntity, bool>> filter = null,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
+            string includeProperties = "",
+            int? pageIndex = null,
+            int? pageSize = null);
         TEntity GetByID(object id);
 
         void Insert(TEntity entity);

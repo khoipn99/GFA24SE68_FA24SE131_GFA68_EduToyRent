@@ -351,6 +351,8 @@ namespace EduToyRentAPI.Controllers
             toy.BuyQuantity = buyQuantity;
             toy.Age = toyRequest.Age;
             toy.Brand = toyRequest.Brand;
+            toy.RentCount = toyRequest.RentCount;
+            toy.RentTime = toyRequest.RentTime;
             toy.CategoryId = toyRequest.CategoryId;
             toy.Status = "Inactive";
             toy.CreateDate = DateTime.Now;

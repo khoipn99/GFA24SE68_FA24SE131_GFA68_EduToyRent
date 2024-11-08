@@ -29,6 +29,9 @@ namespace EduToyRentRepositories.DTO.Request
 
         [Required]
         public int CategoryId { get; set; }
+
+        public int RentCount { get; set; }
+        public string RentTime { get; set; }
     }
 
 }

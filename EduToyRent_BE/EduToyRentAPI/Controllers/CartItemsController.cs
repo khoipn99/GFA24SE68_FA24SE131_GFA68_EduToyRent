@@ -26,7 +26,6 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/CartItems
         [HttpGet]
-        [Authorize(Roles = "1")]
         public ActionResult<IEnumerable<CartItemResponse>> GetCartItems(int pageIndex = 1, int pageSize = 50)
         {
             var cartItems = _unitOfWork.CartItemRepository.Get(pageIndex: pageIndex, pageSize: pageSize)
@@ -47,7 +46,6 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/CartItems/5
         [HttpGet("{id}")]
-        [Authorize(Roles = "1,3")]
         public async Task<ActionResult<CartItemResponse>> GetCartItem(int id)
         {
             var cartItem = _unitOfWork.CartItemRepository.GetByID(id);
@@ -57,6 +55,10 @@ namespace EduToyRentAPI.Controllers
                 return NotFound();
             }
 
+            var mediaList = _unitOfWork.MediaRepository
+                            .GetV2(m => m.ToyId == cartItem.ToyId)
+                            .Select(m => m.MediaUrl)
+                            .ToList();
             var cartItemResponse = new CartItemResponse
             {
                 Id = cartItem.Id,
@@ -66,7 +68,10 @@ namespace EduToyRentAPI.Controllers
                 EndDate = cartItem.EndDate,
                 Status = cartItem.Status,
                 CartId = (int)cartItem.CartId,
-                ToyId = (int)cartItem.ToyId
+                ToyId = (int)cartItem.ToyId,
+                ToyName = _unitOfWork.ToyRepository.GetByID(cartItem.ToyId).Name,
+                ToyPrice = _unitOfWork.ToyRepository.GetByID(cartItem.ToyId).Price,
+                ToyImgUrls = mediaList
             };
 
             return Ok(cartItemResponse);
@@ -74,7 +79,6 @@ namespace EduToyRentAPI.Controllers
 
         // PUT: api/CartItems/5
         [HttpPut("{id}")]
-        [Authorize(Roles = "1")]
         public async Task<IActionResult> PutCartItem(int id, CartItemRequest cartItemRequest)
         {
             var cartItem = _unitOfWork.CartItemRepository.GetByID(id);
@@ -100,10 +104,8 @@ namespace EduToyRentAPI.Controllers
 
         // POST: api/CartItems
         [HttpPost]
-        [Authorize(Roles = "1")]
         public async Task<ActionResult<CartItemResponse>> PostCartItem(CartItemRequest cartItemRequest)
         {
-            // Lấy thông tin Toy từ ToyRepository
             var toy = _unitOfWork.ToyRepository.GetByID(cartItemRequest.ToyId);
             if (toy == null)
             {
@@ -178,7 +180,6 @@ namespace EduToyRentAPI.Controllers
 
         // DELETE: api/CartItems/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "1")]
         public async Task<IActionResult> DeleteCartItem(int id)
         {
             var cartItem = _unitOfWork.CartItemRepository.GetByID(id);
@@ -199,7 +200,20 @@ namespace EduToyRentAPI.Controllers
             var cartItems = _unitOfWork.CartItemRepository.Get(
                 filter: ci => ci.CartId == cartId,
                 includeProperties: "Toy")
-                .Select(ci => new CartItemResponse
+                .ToList(); 
+
+            if (cartItems == null || !cartItems.Any())
+            {
+                return NotFound(new { Message = $"No items found in cart with ID {cartId}" });
+            }
+
+            var cartItemResponses = cartItems.Select(ci =>
+            {
+                var mediaList = _unitOfWork.MediaRepository
+                    .GetV2(m => m.ToyId == ci.ToyId) 
+                    .Select(m => m.MediaUrl) 
+                    .ToList();
+                return new CartItemResponse
                 {
                     Id = ci.Id,
                     Price = ci.Price,
@@ -207,15 +221,16 @@ namespace EduToyRentAPI.Controllers
                     StartDate = ci.StartDate,
                     EndDate = ci.EndDate,
                     Status = ci.Status,
+                    CartId = (int)ci.CartId,
                     ToyId = (int)ci.ToyId,
-                }).ToList();
+                    ToyName = _unitOfWork.ToyRepository.GetByID(ci.ToyId).Name,
+                    ToyPrice = _unitOfWork.ToyRepository.GetByID(ci.ToyId).Price,
+                    ToyImgUrls = mediaList 
+                };
+            }).ToList();
 
-            if (cartItems == null || !cartItems.Any())
-            {
-                return NotFound(new { Message = $"No items found in cart with ID {cartId}" });
-            }
-
-            return Ok(cartItems);
+            return Ok(cartItemResponses); 
         }
+
     }
 }
