@@ -11,6 +11,9 @@ using EduToyRentRepositories.Implement;
 using EduToyRentRepositories.Interface;
 using EduToyRentRepositories.Models;
 using System.Text;
+using Google.Cloud.Storage.V1;
+using EduToyRentAPI.FireBaseService;
+using EduToyRentAPI.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +22,8 @@ builder.Services.AddDbContext<EduToyRentDBContext>(options =>
     options.UseSqlServer(connectionString));
 // Add services to the container.
 builder.Services.AddSingleton<IJwtGeneratorTokenService, JwtGeneratorTokenService>();
+builder.Services.AddSingleton(opt => StorageClient.Create());
+builder.Services.AddScoped<IFireBaseService, FireBaseService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -86,6 +91,7 @@ builder.Services.AddSwaggerGen(option =>
         }
     });
 });
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", builder.Configuration["FirebaseCredentials:Path"]);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -94,6 +100,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 static IEdmModel GetEdmModel()
 {
