@@ -290,7 +290,7 @@ namespace EduToyRentAPI.Controllers
                 ReceivePhone = o.ReceivePhone,
                 Status = o.Status,
                 UserId = o.UserId,
-                UserName = o.User.FullName, // Assuming FullName is a property in User
+                UserName = o.User.FullName, 
             })
             .ToList();
 
