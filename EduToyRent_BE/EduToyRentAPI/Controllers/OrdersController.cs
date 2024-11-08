@@ -265,6 +265,38 @@ namespace EduToyRentAPI.Controllers
 
             return Ok(orderResponses);
         }
+        // GET: api/Orders/ByShop
+        [HttpGet("ByShop")]
+        public ActionResult<IEnumerable<OrderResponse>> GetOrdersByShop(int shopId, int pageIndex = 1, int pageSize = 20)
+        {
+
+            var orders = _unitOfWork.OrderRepository.Get(
+                includeProperties: "OrderDetails.Toy,User", 
+                filter: o => o.OrderDetails.Any(od => od.Toy.UserId == shopId), 
+                pageIndex: pageIndex,
+                pageSize: pageSize
+            )
+            .OrderByDescending(o => o.Id)
+            .Select(o => new OrderResponse
+            {
+                Id = o.Id,
+                OrderDate = o.OrderDate,
+                ReceiveDate = o.ReceiveDate,
+                TotalPrice = o.TotalPrice,
+                RentPrice = o.RentPrice,
+                DepositeBackMoney = o.DepositeBackMoney,
+                ReceiveName = o.ReceiveName,
+                ReceiveAddress = o.ReceiveAddress,
+                ReceivePhone = o.ReceivePhone,
+                Status = o.Status,
+                UserId = o.UserId,
+                UserName = o.User.FullName, // Assuming FullName is a property in User
+            })
+            .ToList();
+
+            return Ok(orders);
+        }
+
 
         private bool OrderExists(int id)
         {
