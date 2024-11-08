@@ -107,6 +107,8 @@ namespace EduToyRentAPI.Controllers
                 pageSize: pageSize)
                 .Where(toy => toy.Status == "Active") 
                 .OrderByDescending(toy => toy.Id)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
                 .Select(toy => new ToyResponse
                 {
                     Id = toy.Id,
@@ -784,7 +786,7 @@ namespace EduToyRentAPI.Controllers
                 includeProperties: "Category,User,User.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
-                .Where(toy => toy.Status == "Active")
+                .Where(toy => toy.Status == "Active" && toy.BuyQuantity < 0)
                 .OrderByDescending(toy => toy.Id)
                 .Select(toy => new ToyResponse
                 {
