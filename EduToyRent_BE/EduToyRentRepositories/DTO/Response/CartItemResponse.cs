@@ -16,5 +16,8 @@ namespace EduToyRentRepositories.DTO.Response
         public string Status { get; set; } = string.Empty;
         public int CartId { get; set; }
         public int ToyId { get; set; }
+        public string ToyName { get; set; }
+        public int ToyPrice { get; set; }
+        public List<string> ToyImgUrls { get; set; }
     }
 }
