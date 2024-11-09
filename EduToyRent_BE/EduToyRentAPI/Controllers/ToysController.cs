@@ -317,7 +317,7 @@ namespace EduToyRentAPI.Controllers
         }
         [HttpPut("{id}")]
         [EnableQuery]
-        [Authorize]
+       // [Authorize]
         public async Task<IActionResult> PutToy(int id, ToyRequest toyRequest)
         {
             var toy = _unitOfWork.ToyRepository.GetByID(id);
