@@ -17,7 +17,7 @@ const HeaderForCustomer = () => {
   const [userId, setUserId] = useState(null);
   const [userWallet, setUserWallet] = useState(""); // Thêm state này
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [cartId, setCartId] = useState(null);
+  const [cartId, setCartId] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleMouseEnter = () => setIsDropdownOpen(true);
@@ -40,7 +40,7 @@ const HeaderForCustomer = () => {
 
       const fetchUserData = async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = Cookies.get("userToken");
           if (!token) {
             console.error("Token không hợp lệ hoặc hết hạn.");
             return;
@@ -70,7 +70,7 @@ const HeaderForCustomer = () => {
             setEditedData(user);
 
             // Sau khi có userId, gọi API giỏ hàng
-            fetchUserCart(user.id);
+            fetchUserCart(user.id); // Kiểm tra có cartId hay không
 
             // Sau khi có walletId, gọi API ví
             if (user.walletId) {
@@ -93,7 +93,7 @@ const HeaderForCustomer = () => {
             `https://localhost:44350/api/v1/Carts?userId=${userId}&pageIndex=1&pageSize=5`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
@@ -105,7 +105,6 @@ const HeaderForCustomer = () => {
             const cartId = cart.id;
             // Lưu cartId vào state
             setCartId(cartId);
-
             // Sau khi có cartId, gọi API CartItems
             fetchCartItems(cartId);
           } else {
@@ -128,7 +127,7 @@ const HeaderForCustomer = () => {
             `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
@@ -147,7 +146,7 @@ const HeaderForCustomer = () => {
             `https://localhost:44350/api/v1/Wallets/${walletId}`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
@@ -194,7 +193,7 @@ const HeaderForCustomer = () => {
   };
 
   // Load giỏ hàng từ database
-  const loadCartFromDatabase = async () => {
+  const loadCartFromDatabase = async (id) => {
     setLoading(true);
     try {
       if (!cartId) {
@@ -206,7 +205,7 @@ const HeaderForCustomer = () => {
         `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
           },
         }
       );
@@ -269,9 +268,10 @@ const HeaderForCustomer = () => {
   }, [buyItems]);
 
   useEffect(() => {
-    // Tải giỏ hàng từ cookie khi component được mount lần đầu
-    loadCartFromDatabase();
-  }, []);
+    if (cartId) {
+      loadCartFromDatabase(cartId);
+    }
+  }, [cartId]);
 
   function removeItem(itemId, type) {
     if (type === "rent") {
