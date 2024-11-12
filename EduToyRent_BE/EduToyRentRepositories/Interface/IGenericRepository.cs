@@ -25,6 +25,8 @@ namespace EduToyRentRepositories.Interface
 
         void Insert(TEntity entity);
 
+        void InsertList(List<TEntity> entities);
+
         void Delete(object id);
 
         void Delete(TEntity entityToDelete);

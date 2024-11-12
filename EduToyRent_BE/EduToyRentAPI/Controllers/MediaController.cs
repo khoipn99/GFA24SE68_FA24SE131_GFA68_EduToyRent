@@ -11,6 +11,7 @@ using EduToyRentRepositories.DTO.Response;
 using Mapster;
 using EduToyRentRepositories.DTO.Request;
 using EduToyRentAPI.FireBaseService;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -30,9 +31,10 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Media
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<MediaResponse>> GetMedias(int pageIndex = 1, int pageSize = 20)
         {
-            var medias = _unitOfWork.MediaRepository.Get(
+            var mediaResponses = _unitOfWork.MediaRepository.Get(
                 includeProperties: "Toy",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
@@ -45,11 +47,12 @@ namespace EduToyRentAPI.Controllers
                     ToyId = media.ToyId,
                 });
              
-            return Ok(medias);
+            return Ok(mediaResponses);
         }
 
         // GET: api/Media/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<Media>> GetMedia(int id)
         {
             var media = _unitOfWork.MediaRepository.GetByID(id);
@@ -136,9 +139,67 @@ namespace EduToyRentAPI.Controllers
         //    return NoContent();
         //}
 
-        //private bool MediaExists(int id)
-        //{
-        //    return _context.Media.Any(e => e.Id == id);
-        //}
+        //POST: api/Media/upload-toy-images/5
+        [HttpPost("upload-toy-images/{toyId}")]
+        [EnableQuery]
+        public async Task<IActionResult> UploadToyImages([FromForm] List<IFormFile> mediaUrls, int toyId)
+        {
+            var toy = _unitOfWork.ToyRepository.GetByID(toyId);
+
+            if (toy == null)
+            {
+                return NotFound();
+            }
+
+            if (mediaUrls == null || mediaUrls.Count == 0)
+            {
+                return BadRequest("No image was uploaded.");
+            }
+            
+            var imageUrls = await _fireBaseService.UploadImagesAsync(mediaUrls);
+
+            var medias = imageUrls.Select(mediaUrl => new Media
+            {
+                MediaUrl = mediaUrl,
+                Status = "Pending",
+                ToyId = toyId
+            }).ToList();
+
+            _unitOfWork.MediaRepository.InsertList(medias);
+            _unitOfWork.Save();
+
+            var mediaResponses = medias.Select(media => new MediaResponse
+            {
+                Id = media.Id,
+                MediaUrl = media.MediaUrl,
+                Status = media.Status,
+                ToyId = media.ToyId
+            }).ToList();
+
+            return Ok(mediaResponses);
+        }
+
+        //GET: api/Media/toy/5
+        [HttpGet("toy/{toyId}")]
+        [EnableQuery]
+        public ActionResult<IEnumerable<MediaResponse>> GetMediasByToyId(int toyId, int pageIndex = 1, int pageSize = 20)
+        {
+            var mediaResponses = _unitOfWork.MediaRepository.Get(
+                media => media.ToyId == toyId,
+                includeProperties: "Toy",
+                pageIndex: pageIndex,
+                pageSize: pageSize)
+                .OrderByDescending(media => media.Id)
+                .Select(media => new MediaResponse
+                {
+                    Id = media.Id,
+                    MediaUrl = media.MediaUrl,
+                    Status = media.Status,
+                    ToyId = media.ToyId,
+                });
+
+            return Ok(mediaResponses);
+        }
+
     }
 }

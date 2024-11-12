@@ -102,6 +102,16 @@ namespace EduToyRentRepositories.Implement
             dbSet.Add(entity);
         }
 
+        public virtual void InsertList(List<TEntity> entities)
+        {
+            if (entities == null || entities.Count == 0)
+            {
+                throw new ArgumentException("Null List");
+            }
+
+            dbSet.AddRange(entities);
+        }
+
         public virtual void Delete(object id)
         {
             TEntity entityToDelete = dbSet.Find(id);
