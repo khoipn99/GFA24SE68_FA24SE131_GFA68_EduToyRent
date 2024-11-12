@@ -14,6 +14,7 @@ using EduToyRentRepositories.DTO.Request;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using NuGet.Protocol.Plugins;
+using Humanizer;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -103,9 +104,9 @@ namespace EduToyRentAPI.Controllers
         {
             var toys = _unitOfWork.ToyRepository.Get(
                 includeProperties: "Category,User,User.Role",
+                filter: toy => toy.Status == "Active",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
-                .Where(toy => toy.Status == "Active") 
                 .OrderByDescending(toy => toy.Id)
                 .Select(toy => new ToyResponse
                 {
@@ -316,7 +317,7 @@ namespace EduToyRentAPI.Controllers
         }
         [HttpPut("{id}")]
         [EnableQuery]
-        [Authorize]
+       // [Authorize]
         public async Task<IActionResult> PutToy(int id, ToyRequest toyRequest)
         {
             var toy = _unitOfWork.ToyRepository.GetByID(id);
@@ -412,12 +413,11 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<ToyResponse>> GetToysByCategory(int categoryId, int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get(
-                toy => toy.CategoryId == categoryId,
                 includeProperties: "Category,User,User.Role",
+                filter: toy => toy.Status == "Active" && toy.CategoryId == categoryId,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(toy => toy.Id)
-                .Where(toy => toy.Status == "Active")
                 .Select(toy => new ToyResponse
                 {
                     Id = toy.Id,
@@ -480,7 +480,7 @@ namespace EduToyRentAPI.Controllers
         [HttpGet("age/{ageRange}")]
         public ActionResult<IEnumerable<ToyResponse>> GetToysByAge(string ageRange, int pageIndex = 1, int pageSize = 20)
         {
-            var toys = _unitOfWork.ToyRepository.Get(includeProperties: "Category,User,User.Role", pageIndex: pageIndex, pageSize: pageSize)
+            var toys = _unitOfWork.ToyRepository.Get(includeProperties: "Category,User,User.Role", filter: toy => toy.Status == "Active", pageIndex: pageIndex, pageSize: pageSize)
                 .Where(toy =>
                 {
                     switch (ageRange.ToLower())
@@ -498,7 +498,6 @@ namespace EduToyRentAPI.Controllers
                     }
                 })
                 .OrderByDescending(toy => toy.Id)
-                .Where(toy => toy.Status == "Active")
                 .Select(toy => new ToyResponse
                 {
                     Id = toy.Id,
@@ -568,9 +567,9 @@ namespace EduToyRentAPI.Controllers
 
             var toys = _unitOfWork.ToyRepository.Get(
                 includeProperties: "Category,User,User.Role",
+                filter: toy => toy.Status == "Active" && toy.Name.Contains(name, StringComparison.OrdinalIgnoreCase),
                 pageIndex: pageIndex,
                 pageSize: pageSize)
-                .Where(toy => toy.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(toy => toy.Id)
                 .Select(toy => new ToyResponse
                 {
@@ -709,11 +708,10 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<ToyResponse>> GetToysAvailableForPurchase(int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get(
-                filter: t => t.BuyQuantity > -1,
                 includeProperties: "Category,User,User.Role",
+                filter: toy => toy.Status == "Active" && toy.BuyQuantity > -1,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
-                .Where(toy => toy.Status == "Active")
                 .OrderByDescending(toy => toy.Id)
                 .Select(toy => new ToyResponse
                 {
@@ -780,7 +778,7 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<ToyResponse>> GetToysAvailableForRent(int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get( 
-                filter: t => t.RentCount > -1,
+                filter: toy => toy.RentCount > -1 && toy.Status == "Active" && toy.BuyQuantity < 0,
                 includeProperties: "Category,User,User.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)

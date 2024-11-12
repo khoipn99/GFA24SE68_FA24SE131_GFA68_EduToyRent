@@ -9,136 +9,47 @@ import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import cá
 import { useNavigate } from "react-router-dom";
 import apiToys from "../../service/ApiToys";
 import axios from "axios";
+import apiCategory from "../../service/ApiCategory";
 
-const featuredToys = [
+const PictureCategory = [
   {
-    id: 1,
-    name: "Đồ chơi phát triển tư duy",
-    ageGroup: "Ages 3-5",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://dathangsi.vn/upload/products/2024/09/0832-do-choi-xep-hinh-cho-be,-lap-ghep-nha-khoi-3d-210-chi-tiet.jpg",
   },
   {
-    id: 2,
-    name: "Đồ chơi STEM",
-    ageGroup: "Ages 6-8",
     image:
-      "https://cdn.usegalileo.ai/stability/600f7d73-b2c4-4ef5-a065-4968a5ee23d4.png",
+      "https://product.hstatic.net/1000319165/product/dk81163_01_b9ab24c40753428b97cff3a2f894211d_1024x1024.jpg",
   },
   {
-    id: 3,
-    name: "Đồ chơi ngôn ngữ",
-    ageGroup: "Ages 9-12",
     image:
-      "https://cdn.usegalileo.ai/stability/94e0bca4-abc6-4700-8e82-cf72b95d7a27.png",
+      "https://bizweb.dktcdn.net/100/004/338/files/my-thuat-thu-cong-1.jpg?v=1466155461550",
   },
   {
-    name: "Đồ chơi nghệ thuật và sáng tạo",
-    ageGroup: "Ages 10+",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://sudo.vn1.vdrive.vn/babycuatoi/2023/08/clb-4-do-choi-xep-hinh-nam-cham-64-chi-tiet-cho-be.jpg",
   },
   {
-    name: "Đồ chơi toán học",
-    ageGroup: "Ages 10+",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://down-vn.img.susercontent.com/file/e0653c8ef2185cdf98abb34da05f7827",
   },
   {
-    name: "Đồ chơi cho thuê",
-    ageGroup: "Ages 10+",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://bizweb.dktcdn.net/thumb/1024x1024/100/226/134/products/5-3f4c04bb-20fa-4d98-b8e2-7647b4cda531.jpg?v=1658474391327",
   },
   {
-    name: "Đồ chơi bán",
-    ageGroup: "Ages 10+",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://bizweb.dktcdn.net/100/462/711/products/pothehk-60ad384c-5e3c-4948-a00e-0ef294800393.png?v=1669113673947",
   },
   {
-    name: "",
-    ageGroup: "Ages 10+",
     image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-];
-
-const dealsOfTheDay = [
-  {
-    name: "Remote Control Car",
-    ageGroup: "Ages 4-6",
-    price: "29.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Magic Markers",
-    ageGroup: "Ages 5-7",
-    price: "14.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Dinosaur Play Set",
-    ageGroup: "Ages 3-6",
-    price: "39.99",
-    rating: 5,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Remote Control Car",
-    ageGroup: "Ages 4-6",
-    price: "29.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Magic Markers",
-    ageGroup: "Ages 5-7",
-    price: "14.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Dinosaur Play Set",
-    ageGroup: "Ages 3-6",
-    price: "39.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Remote Control Car",
-    ageGroup: "Ages 4-6",
-    price: "29.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Magic Markers",
-    ageGroup: "Ages 5-7",
-    price: "14.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  },
-  {
-    name: "Dinosaur Play Set",
-    ageGroup: "Ages 3-6",
-    price: "39.99",
-    rating: 4,
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
+      "https://mebi.vn/wp-content/uploads/2023/04/bang-viet-xoa-tu-dong-thong-minh-3.jpg",
   },
 ];
 
 const images = [
-  "https://cdn.usegalileo.ai/sdxl10/53c88725-ec48-4320-81f5-e34d4c105caf.png",
-  "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-  "https://cdn.usegalileo.ai/stability/94e0bca4-abc6-4700-8e82-cf72b95d7a27.png",
+  "https://cafefcdn.com/2018/12/17/banner-hinh-do-choi-1545016993587208100840.jpg",
+  "https://dochoigohanoi.com/public/media/media/files/slide/slider-2.jpg",
+  "https://salt.tikicdn.com/ts/tmp/ea/08/af/baea61f75fdcb77f0d88bbec3ecc0ca8.jpg",
   // Thay thế bằng URL hình ảnh thứ ba
 ];
 
@@ -146,7 +57,7 @@ const Home = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedToy, setSelectedToy] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [rentalDuration, setRentalDuration] = useState(); // Giá trị mặc định là "1 tuần"
+  const [rentalDuration, setRentalDuration] = useState("1 tuần"); // Giá trị mặc định là "1 tuần"
   const [calculatedPrice, setCalculatedPrice] = useState(0);
   const [rentItems, setRentItems] = useState([]); // Khởi tạo giỏ hàng
   const navigate = useNavigate();
@@ -155,21 +66,33 @@ const Home = () => {
   const [toysForSale, setToysForSale] = useState([]);
   const [editedData, setEditedData] = useState({});
   const [userId, setUserId] = useState(null);
-
+  const [featuredToys, setFeaturedToys] = useState([]);
+  const [dealsOfTheDay, setdealsOfTheDay] = useState([]);
+  const [cartId, setCartId] = useState(null);
   useEffect(() => {
     apiToys
-      .get("/AvailableForPurchase?pageIndex=1&pageSize=50000")
+      .get("/AvailableForPurchase?pageIndex=1&pageSize=100")
       .then((response) => {
         console.log(response.data);
         setToysForSale(response.data);
       });
 
     apiToys
-      .get("/AvailableForRent?pageIndex=1&pageSize=50000")
+      .get("/AvailableForRent?pageIndex=1&pageSize=100")
       .then((response) => {
         console.log(response.data);
         setToysForRent(response.data);
       });
+
+    apiToys.get("/active?pageIndex=1&pageSize=100").then((response) => {
+      console.log(response.data);
+      setdealsOfTheDay(response.data);
+    });
+
+    apiCategory.get("?pageIndex=1&pageSize=100").then((response) => {
+      console.log(response.data);
+      setFeaturedToys(response.data);
+    });
   }, []);
 
   useEffect(() => {
@@ -181,7 +104,7 @@ const Home = () => {
 
       const fetchUserData = async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = Cookies.get("userToken");
           if (!token) {
             console.error("Token không hợp lệ hoặc hết hạn.");
             return;
@@ -224,7 +147,7 @@ const Home = () => {
             `https://localhost:44350/api/v1/Carts?userId=${userId}&pageIndex=1&pageSize=5`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
@@ -233,10 +156,13 @@ const Home = () => {
 
           if (response.data && response.data.length > 0) {
             const cart = response.data[0]; // Lấy giỏ hàng đầu tiên trong danh sách giỏ hàng
-            const cartId = cart.id;
+            const fetchedCartId = cart.id;
+
+            // Lưu cartId vào state
+            setCartId(fetchedCartId);
 
             // Sau khi có cartId, gọi API CartItems
-            fetchCartItems(cartId);
+            fetchCartItems(fetchedCartId);
           } else {
             console.error("Không tìm thấy giỏ hàng cho người dùng.");
           }
@@ -252,7 +178,7 @@ const Home = () => {
             `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
@@ -280,11 +206,6 @@ const Home = () => {
     return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
   }, []);
 
-  useEffect(() => {
-    const cart = JSON.parse(Cookies.get("cart") || "[]");
-    setRentItems(cart); // Khôi phục trạng thái giỏ hàng từ cookie
-  }, []);
-
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === images.length - 1 ? 0 : prevIndex + 1
@@ -310,77 +231,156 @@ const Home = () => {
     }
     return stars;
   };
-  const addToCart = (toy) => {
-    const cart = JSON.parse(Cookies.get("cart") || "[]");
-
-    // Tìm kiếm sản phẩm đã có trong giỏ hàng
-    const existingToyIndex = cart.findIndex((item) => item.id === toy.id);
-
-    if (existingToyIndex !== -1) {
-      // Nếu sản phẩm đã có, cập nhật số lượng và thời gian thuê
-      cart[existingToyIndex].quantity += 1;
-      // Cập nhật thời gian thuê nếu người dùng đã chọn
-      if (rentalDuration) {
-        cart[existingToyIndex].rentalDuration = rentalDuration;
+  // Hàm thêm sản phẩm vào giỏ hàng
+  const addToCart = async (toy) => {
+    try {
+      if (!cartId) {
+        console.error("Không tìm thấy cartId");
+        return;
       }
-    } else {
-      // Nếu chưa có, thêm sản phẩm mới vào giỏ hàng cùng với thời gian thuê
-      cart.push({ ...toy, quantity: 1, rentalDuration }); // Lưu rentalDuration
+
+      // Kiểm tra giá trị rentalDuration và tính ngày kết thúc
+      let endDate = null;
+      if (rentalDuration) {
+        let daysToAdd = 0;
+
+        // Phân tích rentalDuration và tính số ngày
+        if (rentalDuration.includes("tuần")) {
+          // Ví dụ: "1 tuần" hoặc "2 tuần"
+          const weekMatch = rentalDuration.match(/(\d+)\s*tuần/);
+          if (weekMatch) {
+            daysToAdd = parseInt(weekMatch[1]) * 7; // Cộng thêm số ngày theo tuần
+          }
+        } else if (rentalDuration.includes("tháng")) {
+          // Ví dụ: "1 tháng"
+          const monthMatch = rentalDuration.match(/(\d+)\s*tháng/);
+          if (monthMatch) {
+            daysToAdd = parseInt(monthMatch[1]) * 30; // Cộng thêm số ngày theo tháng (30 ngày)
+          }
+        }
+
+        // Tính ngày kết thúc dựa trên rentalDuration
+        endDate = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000);
+
+        // Kiểm tra xem endDate có hợp lệ không
+        if (isNaN(endDate.getTime())) {
+          console.error("Giá trị ngày kết thúc không hợp lệ");
+          return;
+        }
+        endDate = endDate.toISOString(); // Chuyển đổi thành chuỗi ISO
+      }
+
+      // Tính giá thuê dựa trên rentalDuration
+      let rentalPrice = 0; // Khai báo rentalPrice trước
+      if (rentalDuration) {
+        rentalPrice = calculateRentalPrice(toy.price, rentalDuration); // Tính giá thuê
+      }
+
+      const cartItemData = {
+        price: rentalPrice, // Sử dụng giá thuê
+        quantity: toy.buyQuantity,
+        startDate: new Date().toISOString(), // Ngày bắt đầu
+        endDate: endDate, // Ngày kết thúc tính từ rentalDuration (nếu có)
+        status: "success",
+        cartId: cartId,
+        toyId: toy.id,
+        toyName: toy.name,
+        toyPrice: rentalPrice, // Lưu giá thuê vào database
+        toyImgUrls: toy.imageUrls,
+      };
+      console.log("Quantity before saving: " + cartItemData.quantity);
+      const response = await axios.post(
+        "https://localhost:44350/api/v1/CartItems",
+        cartItemData,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      console.log("Sản phẩm đã được thêm vào giỏ hàng:", response.data);
+      alert("Sản phẩm đã được thêm vào giỏ hàng!");
+    } catch (error) {
+      console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
+      alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
     }
-
-    // Lưu lại giỏ hàng vào cookie
-    Cookies.set("cart", JSON.stringify(cart), { expires: 7 });
-    alert("Sản phẩm đã được thêm vào giỏ hàng!");
   };
+  const addToPurchase = async (toy) => {
+    try {
+      if (!cartId) {
+        console.error("Không tìm thấy cartId");
+        return;
+      }
 
-  const addToPurchase = (toy) => {
-    const purchases = JSON.parse(Cookies.get("purchases") || "[]");
+      // Chỉ sử dụng giá gốc khi mua sản phẩm
+      const purchaseData = {
+        price: toy.price, // Sử dụng giá gốc
+        quantity: toy.buyQuantity,
+        cartId: cartId,
+        toyId: toy.id,
+        toyName: toy.name,
+        toyPrice: toy.toyPrice, // Giá gốc
+        toyImgUrls: toy.imageUrls,
+        status: "success",
+      };
 
-    const existingToy = purchases.find((item) => item.id === toy.id);
+      // Gửi dữ liệu đến API để lưu vào cơ sở dữ liệu
+      const response = await axios.post(
+        "https://localhost:44350/api/v1/CartItems", // Đảm bảo API đúng với mục đích mua hàng
+        purchaseData,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
 
-    if (existingToy) {
-      existingToy.quantity = (existingToy.quantity || 1) + 1;
-    } else {
-      purchases.push({ ...toy, quantity: 1 });
+      console.log("Sản phẩm đã được thêm vào danh sách mua:", response.data);
+      alert("Sản phẩm đã được thêm vào danh sách mua!");
+    } catch (error) {
+      console.error("Lỗi khi thêm sản phẩm vào danh sách mua:", error);
+      alert("Có lỗi xảy ra khi thêm sản phẩm vào danh sách mua.");
     }
-
-    Cookies.set("purchases", JSON.stringify(purchases), { expires: 7 });
-    alert("Sản phẩm đã được thêm vào danh sách mua!");
-    console.log(`Đã thêm ${toy.name} vào giỏ hàng`);
   };
+  // Mở modal, đặt thời gian thuê mặc định và tính giá
   const openModal = (toy) => {
     setSelectedToy(toy);
     setIsModalOpen(true);
+    handleDurationChange("1 tuần"); // Đặt thời gian thuê mặc định là 1 tuần
+    const price = calculateRentalPrice(toy.price, "1 tuần"); // Tính giá thuê với thời gian 1 tuần
+    setCalculatedPrice(price); // Lưu giá thuê vào state
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setSelectedToy(null);
+    setSelectedToy(null); // Reset món đồ đã chọn
+    setRentalDuration("1 tuần"); // Đặt lại thời gian thuê về mặc định
+    setCalculatedPrice(0); // Reset giá thuê
   };
 
   // Cập nhật giá khi người dùng chọn thời gian thuê
   const handleDurationChange = (duration) => {
     if (selectedToy) {
-      // Kiểm tra xem selectedToy có tồn tại không
-      setRentalDuration(duration);
-      const price = calculateRentalPrice(selectedToy.price, duration);
-      setCalculatedPrice(price);
+      setRentalDuration(duration); // Cập nhật thời gian thuê trong state
+      const price = calculateRentalPrice(selectedToy.price, duration); // Tính giá thuê
+      setCalculatedPrice(price); // Cập nhật giá thuê đã tính vào state
     }
   };
+  // Hàm xác nhận thêm vào giỏ hàng
   const confirmAddToCart = () => {
     if (selectedToy) {
-      // Kiểm tra xem selectedToy có tồn tại không
-      updateRentalDuration(selectedToy.id, rentalDuration);
-
       // Gọi hàm addToCart để thêm sản phẩm vào giỏ hàng
-      addToCart({ ...selectedToy, rentalDuration }); // Thêm rentalDuration vào sản phẩm
+      addToCart({ ...selectedToy, rentalDuration });
       console.log(
         `Đã thêm ${selectedToy.name} vào giỏ với thời gian thuê: ${rentalDuration} và giá thuê: ${calculatedPrice} VNĐ`
       );
 
+      // Đóng modal sau khi thêm vào giỏ hàng
       closeModal();
     }
   };
+  // Hàm tính giá thuê
   const calculateRentalPrice = (price, duration) => {
     let rentalPrice = 0;
     switch (duration) {
@@ -398,13 +398,16 @@ const Home = () => {
     }
     return rentalPrice;
   };
-
   const updateRentalDuration = (itemId, duration) => {
     setRentItems((prevItems) =>
       prevItems.map((item) =>
         item.id === itemId ? { ...item, rentalDuration: duration } : item
       )
     );
+  };
+
+  const FilterCategory = (category) => {
+    navigate("/filter-toys");
   };
 
   return (
@@ -426,24 +429,23 @@ const Home = () => {
                 className="flex transition-transform duration-500 ease-in-out"
                 style={{
                   transform: `translateX(${-currentImageIndex * 100}%)`,
-                  width: `${images.length * 100}%`,
+                  width: `${images.length * 40}%`,
                 }}
               >
                 {images.map((image, index) => (
                   <div
                     key={index}
-                    className="min-w-full flex-shrink-0"
+                    className="min-w-full flex-shrink-0 h-[480px]"
                     style={{
-                      backgroundImage: `url("${image}")`,
-                      backgroundSize: "cover", // Thay đổi thành cover
+                      backgroundImage: `url(${image})`,
+                      backgroundSize: "contain", // Show the full image
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
-                      height: "480px",
-                      width: "100%",
                     }}
                   ></div>
                 ))}
               </div>
+
               {/* Nút Previous Image */}
               <button
                 onClick={previousImage}
@@ -471,28 +473,56 @@ const Home = () => {
 
             <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="flex items-stretch p-4 gap-3">
-                {featuredToys.map((toy, index) => (
+                {featuredToys.map((category, index) => (
                   <div
                     key={index}
-                    className="flex h-full flex-1 flex-col gap-4 rounded-lg"
+                    className="flex h-full flex-1 flex-col gap-4 rounded-lg hover:shadow-lg hover:bg-gray-100 transition duration-300"
+                    onClick={() => FilterCategory(category.id)}
                   >
-                    <Link to="/filter-toys">
-                      <div
-                        className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                        style={{ backgroundImage: `url(${toy.image})` }}
-                      ></div>
-                    </Link>
+                    <div
+                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
+                      style={{
+                        backgroundImage: `url(${PictureCategory[index].image})`,
+                      }}
+                    ></div>
+
                     <div>
                       <p className="text-[#0e161b] text-base font-medium">
-                        {toy.name}
+                        {category.name}
                       </p>
-                      <p className="text-[#507a95] text-sm">{toy.ageGroup}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
+            <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
+              Các Nhãn Hàng Đối Tác
+            </h2>
+            <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex items-stretch p-4 gap-3">
+                {featuredToys.map((category, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
+                    onClick={() => FilterCategory(category.id)}
+                  >
+                    <div
+                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
+                      style={{
+                        backgroundImage: `url(${PictureCategory[index].image})`,
+                      }}
+                    ></div>
+
+                    <div>
+                      <p className="text-[#0e161b] text-base font-medium">
+                        {category.name}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
             <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
               Khuyễn mãi hôm nay
             </h2>
@@ -504,25 +534,55 @@ const Home = () => {
                 >
                   <div
                     className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                    style={{ backgroundImage: `url(${deal.image})` }}
+                    style={{
+                      backgroundImage: `url(https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png)`,
+                    }}
                   ></div>
                   <div>
-                    <p className="text-[#0e161b] text-base font-medium">
+                    <p
+                      className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2,
+                        lineClamp: 2,
+                        maxHeight: "3rem", // Ensures space for two lines
+                        lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                      }}
+                    >
                       {deal.name}
                     </p>
+
                     <p className="text-[#507a95] text-sm">
-                      Age group: {deal.ageGroup}
+                      Age group: {deal.age}
                     </p>
                     <div className="flex items-center gap-1">
-                      {renderStars(deal.rating)}
+                      {renderStars(deal.star)}
                     </div>
-                    <p className="text-[#0e161b] text-lg font-bold">
-                      ${deal.price}
-                    </p>
-
-                    <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e8eef3] text-[#0e161b] text-sm font-bold">
-                      Thêm vào giỏ
-                    </button>
+                    {deal.buyQuantity >= 0 ? (
+                      <p className="text-[#0e161b] text-lg font-bold">
+                        {deal.price} VNĐ
+                      </p>
+                    ) : (
+                      <p className="text-[#0e161b] text-lg font-bold">
+                        {deal.price} VNĐ
+                      </p>
+                    )}
+                    {deal.buyQuantity >= 0 ? (
+                      <button
+                        onClick={() => addToPurchase(deal)}
+                        className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                      >
+                        Mua
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => openModal(deal)}
+                        className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                      >
+                        Thuê
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -546,24 +606,34 @@ const Home = () => {
                     ></div>
                   </Link>
                   <div>
-                    <p className="text-[#0e161b] text-base font-medium">
+                    <p
+                      className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2,
+                        lineClamp: 2,
+                        maxHeight: "3rem", // Ensures space for two lines
+                        lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                      }}
+                    >
                       {toy.name}
                     </p>
                     <p className="text-[#507a95] text-sm">
                       Age group: {toy.ageGroup}
                     </p>
                     <div className="flex items-center gap-1">
-                      {renderStars(toy.rating)}
+                      {renderStars(toy.star)}
                     </div>
                     <p className="text-[#0e161b] text-lg font-bold">
-                      ${toy.price}
+                      {toy.price} VNĐ
                     </p>
                   </div>
                   <button
-                    className="bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                    className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
                     onClick={() => openModal(toy)}
                   >
-                    Thêm vào giỏ hàng
+                    Thuê
                   </button>
                 </div>
               ))}
@@ -599,7 +669,7 @@ const Home = () => {
                       Nhóm tuổi: {selectedToy.ageGroup}
                     </p>
                     <div className="flex items-center gap-1 mb-2">
-                      {renderStars(selectedToy.rating)}
+                      {renderStars(selectedToy.star)}
                     </div>
                     <p className="text-lg font-bold text-[#0e161b] mb-2">
                       Giá: {selectedToy.price} VNĐ
@@ -683,7 +753,17 @@ const Home = () => {
                     ></div>
                   </Link>
                   <div>
-                    <p className="text-[#0e161b] text-base font-medium">
+                    <p
+                      className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2,
+                        lineClamp: 2,
+                        maxHeight: "3rem", // Ensures space for two lines
+                        lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                      }}
+                    >
                       {toy.name}
                     </p>
                     <p className="text-[#507a95] text-sm">
@@ -693,15 +773,15 @@ const Home = () => {
                       {renderStars(toy.star)}
                     </div>
                     <p className="text-[#0e161b] text-lg font-bold">
-                      ${toy.price}
+                      {toy.price} VNĐ
                     </p>
                   </div>
                   {/* Nút thêm vào giỏ hàng */}
                   <button
-                    className="bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                    className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
                     onClick={() => addToPurchase(toy)} // Gọi hàm addToCart khi bấm nút
                   >
-                    Thêm vào giỏ hàng
+                    Mua
                   </button>
                 </div>
               ))}

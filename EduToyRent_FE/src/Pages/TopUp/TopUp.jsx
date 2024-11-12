@@ -26,7 +26,7 @@ const TopUp = () => {
         "/create-payment-link?totalAmount=" + numericAmount + "&orderId=6368"
       )
       .then((response) => {
-        window.location.href = response.data;
+        window.location.href = response.data.url;
       });
   };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie"; // Import thư viện Cookies
 import axios from "axios";
-import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
+import HeaderForToySupplier from "../../Component/HeaderForToySupplier/HeaderForToySupplier";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import { data } from "autoprefixer";
 
@@ -17,6 +17,7 @@ const ToySupplierPage = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [toyId, setToyId] = useState(null); // Lưu URL ảnh để hiển thị
   const [toyData, setToyData] = useState(null);
+  const [toysData, setToysData] = useState([]);
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -26,13 +27,14 @@ const ToySupplierPage = () => {
 
       const fetchUserData = async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = Cookies.get("userToken");
           if (!token) {
             console.error("Token không hợp lệ hoặc hết hạn.");
             return;
           }
 
-          const response = await axios.get(
+          // Lấy thông tin người dùng dựa trên email
+          const userResponse = await axios.get(
             `https://localhost:44350/api/v1/Users/ByEmail?email=${encodeURIComponent(
               email
             )}&pageIndex=1&pageSize=5`,
@@ -43,18 +45,33 @@ const ToySupplierPage = () => {
             }
           );
 
-          console.log("Dữ liệu trả về:", response.data);
+          console.log("Dữ liệu người dùng:", userResponse.data);
 
-          if (response.data && response.data.length > 0) {
-            const user = response.data[0]; // Lấy đối tượng người dùng đầu tiên trong mảng
+          if (userResponse.data && userResponse.data.length > 0) {
+            const user = userResponse.data[0]; // Lấy đối tượng người dùng đầu tiên trong mảng
             setUserData(user);
             setUserId(user.id);
             setEditedData(user); // Cập nhật dữ liệu chỉnh sửa với thông tin của người dùng
+
+            // Lấy danh sách đồ chơi của người dùng
+            const toyResponse = await axios.get(
+              `https://localhost:44350/api/v1/Toys/user/${user.id}?pageIndex=1&pageSize=20000`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            console.log("Dữ liệu đồ chơi:", toyResponse.data);
+
+            // Cập nhật dữ liệu đồ chơi (nếu cần thiết)
+            setToysData(toyResponse.data);
           } else {
             console.error("Không tìm thấy thông tin người dùng.");
           }
         } catch (error) {
-          console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+          console.error("Lỗi khi lấy dữ liệu:", error);
         }
       };
 
@@ -65,41 +82,52 @@ const ToySupplierPage = () => {
   }, []);
 
   const handleUpdate = async () => {
-    // Kiểm tra nếu có userId để gửi yêu cầu PUT
     if (userId) {
       try {
-        // Tạo payload với các trường thông tin cần thiết
-        const payload = {
-          fullName: editedData.fullName || "",
-          email: editedData.email || "",
-          password: editedData.password || "",
-          createDate: editedData.createDate || new Date().toISOString(),
-          phone: editedData.phone || "",
-          dob: editedData.dob || "",
-          address: editedData.address || "",
-          avatarUrl: editedData.avatarUrl || "", // Giữ nguyên avatar cũ nếu không thay đổi ảnh
-          status: editedData.status || "", // Thêm giá trị hợp lệ cho trường status
-        };
+        const formData = new FormData();
 
-        // Gửi yêu cầu PUT với dữ liệu đã chuẩn bị dưới dạng JSON
+        // Thêm các trường dữ liệu vào formData
+        formData.append("fullName", editedData.fullName || "Default Name");
+        formData.append("email", editedData.email || "default@example.com");
+        formData.append("password", editedData.password || "defaultPassword");
+        formData.append(
+          "createDate",
+          editedData.createDate || new Date().toISOString()
+        );
+        formData.append("phone", editedData.phone || "0000000000");
+        formData.append("dob", editedData.dob || new Date().toISOString());
+        formData.append("address", editedData.address || "Default Address");
+        formData.append("status", editedData.status || "Active");
+        formData.append("roleId", editedData.roleId || 2);
+
+        // Kiểm tra và thêm avatarUrl
+        if (editedData.avatarUrl && editedData.avatarUrl instanceof File) {
+          // Nếu có ảnh mới, thêm file vào formData
+          formData.append("avatarUrl", editedData.avatarUrl);
+        } else if (userData.avatarUrl) {
+          // Nếu không có ảnh mới, gửi URL của ảnh hiện có
+          formData.append("avatarUrl", userData.avatarUrl);
+        } else {
+          // Nếu không có ảnh mới và cũng không có ảnh hiện tại, thêm giá trị mặc định
+          formData.append("avatarUrl", "default-avatar-url.jpg");
+        }
+
         const response = await axios.put(
-          `https://localhost:44350/api/v1/Users/${userId}`, // Sử dụng userId đã có
-          payload,
+          `https://localhost:44350/api/v1/Users/${userId}`,
+          formData,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`, // Lấy token từ localStorage
-              "Content-Type": "application/json", // Đảm bảo gửi dữ liệu dạng JSON
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+              "Content-Type": "multipart/form-data",
             },
           }
         );
 
-        // Cập nhật dữ liệu người dùng trong state sau khi thành công
         console.log("Cập nhật thành công:", response.data);
-        setUserData(response.data); // Cập nhật dữ liệu người dùng trong state
-        setIsEditing(false); // Tắt chế độ chỉnh sửa
+        setUserData(response.data);
+        setIsEditing(false);
         window.location.reload();
       } catch (error) {
-        // Xử lý lỗi khi có vấn đề xảy ra
         console.error("Lỗi khi cập nhật thông tin người dùng:", error);
         console.log("Chi tiết lỗi:", error.response?.data);
       }
@@ -109,11 +137,12 @@ const ToySupplierPage = () => {
   };
 
   const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile); // Lưu tệp vào state
-      const objectUrl = URL.createObjectURL(selectedFile); // Tạo URL tạm thời
-      setImageUrl(objectUrl); // Cập nhật URL ảnh vào state để hiển thị
+    const file = event.target.files[0];
+    if (file && file.size <= 1024 * 1024) {
+      setFile(file); // Lưu file đã chọn vào state để gửi lên server
+      setImageUrl(URL.createObjectURL(file)); // Hiển thị ảnh tạm thời
+    } else {
+      alert("Dung lượng file tối đa là 1 MB");
     }
   };
   const handleEditClick = () => {
@@ -166,12 +195,6 @@ const ToySupplierPage = () => {
                 <div className="mb-4">
                   <label className="block text-gray-700 font-medium">
                     <p>Địa chỉ: {userData.address}</p>
-                  </label>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-medium">
-                    <p>Số tiền trong ví: {userData.walletId}</p>
                   </label>
                 </div>
 
@@ -249,7 +272,22 @@ const ToySupplierPage = () => {
                       />
                     </div>
 
-                    {/* Các trường chỉnh sửa khác nếu cần */}
+                    {/* Trường chọn ảnh */}
+                    <div className="mb-4">
+                      <label className="block text-gray-700">
+                        Ảnh đại diện
+                      </label>
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          setEditedData({
+                            ...editedData,
+                            avatarUrl: e.target.files[0], // Lưu file đã chọn vào state
+                          })
+                        }
+                        className="w-full p-2 border border-gray-300 rounded"
+                      />
+                    </div>
 
                     {/* Nút lưu và hủy */}
                     <div className="flex justify-end space-x-2">
@@ -278,8 +316,7 @@ const ToySupplierPage = () => {
                       alt="Avatar"
                       className="w-full h-full rounded-full object-cover"
                     />
-                  ) : // Nếu không có ảnh, hiển thị chữ cái đầu tiên từ fullName
-                  file ? (
+                  ) : file ? (
                     <img
                       src={URL.createObjectURL(file)}
                       alt="Avatar"
@@ -287,12 +324,12 @@ const ToySupplierPage = () => {
                     />
                   ) : userData && userData.avatarUrl ? (
                     <img
-                      src={userData.avatarUrl}
+                      src={userData.avatarUrl} // Hiển thị ảnh từ URL lưu trong userData
                       alt="Avatar"
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : userData && userData.fullName ? (
-                    userData.fullName.charAt(0)
+                    userData.fullName.charAt(0) // Hiển thị chữ cái đầu tiên từ fullName nếu không có ảnh
                   ) : (
                     ""
                   )}
@@ -301,7 +338,7 @@ const ToySupplierPage = () => {
                 <input
                   type="file"
                   accept=".jpeg, .png"
-                  onChange={handleFileChange}
+                  //onChange={handleFileChange}
                   className="hidden"
                   id="fileInput"
                 />
@@ -378,7 +415,6 @@ const ToySupplierPage = () => {
                           >
                             Toy Name
                           </th>
-
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
@@ -460,10 +496,10 @@ const ToySupplierPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {toyData &&
-                        Array.isArray(toyData) &&
-                        toyData.length > 0 ? (
-                          toyData.map((toy) => (
+                        {toysData &&
+                        Array.isArray(toysData) &&
+                        toysData.length > 0 ? (
+                          toysData.map((toy) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={toy.id}
@@ -520,36 +556,33 @@ const ToySupplierPage = () => {
                                 {toy.status}
                               </td>
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.owner?.fullName}
+                                {toy.owner.id}
                               </td>
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.category?.name}
+                                {toy.category.id}
                               </td>
                               <td className="p-4 space-x-2 whitespace-nowrap">
                                 <button
                                   type="button"
-                                  // onClick={() => handleUpdate(toy)}
+                                  // onClick={() => handleUpdate(toy)} // Gọi hàm update khi nhấn nút
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                                 >
-                                  Approver
+                                  Edit
                                 </button>
                                 <button
                                   type="button"
-                                  // onClick={() => handleDelete(toy.id)}
+                                  // onClick={() => handleDelete(toy.id)} // Gọi hàm delete khi nhấn nút
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
                                 >
-                                  Reject
+                                  Delete
                                 </button>
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td
-                              colSpan="12"
-                              className="text-center text-gray-500"
-                            >
-                              Không có đồ chơi để hiển thị
+                            <td colSpan="13" className="p-4 text-center">
+                              No toys found.
                             </td>
                           </tr>
                         )}
@@ -615,7 +648,7 @@ const ToySupplierPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       <header className="bg-white shadow-md p-4">
-        <HeaderForCustomer />
+        <HeaderForToySupplier />
       </header>
 
       <div className="flex flex-grow">
