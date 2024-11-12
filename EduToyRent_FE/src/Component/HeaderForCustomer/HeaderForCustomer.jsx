@@ -38,7 +38,7 @@ const HeaderForCustomer = () => {
 
       const fetchUserData = async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = Cookies.get("userToken");
           if (!token) {
             console.error("Token không hợp lệ hoặc hết hạn.");
             return;
