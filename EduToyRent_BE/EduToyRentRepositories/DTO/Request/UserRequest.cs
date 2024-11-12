@@ -24,7 +24,7 @@ namespace EduToyRentRepositories.DTO.Request
         public DateTime Dob { get; set; }
         [Required]
         public string Address { get; set; }
-        public IFormFile AvatarUrl { get; set; }
+        public IFormFile? AvatarUrl { get; set; } = null;
         [Required]
         public int RoleId { get; set; }
         [Required]
