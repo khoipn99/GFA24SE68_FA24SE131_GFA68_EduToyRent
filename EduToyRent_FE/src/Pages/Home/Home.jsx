@@ -104,7 +104,7 @@ const Home = () => {
 
       const fetchUserData = async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = Cookies.get("userToken");
           if (!token) {
             console.error("Token không hợp lệ hoặc hết hạn.");
             return;
@@ -147,7 +147,7 @@ const Home = () => {
             `https://localhost:44350/api/v1/Carts?userId=${userId}&pageIndex=1&pageSize=5`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
@@ -178,7 +178,7 @@ const Home = () => {
             `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
@@ -294,7 +294,7 @@ const Home = () => {
         cartItemData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
           },
         }
       );
@@ -331,7 +331,7 @@ const Home = () => {
         purchaseData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
           },
         }
       );

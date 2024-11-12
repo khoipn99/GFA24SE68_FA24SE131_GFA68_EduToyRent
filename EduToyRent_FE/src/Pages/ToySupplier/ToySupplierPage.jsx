@@ -27,7 +27,7 @@ const ToySupplierPage = () => {
 
       const fetchUserData = async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = Cookies.get("userToken");
           if (!token) {
             console.error("Token không hợp lệ hoặc hết hạn.");
             return;
@@ -117,7 +117,7 @@ const ToySupplierPage = () => {
           formData,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
               "Content-Type": "multipart/form-data",
             },
           }
