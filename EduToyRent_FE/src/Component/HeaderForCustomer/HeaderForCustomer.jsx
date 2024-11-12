@@ -17,6 +17,8 @@ const HeaderForCustomer = () => {
   const [userId, setUserId] = useState(null);
   const [userWallet, setUserWallet] = useState(""); // Thêm state này
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [cartId, setCartId] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleMouseEnter = () => setIsDropdownOpen(true);
   const handleMouseLeave = () => setIsDropdownOpen(false);
@@ -68,7 +70,7 @@ const HeaderForCustomer = () => {
             setEditedData(user);
 
             // Sau khi có userId, gọi API giỏ hàng
-            fetchUserCart(user.id);
+            fetchUserCart(user.id); // Kiểm tra có cartId hay không
 
             // Sau khi có walletId, gọi API ví
             if (user.walletId) {
@@ -84,25 +86,6 @@ const HeaderForCustomer = () => {
         }
       };
 
-      // Hàm lấy thông tin ví của người dùng dựa trên walletId
-      const fetchWalletData = async (walletId) => {
-        try {
-          const response = await axios.get(
-            `https://localhost:44350/api/v1/Wallets/${walletId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          );
-
-          console.log("Thông tin ví của người dùng:", response.data);
-          setUserWallet(response.data); // Lưu thông tin ví vào state nếu cần
-        } catch (error) {
-          console.error("Lỗi khi lấy thông tin ví của người dùng:", error);
-        }
-      };
-
       // Hàm lấy giỏ hàng của người dùng theo userId
       const fetchUserCart = async (userId) => {
         try {
@@ -110,7 +93,7 @@ const HeaderForCustomer = () => {
             `https://localhost:44350/api/v1/Carts?userId=${userId}&pageIndex=1&pageSize=5`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
@@ -120,7 +103,8 @@ const HeaderForCustomer = () => {
           if (response.data && response.data.length > 0) {
             const cart = response.data[0];
             const cartId = cart.id;
-
+            // Lưu cartId vào state
+            setCartId(cartId);
             // Sau khi có cartId, gọi API CartItems
             fetchCartItems(cartId);
           } else {
@@ -134,11 +118,16 @@ const HeaderForCustomer = () => {
       // Hàm lấy các mục trong giỏ hàng theo cartId
       const fetchCartItems = async (cartId) => {
         try {
+          if (!cartId) {
+            console.error("Không tìm thấy cartId");
+            return;
+          }
+
           const response = await axios.get(
             `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
@@ -147,6 +136,25 @@ const HeaderForCustomer = () => {
           // Thực hiện thêm các bước xử lý với dữ liệu CartItems (ví dụ: setCartItems(response.data))
         } catch (error) {
           console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
+        }
+      };
+
+      // Hàm lấy thông tin ví của người dùng dựa trên walletId
+      const fetchWalletData = async (walletId) => {
+        try {
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/Wallets/${walletId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+
+          console.log("Thông tin ví của người dùng:", response.data);
+          setUserWallet(response.data); // Lưu thông tin ví vào state nếu cần
+        } catch (error) {
+          console.error("Lỗi khi lấy thông tin ví của người dùng:", error);
         }
       };
 
@@ -180,19 +188,51 @@ const HeaderForCustomer = () => {
     // Mở hoặc đóng giỏ hàng
     setCartVisible(!cartVisible);
     if (!cartVisible) {
-      loadCartFromCookies(); // Tải lại giỏ hàng từ cookie khi mở giỏ hàng
+      loadCartFromDatabase(); // Tải lại giỏ hàng từ cookie khi mở giỏ hàng
     }
   };
 
-  const loadCartFromCookies = () => {
-    // Lấy sản phẩm thuê từ cookie
-    const rentalCart = JSON.parse(Cookies.get("cart") || "[]");
-    console.log("Rental Cart:", rentalCart);
-    setRentItems(rentalCart);
+  // Load giỏ hàng từ database
+  const loadCartFromDatabase = async (id) => {
+    setLoading(true);
+    try {
+      if (!cartId) {
+        console.error("Không tìm thấy cartId");
+        return;
+      }
 
-    //Lấy sản phẩm mua từ cookie (giả sử bạn lưu chúng trong cookie khác hoặc sử dụng cùng một cookie)
-    const buyCart = JSON.parse(Cookies.get("purchases") || "[]");
-    setBuyItems(buyCart);
+      const response = await axios.get(
+        `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      console.log("Dữ liệu trả về từ API:", response.data);
+
+      // Tạo các danh sách rentItems và buyItems dựa vào quantity
+      const rentItems = response.data
+        .filter((item) => item.quantity === -1)
+        .map((item) => ({
+          ...item,
+          rentalDuration: calculateRentalDuration(item.startDate, item.endDate),
+        }));
+      const buyItems = response.data.filter((item) => item.quantity >= 1);
+
+      // Lưu vào state
+      setRentItems(rentItems);
+      setBuyItems(buyItems);
+
+      console.log("Rental Items:", rentItems);
+      console.log("Purchase Items:", buyItems);
+    } catch (error) {
+      console.error("Lỗi khi tải giỏ hàng từ cơ sở dữ liệu:", error);
+      alert("Có lỗi xảy ra khi tải giỏ hàng.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateQuantity = (id, newQuantity, type) => {
@@ -228,9 +268,10 @@ const HeaderForCustomer = () => {
   }, [buyItems]);
 
   useEffect(() => {
-    // Tải giỏ hàng từ cookie khi component được mount lần đầu
-    loadCartFromCookies();
-  }, []);
+    if (cartId) {
+      loadCartFromDatabase(cartId);
+    }
+  }, [cartId]);
 
   function removeItem(itemId, type) {
     if (type === "rent") {
@@ -252,7 +293,7 @@ const HeaderForCustomer = () => {
     }
 
     // Sau khi xóa, tải lại giỏ hàng từ cookie để hiển thị thông tin chính xác
-    loadCartFromCookies();
+    loadCartFromDatabase();
   }
 
   const calculateRentalPrice = (price, duration) => {
@@ -272,7 +313,19 @@ const HeaderForCustomer = () => {
     }
     return rentalPrice;
   };
+  // Hàm để tính thời gian thuê dựa vào startDate và endDate
+  const calculateRentalDuration = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
+    if (diffDays === 7) return "1 tuần";
+    if (diffDays === 14) return "2 tuần";
+    if (diffDays === 30) return "1 tháng";
+    return `${diffDays} ngày`;
+  };
+  // Hàm cập nhật thời gian thuê khi người dùng nhấn vào nút
   const updateRentalDuration = (itemId, duration) => {
     setRentItems((prevItems) =>
       prevItems.map((item) =>
@@ -439,11 +492,11 @@ const HeaderForCustomer = () => {
                             >
                               <img
                                 src={item.image}
-                                alt={item.name}
+                                alt={item.toyName}
                                 className="w-20 h-20 object-cover mr-4"
                               />
                               <div className="flex-grow">
-                                <h3 className="font-bold">{item.name}</h3>
+                                <h3 className="font-bold">{item.toyName}</h3>
                                 <div className="flex flex-col">
                                   {/* Chọn thời gian thuê */}
                                   <div className="flex justify-between items-center mb-2">
@@ -532,11 +585,11 @@ const HeaderForCustomer = () => {
                             >
                               <img
                                 src={item.image}
-                                alt={item.name}
+                                alt={item.toyName}
                                 className="w-20 h-20 object-cover mr-4"
                               />
                               <div className="flex-grow">
-                                <h3 className="font-bold">{item.name}</h3>
+                                <h3 className="font-bold">{item.toyName}</h3>
                                 <div className="flex justify-between items-center">
                                   <p className="mr-4">Giá: {item.price} VNĐ</p>
                                   <div className="flex items-center">

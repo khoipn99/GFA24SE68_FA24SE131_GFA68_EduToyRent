@@ -782,6 +782,7 @@ namespace EduToyRentAPI.Controllers
                 includeProperties: "Category,User,User.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
+                .Where(toy => toy.Status == "Active" && toy.BuyQuantity < 0)
                 .OrderByDescending(toy => toy.Id)
                 .Select(toy => new ToyResponse
                 {

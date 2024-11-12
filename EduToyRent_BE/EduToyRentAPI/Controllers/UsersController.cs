@@ -242,6 +242,92 @@ namespace EduToyRentAPI.Controllers
             return Ok(users);
         }
 
+        //[HttpPut("upload-user-image/{userId}")]
+        //[EnableQuery]
+        ////[Authorize(Roles = "1")]
+        //public async Task<IActionResult> UploadUserImage(IFormFile userImage, int userId)
+        //{
+        //    var user = _unitOfWork.UserRepository.GetByID(userId);
+
+        //    if (user == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    if (userImage != null)
+        //    {
+        //        user.AvatarUrl = await _fireBaseService.UploadImageAsync(userImage);
+        //    }
+
+        //    _unitOfWork.UserRepository.Update(user);
+
+        //    try
+        //    {
+        //        _unitOfWork.Save();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!UserExists(userId))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
+
+        //    return NoContent();
+        //}
+
+        [HttpPut("update-user-image/{userId}")]
+        [EnableQuery]
+        //[Authorize(Roles = "1")]
+        public async Task<IActionResult> UpdateUserImage(IFormFile userImage, int userId)
+        {
+            var user = _unitOfWork.UserRepository.GetByID(userId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            if (userImage == null)
+            {
+                return BadRequest();
+            }
+
+            if (user.AvatarUrl == null)
+            {
+                user.AvatarUrl = await _fireBaseService.UploadImageAsync(userImage);
+            }
+            else
+            {
+                await _fireBaseService.DeleteImageAsync(user.AvatarUrl);
+                user.AvatarUrl = await _fireBaseService.UploadImageAsync(userImage);                
+            }
+
+            _unitOfWork.UserRepository.Update(user);
+
+            try
+            {
+                _unitOfWork.Save();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!UserExists(userId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
         private bool UserExists(int id)
         {
             return _unitOfWork.UserRepository.Get().Any(e => e.Id == id);
