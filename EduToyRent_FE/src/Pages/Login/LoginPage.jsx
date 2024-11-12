@@ -32,6 +32,9 @@ const LoginPage = () => {
         };
         Cookies.set("userData", JSON.stringify(userData), { expires: 1 });
         try {
+
+          //const token = localStorage.getItem("token");
+
           const token = Cookies.get("userToken");
           if (!token) {
             console.error("Token không hợp lệ hoặc hết hạn.");

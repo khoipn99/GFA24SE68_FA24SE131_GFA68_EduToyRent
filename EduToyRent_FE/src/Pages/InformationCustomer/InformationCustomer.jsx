@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
+import apiOrderDetail from "../../service/ApiOrderDetail";
+import apiOrder from "../../service/ApiOrder";
 
 const InformationCustomer = () => {
   const [selectedTab, setSelectedTab] = useState("info");
@@ -10,8 +12,11 @@ const InformationCustomer = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [customerInfo, setCustomerInfo] = useState({});
 
+  const [orders, setOrders] = useState([]);
+  const [orderDetails, setOrderDetails] = useState([]);
   useEffect(() => {
     getUserInfo();
+    getOrderInfo();
   }, []);
 
   const getUserInfo = () => {
@@ -23,146 +28,21 @@ const InformationCustomer = () => {
     }
   };
 
-  // Dữ liệu mẫu cho đơn hàng
-  const [orders, setOrders] = useState([
-    {
-      id: 1,
-      product: "Người dùng A",
-      store: "Người dùng A",
-      price: 100000,
-      quantity: 2,
-      total: 200000,
-      status: "Chờ xác nhận",
-      address: "Quận 9",
-      date: "2024-01-01",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 1,
-          name: "Sản phẩm 1",
-          price: 50000,
-          quantity: 2,
-          image: "path_to_image_1.jpg",
-          status: "Chờ xác nhận",
-        },
-        {
-          id: 2,
-          name: "Sản phẩm 2",
-          price: 50000,
-          quantity: 1,
-          image: "path_to_image_2.jpg",
-          status: "Chờ xác nhận",
-        },
-      ],
-    },
-    {
-      id: 2,
-      product: "Người dùng B",
-      store: "Người dùng B",
-      price: 150000,
-      quantity: 1,
-      total: 150000,
-      status: "Đang vận chuyển",
-      address: "Quận 1",
-      date: "2024-01-02",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 3,
-          name: "Sản phẩm 3",
-          price: 150000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Đang vận chuyển",
-        },
-      ],
-    },
+  const getOrderInfo = () => {
+    const userDataCookie = Cookies.get("userDataReal");
+    const parsedUserData = JSON.parse(userDataCookie);
 
-    {
-      id: 4,
-      product: "Người dùng D",
-      store: "Người dùng D",
-      price: 150000,
-      quantity: 1,
-      total: 150000,
-      status: "Đang thực hiện",
-      address: "Quận 1",
-      date: "2024-01-02",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 5,
-          name: "Sản phẩm 3",
-          price: 150000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Đang trả hàng",
-        },
-        {
-          id: 6,
-          name: "Sản phẩm 6",
-          price: 1500000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Chờ trả hàng",
-        },
-        {
-          id: 6,
-          name: "Sản phẩm 7",
-          price: 1700000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Hoàn thành",
-        },
-      ],
-    },
-
-    {
-      id: 5,
-      product: "Người dùng E",
-      store: "Người dùng E",
-      price: 150000,
-      quantity: 1,
-      total: 150000,
-      status: "Hoàn thành",
-      address: "Quận 1",
-      date: "2024-01-02",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 5,
-          name: "Sản phẩm 3",
-          price: 150000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Hoàn thành",
-        },
-      ],
-    },
-
-    {
-      id: 6,
-      product: "Người dùng F",
-      store: "Người dùng F",
-      price: 150000,
-      quantity: 1,
-      total: 150000,
-      status: "Đã hủy",
-      address: "Quận 1",
-      date: "2024-01-02",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 5,
-          name: "Sản phẩm 3",
-          price: 150000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Đã hủy",
-        },
-      ],
-    },
-  ]);
+    apiOrder
+      .get(
+        "/ByUserId?userId=" +
+          parsedUserData[0].id +
+          "&pageIndex=1&pageSize=1000"
+      )
+      .then((response) => {
+        setOrders(response.data);
+        console.log(response.data);
+      });
+  };
 
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -194,6 +74,18 @@ const InformationCustomer = () => {
 
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
+
+    apiOrderDetail.get("/Order/" + order.id).then((response) => {
+      setOrderDetails(response.data);
+      console.log(response.data);
+    });
+  };
+
+  const ViewDetails = () => {
+    apiOrderDetail.get("/Order/" + selectedOrder.id).then((response) => {
+      setOrderDetails(response.data);
+      console.log(response.data);
+    });
   };
 
   const closeDetails = () => {
@@ -207,47 +99,24 @@ const InformationCustomer = () => {
   });
 
   const handleExtendRental = (order) => {};
-  const handleReturnOrder = (order) => {};
+  const handleReturnOrderDetail = (order) => {
+    var tmp = order;
+    tmp.status = "returning";
+
+    apiOrderDetail.put("/" + order.id, tmp).then((response) => {
+      ViewDetails();
+    });
+  };
+  const handleFinishOrderDetail = (order) => {
+    var tmp = order;
+    tmp.status = "finish";
+
+    apiOrderDetail.put("/" + order.id, tmp).then((response) => {
+      ViewDetails();
+    });
+  };
+  const handleCancelOrder = (order) => {};
   const handleReBuy = (order) => {};
-
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null); // Hiển thị ảnh hiện tại ban đầu
-  const [isUploading, setIsUploading] = useState(false);
-
-  // Handle file selection
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      // Tạo preview hình ảnh đã chọn
-      const fileReader = new FileReader();
-      fileReader.onloadend = () => {
-        setPreviewImage(fileReader.result);
-      };
-      fileReader.readAsDataURL(file);
-    }
-  };
-
-  // Handle image upload to server (simulated here)
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-
-    setIsUploading(true);
-
-    // Simulate image upload (replace with actual upload logic)
-    const uploadedImageUrl = await uploadImage(selectedFile);
-
-    // Call the function to update the image URL in the database
-
-    setIsUploading(false);
-    setPreviewImage(uploadedImageUrl); // Update the preview with the uploaded image
-  };
-
-  // Simulated image upload function (replace with actual upload logic)
-  const uploadImage = async (file) => {
-    // Simulate uploading the file and returning a URL (replace with actual upload logic)
-    return URL.createObjectURL(file); // For demo purposes, just return a URL
-  };
 
   const renderContent = () => {
     switch (selectedTab) {
@@ -415,46 +284,6 @@ const InformationCustomer = () => {
                   >
                     Chỉnh sửa hình ảnh
                   </button>
-                  <div className="relative">
-                    {/* Current Avatar */}
-                    <div className="flex justify-center items-center mb-4">
-                      <img
-                        src={previewImage}
-                        alt="Avatar"
-                        className="w-32 h-32 rounded-full object-cover"
-                      />
-                    </div>
-
-                    {/* Button to trigger file selection */}
-                    <label
-                      htmlFor="avatar-upload"
-                      className="p-2 bg-blue-500 text-white rounded cursor-pointer"
-                    >
-                      Tải hình ảnh mới
-                    </label>
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-
-                    {selectedFile && (
-                      <div className="mt-4">
-                        <p className="text-sm text-gray-600">
-                          Hình ảnh đã chọn: {selectedFile.name}
-                        </p>
-                        <button
-                          onClick={handleUpload}
-                          className="mt-2 p-2 bg-green-500 text-white rounded"
-                          disabled={isUploading}
-                        >
-                          {isUploading ? "Đang tải..." : "Lưu hình ảnh"}
-                        </button>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             )}
@@ -476,9 +305,9 @@ const InformationCustomer = () => {
                 Tất cả
               </button>
               <button
-                onClick={() => handleFilterChange("Chờ xác nhận")}
+                onClick={() => handleFilterChange("Inactive")}
                 className={`p-2 rounded ${
-                  filterStatus === "Chờ xác nhận"
+                  filterStatus === "Inactive"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -486,9 +315,9 @@ const InformationCustomer = () => {
                 Chờ xác nhận
               </button>
               <button
-                onClick={() => handleFilterChange("Đang vận chuyển")}
+                onClick={() => handleFilterChange("Active")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đang vận chuyển"
+                  filterStatus === "Active"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -496,9 +325,9 @@ const InformationCustomer = () => {
                 Đang vận chuyển
               </button>
               <button
-                onClick={() => handleFilterChange("Đang thực hiện")}
+                onClick={() => handleFilterChange("Progress")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đang thực hiện"
+                  filterStatus === "Progress"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -507,9 +336,9 @@ const InformationCustomer = () => {
               </button>
 
               <button
-                onClick={() => handleFilterChange("Hoàn thành")}
+                onClick={() => handleFilterChange("Finish")}
                 className={`p-2 rounded ${
-                  filterStatus === "Hoàn thành"
+                  filterStatus === "Finish"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -517,9 +346,9 @@ const InformationCustomer = () => {
                 Hoàn thành
               </button>
               <button
-                onClick={() => handleFilterChange("Đã hủy")}
+                onClick={() => handleFilterChange("Cancel")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đã hủy"
+                  filterStatus === "Cancel"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -534,20 +363,19 @@ const InformationCustomer = () => {
                   className="p-4 border border-gray-300 rounded-lg"
                 >
                   <div className="flex justify-between mb-2">
-                    <h4 className="font-semibold">
-                      Đặt hàng từ: {order.store}
-                    </h4>
+                    <h4 className="font-semibold">Đặt hàng từ:</h4>
                     <span className="font-medium">{order.status}</span>
                   </div>
                   <hr className="border-gray-300 mb-2" />
                   <div className="flex items-center mb-2">
                     <div className="flex-grow">
                       <p className="font-semibold">
-                        Ngày đặt hàng: {order.date}
+                        Ngày đặt hàng:{" "}
+                        {new Date(order.orderDate).toISOString().split("T")[0]}
                       </p>
-                      <p>Địa chỉ giao hàng: {order.address}</p>
-                      <p>Tên người nhận: {order.store}</p>
-                      <p>Số điện thoại: {order.numbers}</p>
+                      <p>Địa chỉ nhận hàng: {order.receiveAddress}</p>
+                      <p>Tên người nhận: {order.receiveName}</p>
+                      <p>Số điện thoại: {order.receivePhone}</p>
                     </div>
                     <button
                       onClick={() => handleViewDetails(order)}
@@ -559,10 +387,10 @@ const InformationCustomer = () => {
                   <hr className="border-gray-300 mb-2" />
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">
-                      Tổng tiền: {order.total.toLocaleString()} VNĐ
+                      Tổng tiền: {order.totalPrice.toLocaleString()} VNĐ
                     </p>
 
-                    {order.status === "Đã hủy" && (
+                    {order.status === "Cancel" && (
                       <div className="flex space-x-2 mt-2">
                         <button
                           onClick={() => handleReBuy(order)}
@@ -572,7 +400,7 @@ const InformationCustomer = () => {
                         </button>
                       </div>
                     )}
-                    {order.status === "Chờ xác nhận" && (
+                    {order.status === "Inactive" && (
                       <div className="flex space-x-2 mt-2">
                         <button
                           //onClick={() => handleReBuy(order)}
@@ -596,16 +424,8 @@ const InformationCustomer = () => {
   const renderOrderDetails = () => {
     if (!selectedOrder) return null;
 
-    const stages = ["Chờ trả hàng", "Đang trả hàng", "Hoàn thành"];
-
-    // Determine the current stage index based on status
+    const stages = ["renting", "await", "returning", "finish"];
     const getStatusIndex = (status) => stages.indexOf(status);
-
-    const handleStageClick = (item, stage) => {
-      // Function to handle status change
-      item.status = stage;
-      setSelectedOrder({ ...selectedOrder }); // Update state to trigger re-render
-    };
 
     return (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center">
@@ -624,27 +444,37 @@ const InformationCustomer = () => {
                 <strong>Mã đơn hàng:</strong> {selectedOrder.id}
               </p>
               <p>
-                <strong>Ngày đặt:</strong> {selectedOrder.orderDate}
+                <strong>Ngày đặt:</strong>{" "}
+                {new Date(selectedOrder.orderDate).toISOString().split("T")[0]}
               </p>
               <p>
                 <strong>Tình trạng:</strong> {selectedOrder.status}
               </p>
+
               <p>
-                <strong>Tổng tiền:</strong>{" "}
-                {(selectedOrder.totalAmount || 0).toLocaleString()} VNĐ
+                <strong>Địa chỉ nhận hàng:</strong>{" "}
+                {selectedOrder.receiveAddress}
               </p>
               <p>
-                <strong>Địa chỉ giao hàng:</strong>{" "}
-                {selectedOrder.shippingAddress}
+                <strong>Tên người nhận:</strong> {selectedOrder.receiveName}
+              </p>
+
+              <p>
+                <strong>Số điện thoại:</strong> {selectedOrder.receivePhone}
+              </p>
+
+              <p>
+                <strong>Tổng tiền:</strong>{" "}
+                {(selectedOrder.totalPrice || 0).toLocaleString()} VNĐ
               </p>
             </div>
           </div>
 
           {/* Right side: OrderDetails */}
           <div className="w-1/2 p-4">
-            <h3 className="text-lg font-semibold">Chi tiết sản phẩm</h3>
-            <ul className="space-y-4 mt-4">
-              {selectedOrder.items.map((item) => {
+            <h3 className="text-lg font-semibold">Chi tiết đơn hàng</h3>
+            <ul className="space-y-4 mt-4 overflow-y-auto max-h-[700px] w-full px-4 py-4 text-lg">
+              {orderDetails.map((item) => {
                 const currentIndex = getStatusIndex(item.status);
 
                 return (
@@ -652,46 +482,132 @@ const InformationCustomer = () => {
                     key={item.id}
                     className="p-4 border border-gray-300 rounded-lg flex flex-col"
                   >
-                    <div className="flex items-center mb-2">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-20 h-20 object-cover mr-4"
-                      />
-                      <div className="flex-grow">
-                        <h4 className="font-semibold">{item.name}</h4>
-                        <p>Giá: {(item.price || 0).toLocaleString()} VNĐ</p>
-                        <p>Số lượng: {item.quantity}</p>
-                        <p>
-                          Tổng:{" "}
-                          {(item.price * item.quantity || 0).toLocaleString()}{" "}
-                          VNĐ
-                        </p>
-                      </div>
-                    </div>
+                    {item.quantity === -1 && (
+                      <div>
+                        <div className="flex items-center mb-2">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-20 h-20 object-cover mr-4"
+                          />
+                          <div className="flex-grow">
+                            <h4 className="font-semibold">{item.toyName}</h4>
+                            <p>
+                              Giá cọc: {(item.unitPrice || 0).toLocaleString()}{" "}
+                              VNĐ
+                            </p>
 
-                    <div className="relative">
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gray-300"></div>
-                      <div className="flex justify-between relative z-10">
-                        {stages.map((stage, index) => (
-                          <div
-                            key={stage}
-                            className="flex items-center justify-center space-x-2"
-                          >
-                            <div
-                              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                index <= currentIndex
-                                  ? "bg-green-500 text-white"
-                                  : "bg-gray-300 text-gray-600"
-                              }`}
-                            >
-                              {index + 1}
-                            </div>
-                            <div className="text-sm">{stage}</div>
+                            <p>
+                              Giá thuê: {(item.rentPrice || 0).toLocaleString()}{" "}
+                              VNĐ
+                            </p>
+                            <p>
+                              Ngày thuê:{" "}
+                              {
+                                new Date(item.startDate)
+                                  .toISOString()
+                                  .split("T")[0]
+                              }
+                            </p>
+                            <p>
+                              Ngày trả hàng:{" "}
+                              {
+                                new Date(item.endDate)
+                                  .toISOString()
+                                  .split("T")[0]
+                              }
+                            </p>
                           </div>
-                        ))}
+                          {item.status === "await" && (
+                            <div>
+                              <button
+                                className="flex items-center mb-2 px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
+                                onClick={() => handleExtendRental(item)}
+                              >
+                                Thuê tiếp
+                              </button>
+                              <button
+                                className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                                onClick={() => handleReturnOrderDetail(item)}
+                              >
+                                Trả hàng
+                              </button>
+                            </div>
+                          )}
+                          {item.status === "returning" && (
+                            <div>
+                              <button
+                                className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                                onClick={() => handleFinishOrderDetail(item)}
+                              >
+                                Đã trả hàng
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="relative">
+                          <div className="absolute top-0 left-0 w-full h-1 bg-gray-300"></div>
+                          <div className="flex justify-between relative z-10">
+                            {stages.map((stage, index) => (
+                              <div
+                                key={stage}
+                                className="flex items-center justify-center space-x-2"
+                              >
+                                <div
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    index <= currentIndex
+                                      ? "bg-green-500 text-white"
+                                      : "bg-gray-300 text-gray-600"
+                                  }`}
+                                >
+                                  {index + 1}
+                                </div>
+                                {stage === "renting" && (
+                                  <div className="text-sm">Đang thuê</div>
+                                )}
+                                {stage === "await" && (
+                                  <div className="text-sm">Chờ trả hàng</div>
+                                )}
+                                {stage === "returning" && (
+                                  <div className="text-sm">Đang trả hàng</div>
+                                )}
+                                {stage === "finish" && (
+                                  <div className="text-sm">Hoàn thành</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {item.quantity >= 1 && (
+                      <div className="flex items-center mb-2">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-20 h-20 object-cover mr-4"
+                        />
+                        <div className="flex-grow">
+                          <h4 className="font-semibold">{item.toyName}</h4>
+                          <p>
+                            Giá đồ chơi:{" "}
+                            {(item.unitPrice || 0).toLocaleString()} VNĐ
+                          </p>
+
+                          <p>Số lượng: {item.quantity}</p>
+
+                          <p>
+                            Tổng:{" "}
+                            {(
+                              item.unitPrice * item.quantity || 0
+                            ).toLocaleString()}{" "}
+                            VNĐ
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 );
               })}
