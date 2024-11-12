@@ -57,6 +57,9 @@ const HeaderForCustomer = () => {
           );
 
           console.log("Dữ liệu trả về:", response.data);
+          Cookies.set("userDataReal", JSON.stringify(response.data), {
+            expires: 1,
+          });
 
           if (response.data && response.data.length > 0) {
             const user = response.data[0];
@@ -377,6 +380,7 @@ const HeaderForCustomer = () => {
                     className="rounded-full"
                   />
                 </div>
+
                 <div className="flex justify-center items-center">
                   <p>{userData.fullName || userData.name}</p>
                 </div>

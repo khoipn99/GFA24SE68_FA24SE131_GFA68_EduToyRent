@@ -31,7 +31,32 @@ const LoginPage = () => {
           fullName: response.data.fullName,
         };
         Cookies.set("userData", JSON.stringify(userData), { expires: 1 });
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            console.error("Token không hợp lệ hoặc hết hạn.");
+            return;
+          }
 
+          // Gọi API lấy thông tin người dùng dựa trên email
+          const response = await axios.get(
+            `https://localhost:44350/api/v1/Users/ByEmail?email=${encodeURIComponent(
+              userData.email
+            )}&pageIndex=1&pageSize=5`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          console.log("Dữ liệu trả về:", response.data);
+          Cookies.set("userDataReal", JSON.stringify(response.data[0]), {
+            expires: 1,
+          });
+        } catch (error) {
+          console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+        }
         // Kiểm tra vai trò và chuyển hướng đến trang tương ứngg
         switch (userData.roleId) {
           case 1:

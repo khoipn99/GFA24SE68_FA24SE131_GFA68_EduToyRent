@@ -1,17 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
+import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
 
 const InformationCustomer = () => {
   const [selectedTab, setSelectedTab] = useState("info");
   const [isEditing, setIsEditing] = useState(false);
-  const [customerInfo, setCustomerInfo] = useState({
-    name: "Nguyễn Văn A",
-    email: "nguyenvana@example.com",
-    phone: "0123456789",
-  });
 
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [customerInfo, setCustomerInfo] = useState({});
+
+  useEffect(() => {
+    getUserInfo();
+  }, []);
+
+  const getUserInfo = () => {
+    const userDataCookie = Cookies.get("userDataReal");
+    if (userDataCookie) {
+      const parsedUserData = JSON.parse(userDataCookie);
+      setCustomerInfo(parsedUserData[0]);
+      console.log(parsedUserData[0]);
+    }
+  };
 
   // Dữ liệu mẫu cho đơn hàng
   const [orders, setOrders] = useState([
@@ -173,6 +183,11 @@ const InformationCustomer = () => {
     console.log("Thông tin đã lưu:", customerInfo);
   };
 
+  const handleCancel = () => {
+    getUserInfo();
+    setIsEditing(false);
+  };
+
   const handleFilterChange = (status) => {
     setFilterStatus(status);
   };
@@ -185,6 +200,8 @@ const InformationCustomer = () => {
     setSelectedOrder(null);
   };
 
+  const handleEditAvatar = () => {};
+
   const filteredOrders = orders.filter((order) => {
     return filterStatus === "all" || order.status === filterStatus;
   });
@@ -193,6 +210,45 @@ const InformationCustomer = () => {
   const handleReturnOrder = (order) => {};
   const handleReBuy = (order) => {};
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null); // Hiển thị ảnh hiện tại ban đầu
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Handle file selection
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      // Tạo preview hình ảnh đã chọn
+      const fileReader = new FileReader();
+      fileReader.onloadend = () => {
+        setPreviewImage(fileReader.result);
+      };
+      fileReader.readAsDataURL(file);
+    }
+  };
+
+  // Handle image upload to server (simulated here)
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+
+    // Simulate image upload (replace with actual upload logic)
+    const uploadedImageUrl = await uploadImage(selectedFile);
+
+    // Call the function to update the image URL in the database
+
+    setIsUploading(false);
+    setPreviewImage(uploadedImageUrl); // Update the preview with the uploaded image
+  };
+
+  // Simulated image upload function (replace with actual upload logic)
+  const uploadImage = async (file) => {
+    // Simulate uploading the file and returning a URL (replace with actual upload logic)
+    return URL.createObjectURL(file); // For demo purposes, just return a URL
+  };
+
   const renderContent = () => {
     switch (selectedTab) {
       case "info":
@@ -200,55 +256,206 @@ const InformationCustomer = () => {
           <div>
             <h3 className="text-lg font-semibold">Thông tin khách hàng</h3>
             {isEditing ? (
-              <div>
-                <label className="block">
-                  Tên:
-                  <input
-                    type="text"
-                    name="name"
-                    value={customerInfo.name}
-                    onChange={handleInputChange}
-                    className="border border-gray-300 rounded p-1"
+              <div className="flex justify-between items-center">
+                <div>
+                  <label className="flex justify-between items-center space-x-12 block">
+                    <p className="font-semibold w-4/10">Tên:</p>
+                    <input
+                      type="text"
+                      name="fullName"
+                      value={customerInfo.fullName}
+                      onChange={handleInputChange}
+                      className="w-6/10 border border-gray-300 rounded p-1"
+                    />
+                  </label>
+                  <label className="flex justify-between items-center space-x-12 block">
+                    <p className="font-semibold w-4/10">Địa chỉ:</p>
+                    <input
+                      type="text"
+                      name="address"
+                      value={customerInfo.address}
+                      onChange={handleInputChange}
+                      className="w-6/10 border border-gray-300 rounded p-1"
+                    />
+                  </label>
+                  <label className="flex justify-between items-center space-x-12 block">
+                    <p className="font-semibold w-4/10">Điện thoại:</p>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={customerInfo.phone}
+                      onChange={handleInputChange}
+                      className="w-6/10 border border-gray-300 rounded p-1"
+                    />
+                  </label>
+                  <label className="flex justify-between items-center space-x-12 block">
+                    <p className="font-semibold w-4/10">Ngày sinh:</p>
+                    <input
+                      type="date"
+                      name="dob"
+                      value={
+                        customerInfo.dob
+                          ? new Date(customerInfo.dob)
+                              .toISOString()
+                              .split("T")[0]
+                          : ""
+                      }
+                      onChange={handleInputChange}
+                      className="w-6/10 border border-gray-300 rounded p-1"
+                    />
+                  </label>
+
+                  <label className="flex justify-between items-center space-x-12 block">
+                    <p className="font-semibold w-4/10">Email:</p>
+                    <input
+                      type="email"
+                      name="email"
+                      value={customerInfo.email}
+                      onChange={handleInputChange}
+                      className="w-6/10 border border-gray-300 rounded p-1"
+                    />
+                  </label>
+                  <label className="flex justify-between items-center space-x-12 block">
+                    <p className="font-semibold w-4/10">Mật khẩu:</p>
+                    <input
+                      type="email"
+                      name="email"
+                      value={customerInfo.email}
+                      onChange={handleInputChange}
+                      className="w-6/10 border border-gray-300 rounded p-1"
+                    />
+                  </label>
+                  <button
+                    onClick={handleSaveChanges}
+                    className="mt-4 p-2 bg-blue-500 text-white rounded"
+                  >
+                    Lưu thay đổi
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="mt-4 p-2 bg-red-500 text-white rounded"
+                  >
+                    Hủy
+                  </button>
+                </div>
+                <div className="relative group w-40 h-40 ml-auto">
+                  {" "}
+                  {/* Increased size */}
+                  <img
+                    src={customerInfo.avatarUrl}
+                    alt="User Avatar"
+                    className="w-full h-full object-cover rounded-full"
                   />
-                </label>
-                <label className="block">
-                  Email:
-                  <input
-                    type="email"
-                    name="email"
-                    value={customerInfo.email}
-                    onChange={handleInputChange}
-                    className="border border-gray-300 rounded p-1"
-                  />
-                </label>
-                <label className="block">
-                  Điện thoại:
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={customerInfo.phone}
-                    onChange={handleInputChange}
-                    className="border border-gray-300 rounded p-1"
-                  />
-                </label>
-                <button
-                  onClick={handleSaveChanges}
-                  className="mt-4 p-2 bg-blue-500 text-white rounded"
-                >
-                  Lưu thay đổi
-                </button>
+                  <button
+                    onClick={handleEditAvatar}
+                    className="absolute inset-0 bg-black bg-opacity-50 text-white text-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
+                  >
+                    Chỉnh sửa hình ảnh
+                  </button>
+                </div>
               </div>
             ) : (
-              <div>
-                <p>Tên: {customerInfo.name}</p>
-                <p>Email: {customerInfo.email}</p>
-                <p>Điện thoại: {customerInfo.phone}</p>
-                <button
-                  onClick={handleEditToggle}
-                  className="mt-4 p-2 bg-yellow-500 text-white rounded"
-                >
-                  Sửa thông tin
-                </button>
+              <div className="flex justify-between items-center">
+                {/* Left Side: User Info */}
+                <div>
+                  <div className="flex justify-between items-center space-x-12">
+                    <p className="font-semibold w-4/10">Tên:</p>
+                    <p className="w-6/10">{customerInfo.fullName}</p>
+                  </div>
+
+                  <div className="flex justify-between items-center space-x-12">
+                    <p className="font-semibold w-4/10">Địa chỉ:</p>
+                    <p className="w-6/10">{customerInfo.address}</p>
+                  </div>
+
+                  <div className="flex justify-between items-center space-x-12">
+                    <p className="font-semibold w-4/10">Điện thoại:</p>
+                    <p className="w-6/10">{customerInfo.phone}</p>
+                  </div>
+
+                  <div className="flex justify-between items-center space-x-12">
+                    <p className="font-semibold w-4/10">Ngày sinh:</p>
+                    <p className="w-6/10">
+                      {customerInfo.dob
+                        ? new Date(customerInfo.dob).toISOString().split("T")[0]
+                        : ""}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-center space-x-12">
+                    <p className="font-semibold w-4/10">Email:</p>
+                    <p className="w-6/10">{customerInfo.email}</p>
+                  </div>
+
+                  <div className="flex justify-between items-center space-x-12">
+                    <p className="font-semibold w-4/10">Mật khẩu:</p>
+                    <p className="w-6/10">{customerInfo.password}</p>
+                  </div>
+
+                  <button
+                    onClick={handleEditToggle}
+                    className="mt-4 p-2 bg-yellow-500 text-white rounded w-full"
+                  >
+                    Sửa thông tin
+                  </button>
+                </div>
+
+                {/* Right Side: Larger User Avatar with Edit Button */}
+                <div className="relative group w-40 h-40 ml-auto">
+                  {" "}
+                  {/* Increased size */}
+                  <img
+                    src={customerInfo.avatarUrl}
+                    alt="User Avatar"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                  <button
+                    onClick={handleEditAvatar}
+                    className="absolute inset-0 bg-black bg-opacity-50 text-white text-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
+                  >
+                    Chỉnh sửa hình ảnh
+                  </button>
+                  <div className="relative">
+                    {/* Current Avatar */}
+                    <div className="flex justify-center items-center mb-4">
+                      <img
+                        src={previewImage}
+                        alt="Avatar"
+                        className="w-32 h-32 rounded-full object-cover"
+                      />
+                    </div>
+
+                    {/* Button to trigger file selection */}
+                    <label
+                      htmlFor="avatar-upload"
+                      className="p-2 bg-blue-500 text-white rounded cursor-pointer"
+                    >
+                      Tải hình ảnh mới
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+
+                    {selectedFile && (
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-600">
+                          Hình ảnh đã chọn: {selectedFile.name}
+                        </p>
+                        <button
+                          onClick={handleUpload}
+                          className="mt-2 p-2 bg-green-500 text-white rounded"
+                          disabled={isUploading}
+                        >
+                          {isUploading ? "Đang tải..." : "Lưu hình ảnh"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
