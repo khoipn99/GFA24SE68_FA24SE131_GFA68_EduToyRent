@@ -57,7 +57,7 @@ const Home = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedToy, setSelectedToy] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [rentalDuration, setRentalDuration] = useState(); // Giá trị mặc định là "1 tuần"
+  const [rentalDuration, setRentalDuration] = useState("1 tuần"); // Giá trị mặc định là "1 tuần"
   const [calculatedPrice, setCalculatedPrice] = useState(0);
   const [rentItems, setRentItems] = useState([]); // Khởi tạo giỏ hàng
   const navigate = useNavigate();
@@ -78,7 +78,7 @@ const Home = () => {
       });
 
     apiToys
-      .get("/AvailableForRent?pageIndex=1&pageSize=18")
+      .get("/AvailableForRent?pageIndex=1&pageSize=100")
       .then((response) => {
         console.log(response.data);
         setToysForRent(response.data);
@@ -233,6 +233,7 @@ const Home = () => {
     }
     return stars;
   };
+  // Hàm thêm sản phẩm vào giỏ hàng
   const addToCart = (toy) => {
     const cart = JSON.parse(Cookies.get("cart") || "[]");
 
@@ -242,13 +243,12 @@ const Home = () => {
     if (existingToyIndex !== -1) {
       // Nếu sản phẩm đã có, cập nhật số lượng và thời gian thuê
       cart[existingToyIndex].quantity += 1;
-      // Cập nhật thời gian thuê nếu người dùng đã chọn
       if (rentalDuration) {
-        cart[existingToyIndex].rentalDuration = rentalDuration;
+        cart[existingToyIndex].rentalDuration = rentalDuration; // Cập nhật thời gian thuê
       }
     } else {
       // Nếu chưa có, thêm sản phẩm mới vào giỏ hàng cùng với thời gian thuê
-      cart.push({ ...toy, quantity: 1, rentalDuration }); // Lưu rentalDuration
+      cart.push({ ...toy, quantity: 1, rentalDuration });
     }
 
     // Lưu lại giỏ hàng vào cookie
@@ -271,39 +271,44 @@ const Home = () => {
     alert("Sản phẩm đã được thêm vào danh sách mua!");
     console.log(`Đã thêm ${toy.name} vào giỏ hàng`);
   };
+  // Mở modal, đặt thời gian thuê mặc định và tính giá
   const openModal = (toy) => {
     setSelectedToy(toy);
     setIsModalOpen(true);
+    handleDurationChange("1 tuần"); // Đặt thời gian thuê mặc định là 1 tuần
+    const price = calculateRentalPrice(toy.price, "1 tuần"); // Tính giá thuê với thời gian 1 tuần
+    setCalculatedPrice(price); // Lưu giá thuê vào state
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setSelectedToy(null);
+    setSelectedToy(null); // Reset món đồ đã chọn
+    setRentalDuration("1 tuần"); // Đặt lại thời gian thuê về mặc định
+    setCalculatedPrice(0); // Reset giá thuê
   };
 
   // Cập nhật giá khi người dùng chọn thời gian thuê
   const handleDurationChange = (duration) => {
     if (selectedToy) {
-      // Kiểm tra xem selectedToy có tồn tại không
-      setRentalDuration(duration);
-      const price = calculateRentalPrice(selectedToy.price, duration);
-      setCalculatedPrice(price);
+      setRentalDuration(duration); // Cập nhật thời gian thuê trong state
+      const price = calculateRentalPrice(selectedToy.price, duration); // Tính giá thuê
+      setCalculatedPrice(price); // Cập nhật giá thuê đã tính vào state
     }
   };
+  // Hàm xác nhận thêm vào giỏ hàng
   const confirmAddToCart = () => {
     if (selectedToy) {
-      // Kiểm tra xem selectedToy có tồn tại không
-      updateRentalDuration(selectedToy.id, rentalDuration);
-
       // Gọi hàm addToCart để thêm sản phẩm vào giỏ hàng
-      addToCart({ ...selectedToy, rentalDuration }); // Thêm rentalDuration vào sản phẩm
+      addToCart({ ...selectedToy, rentalDuration });
       console.log(
         `Đã thêm ${selectedToy.name} vào giỏ với thời gian thuê: ${rentalDuration} và giá thuê: ${calculatedPrice} VNĐ`
       );
 
+      // Đóng modal sau khi thêm vào giỏ hàng
       closeModal();
     }
   };
+  // Hàm tính giá thuê
   const calculateRentalPrice = (price, duration) => {
     let rentalPrice = 0;
     switch (duration) {
@@ -321,7 +326,6 @@ const Home = () => {
     }
     return rentalPrice;
   };
-
   const updateRentalDuration = (itemId, duration) => {
     setRentItems((prevItems) =>
       prevItems.map((item) =>
@@ -420,6 +424,33 @@ const Home = () => {
               </div>
             </div>
 
+            <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
+              Các Nhãn Hàng Đối Tác
+            </h2>
+            <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex items-stretch p-4 gap-3">
+                {featuredToys.map((category, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
+                    onClick={() => FilterCategory(category.id)}
+                  >
+                    <div
+                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
+                      style={{
+                        backgroundImage: `url(${PictureCategory[index].image})`,
+                      }}
+                    ></div>
+
+                    <div>
+                      <p className="text-[#0e161b] text-base font-medium">
+                        {category.name}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
             <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
               Khuyễn mãi hôm nay
             </h2>

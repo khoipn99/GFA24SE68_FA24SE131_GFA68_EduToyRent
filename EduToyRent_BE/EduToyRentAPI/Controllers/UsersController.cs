@@ -100,7 +100,7 @@ namespace EduToyRentAPI.Controllers
         // PUT: api/Users/5
         [HttpPut("{id}")]
         [EnableQuery]
-        [Authorize(Roles = "1")]
+     //   [Authorize(Roles = "1")]
         public async Task<IActionResult> PutUser(int id, UserRequest userRequest)
         {
             var user = _unitOfWork.UserRepository.GetByID(id);
