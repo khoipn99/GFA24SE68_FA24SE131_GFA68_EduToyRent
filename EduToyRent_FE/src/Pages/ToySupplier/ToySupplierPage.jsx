@@ -4,7 +4,7 @@ import axios from "axios";
 import HeaderForToySupplier from "../../Component/HeaderForToySupplier/HeaderForToySupplier";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import { data } from "autoprefixer";
-
+import { EyeIcon, EyeOffIcon } from "@heroicons/react/solid";
 const ToySupplierPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("orders");
@@ -18,6 +18,13 @@ const ToySupplierPage = () => {
   const [toyId, setToyId] = useState(null); // Lưu URL ảnh để hiển thị
   const [toyData, setToyData] = useState(null);
   const [toysData, setToysData] = useState([]);
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+  const [selectedToy, setSelectedToy] = useState(null);
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -52,7 +59,7 @@ const ToySupplierPage = () => {
             setUserData(user);
             setUserId(user.id);
             setEditedData(user); // Cập nhật dữ liệu chỉnh sửa với thông tin của người dùng
-
+            setImageUrl(user.avatarUrl); // Đặt URL ảnh nếu có
             // Lấy danh sách đồ chơi của người dùng
             const toyResponse = await axios.get(
               `https://localhost:44350/api/v1/Toys/user/${user.id}?pageIndex=1&pageSize=20000`,
@@ -98,20 +105,8 @@ const ToySupplierPage = () => {
         formData.append("dob", editedData.dob || new Date().toISOString());
         formData.append("address", editedData.address || "Default Address");
         formData.append("status", editedData.status || "Active");
-        formData.append("roleId", editedData.roleId || 2);
-
-        // Kiểm tra và thêm avatarUrl
-        if (editedData.avatarUrl && editedData.avatarUrl instanceof File) {
-          // Nếu có ảnh mới, thêm file vào formData
-          formData.append("avatarUrl", editedData.avatarUrl);
-        } else if (userData.avatarUrl) {
-          // Nếu không có ảnh mới, gửi URL của ảnh hiện có
-          formData.append("avatarUrl", userData.avatarUrl);
-        } else {
-          // Nếu không có ảnh mới và cũng không có ảnh hiện tại, thêm giá trị mặc định
-          formData.append("avatarUrl", "default-avatar-url.jpg");
-        }
-
+        formData.append("roleId", editedData.role.id || "");
+        formData.append("avatarUrl", editedData.avatarUrl || "");
         const response = await axios.put(
           `https://localhost:44350/api/v1/Users/${userId}`,
           formData,
@@ -135,16 +130,111 @@ const ToySupplierPage = () => {
       console.error("Không tìm thấy ID người dùng.");
     }
   };
+  const handleUpdatePassword = async () => {
+    // Kiểm tra mật khẩu mới và xác nhận mật khẩu có khớp không
+    if (editedData.newPassword !== editedData.confirmPassword) {
+      alert(
+        "Mật khẩu mới và xác nhận mật khẩu không khớp. Vui lòng kiểm tra lại."
+      );
+      return;
+    }
+    try {
+      // Bước 1: Lấy thông tin người dùng bao gồm mật khẩu cũ
+      const userResponse = await axios.get(
+        `https://localhost:44350/api/v1/Users/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file && file.size <= 1024 * 1024) {
-      setFile(file); // Lưu file đã chọn vào state để gửi lên server
-      setImageUrl(URL.createObjectURL(file)); // Hiển thị ảnh tạm thời
-    } else {
-      alert("Dung lượng file tối đa là 1 MB");
+      // Kiểm tra mật khẩu cũ có khớp không
+      if (userResponse.data.password !== editedData.currentPassword) {
+        alert("Mật khẩu cũ không đúng. Vui lòng thử lại.");
+        return;
+      }
+      // Kiểm tra độ mạnh của mật khẩu mới
+      if (passwordStrength !== "Mạnh") {
+        alert("Mật khẩu mới phải đủ mạnh. Vui lòng thử lại.");
+        return;
+      }
+
+      // Tạo formData để gửi các dữ liệu cập nhật
+      const formData = new FormData();
+      formData.append("fullName", editedData.fullName || "Default Name");
+      formData.append("email", editedData.email || "default@example.com");
+      formData.append("password", editedData.newPassword || "defaultPassword");
+      formData.append(
+        "createDate",
+        editedData.createDate || new Date().toISOString()
+      );
+      formData.append("phone", editedData.phone || "0000000000");
+      formData.append("dob", editedData.dob || new Date().toISOString());
+      formData.append("address", editedData.address || "Default Address");
+      formData.append("status", editedData.status || "Active");
+      formData.append("roleId", editedData.role.id || "");
+      formData.append("avatarUrl", editedData.avatarUrl || "");
+
+      // Bước 2: Gửi yêu cầu PUT để cập nhật thông tin người dùng
+      const response = await axios.put(
+        `https://localhost:44350/api/v1/Users/${userId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Xử lý phản hồi thành công
+      console.log("Cập nhật thành công:", response.data);
+      setUserData(response.data);
+      setIsEditing(false);
+      window.location.reload();
+    } catch (error) {
+      // Xử lý lỗi khi gọi API
+      console.error("Lỗi khi đổi mật khẩu:", error);
+      alert("Đã xảy ra lỗi khi đổi mật khẩu. Vui lòng thử lại.");
     }
   };
+  // Hàm xử lý thay đổi tệp ảnh
+  const handleFileChange = async (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setImageUrl(URL.createObjectURL(selectedFile)); // Hiển thị ảnh ngay lập tức
+
+      // Gửi ảnh lên API ngay khi người dùng chọn ảnh
+      if (userId) {
+        const formData = new FormData();
+        formData.append("userImage", selectedFile);
+
+        try {
+          const response = await axios.put(
+            `https://localhost:44350/api/v1/Users/update-user-image/${userId}`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+
+          console.log("Cập nhật ảnh thành công:", response.data);
+          setImageUrl(response.data.avatarUrl); // Cập nhật lại URL ảnh mới từ API
+          window.location.reload();
+        } catch (error) {
+          console.error("Lỗi khi cập nhật ảnh:", error);
+        }
+      } else {
+        console.error("Không có userId.");
+      }
+    }
+  };
+  // Hàm để gửi ảnh lên API
+
   const handleEditClick = () => {
     setEditedData(userData);
     setIsEditing(true);
@@ -154,6 +244,27 @@ const ToySupplierPage = () => {
     setEditedData(userData); // Đặt lại dữ liệu về ban đầu
   };
 
+  const checkPasswordStrength = (password) => {
+    if (
+      password.length >= 8 &&
+      /[A-Z]/.test(password) &&
+      /\d/.test(password) &&
+      /[@$!%*?&]/.test(password)
+    ) {
+      setPasswordStrength("Mạnh");
+    } else if (password.length >= 6) {
+      setPasswordStrength("Trung bình");
+    } else {
+      setPasswordStrength("Yếu");
+    }
+  };
+
+  const toggleShowPassword = (field) => {
+    setShowPasswords((prevState) => ({
+      ...prevState,
+      [field]: !prevState[field],
+    }));
+  };
   const renderContent = () => {
     switch (selectedTab) {
       case "info":
@@ -272,7 +383,7 @@ const ToySupplierPage = () => {
                       />
                     </div>
 
-                    {/* Trường chọn ảnh */}
+                    {/* Trường chọn ảnh
                     <div className="mb-4">
                       <label className="block text-gray-700">
                         Ảnh đại diện
@@ -287,7 +398,7 @@ const ToySupplierPage = () => {
                         }
                         className="w-full p-2 border border-gray-300 rounded"
                       />
-                    </div>
+                    </div> */}
 
                     {/* Nút lưu và hủy */}
                     <div className="flex justify-end space-x-2">
@@ -307,9 +418,9 @@ const ToySupplierPage = () => {
                   </div>
                 </div>
               )}
-              <div className="w-1/3 flex flex-col items-center">
-                <div className="w-24 h-24 rounded-full flex items-center justify-center bg-gray-200 text-gray-500 text-2xl font-semibold">
-                  {/* Nếu đã có URL ảnh (hoặc tệp đã chọn), hiển thị ảnh */}
+              <div className="w-1/3 flex flex-col items-center mr-52">
+                <div className="w-36 h-36 rounded-full flex items-center justify-center bg-gray-200 text-gray-500 text-2xl font-semibold">
+                  {/* Hiển thị ảnh nếu có */}
                   {imageUrl ? (
                     <img
                       src={imageUrl} // Hiển thị ảnh từ URL tạm thời
@@ -318,13 +429,13 @@ const ToySupplierPage = () => {
                     />
                   ) : file ? (
                     <img
-                      src={URL.createObjectURL(file)}
+                      src={URL.createObjectURL(file)} // Hiển thị ảnh từ file được chọn tạm thời
                       alt="Avatar"
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : userData && userData.avatarUrl ? (
                     <img
-                      src={userData.avatarUrl} // Hiển thị ảnh từ URL lưu trong userData
+                      src={userData.avatarUrl} // Hiển thị ảnh từ URL trong userData
                       alt="Avatar"
                       className="w-full h-full rounded-full object-cover"
                     />
@@ -335,26 +446,181 @@ const ToySupplierPage = () => {
                   )}
                 </div>
 
+                {/* Input ẩn để chọn ảnh */}
                 <input
                   type="file"
                   accept=".jpeg, .png"
-                  //onChange={handleFileChange}
+                  onChange={handleFileChange} // Gọi hàm xử lý khi người dùng chọn file
                   className="hidden"
                   id="fileInput"
                 />
 
                 <button
                   className="mt-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none"
-                  onClick={() => document.getElementById("fileInput").click()}
+                  onClick={() => document.getElementById("fileInput").click()} // Mở input file khi click nút này
                 >
                   Chọn Ảnh
                 </button>
+
                 <p className="text-sm text-gray-500 mt-2 text-center">
                   Dung lượng file tối đa 1 MB
                   <br />
                   Định dạng: .JPEG, .PNG
                 </p>
               </div>
+            </div>
+          </div>
+        );
+      case "password":
+        return (
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-800">
+              Đổi Mật Khẩu
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Thay đổi mật khẩu để bảo mật tài khoản của bạn
+            </p>
+
+            <div className="flex mt-6">
+              <div className="w-2/3 pr-6">
+                <div className="mb-4">
+                  <label className="block text-gray-700 font-medium">
+                    <p>Xin chào {userData.fullName || userData.name}</p>
+                  </label>
+                </div>
+
+                <button
+                  onClick={handleEditClick}
+                  className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none"
+                >
+                  Đổi mật khẩu
+                </button>
+              </div>
+              {isEditing && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                  <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
+                    <h2 className="text-xl font-bold mb-4">Đổi mật khẩu</h2>
+
+                    {/* Form đổi mật khẩu */}
+                    <div className="mb-4">
+                      <label className="block text-gray-700">
+                        Mật khẩu hiện tại
+                      </label>
+                      <div className="relative">
+                        {/* Input mật khẩu */}
+                        <input
+                          type={showPasswords.current ? "text" : "password"}
+                          value={editedData.currentPassword || ""}
+                          onChange={(e) =>
+                            setEditedData({
+                              ...editedData,
+                              currentPassword: e.target.value,
+                            })
+                          }
+                          className="w-full p-2 border border-gray-300 rounded pr-10" // padding-left để tạo không gian cho icon bên trái
+                        />
+                        {/* Biểu tượng con mắt */}
+                        <button
+                          type="button"
+                          onClick={() => toggleShowPassword("current")}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        >
+                          {showPasswords.current ? (
+                            <EyeOffIcon className="h-5 w-5" />
+                          ) : (
+                            <EyeIcon className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-gray-700">
+                        Mật khẩu mới
+                      </label>
+                      <div className="relative">
+                        {/* Input mật khẩu */}
+                        <input
+                          type={showPasswords.new ? "text" : "password"}
+                          value={editedData.newPassword || ""}
+                          onChange={(e) => {
+                            setEditedData({
+                              ...editedData,
+                              newPassword: e.target.value,
+                            });
+                            checkPasswordStrength(e.target.value);
+                          }}
+                          className="w-full p-2 border border-gray-300 rounded pr-10" // padding-left để tạo không gian cho icon bên trái
+                        />
+                        {/* Biểu tượng con mắt */}
+                        <button
+                          type="button"
+                          onClick={() => toggleShowPassword("new")}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        >
+                          {showPasswords.new ? (
+                            <EyeOffIcon className="h-5 w-5" />
+                          ) : (
+                            <EyeIcon className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Mật khẩu nên có ít nhất 8 ký tự, bao gồm chữ hoa, chữ
+                        thường, số và ký tự đặc biệt như @, $, hoặc !
+                      </p>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-gray-700">
+                        Xác nhận mật khẩu mới
+                      </label>
+                      <div className="relative">
+                        {/* Input mật khẩu */}
+                        <input
+                          type={showPasswords.confirm ? "text" : "password"}
+                          value={editedData.confirmPassword || ""}
+                          onChange={(e) =>
+                            setEditedData({
+                              ...editedData,
+                              confirmPassword: e.target.value,
+                            })
+                          }
+                          className="w-full p-2 border border-gray-300 rounded pr-10" // padding-left để tạo không gian cho icon bên trái
+                        />
+                        {/* Biểu tượng con mắt */}
+                        <button
+                          type="button"
+                          onClick={() => toggleShowPassword("confirm")}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        >
+                          {showPasswords.confirm ? (
+                            <EyeOffIcon className="h-5 w-5" />
+                          ) : (
+                            <EyeIcon className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={handleCancelEdit}
+                        className="px-4 py-2 bg-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-400"
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        onClick={handleUpdatePassword}
+                        className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600"
+                      >
+                        Lưu
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              ;
             </div>
           </div>
         );
@@ -421,12 +687,7 @@ const ToySupplierPage = () => {
                           >
                             Price
                           </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            Star
-                          </th>
+
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
@@ -445,18 +706,7 @@ const ToySupplierPage = () => {
                           >
                             Brand
                           </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            RentCount
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            BuyQuantity
-                          </th>
+
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
@@ -475,18 +725,7 @@ const ToySupplierPage = () => {
                           >
                             Status
                           </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            UserId
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            CategoryId
-                          </th>
+
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
@@ -503,6 +742,7 @@ const ToySupplierPage = () => {
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={toy.id}
+                              onClick={() => setSelectedToy(toy)} // Cập nhật selectedToy khi bấm vào dòng
                             >
                               <td className="w-4 p-4">
                                 <div className="flex items-center">
@@ -528,9 +768,7 @@ const ToySupplierPage = () => {
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {toy.price}
                               </td>
-                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.star}
-                              </td>
+
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {toy.origin}
                               </td>
@@ -540,12 +778,7 @@ const ToySupplierPage = () => {
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {toy.brand}
                               </td>
-                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.rentCount}
-                              </td>
-                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.buyQuantity}
-                              </td>
+
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {new Date(toy.createDate).toLocaleDateString()}
                               </td>
@@ -555,12 +788,7 @@ const ToySupplierPage = () => {
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {toy.status}
                               </td>
-                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.owner.id}
-                              </td>
-                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.category.id}
-                              </td>
+
                               <td className="p-4 space-x-2 whitespace-nowrap">
                                 <button
                                   type="button"
@@ -628,9 +856,48 @@ const ToySupplierPage = () => {
                 </button>
               </div>
             </div>
+            {selectedToy && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
+                <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+                  <h2 className="text-xl font-bold mb-4">Toy Details</h2>
+                  <div>
+                    <p>
+                      <strong>Name:</strong> {selectedToy.name}
+                    </p>
+                    <p>
+                      <strong>Price:</strong> {selectedToy.price}
+                    </p>
+                    <p>
+                      <strong>Origin:</strong> {selectedToy.origin}
+                    </p>
+                    <p>
+                      <strong>Age:</strong> {selectedToy.age}
+                    </p>
+                    <p>
+                      <strong>Brand:</strong> {selectedToy.brand}
+                    </p>
+                    <p>
+                      <strong>Create Date:</strong>{" "}
+                      {new Date(selectedToy.createDate).toLocaleDateString()}
+                    </p>
+                    <p>
+                      <strong>Rent Time:</strong> {selectedToy.rentTime}
+                    </p>
+                    <p>
+                      <strong>Status:</strong> {selectedToy.status}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedToy(null)} // Đóng card khi bấm nút
+                    className="mt-4 bg-red-500 text-white p-2 rounded-lg"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         );
-
       case "dashboard":
         return (
           <div>
@@ -663,7 +930,14 @@ const ToySupplierPage = () => {
             >
               <span className="icon-class mr-2">👤</span> Thông tin cửa hàng
             </button>
-
+            <button
+              onClick={() => setSelectedTab("password")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "password" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">🔒</span> Đổi mật khẩu
+            </button>
             <button
               onClick={() => setSelectedTab("products")}
               className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${

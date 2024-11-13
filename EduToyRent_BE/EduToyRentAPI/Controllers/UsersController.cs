@@ -64,7 +64,7 @@ namespace EduToyRentAPI.Controllers
         // GET: api/Users/5
         [HttpGet("{id}")]
         [EnableQuery]
-        [Authorize(Roles = "1")]
+       // [Authorize(Roles = "1")]
         public async Task<ActionResult<UserResponse>> GetUser(int id)
         {
             var user = _unitOfWork.UserRepository.GetByID(id);
