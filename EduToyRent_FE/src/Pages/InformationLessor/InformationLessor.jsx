@@ -1,228 +1,78 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
+import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
+import apiOrderDetail from "../../service/ApiOrderDetail";
+import apiOrder from "../../service/ApiOrder";
+import apiToys from "../../service/ApiToys";
+import apiCategory from "../../service/ApiCategory";
+import apiMedia from "../../service/ApiMedia";
 
 const InformationLessor = () => {
   const [selectedTab, setSelectedTab] = useState("orders");
-  const [selectedOrder, setSelectedOrder] = useState(null); // To store selected order details
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const [customerInfo, setCustomerInfo] = useState({});
+
+  const [orders, setOrders] = useState([]);
+  const [orderDetails, setOrderDetails] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   // Sample data for orders
-  const [orders, setOrders] = useState([
-    {
-      id: 1,
-      product: "Người dùng A",
-      store: "Người dùng A",
-      price: 100000,
-      quantity: 2,
-      total: 200000,
-      status: "Chờ xác nhận",
-      address: "Quận 9",
-      date: "2024-01-01",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 1,
-          name: "Sản phẩm 1",
-          price: 50000,
-          quantity: 2,
-          image: "path_to_image_1.jpg",
-          status: "Chờ xác nhận",
-        },
-        {
-          id: 2,
-          name: "Sản phẩm 2",
-          price: 50000,
-          quantity: 1,
-          image: "path_to_image_2.jpg",
-          status: "Chờ xác nhận",
-        },
-      ],
-    },
-    {
-      id: 2,
-      product: "Người dùng B",
-      store: "Người dùng B",
-      price: 150000,
-      quantity: 1,
-      total: 150000,
-      status: "Đang vận chuyển",
-      address: "Quận 1",
-      date: "2024-01-02",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 3,
-          name: "Sản phẩm 3",
-          price: 150000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Đang vận chuyển",
-        },
-      ],
-    },
-    {
-      id: 3,
-      product: "Người dùng C",
-      store: "Người dùng C",
-      price: 150000,
-      quantity: 1,
-      total: 150000,
-      status: "Đang thuê",
-      address: "Quận 1",
-      date: "2024-01-02",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 4,
-          name: "Sản phẩm 3",
-          price: 150000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Đang thuê",
-        },
-      ],
-    },
-    {
-      id: 4,
-      product: "Người dùng D",
-      store: "Người dùng D",
-      price: 150000,
-      quantity: 1,
-      total: 150000,
-      status: "Chờ trả hàng",
-      address: "Quận 1",
-      date: "2024-01-02",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 5,
-          name: "Sản phẩm 3",
-          price: 150000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Đang trả hàng",
-        },
-        {
-          id: 6,
-          name: "Sản phẩm 6",
-          price: 1500000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Chờ trả hàng",
-        },
-        {
-          id: 6,
-          name: "Sản phẩm 7",
-          price: 1700000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Hoàn thành",
-        },
-      ],
-    },
+  useEffect(() => {
+    getUserInfo();
+    getOrderInfo();
+    getProductInfo();
+    getCategoryInfo();
+  }, []);
 
-    {
-      id: 5,
-      product: "Người dùng E",
-      store: "Người dùng E",
-      price: 150000,
-      quantity: 1,
-      total: 150000,
-      status: "Hoàn thành",
-      address: "Quận 1",
-      date: "2024-01-02",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 5,
-          name: "Sản phẩm 3",
-          price: 150000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Hoàn thành",
-        },
-      ],
-    },
+  const getUserInfo = () => {
+    const userDataCookie = Cookies.get("userDataReal");
+    if (userDataCookie) {
+      const parsedUserData = JSON.parse(userDataCookie);
+      setCustomerInfo(parsedUserData[0]);
+      console.log(parsedUserData[0]);
+    }
+  };
 
-    {
-      id: 6,
-      product: "Người dùng F",
-      store: "Người dùng F",
-      price: 150000,
-      quantity: 1,
-      total: 150000,
-      status: "Đã hủy",
-      address: "Quận 1",
-      date: "2024-01-02",
-      numbers: "1234567890",
-      items: [
-        {
-          id: 5,
-          name: "Sản phẩm 3",
-          price: 150000,
-          quantity: 1,
-          image: "path_to_image_3.jpg",
-          status: "Đã hủy",
-        },
-      ],
-    },
-  ]);
+  const getCategoryInfo = () => {
+    apiCategory.get("?pageIndex=1&pageSize=50").then((response) => {
+      setCategories(response.data);
+    });
+  };
 
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Sản phẩm 1",
-      price: 50000,
-      status: "Đang cho thuê",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-    {
-      id: 2,
-      name: "Sản phẩm 2",
-      price: 75000,
-      status: "Chờ duyệt",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-    {
-      id: 3,
-      name: "Sản phẩm 3",
-      price: 60000,
-      status: "Đã duyệt",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-    {
-      id: 4,
-      name: "Sản phẩm 4",
-      price: 80000,
-      status: "Bị cấm",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-    {
-      id: 5,
-      name: "Sản phẩm 5",
-      price: 90000,
-      status: "Đang cho thuê",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-    {
-      id: 6,
-      name: "Sản phẩm 5",
-      price: 90000,
-      status: "Đang cho thuê",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-  ]);
+  const getOrderInfo = () => {
+    const userDataCookie = Cookies.get("userDataReal");
+    const parsedUserData = JSON.parse(userDataCookie);
+
+    apiOrder
+      .get(
+        "/ByShop?shopId=" + parsedUserData[0].id + "&pageIndex=1&pageSize=1000"
+      )
+      .then((response) => {
+        setOrders(response.data);
+        console.log(response.data);
+      });
+  };
+
+  const [products, setProducts] = useState([]);
 
   const [filterStatus, setFilterStatus] = useState("all");
   const [productFilter, setProductFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  const getProductInfo = () => {
+    const userDataCookie = Cookies.get("userDataReal");
+    const parsedUserData = JSON.parse(userDataCookie);
+
+    apiToys
+      .get("/user/" + parsedUserData[0].id + "?pageIndex=1&pageSize=1000")
+      .then((response) => {
+        setProducts(response.data);
+        console.log(response.data);
+      });
+  };
 
   const handleProductFilterChange = (filter) => {
     setProductFilter(filter);
@@ -230,20 +80,7 @@ const InformationLessor = () => {
   };
 
   const filteredProducts = products.filter((product) => {
-    switch (productFilter) {
-      case "all":
-        return true;
-      case "rented":
-        return product.status === "Đang cho thuê";
-      case "pending":
-        return product.status === "Chờ duyệt";
-      case "approved":
-        return product.status === "Đã duyệt";
-      case "banned":
-        return product.status === "Bị cấm";
-      default:
-        return true;
-    }
+    return productFilter === "all" || product.status === productFilter;
   });
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -269,7 +106,19 @@ const InformationLessor = () => {
   };
 
   const handleViewDetails = (order) => {
-    setSelectedOrder(order); // Set selected order to view details
+    setSelectedOrder(order);
+
+    apiOrderDetail.get("/Order/" + order.id).then((response) => {
+      setOrderDetails(response.data);
+      console.log(response.data);
+    });
+  };
+
+  const ViewDetails = () => {
+    apiOrderDetail.get("/Order/" + selectedOrder.id).then((response) => {
+      setOrderDetails(response.data);
+      console.log(response.data);
+    });
   };
 
   const closeDetails = () => {
@@ -280,16 +129,55 @@ const InformationLessor = () => {
     return filterStatus === "all" || order.status === filterStatus;
   });
 
+  const handleFinishOrderDetail = (order) => {
+    var tmp = order;
+    tmp.status = "finish";
+
+    apiOrderDetail.put("/" + order.id, tmp).then((response) => {
+      ViewDetails();
+    });
+  };
+
+  const handleAcceptOrder = (order) => {
+    var tmp = order;
+    tmp.status = "Active";
+
+    apiOrder.put("/" + order.id, tmp).then((response) => {
+      getOrderInfo();
+    });
+  };
+
+  const handleCancelOrder = (order) => {
+    var tmp = order;
+    tmp.status = "Cancel";
+
+    apiOrder.put("/" + order.id, tmp).then((response) => {
+      getOrderInfo();
+    });
+  };
+
+  const handleFinishDeliveryOrder = (order) => {
+    var tmp = order;
+    tmp.status = "Progress";
+
+    apiOrder.put("/" + order.id, tmp).then((response) => {
+      getOrderInfo();
+    });
+  };
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [newProduct, setNewProduct] = useState({
     name: "",
-    details: "",
+    description: "",
     price: "",
+    buyQuantity: -1,
     origin: "",
     age: "",
     brand: "",
-    category: "",
-    image: null,
+    categoryId: 1,
+    rentCount: 0,
+    rentTime: "o",
   });
 
   const handleInputChange = (e) => {
@@ -297,16 +185,37 @@ const InformationLessor = () => {
     setNewProduct((prev) => ({ ...prev, [name]: value }));
   };
 
+  const [newImage, setNewImage] = useState([]);
+  const [newImage2, setNewImage2] = useState([]);
+
   const handleImageChange = (e) => {
-    setNewProduct((prev) => ({ ...prev, image: e.target.files[0] }));
+    setNewImage(e.target.files[0]);
   };
 
-  const openModal = () => setIsModalOpen(true);
+  const handleImageChange2 = (e) => {
+    setNewImage2(e.target.files[0]);
+  };
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
   const closeModal = () => setIsModalOpen(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would normally send the newProduct data to the server
+
+    apiToys.post("", newProduct).then((response) => {
+      getProductInfo();
+      var formData = new FormData();
+
+      formData.append(`mediaUrls`, newImage);
+      formData.append(`mediaUrls`, newImage2);
+
+      apiMedia
+        .post("/upload-toy-images/" + response.data.id, formData)
+        .then((response) => {});
+    });
+
     console.log("New product:", newProduct);
     closeModal();
   };
@@ -364,9 +273,9 @@ const InformationLessor = () => {
                 Tất cả
               </button>
               <button
-                onClick={() => handleFilterChange("Chờ xác nhận")}
+                onClick={() => handleFilterChange("Inactive")}
                 className={`p-2 rounded ${
-                  filterStatus === "Chờ xác nhận"
+                  filterStatus === "Inactive"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -374,9 +283,9 @@ const InformationLessor = () => {
                 Chờ xác nhận
               </button>
               <button
-                onClick={() => handleFilterChange("Đang vận chuyển")}
+                onClick={() => handleFilterChange("Active")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đang vận chuyển"
+                  filterStatus === "Active"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -384,30 +293,20 @@ const InformationLessor = () => {
                 Đang vận chuyển
               </button>
               <button
-                onClick={() => handleFilterChange("Đang thuê")}
+                onClick={() => handleFilterChange("Progress")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đang thuê"
+                  filterStatus === "Progress"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
               >
-                Đang thuê
-              </button>
-              <button
-                onClick={() => handleFilterChange("Chờ trả hàng")}
-                className={`p-2 rounded ${
-                  filterStatus === "Chờ trả hàng"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-300"
-                }`}
-              >
-                Chờ trả hàng
+                Đang thực hiện
               </button>
 
               <button
-                onClick={() => handleFilterChange("Hoàn thành")}
+                onClick={() => handleFilterChange("Finish")}
                 className={`p-2 rounded ${
-                  filterStatus === "Hoàn thành"
+                  filterStatus === "Finish"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -415,9 +314,9 @@ const InformationLessor = () => {
                 Hoàn thành
               </button>
               <button
-                onClick={() => handleFilterChange("Đã hủy")}
+                onClick={() => handleFilterChange("Cancel")}
                 className={`p-2 rounded ${
-                  filterStatus === "Đã hủy"
+                  filterStatus === "Cancel"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -433,7 +332,7 @@ const InformationLessor = () => {
                 >
                   <div className="flex justify-between mb-2">
                     <h4 className="font-semibold">
-                      Người đặt hàng: {order.store}
+                      Người đặt hàng: {order.userName}
                     </h4>
                     <span className="font-medium">{order.status}</span>
                   </div>
@@ -441,11 +340,12 @@ const InformationLessor = () => {
                   <div className="flex items-center mb-2">
                     <div className="flex-grow">
                       <p className="font-semibold">
-                        Ngày đặt hàng: {order.date}
+                        Ngày đặt hàng:{" "}
+                        {new Date(order.orderDate).toISOString().split("T")[0]}
                       </p>
-                      <p>Địa chỉ giao hàng: {order.address}</p>
-                      <p>Tên người nhận: {order.store}</p>
-                      <p>Số điện thoại: {order.numbers}</p>
+                      <p>Địa chỉ giao hàng: {order.receiveAddress}</p>
+                      <p>Tên người nhận: {order.receiveName}</p>
+                      <p>Số điện thoại: {order.receivePhone}</p>
                     </div>
                     <button
                       onClick={() => handleViewDetails(order)}
@@ -455,26 +355,42 @@ const InformationLessor = () => {
                     </button>
                   </div>
                   <hr className="border-gray-300 mb-2" />
-                  <p className="font-semibold">
-                    Tổng tiền: {order.total.toLocaleString()} VNĐ
-                  </p>
-                  {order.status === "Chờ xác nhận" && (
-                    <div className="flex space-x-2 mt-2">
-                      <button className="p-2 bg-green-500 text-white rounded">
-                        Xác nhận đơn hàng
-                      </button>
-                      <button className="p-2 bg-red-500 text-white rounded">
-                        Không nhận đơn hàng
-                      </button>
-                    </div>
-                  )}
-                  {order.status === "Đang vận chuyển" && (
-                    <div className="flex space-x-2 mt-2">
-                      <button className="p-2 bg-green-500 text-white rounded">
-                        Đã giao hàng
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold">
+                      Tổng tiền: {order.totalPrice.toLocaleString()} VNĐ
+                    </p>
+
+                    {order.status === "Active" && (
+                      <div className="flex space-x-2 mt-2">
+                        <button
+                          onClick={() => handleFinishDeliveryOrder(order)}
+                          className="p-2 bg-green-500 text-white rounded"
+                        >
+                          Đã giao hàng
+                        </button>
+                      </div>
+                    )}
+                    {order.status === "Inactive" && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex space-x-2 mt-2">
+                          <button
+                            onClick={() => handleCancelOrder(order)}
+                            className="p-2 bg-red-500 text-white rounded"
+                          >
+                            Hủy đơn hàng
+                          </button>
+                        </div>
+                        <div className="flex space-x-2 mt-2">
+                          <button
+                            onClick={() => handleAcceptOrder(order)}
+                            className="p-2 bg-green-500 text-white rounded"
+                          >
+                            Xác nhận đơn hàng
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -515,10 +431,11 @@ const InformationLessor = () => {
                     <label className="block mb-2">
                       Chi tiết:
                       <textarea
-                        name="details"
-                        value={newProduct.details}
+                        name="description"
+                        value={newProduct.description}
                         onChange={handleInputChange}
                         className="border border-gray-300 rounded p-1 w-full"
+                        required
                       />
                     </label>
                     <label className="block mb-2">
@@ -529,6 +446,7 @@ const InformationLessor = () => {
                         value={newProduct.price}
                         onChange={handleInputChange}
                         className="border border-gray-300 rounded p-1 w-full"
+                        required
                       />
                     </label>
                     <label className="block mb-2">
@@ -539,6 +457,7 @@ const InformationLessor = () => {
                         value={newProduct.origin}
                         onChange={handleInputChange}
                         className="border border-gray-300 rounded p-1 w-full"
+                        required
                       />
                     </label>
                     <label className="block mb-2">
@@ -549,6 +468,7 @@ const InformationLessor = () => {
                         value={newProduct.age}
                         onChange={handleInputChange}
                         className="border border-gray-300 rounded p-1 w-full"
+                        required
                       />
                     </label>
                     <label className="block mb-2">
@@ -559,23 +479,39 @@ const InformationLessor = () => {
                         value={newProduct.brand}
                         onChange={handleInputChange}
                         className="border border-gray-300 rounded p-1 w-full"
+                        required
                       />
                     </label>
                     <label className="block mb-2">
                       Loại đồ chơi:
-                      <input
-                        type="text"
-                        name="category"
-                        value={newProduct.category}
+                      <select
+                        name="categoryId"
+                        type="number"
+                        value={newProduct.categoryId}
                         onChange={handleInputChange}
                         className="border border-gray-300 rounded p-1 w-full"
-                      />
+                      >
+                        {categories.map((category, index) => (
+                          <option key={index} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
                     </label>
                     <label className="block mb-2">
                       Hình ảnh:
                       <input
                         type="file"
                         onChange={handleImageChange}
+                        className="border border-gray-300 rounded p-1 w-full"
+                        accept="image/*"
+                      />
+                    </label>
+                    <label className="block mb-2">
+                      Hình ảnh 2:
+                      <input
+                        type="file"
+                        onChange={handleImageChange2}
                         className="border border-gray-300 rounded p-1 w-full"
                         accept="image/*"
                       />
@@ -618,9 +554,9 @@ const InformationLessor = () => {
                 Đang cho thuê
               </button>
               <button
-                onClick={() => handleProductFilterChange("pending")}
+                onClick={() => handleProductFilterChange("Inactive")}
                 className={`p-2 rounded ${
-                  productFilter === "pending"
+                  productFilter === "Inactive"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -650,13 +586,13 @@ const InformationLessor = () => {
             </div>
 
             <ul className="space-y-4">
-              {filteredProducts.map((product) => (
+              {currentProducts.map((product) => (
                 <li
                   key={product.id}
                   className="p-4 border border-gray-300 rounded-lg flex items-center"
                 >
                   <img
-                    src={product.image}
+                    src="https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png"
                     alt={product.name}
                     className="w-24 h-24 object-cover mr-4"
                   />
@@ -712,7 +648,7 @@ const InformationLessor = () => {
                       />
                       <textarea
                         name="details"
-                        value={editedProduct.details}
+                        value={editedProduct.description}
                         onChange={handleChange}
                         className="mb-2 w-full p-2 border border-gray-300 rounded"
                         placeholder="Chi tiết"
@@ -734,7 +670,7 @@ const InformationLessor = () => {
                       />
                       <input
                         name="category"
-                        value={editedProduct.category}
+                        value={editedProduct.category.name}
                         onChange={handleChange}
                         className="mb-2 w-full p-2 border border-gray-300 rounded"
                         placeholder="Loại đồ chơi"
@@ -766,7 +702,7 @@ const InformationLessor = () => {
                         <strong>Trạng thái:</strong> {selectedProduct.status}
                       </p>
                       <p>
-                        <strong>Chi tiết:</strong> {selectedProduct.details}
+                        <strong>Chi tiết:</strong> {selectedProduct.description}
                       </p>
                       <p>
                         <strong>Tuổi:</strong> {selectedProduct.age}
@@ -776,13 +712,13 @@ const InformationLessor = () => {
                       </p>
                       <p>
                         <strong>Loại đồ chơi:</strong>{" "}
-                        {selectedProduct.category}
+                        {selectedProduct.category.name}
                       </p>
                       <p>
                         <strong>Nguồn gốc:</strong> {selectedProduct.origin}
                       </p>
-                      {(selectedProduct.status === "Chờ duyệt" ||
-                        selectedProduct.status === "Đã duyệt") && (
+                      {(selectedProduct.status === "Inactive" ||
+                        selectedProduct.status === "Active") && (
                         <button
                           onClick={handleEditClick}
                           className="mt-4 p-2 bg-yellow-500 text-white rounded"
@@ -844,39 +780,180 @@ const InformationLessor = () => {
   const renderOrderDetails = () => {
     if (!selectedOrder) return null;
 
+    const stages = ["renting", "await", "returning", "finish"];
+    const getStatusIndex = (status) => stages.indexOf(status);
+
     return (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center">
-        <div className="bg-white p-6 rounded shadow-lg relative">
-          <button
-            onClick={closeDetails}
-            className="absolute top-2 right-2 text-red-500"
-          >
-            Đóng
-          </button>
-          <h3 className="text-lg font-semibold">Chi tiết đơn hàng</h3>
-          <ul className="space-y-4 mt-4">
-            {selectedOrder.items.map((item) => (
-              <li
-                key={item.id}
-                className="p-4 border border-gray-300 rounded-lg flex"
-              >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-20 h-20 object-cover mr-4"
-                />
-                <div className="flex-grow">
-                  <h4 className="font-semibold">{item.name}</h4>
-                  <p>Giá: {item.price.toLocaleString()} VNĐ</p>
-                  <p>Số lượng: {item.quantity}</p>
-                  <p>
-                    Tổng: {(item.price * item.quantity).toLocaleString()} VNĐ
-                  </p>
-                  <h4 className="font-semibold">{item.status}</h4>
-                </div>
-              </li>
-            ))}
-          </ul>
+        <div className="bg-white p-6 rounded shadow-lg relative w-3/4 flex">
+          {/* Left side: Order information */}
+          <div className="w-1/2 p-4 border-r border-gray-300">
+            <button
+              onClick={closeDetails}
+              className="absolute top-2 right-2 text-red-500"
+            >
+              Đóng
+            </button>
+            <h3 className="text-lg font-semibold">Thông tin đơn hàng</h3>
+            <div className="mt-4 space-y-2">
+              <p>
+                <strong>Mã đơn hàng:</strong> {selectedOrder.id}
+              </p>
+              <p>
+                <strong>Ngày đặt:</strong>{" "}
+                {new Date(selectedOrder.orderDate).toISOString().split("T")[0]}
+              </p>
+              <p>
+                <strong>Tình trạng:</strong> {selectedOrder.status}
+              </p>
+
+              <p>
+                <strong>Địa chỉ nhận hàng:</strong>{" "}
+                {selectedOrder.receiveAddress}
+              </p>
+              <p>
+                <strong>Tên người nhận:</strong> {selectedOrder.receiveName}
+              </p>
+
+              <p>
+                <strong>Số điện thoại:</strong> {selectedOrder.receivePhone}
+              </p>
+
+              <p>
+                <strong>Tổng tiền:</strong>{" "}
+                {(selectedOrder.totalPrice || 0).toLocaleString()} VNĐ
+              </p>
+            </div>
+          </div>
+
+          {/* Right side: OrderDetails */}
+          <div className="w-1/2 p-4">
+            <h3 className="text-lg font-semibold">Chi tiết đơn hàng</h3>
+            <ul className="space-y-4 mt-4 overflow-y-auto max-h-[700px] w-full px-4 py-4 text-lg">
+              {orderDetails.map((item) => {
+                const currentIndex = getStatusIndex(item.status);
+
+                return (
+                  <li
+                    key={item.id}
+                    className="p-4 border border-gray-300 rounded-lg flex flex-col"
+                  >
+                    {item.quantity === -1 && (
+                      <div>
+                        <div className="flex items-center mb-2">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-20 h-20 object-cover mr-4"
+                          />
+                          <div className="flex-grow">
+                            <h4 className="font-semibold">{item.toyName}</h4>
+                            <p>
+                              Giá cọc: {(item.unitPrice || 0).toLocaleString()}{" "}
+                              VNĐ
+                            </p>
+
+                            <p>
+                              Giá thuê: {(item.rentPrice || 0).toLocaleString()}{" "}
+                              VNĐ
+                            </p>
+                            <p>
+                              Ngày thuê:{" "}
+                              {
+                                new Date(item.startDate)
+                                  .toISOString()
+                                  .split("T")[0]
+                              }
+                            </p>
+                            <p>
+                              Ngày trả hàng:{" "}
+                              {
+                                new Date(item.endDate)
+                                  .toISOString()
+                                  .split("T")[0]
+                              }
+                            </p>
+                          </div>
+
+                          {item.status === "returning" && (
+                            <div>
+                              <button
+                                className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                                onClick={() => handleFinishOrderDetail(item)}
+                              >
+                                Đã nhận hàng
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="relative">
+                          <div className="absolute top-0 left-0 w-full h-1 bg-gray-300"></div>
+                          <div className="flex justify-between relative z-10">
+                            {stages.map((stage, index) => (
+                              <div
+                                key={stage}
+                                className="flex items-center justify-center space-x-2"
+                              >
+                                <div
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    index <= currentIndex
+                                      ? "bg-green-500 text-white"
+                                      : "bg-gray-300 text-gray-600"
+                                  }`}
+                                >
+                                  {index + 1}
+                                </div>
+                                {stage === "renting" && (
+                                  <div className="text-sm">Đang thuê</div>
+                                )}
+                                {stage === "await" && (
+                                  <div className="text-sm">Chờ trả hàng</div>
+                                )}
+                                {stage === "returning" && (
+                                  <div className="text-sm">Đang trả hàng</div>
+                                )}
+                                {stage === "finish" && (
+                                  <div className="text-sm">Hoàn thành</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {item.quantity >= 1 && (
+                      <div className="flex items-center mb-2">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-20 h-20 object-cover mr-4"
+                        />
+                        <div className="flex-grow">
+                          <h4 className="font-semibold">{item.toyName}</h4>
+                          <p>
+                            Giá đồ chơi:{" "}
+                            {(item.unitPrice || 0).toLocaleString()} VNĐ
+                          </p>
+
+                          <p>Số lượng: {item.quantity}</p>
+
+                          <p>
+                            Tổng:{" "}
+                            {(
+                              item.unitPrice * item.quantity || 0
+                            ).toLocaleString()}{" "}
+                            VNĐ
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
       </div>
     );

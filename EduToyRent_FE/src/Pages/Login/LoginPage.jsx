@@ -24,15 +24,14 @@ const LoginPage = () => {
       // Kiểm tra xem phản hồi có dữ liệu cần thiết hay không
       if (response.data && response.data.token) {
         // Lưu token và thông tin người dùng vào cookies
-        Cookies.set("userToken", response.data.token, { expires: 1 }); // Lưu trong 1 ngày
+        Cookies.set("userToken", response.data.token, { expires: 7 }); // Lưu trong 1 ngày
         const userData = {
           email: response.data.email,
           roleId: response.data.roleId,
           fullName: response.data.fullName,
         };
-        Cookies.set("userData", JSON.stringify(userData), { expires: 1 });
+        Cookies.set("userData", JSON.stringify(userData), { expires: 7 });
         try {
-
           //const token = localStorage.getItem("token");
 
           const token = Cookies.get("userToken");
