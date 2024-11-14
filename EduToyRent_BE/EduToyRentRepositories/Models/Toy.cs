@@ -34,7 +34,7 @@ namespace EduToyRentRepositories.Models
         public int CategoryId { get; set; }
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; } = null!;
-        public int? ApproverId { get; set; } 
+        public int? ApproverId { get; set; } = null;
         [ForeignKey(nameof(ApproverId))]
         public virtual User Approver { get; set; } = null!;
     }

@@ -445,7 +445,7 @@ namespace EduToyRentRepositories.Migrations
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Dob = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AvatarUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AvatarUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false),
                     WalletId = table.Column<int>(type: "int", nullable: true)
