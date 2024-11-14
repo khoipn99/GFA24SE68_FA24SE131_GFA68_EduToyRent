@@ -34,9 +34,8 @@ namespace EduToyRentAPI.Controllers
                     Id = cartItem.Id,
                     Price = cartItem.Price,
                     Quantity = cartItem.Quantity,
-                    StartDate = cartItem.StartDate,
-                    EndDate = cartItem.EndDate,
                     Status = cartItem.Status,
+                    OrderTypeId = (int)cartItem.OrderTypeId,
                     CartId = (int)cartItem.CartId,
                     ToyId = (int)cartItem.ToyId
                 }).ToList();
@@ -64,11 +63,10 @@ namespace EduToyRentAPI.Controllers
                 Id = cartItem.Id,
                 Price = cartItem.Price,
                 Quantity = cartItem.Quantity,
-                StartDate = cartItem.StartDate,
-                EndDate = cartItem.EndDate,
                 Status = cartItem.Status,
                 CartId = (int)cartItem.CartId,
                 ToyId = (int)cartItem.ToyId,
+                OrderTypeId = (int)cartItem.OrderTypeId,
                 ToyName = _unitOfWork.ToyRepository.GetByID(cartItem.ToyId).Name,
                 ToyPrice = _unitOfWork.ToyRepository.GetByID(cartItem.ToyId).Price,
                 ToyImgUrls = mediaList
@@ -90,8 +88,7 @@ namespace EduToyRentAPI.Controllers
 
             cartItem.Price = cartItemRequest.Price;
             cartItem.Quantity = cartItemRequest.Quantity;
-            cartItem.StartDate = cartItemRequest.StartDate;
-            cartItem.EndDate = cartItemRequest.EndDate;
+            cartItem.OrderTypeId = (int)cartItem.OrderTypeId;
             cartItem.Status = cartItemRequest.Status;
             cartItem.CartId = cartItemRequest.CartId;
             cartItem.ToyId = cartItemRequest.ToyId;
@@ -116,8 +113,7 @@ namespace EduToyRentAPI.Controllers
             {
                 Price = cartItemRequest.Price,
                 Quantity = cartItemRequest.Quantity,
-                StartDate = cartItemRequest.StartDate,
-                EndDate = cartItemRequest.EndDate,
+                OrderTypeId = (int)cartItemRequest.OrderTypeId,
                 Status = cartItemRequest.Status,
                 CartId = cartItemRequest.CartId,
                 ToyId = cartItemRequest.ToyId
@@ -148,7 +144,7 @@ namespace EduToyRentAPI.Controllers
             else 
             {
 
-               // cartItem.Quantity = 1;
+                cartItem.Quantity = 1;
 
                 var cart =  _unitOfWork.CartRepository.GetByID(cartItemRequest.CartId);
                 if (cart == null)
@@ -168,8 +164,7 @@ namespace EduToyRentAPI.Controllers
                 Id = cartItem.Id,
                 Price = cartItem.Price,
                 Quantity = cartItem.Quantity,
-                StartDate = cartItem.StartDate,
-                EndDate = cartItem.EndDate,
+                OrderTypeId = (int)cartItem.OrderTypeId,
                 Status = cartItem.Status,
                 CartId = (int)cartItem.CartId,
                 ToyId = (int)cartItem.ToyId
@@ -218,8 +213,7 @@ namespace EduToyRentAPI.Controllers
                     Id = ci.Id,
                     Price = ci.Price,
                     Quantity = ci.Quantity,
-                    StartDate = ci.StartDate,
-                    EndDate = ci.EndDate,
+                    OrderTypeId = (int)ci.OrderTypeId,
                     Status = ci.Status,
                     CartId = (int)ci.CartId,
                     ToyId = (int)ci.ToyId,

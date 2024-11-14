@@ -22,7 +22,7 @@ namespace EduToyRentRepositories.Models
         public string Phone { get; set; }
         public DateTime Dob { get; set; }
         public string Address { get; set; }
-        public string? AvatarUrl { get; set; } = null;
+        public string? AvatarUrl { get; set; }
         public string Status { get; set; }
         public int RoleId { get; set; }
         [ForeignKey(nameof(RoleId))]

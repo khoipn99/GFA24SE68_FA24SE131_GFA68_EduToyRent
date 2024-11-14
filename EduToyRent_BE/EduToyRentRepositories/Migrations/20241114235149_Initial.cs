@@ -107,15 +107,20 @@ namespace EduToyRentRepositories.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Price = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CartId = table.Column<int>(type: "int", nullable: true),
-                    ToyId = table.Column<int>(type: "int", nullable: true)
+                    ToyId = table.Column<int>(type: "int", nullable: true),
+                    OrderTypeId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CartItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CartItems_OrderTypes_OrderTypeId",
+                        column: x => x.OrderTypeId,
+                        principalTable: "OrderTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -532,6 +537,11 @@ namespace EduToyRentRepositories.Migrations
                 column: "CartId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CartItems_OrderTypeId",
+                table: "CartItems",
+                column: "OrderTypeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CartItems_ToyId",
                 table: "CartItems",
                 column: "ToyId");
@@ -845,6 +855,10 @@ namespace EduToyRentRepositories.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
+                name: "FK_OrderDetails_OrderTypes_OrderTypeId",
+                table: "OrderDetails");
+
+            migrationBuilder.DropForeignKey(
                 name: "FK_OrderDetails_Toys_ToyId",
                 table: "OrderDetails");
 
@@ -859,10 +873,6 @@ namespace EduToyRentRepositories.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_Wallets_Users_UserId",
                 table: "Wallets");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_OrderDetails_OrderTypes_OrderTypeId",
-                table: "OrderDetails");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_OrderDetails_Orders_OrderId",
@@ -918,6 +928,9 @@ namespace EduToyRentRepositories.Migrations
                 name: "PaymentTypes");
 
             migrationBuilder.DropTable(
+                name: "OrderTypes");
+
+            migrationBuilder.DropTable(
                 name: "Toys");
 
             migrationBuilder.DropTable(
@@ -931,9 +944,6 @@ namespace EduToyRentRepositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "Wallets");
-
-            migrationBuilder.DropTable(
-                name: "OrderTypes");
 
             migrationBuilder.DropTable(
                 name: "Orders");

@@ -10,10 +10,9 @@ namespace EduToyRentRepositories.DTO.Request
     {
         public int Price { get; set; }
         public int Quantity { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
         public string Status { get; set; } = string.Empty;
         public int CartId { get; set; }
         public int ToyId { get; set; }
+        public int OrderTypeId { get; set; }
     }
 }

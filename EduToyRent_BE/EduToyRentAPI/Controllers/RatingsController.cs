@@ -167,6 +167,30 @@ namespace EduToyRentAPI.Controllers
 
             return NoContent();
         }
+        [HttpGet("ByToyId/{toyId}")]
+        public ActionResult<IEnumerable<RatingResponse>> GetRatingsByToyId(int toyId)
+        {
+            var ratings = _unitOfWork.RatingRepository.Get(
+                filter: r => r.OrderDetail.ToyId == toyId,
+                includeProperties: "OrderDetail,User")
+                .Select(r => new RatingResponse
+                {
+                    Id = r.Id,
+                    Comment = r.Comment,
+                    Star = r.Star,
+                    UserId = r.UserId,
+                    RatingDate = r.RatingDate,
+                    UserName = r.User.FullName,
+                    OrderDetailId = r.OrderDetailId
+                }).ToList();
+
+            if (ratings == null || !ratings.Any())
+            {
+                return NotFound(new { Message = $"No ratings found for toy with ID {toyId}" });
+            }
+
+            return Ok(ratings);
+        }
 
         private bool RatingExists(int id)
         {

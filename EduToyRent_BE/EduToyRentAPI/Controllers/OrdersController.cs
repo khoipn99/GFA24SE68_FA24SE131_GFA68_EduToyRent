@@ -28,7 +28,7 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<OrderResponse>> GetOrders(int pageIndex = 1, int pageSize = 20)
         {
             var orders = _unitOfWork.OrderRepository.Get(
-                includeProperties: "User",
+                includeProperties: "OrderDetails.Toy,User",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(orders => orders.Id)
@@ -46,6 +46,8 @@ namespace EduToyRentAPI.Controllers
                     Status = order.Status,
                     UserId = order.UserId,
                     UserName = order.User.FullName,
+                    ShopId = order.OrderDetails.FirstOrDefault().Toy.User.Id,
+                    ShopName = order.OrderDetails.FirstOrDefault().Toy.User.FullName
                 }).ToList();
 
             return Ok(orders);
@@ -76,6 +78,8 @@ namespace EduToyRentAPI.Controllers
                 Status = order.Status,
                 UserId = order.UserId,
                 UserName = order.User.FullName,
+                ShopId = order.OrderDetails.FirstOrDefault().Toy.User.Id,
+                ShopName = order.OrderDetails.FirstOrDefault().Toy.User.FullName
             };
 
             return Ok(orderResponse);
@@ -181,11 +185,17 @@ namespace EduToyRentAPI.Controllers
         }
         // GET: api/Orders/ByUserId
         [HttpGet("ByUserId")]
-        public ActionResult<IEnumerable<OrderResponse>> GetOrdersByUserId(int userId, int pageIndex = 1, int pageSize = 20)
+        public ActionResult<IEnumerable<OrderResponse>> GetOrdersByUserId(int userId, string? status = null, int pageIndex = 1, int pageSize = 20)
         {
+            var user = _unitOfWork.UserRepository.GetByID(userId);
+            if (user == null)
+            {
+                return NotFound(new { Message = $"User with ID {userId} not found." });
+            }
+
             var orders = _unitOfWork.OrderRepository.Get(
-                includeProperties: "User",
-                filter: o => o.UserId == userId,
+                includeProperties: "OrderDetails.Toy.User,User", 
+                filter: o => o.UserId == userId && (string.IsNullOrEmpty(status) || o.Status == status),
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(o => o.Id)
@@ -203,10 +213,18 @@ namespace EduToyRentAPI.Controllers
                     Status = o.Status,
                     UserId = o.UserId,
                     UserName = o.User.FullName,
+                    ShopId = o.OrderDetails.FirstOrDefault().Toy.User.Id, 
+                    ShopName = o.OrderDetails.FirstOrDefault().Toy.User.FullName 
                 }).ToList();
 
-            return Ok(orders);
+            return Ok(new
+            {
+                UserRentingName = user.FullName,
+                Orders = orders
+            });
         }
+
+
         // GET: api/Orders/User/5
         [HttpGet("User/{userId}")]
         public ActionResult<IEnumerable<OrderResponse>> GetOrdersByUserId(int userId)
@@ -267,12 +285,16 @@ namespace EduToyRentAPI.Controllers
         }
         // GET: api/Orders/ByShop
         [HttpGet("ByShop")]
-        public ActionResult<IEnumerable<OrderResponse>> GetOrdersByShop(int shopId, int pageIndex = 1, int pageSize = 20)
+        public ActionResult<IEnumerable<OrderResponse>> GetOrdersByShop(int shopId, string? status = null, int pageIndex = 1, int pageSize = 20)
         {
-
+            var shop = _unitOfWork.UserRepository.GetByID(shopId);
+            if (shop == null)
+            {
+                return NotFound(new { Message = $"Shop with ID {shopId} not found." });
+            }
             var orders = _unitOfWork.OrderRepository.Get(
                 includeProperties: "OrderDetails.Toy,User", 
-                filter: o => o.OrderDetails.Any(od => od.Toy.UserId == shopId), 
+                filter: o => o.OrderDetails.Any(od => od.Toy.UserId == shopId) && (string.IsNullOrEmpty(status) || o.Status == status), 
                 pageIndex: pageIndex,
                 pageSize: pageSize
             )
@@ -291,6 +313,8 @@ namespace EduToyRentAPI.Controllers
                 Status = o.Status,
                 UserId = o.UserId,
                 UserName = o.User.FullName, 
+                ShopId = shopId,
+                ShopName = _unitOfWork.UserRepository.GetByID(shopId).FullName
             })
             .ToList();
 
