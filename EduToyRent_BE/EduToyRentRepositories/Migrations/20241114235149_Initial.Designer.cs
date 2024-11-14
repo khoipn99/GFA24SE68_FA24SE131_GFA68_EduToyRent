@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduToyRentRepositories.Migrations
 {
     [DbContext(typeof(EduToyRentDBContext))]
-    [Migration("20241031002655_Initial")]
+    [Migration("20241114235149_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace EduToyRentRepositories.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.10")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -61,17 +61,14 @@ namespace EduToyRentRepositories.Migrations
                     b.Property<int?>("CartId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("OrderTypeId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Price")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -83,6 +80,8 @@ namespace EduToyRentRepositories.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CartId");
+
+                    b.HasIndex("OrderTypeId");
 
                     b.HasIndex("ToyId");
 
@@ -709,7 +708,6 @@ namespace EduToyRentRepositories.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("AvatarUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreateDate")
@@ -867,12 +865,20 @@ namespace EduToyRentRepositories.Migrations
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("EduToyRentRepositories.Models.OrderType", "OrderType")
+                        .WithMany()
+                        .HasForeignKey("OrderTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EduToyRentRepositories.Models.Toy", "Toy")
                         .WithMany()
                         .HasForeignKey("ToyId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Cart");
+
+                    b.Navigation("OrderType");
 
                     b.Navigation("Toy");
                 });
@@ -932,7 +938,7 @@ namespace EduToyRentRepositories.Migrations
             modelBuilder.Entity("EduToyRentRepositories.Models.OrderDetail", b =>
                 {
                     b.HasOne("EduToyRentRepositories.Models.Order", "Order")
-                        .WithMany()
+                        .WithMany("OrderDetails")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1173,6 +1179,11 @@ namespace EduToyRentRepositories.Migrations
             modelBuilder.Entity("EduToyRentRepositories.Models.Cart", b =>
                 {
                     b.Navigation("CartItems");
+                });
+
+            modelBuilder.Entity("EduToyRentRepositories.Models.Order", b =>
+                {
+                    b.Navigation("OrderDetails");
                 });
 
             modelBuilder.Entity("EduToyRentRepositories.Models.Role", b =>

@@ -707,12 +707,12 @@ namespace EduToyRentAPI.Controllers
 
             return Ok(toys);
         }
-        // GET: api/Toy/user/{userId}
+       
         [HttpGet("user/{userId}")]
-        public ActionResult<IEnumerable<ToyResponse>> GetToysByOwnerId(int userId, int pageIndex = 1, int pageSize = 20)
+        public ActionResult<IEnumerable<ToyResponse>> GetToysByOwnerId(int userId, string? status = null, int pageIndex = 1, int pageSize = 20)
         {
-            var toys = _unitOfWork.ToyRepository.Get(
-                toy => toy.UserId == userId,
+            var toysQuery = _unitOfWork.ToyRepository.Get(
+                toy => toy.UserId == userId && (status == null || toy.Status == status),
                 includeProperties: "Category,User,User.Role,Approver,Approver.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
@@ -783,8 +783,9 @@ namespace EduToyRentAPI.Controllers
                                                }).FirstOrDefault()
                 }).ToList();
 
-            return Ok(toys);
+            return Ok(toysQuery);
         }
+
         // GET: api/Toys/AvailableForPurchase
         [HttpGet("AvailableForPurchase")]
         [EnableQuery]

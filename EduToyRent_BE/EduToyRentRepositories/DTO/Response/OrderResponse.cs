@@ -19,7 +19,9 @@ namespace EduToyRentRepositories.DTO.Response
         public string ReceivePhone { get; set; }
         public string Status { get; set; }
         public int UserId { get; set; }
-        public string UserName { get; set; } 
-        
+        public string UserName { get; set; }
+        public int ShopId { get; set; }
+        public string ShopName { get; set; }
+
     }
 }

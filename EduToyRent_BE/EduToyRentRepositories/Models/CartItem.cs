@@ -17,8 +17,6 @@ namespace EduToyRentRepositories.Models
         public int Id { get; set; }
         public int Price { get; set; }
         public int Quantity { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
         public string Status { get; set; }
         public int? CartId { get; set; }
         [ForeignKey(nameof(CartId))]
@@ -26,5 +24,8 @@ namespace EduToyRentRepositories.Models
         public int? ToyId { get; set; }
         [ForeignKey(nameof(ToyId))]
         public virtual Toy Toy { get; set; } = null!;
+        public int OrderTypeId { get; set; }
+        [ForeignKey(nameof(OrderTypeId))]
+        public virtual OrderType OrderType { get; set; } = null!;
     }
 }
