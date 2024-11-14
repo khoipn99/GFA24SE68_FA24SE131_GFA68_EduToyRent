@@ -24,5 +24,6 @@ namespace EduToyRentRepositories.DTO.Response
         public UserResponse Owner { get; set; }
         public UserResponse Approver { get; set; }
         public CategoryResponse Category { get; set; }
+        public MediaResponse Media { get; set; }
     }
 }
