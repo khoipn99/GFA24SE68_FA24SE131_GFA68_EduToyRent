@@ -92,7 +92,17 @@ namespace EduToyRentAPI.Controllers
                         Id = toy.Approver.Role.Id,
                         Name = toy.Approver.Role.Name
                     }
-                } : null
+                } : null,
+                Media = _unitOfWork.MediaRepository.Get(
+                                                m => m.ToyId == toy.Id,
+                                                includeProperties: "Toy")
+                                               .Select(m => new MediaResponse
+                                               {
+                                                   Id = m.Id,
+                                                   MediaUrl = m.MediaUrl,
+                                                   Status = m.Status,
+                                                   ToyId = m.ToyId
+                                               }).FirstOrDefault()
             }).ToList();
 
             return Ok(toys);
@@ -162,7 +172,17 @@ namespace EduToyRentAPI.Controllers
                             Id = toy.Approver.Role.Id,
                             Name = toy.Approver.Role.Name
                         }
-                    } : null
+                    } : null,
+                    Media = _unitOfWork.MediaRepository.Get(
+                                                m => m.ToyId == toy.Id,
+                                                includeProperties: "Toy")
+                                               .Select(m => new MediaResponse
+                                               {
+                                                   Id = m.Id,
+                                                   MediaUrl = m.MediaUrl,
+                                                   Status = m.Status,
+                                                   ToyId = m.ToyId
+                                               }).FirstOrDefault()
                 }).ToList();
 
             return Ok(toys);
@@ -245,7 +265,17 @@ namespace EduToyRentAPI.Controllers
                     AvatarUrl = approver.AvatarUrl,
                     Status = approver.Status,
                     Role = approverRole
-                } : null
+                } : null,
+                Media = _unitOfWork.MediaRepository.Get(
+                                                m => m.ToyId == toy.Id,
+                                                includeProperties: "Toy")
+                                               .Select(m => new MediaResponse
+                                               {
+                                                   Id = m.Id,
+                                                   MediaUrl = m.MediaUrl,
+                                                   Status = m.Status,
+                                                   ToyId = m.ToyId
+                                               }).FirstOrDefault()
             };
 
             return Ok(toyResponse);
@@ -480,7 +510,17 @@ namespace EduToyRentAPI.Controllers
                             Id = toy.Approver.Role.Id,
                             Name = toy.Approver.Role.Name
                         }
-                    } : null
+                    } : null,
+                    Media = _unitOfWork.MediaRepository.Get(
+                                                m => m.ToyId == toy.Id,
+                                                includeProperties: "Toy")
+                                               .Select(m => new MediaResponse
+                                               {
+                                                   Id = m.Id,
+                                                   MediaUrl = m.MediaUrl,
+                                                   Status = m.Status,
+                                                   ToyId = m.ToyId
+                                               }).FirstOrDefault()
                 }).ToList();
 
             return Ok(toys);
@@ -564,7 +604,17 @@ namespace EduToyRentAPI.Controllers
                             Id = toy.Approver.Role.Id,
                             Name = toy.Approver.Role.Name
                         }
-                    } : null
+                    } : null,
+                    Media = _unitOfWork.MediaRepository.Get(
+                                                m => m.ToyId == toy.Id,
+                                                includeProperties: "Toy")
+                                               .Select(m => new MediaResponse
+                                               {
+                                                   Id = m.Id,
+                                                   MediaUrl = m.MediaUrl,
+                                                   Status = m.Status,
+                                                   ToyId = m.ToyId
+                                               }).FirstOrDefault()
                 }).ToList();
 
             return Ok(toys);
@@ -637,7 +687,17 @@ namespace EduToyRentAPI.Controllers
                             Id = toy.Approver.Role.Id,
                             Name = toy.Approver.Role.Name
                         }
-                    } : null
+                    } : null,
+                    Media = _unitOfWork.MediaRepository.Get(
+                                                m => m.ToyId == toy.Id,
+                                                includeProperties: "Toy")
+                                               .Select(m => new MediaResponse
+                                               {
+                                                   Id = m.Id,
+                                                   MediaUrl = m.MediaUrl,
+                                                   Status = m.Status,
+                                                   ToyId = m.ToyId
+                                               }).FirstOrDefault()
                 }).ToList();
 
             if (!toys.Any())
@@ -710,7 +770,17 @@ namespace EduToyRentAPI.Controllers
                             Id = toy.Approver.Role.Id,
                             Name = toy.Approver.Role.Name
                         }
-                    } : null
+                    } : null,
+                    Media = _unitOfWork.MediaRepository.Get(
+                                                m => m.ToyId == toy.Id,
+                                                includeProperties: "Toy")
+                                               .Select(m => new MediaResponse
+                                               {
+                                                   Id = m.Id,
+                                                   MediaUrl = m.MediaUrl,
+                                                   Status = m.Status,
+                                                   ToyId = m.ToyId
+                                               }).FirstOrDefault()
                 }).ToList();
 
             return Ok(toys);
@@ -779,7 +849,17 @@ namespace EduToyRentAPI.Controllers
                             Id = toy.Approver.Role.Id,
                             Name = toy.Approver.Role.Name
                         }
-                    } : null
+                    } : null,
+                    Media = _unitOfWork.MediaRepository.Get(
+                                                m => m.ToyId == toy.Id,
+                                                includeProperties: "Toy")
+                                               .Select(m => new MediaResponse
+                                               {
+                                                   Id = m.Id,
+                                                   MediaUrl = m.MediaUrl,
+                                                   Status = m.Status,
+                                                   ToyId = m.ToyId
+                                               }).FirstOrDefault()
                 })
                 .ToList();
 
@@ -850,7 +930,17 @@ namespace EduToyRentAPI.Controllers
                             Id = toy.Approver.Role.Id,
                             Name = toy.Approver.Role.Name
                         }
-                    } : null
+                    } : null,
+                    Media = _unitOfWork.MediaRepository.Get(
+                                                m => m.ToyId == toy.Id,
+                                                includeProperties: "Toy")
+                                               .Select(m => new MediaResponse
+                                               {
+                                                   Id = m.Id,
+                                                   MediaUrl = m.MediaUrl,
+                                                   Status = m.Status,
+                                                   ToyId = m.ToyId
+                                               }).FirstOrDefault()
                 })
                 .ToList();
 
