@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie"; // Import thư viện Cookies
-import axios from "axios";
 import HeaderForToySupplier from "../../Component/HeaderForToySupplier/HeaderForToySupplier";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
-import { data } from "autoprefixer";
 import { EyeIcon, EyeOffIcon } from "@heroicons/react/solid";
+import apiOrderDetail from "../../service/ApiOrderDetail";
+import apiOrder from "../../service/ApiOrder";
+import apiToys from "../../service/ApiToys";
+import apiCategory from "../../service/ApiCategory";
+import apiMedia from "../../service/ApiMedia";
+import apiUser from "../../service/ApiUser";
 const ToySupplierPage = () => {
   const [userData, setUserData] = useState("");
-  const [selectedTab, setSelectedTab] = useState("orders");
+  const [selectedTab, setSelectedTab] = useState("info");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [toys, setToys] = useState([]);
   const [userId, setUserId] = useState(null);
@@ -26,7 +30,7 @@ const ToySupplierPage = () => {
   });
   const [selectedToy, setSelectedToy] = useState(null);
   useEffect(() => {
-    const userDataCookie = Cookies.get("userData");
+    const userDataCookie = Cookies.get("userDataReal");
     if (userDataCookie) {
       const parsedUserData = JSON.parse(userDataCookie);
       setUserData(parsedUserData);
@@ -40,9 +44,9 @@ const ToySupplierPage = () => {
             return;
           }
 
-          // Lấy thông tin người dùng dựa trên email
-          const userResponse = await axios.get(
-            `https://localhost:44350/api/v1/Users/ByEmail?email=${encodeURIComponent(
+          //  Lấy thông tin người dùng dựa trên email
+          const userResponse = await apiUser.get(
+            `/ByEmail?email=${encodeURIComponent(
               email
             )}&pageIndex=1&pageSize=5`,
             {
@@ -61,8 +65,8 @@ const ToySupplierPage = () => {
             setEditedData(user); // Cập nhật dữ liệu chỉnh sửa với thông tin của người dùng
             setImageUrl(user.avatarUrl); // Đặt URL ảnh nếu có
             // Lấy danh sách đồ chơi của người dùng
-            const toyResponse = await axios.get(
-              `https://localhost:44350/api/v1/Toys/user/${user.id}?pageIndex=1&pageSize=20000`,
+            const toyResponse = await apiToys.get(
+              `/user/${user.id}?pageIndex=1&pageSize=20000`,
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -87,7 +91,6 @@ const ToySupplierPage = () => {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
   }, []);
-
   const handleUpdate = async () => {
     if (userId) {
       try {
@@ -107,16 +110,12 @@ const ToySupplierPage = () => {
         formData.append("status", editedData.status || "Active");
         formData.append("roleId", editedData.role.id || "");
         formData.append("avatarUrl", editedData.avatarUrl || "");
-        const response = await axios.put(
-          `https://localhost:44350/api/v1/Users/${userId}`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("userToken")}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
+        const response = await apiUser.put(`/${userId}`, formData, {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
 
         console.log("Cập nhật thành công:", response.data);
         setUserData(response.data);
@@ -140,14 +139,11 @@ const ToySupplierPage = () => {
     }
     try {
       // Bước 1: Lấy thông tin người dùng bao gồm mật khẩu cũ
-      const userResponse = await axios.get(
-        `https://localhost:44350/api/v1/Users/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
+      const userResponse = await apiUser.get(`/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
 
       // Kiểm tra mật khẩu cũ có khớp không
       if (userResponse.data.password !== editedData.currentPassword) {
@@ -177,16 +173,12 @@ const ToySupplierPage = () => {
       formData.append("avatarUrl", editedData.avatarUrl || "");
 
       // Bước 2: Gửi yêu cầu PUT để cập nhật thông tin người dùng
-      const response = await axios.put(
-        `https://localhost:44350/api/v1/Users/${userId}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await apiUser.put(`/${userId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       // Xử lý phản hồi thành công
       console.log("Cập nhật thành công:", response.data);
@@ -212,8 +204,8 @@ const ToySupplierPage = () => {
         formData.append("userImage", selectedFile);
 
         try {
-          const response = await axios.put(
-            `https://localhost:44350/api/v1/Users/update-user-image/${userId}`,
+          const response = await apiUser.put(
+            `/update-user-image/${userId}`,
             formData,
             {
               headers: {
@@ -265,6 +257,7 @@ const ToySupplierPage = () => {
       [field]: !prevState[field],
     }));
   };
+
   const renderContent = () => {
     switch (selectedTab) {
       case "info":
@@ -638,7 +631,7 @@ const ToySupplierPage = () => {
                 <div className="items-center justify-between block sm:flex md:divide-x md:divide-gray-100 dark:divide-gray-700">
                   <div className="flex items-center mb-4 sm:mb-0">
                     <form className="sm:pr-3" action="#" method="GET">
-                      <label for="products-search" className="sr-only">
+                      <label htmlFor="products-search" className="sr-only">
                         Search
                       </label>
                       <div className="relative w-48 mt-1 sm:w-64 xl:w-96">
@@ -646,11 +639,31 @@ const ToySupplierPage = () => {
                           type="text"
                           name="email"
                           id="products-search"
-                          class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           placeholder="Search for products"
                         />
                       </div>
                     </form>
+                  </div>
+                  <div className="flex items-center mt-4 sm:mt-0 sm:ml-4">
+                    <button
+                      type="button"
+                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-500 dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-green-700"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Thêm sản phẩm
+                    </button>
                   </div>
                 </div>
               </div>
