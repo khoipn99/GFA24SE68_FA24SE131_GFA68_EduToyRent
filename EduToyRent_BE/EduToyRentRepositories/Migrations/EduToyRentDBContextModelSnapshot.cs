@@ -705,8 +705,7 @@ namespace EduToyRentRepositories.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("AvatarUrl")
-                        .IsRequired()
+                    b.Property<string>("AvatarUrl")                        
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreateDate")

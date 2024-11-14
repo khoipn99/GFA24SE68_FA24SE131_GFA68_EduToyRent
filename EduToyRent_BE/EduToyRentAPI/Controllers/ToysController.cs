@@ -32,78 +32,79 @@ namespace EduToyRentAPI.Controllers
         // GET: api/Toy
         [HttpGet]
         [EnableQuery]
-        public ActionResult<IEnumerable<ToyResponse>> GetToys(int pageIndex = 1, int pageSize = 20)
+        public ActionResult<IEnumerable<ToyResponse>> GetToys(int pageIndex = 1, int pageSize = 20) 
         {
             var toys = _unitOfWork.ToyRepository.Get(
-                includeProperties: "Category,User,User.Role",
-                pageIndex: pageIndex,
-                pageSize: pageSize)
-                .OrderByDescending(toy => toy.Id)
-                .Select(toy => new ToyResponse
+            includeProperties: "Category,User,User.Role,Approver,Approver.Role",
+            pageIndex: pageIndex,
+            pageSize: pageSize)
+            .OrderByDescending(toy => toy.Id)
+            .Select(toy => new ToyResponse
+            {
+                Id = toy.Id,
+                Name = toy.Name,
+                Description = toy.Description,
+                Price = toy.Price,
+                Origin = toy.Origin,
+                Age = toy.Age,
+                Brand = toy.Brand,
+                Star = (float?)toy.Star,
+                RentCount = toy.RentCount,
+                BuyQuantity = toy.BuyQuantity,
+                CreateDate = toy.CreateDate,
+                RentTime = toy.RentTime,
+                Status = toy.Status,
+                Owner = new UserResponse
                 {
-                    Id = toy.Id,
-                    Name = toy.Name,
-                    Description = toy.Description,
-                    Price = toy.Price,
-                    Origin = toy.Origin,
-                    Age = toy.Age,
-                    Brand = toy.Brand,
-                    Star = (float?)toy.Star,
-                    RentCount = toy.RentCount,
-                    BuyQuantity = toy.BuyQuantity,
-                    CreateDate = toy.CreateDate,
-                    RentTime = toy.RentTime,
-                    Status = toy.Status,
-                    Owner = new UserResponse
+                    Id = toy.UserId,
+                    FullName = toy.User.FullName,
+                    Email = toy.User.Email,
+                    CreateDate = toy.User.CreateDate,
+                    Phone = toy.User.Phone,
+                    Dob = toy.User.Dob,
+                    Address = toy.User.Address,
+                    AvatarUrl = toy.User.AvatarUrl,
+                    Status = toy.User.Status,
+                    Role = new RoleResponse
                     {
-                        Id = toy.UserId,
-                        FullName = toy.User.FullName,
-                        Email = toy.User.Email,
-                        CreateDate = toy.User.CreateDate,
-                        Phone = toy.User.Phone,
-                        Dob = toy.User.Dob,
-                        Address = toy.User.Address,
-                        AvatarUrl = toy.User.AvatarUrl,
-                        Status = toy.User.Status,
-                        Role = new RoleResponse
-                        {
-                            Id = toy.User.Role.Id,
-                            Name = toy.User.Role.Name
-                        }
-                    },
-                    Category = new CategoryResponse
+                        Id = toy.User.Role.Id,
+                        Name = toy.User.Role.Name
+                    }
+                },
+                Category = new CategoryResponse
+                {
+                    Id = toy.Category.Id,
+                    Name = toy.Category.Name
+                },
+                Approver = toy.ApproverId != null ? new UserResponse
+                {
+                    Id = (int)toy.ApproverId,
+                    FullName = toy.Approver.FullName,
+                    Email = toy.Approver.Email,
+                    CreateDate = toy.Approver.CreateDate,
+                    Phone = toy.Approver.Phone,
+                    Dob = toy.Approver.Dob,
+                    Address = toy.Approver.Address,
+                    AvatarUrl = toy.Approver.AvatarUrl,
+                    Status = toy.Approver.Status,
+                    Role = new RoleResponse
                     {
-                        Id = toy.Category.Id,
-                        Name = toy.Category.Name
-                    },
-                    Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
-                    {
-                        Id = (int)toy.ApproverId,
-                        FullName = toy.Approver.FullName,
-                        Email = toy.Approver.Email,
-                        CreateDate = toy.Approver.CreateDate,
-                        Phone = toy.Approver.Phone,
-                        Dob = toy.Approver.Dob,
-                        Address = toy.Approver.Address,
-                        AvatarUrl = toy.Approver.AvatarUrl,
-                        Status = toy.Approver.Status,
-                        Role = new RoleResponse
-                        {
-                            Id = toy.Approver.Role.Id,
-                            Name = toy.Approver.Role.Name
-                        }
-                    } : null
-                }).ToList();
+                        Id = toy.Approver.Role.Id,
+                        Name = toy.Approver.Role.Name
+                    }
+                } : null
+            }).ToList();
 
             return Ok(toys);
         }
+
         // GET: api/Toy/active
         [HttpGet("active")]
         [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> GetActiveToys(int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get(
-                includeProperties: "Category,User,User.Role",
+                includeProperties: "Category,User,User.Role,Approver,Approver.Role",
                 filter: toy => toy.Status == "Active",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
@@ -145,7 +146,7 @@ namespace EduToyRentAPI.Controllers
                         Id = toy.Category.Id,
                         Name = toy.Category.Name
                     },
-                    Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
+                    Approver = toy.ApproverId != null ? new UserResponse
                     {
                         Id = (int)toy.ApproverId,
                         FullName = toy.Approver.FullName,
@@ -172,18 +173,29 @@ namespace EduToyRentAPI.Controllers
         [EnableQuery]
         public async Task<ActionResult<ToyResponse>> GetToy(int id)
         {
-
             var toy = _unitOfWork.ToyRepository.GetByID(id);
 
             if (toy == null)
             {
                 return NotFound();
             }
+
             var category = _unitOfWork.CategoryRepository.GetByID(toy.CategoryId);
             var user = _unitOfWork.UserRepository.GetByID(toy.UserId);
             var userRole = _unitOfWork.RoleRepository.GetByID(user.RoleId);
             var approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId);
-            var approverRole = _unitOfWork.RoleRepository.GetByID(approver.RoleId);
+            RoleResponse approverRole = null;
+
+            if (approver != null)
+            {
+                var arvRole = _unitOfWork.RoleRepository.GetByID(approver.RoleId);
+                approverRole = new RoleResponse
+                {
+                    Id = arvRole.Id,
+                    Name = arvRole.Name
+                };
+            }
+
             var toyResponse = new ToyResponse
             {
                 Id = toy.Id,
@@ -221,9 +233,9 @@ namespace EduToyRentAPI.Controllers
                     Id = category.Id,
                     Name = category.Name
                 },
-                Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
+                Approver = approver != null ? new UserResponse
                 {
-                    Id = (int)toy.ApproverId,
+                    Id = approver.Id,
                     FullName = approver.FullName,
                     Email = approver.Email,
                     CreateDate = approver.CreateDate,
@@ -232,16 +244,13 @@ namespace EduToyRentAPI.Controllers
                     Address = approver.Address,
                     AvatarUrl = approver.AvatarUrl,
                     Status = approver.Status,
-                    Role = new RoleResponse
-                    {
-                        Id = approverRole.Id,
-                        Name = approverRole.Name
-                    }
+                    Role = approverRole
                 } : null
             };
 
             return Ok(toyResponse);
         }
+
         // POST: api/Toys
         [HttpPost]
         [EnableQuery]
@@ -413,7 +422,7 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<ToyResponse>> GetToysByCategory(int categoryId, int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get(
-                includeProperties: "Category,User,User.Role",
+                includeProperties: "Category,User,User.Role,Approver,Approver.Role",
                 filter: toy => toy.Status == "Active" && toy.CategoryId == categoryId,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
@@ -455,7 +464,7 @@ namespace EduToyRentAPI.Controllers
                         Id = toy.Category.Id,
                         Name = toy.Category.Name
                     },
-                    Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
+                    Approver = toy.ApproverId != null ? new UserResponse
                     {
                         Id = (int)toy.ApproverId,
                         FullName = toy.Approver.FullName,
@@ -480,7 +489,11 @@ namespace EduToyRentAPI.Controllers
         [HttpGet("age/{ageRange}")]
         public ActionResult<IEnumerable<ToyResponse>> GetToysByAge(string ageRange, int pageIndex = 1, int pageSize = 20)
         {
-            var toys = _unitOfWork.ToyRepository.Get(includeProperties: "Category,User,User.Role", filter: toy => toy.Status == "Active", pageIndex: pageIndex, pageSize: pageSize)
+            var toys = _unitOfWork.ToyRepository.Get(
+                includeProperties: "Category,User,User.Role,Approver,Approver.Role", 
+                filter: toy => toy.Status == "Active", 
+                pageIndex: pageIndex, 
+                pageSize: pageSize)
                 .Where(toy =>
                 {
                     switch (ageRange.ToLower())
@@ -535,7 +548,7 @@ namespace EduToyRentAPI.Controllers
                         Id = toy.Category.Id,
                         Name = toy.Category.Name
                     },
-                    Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
+                    Approver = toy.ApproverId != null ? new UserResponse
                     {
                         Id = (int)toy.ApproverId,
                         FullName = toy.Approver.FullName,
@@ -566,7 +579,7 @@ namespace EduToyRentAPI.Controllers
             }
 
             var toys = _unitOfWork.ToyRepository.Get(
-                includeProperties: "Category,User,User.Role",
+                includeProperties: "Category,User,User.Role,Approver,Approver.Role",
                 filter: toy => toy.Status == "Active" && toy.Name.Contains(name, StringComparison.OrdinalIgnoreCase),
                 pageIndex: pageIndex,
                 pageSize: pageSize)
@@ -608,7 +621,7 @@ namespace EduToyRentAPI.Controllers
                         Id = toy.Category.Id,
                         Name = toy.Category.Name
                     },
-                    Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
+                    Approver = toy.ApproverId != null ? new UserResponse
                     {
                         Id = (int)toy.ApproverId,
                         FullName = toy.Approver.FullName,
@@ -640,7 +653,7 @@ namespace EduToyRentAPI.Controllers
         {
             var toys = _unitOfWork.ToyRepository.Get(
                 toy => toy.UserId == userId,
-                includeProperties: "Category,User,User.Role",
+                includeProperties: "Category,User,User.Role,Approver,Approver.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(toy => toy.Id)
@@ -681,7 +694,7 @@ namespace EduToyRentAPI.Controllers
                         Id = toy.Category.Id,
                         Name = toy.Category.Name
                     },
-                    Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
+                    Approver = toy.ApproverId != null ? new UserResponse
                     {
                         Id = (int)toy.ApproverId,
                         FullName = toy.Approver.FullName,
@@ -708,7 +721,7 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<ToyResponse>> GetToysAvailableForPurchase(int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get(
-                includeProperties: "Category,User,User.Role",
+                includeProperties: "Category,User,User.Role,Approver,Approver.Role",
                 filter: toy => toy.Status == "Active" && toy.BuyQuantity > -1,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
@@ -750,7 +763,7 @@ namespace EduToyRentAPI.Controllers
                         Id = toy.Category.Id,
                         Name = toy.Category.Name
                     },
-                    Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
+                    Approver = toy.ApproverId != null ? new UserResponse
                     {
                         Id = (int)toy.ApproverId,
                         FullName = toy.Approver.FullName,
@@ -779,7 +792,7 @@ namespace EduToyRentAPI.Controllers
         {
             var toys = _unitOfWork.ToyRepository.Get( 
                 filter: toy => toy.RentCount > -1 && toy.Status == "Active" && toy.BuyQuantity < 0,
-                includeProperties: "Category,User,User.Role",
+                includeProperties: "Category,User,User.Role,Approver,Approver.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .Where(toy => toy.Status == "Active" && toy.BuyQuantity < 0)
@@ -821,7 +834,7 @@ namespace EduToyRentAPI.Controllers
                         Id = toy.Category.Id,
                         Name = toy.Category.Name
                     },
-                    Approver = _unitOfWork.UserRepository.GetByID(toy.ApproverId) != null ? new UserResponse
+                    Approver = toy.ApproverId != null ? new UserResponse
                     {
                         Id = (int)toy.ApproverId,
                         FullName = toy.Approver.FullName,
