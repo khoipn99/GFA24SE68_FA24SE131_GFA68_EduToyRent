@@ -14,6 +14,7 @@ const InformationCustomer = () => {
 
   const [orders, setOrders] = useState([]);
   const [orderDetails, setOrderDetails] = useState([]);
+
   useEffect(() => {
     getUserInfo();
     getOrderInfo();
@@ -107,15 +108,23 @@ const InformationCustomer = () => {
       ViewDetails();
     });
   };
-  const handleFinishOrderDetail = (order) => {
+  // const handleFinishOrderDetail = (order) => {
+  //   var tmp = order;
+  //   tmp.status = "finish";
+
+  //   apiOrderDetail.put("/" + order.id, tmp).then((response) => {
+  //     ViewDetails();
+  //   });
+  // };
+
+  const handleCancelOrder = (order) => {
     var tmp = order;
-    tmp.status = "finish";
+    tmp.status = "Cancel";
 
     apiOrderDetail.put("/" + order.id, tmp).then((response) => {
       ViewDetails();
     });
   };
-  const handleCancelOrder = (order) => {};
   const handleReBuy = (order) => {};
 
   const renderContent = () => {
@@ -403,7 +412,7 @@ const InformationCustomer = () => {
                     {order.status === "Inactive" && (
                       <div className="flex space-x-2 mt-2">
                         <button
-                          //onClick={() => handleReBuy(order)}
+                          onClick={() => handleCancelOrder(order)}
                           className="p-2 bg-red-500 text-white rounded"
                         >
                           Hủy đơn hàng
@@ -534,7 +543,7 @@ const InformationCustomer = () => {
                               </button>
                             </div>
                           )}
-                          {item.status === "returning" && (
+                          {/* {item.status === "returning" && (
                             <div>
                               <button
                                 className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
@@ -543,7 +552,7 @@ const InformationCustomer = () => {
                                 Đã trả hàng
                               </button>
                             </div>
-                          )}
+                          )} */}
                         </div>
 
                         <div className="relative">
