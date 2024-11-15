@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduToyRentRepositories.Migrations
 {
     [DbContext(typeof(EduToyRentDBContext))]
-    [Migration("20241114235149_Initial")]
+    [Migration("20241115075450_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -818,7 +818,10 @@ namespace EduToyRentRepositories.Migrations
                     b.Property<int>("Amount")
                         .HasColumnType("int");
 
-                    b.Property<int>("OrderId")
+                    b.Property<DateTime?>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("OrderId")
                         .HasColumnType("int");
 
                     b.Property<int>("PaymentTypeId")
@@ -1146,8 +1149,7 @@ namespace EduToyRentRepositories.Migrations
                     b.HasOne("EduToyRentRepositories.Models.Order", "Order")
                         .WithMany()
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("EduToyRentRepositories.Models.PaymentType", "PaymentType")
                         .WithMany()

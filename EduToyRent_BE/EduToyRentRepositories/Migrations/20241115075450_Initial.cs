@@ -497,9 +497,10 @@ namespace EduToyRentRepositories.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TransactionType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Amount = table.Column<int>(type: "int", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: true),
                     WalletId = table.Column<int>(type: "int", nullable: false),
                     PaymentTypeId = table.Column<int>(type: "int", nullable: false),
-                    OrderId = table.Column<int>(type: "int", nullable: false),
+                    OrderId = table.Column<int>(type: "int", nullable: true),
                     SenderId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

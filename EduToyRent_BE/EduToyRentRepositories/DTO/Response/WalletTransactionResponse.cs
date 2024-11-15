@@ -11,9 +11,10 @@ namespace EduToyRentRepositories.DTO.Response
         public int Id { get; set; }
         public string TransactionType { get; set; }
         public int Amount { get; set; }
+        public DateTime? Date { get; set; }
         public int WalletId { get; set; }
         public int PaymentTypeId { get; set; }
-        public int OrderId { get; set; }
+        public int? OrderId { get; set; }
         public int SenderId { get; set; }
     }
 }
