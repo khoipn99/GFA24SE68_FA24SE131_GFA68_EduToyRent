@@ -23,7 +23,7 @@ namespace EduToyRentRepositories.Models
         public int PaymentTypeId { get; set; }
         [ForeignKey(nameof(PaymentTypeId))]
         public virtual PaymentType PaymentType { get; set; } = null!;
-        public int OrderId { get; set; }
+        public int? OrderId { get; set; }
         [ForeignKey(nameof(OrderId))]
         public virtual Order Order { get; set; } = null!;
         public int SenderId { get; set; }
