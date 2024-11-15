@@ -40,6 +40,7 @@ namespace EduToyRentAPI.Controllers
                     Id = tx.Id,
                     TransactionType = tx.TransactionType,
                     Amount = tx.Amount,
+                    Date = tx.Date,
                     WalletId = tx.WalletId,
                     PaymentTypeId = tx.PaymentTypeId,
                     OrderId = tx.OrderId,
@@ -66,6 +67,7 @@ namespace EduToyRentAPI.Controllers
                 Id = walletTransaction.Id,
                 TransactionType = walletTransaction.TransactionType,
                 Amount = walletTransaction.Amount,
+                Date = walletTransaction.Date,
                 WalletId = walletTransaction.WalletId,
                 PaymentTypeId = walletTransaction.PaymentTypeId,
                 OrderId = walletTransaction.OrderId,
@@ -89,6 +91,7 @@ namespace EduToyRentAPI.Controllers
 
             walletTransaction.TransactionType = walletTransactionRequest.TransactionType;
             walletTransaction.Amount = walletTransactionRequest.Amount;
+            walletTransaction.Date = walletTransactionRequest.Date;
             walletTransaction.PaymentTypeId = walletTransactionRequest.PaymentTypeId;
             walletTransaction.OrderId = walletTransactionRequest.OrderId;
 
@@ -128,6 +131,7 @@ namespace EduToyRentAPI.Controllers
             {
                 TransactionType = walletTransactionRequest.TransactionType,
                 Amount = walletTransactionRequest.Amount,
+                Date = DateTime.Now,
                 WalletId = walletTransactionRequest.WalletId,
                 PaymentTypeId = walletTransactionRequest.PaymentTypeId,
                 OrderId = walletTransactionRequest.OrderId,
@@ -141,6 +145,7 @@ namespace EduToyRentAPI.Controllers
             {
                 Id = walletTransaction.Id,
                 TransactionType = walletTransaction.TransactionType,
+                Date = DateTime.Now,
                 Amount = walletTransaction.Amount,
                 WalletId = walletTransaction.WalletId,
                 PaymentTypeId = walletTransaction.PaymentTypeId,
@@ -184,6 +189,7 @@ namespace EduToyRentAPI.Controllers
                     Id = tx.Id,
                     TransactionType = tx.TransactionType,
                     Amount = tx.Amount,
+                    Date = tx.Date,
                     WalletId = tx.WalletId,
                     PaymentTypeId = tx.PaymentTypeId,
                     OrderId = tx.OrderId,
