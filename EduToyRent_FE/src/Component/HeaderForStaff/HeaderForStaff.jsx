@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
-import axios from "axios";
+
+import apiUser from "../../service/ApiUser";
 
 const HeaderForStaff = () => {
   const [cartVisible, setCartVisible] = useState(false);
@@ -45,8 +46,8 @@ const HeaderForStaff = () => {
           }
 
           // Gọi API lấy thông tin người dùng dựa trên email
-          const response = await axios.get(
-            `https://localhost:44350/api/v1/Users/ByEmail?email=${encodeURIComponent(
+          const response = await apiUser.get(
+            `/ByEmail?email=${encodeURIComponent(
               email
             )}&pageIndex=1&pageSize=5`,
             {
@@ -57,7 +58,9 @@ const HeaderForStaff = () => {
           );
 
           console.log("Dữ liệu trả về:", response.data);
-
+          Cookies.set("userDataReal", JSON.stringify(response.data), {
+            expires: 7,
+          });
           if (response.data && response.data.length > 0) {
             const user = response.data[0];
             setUserData(user);
