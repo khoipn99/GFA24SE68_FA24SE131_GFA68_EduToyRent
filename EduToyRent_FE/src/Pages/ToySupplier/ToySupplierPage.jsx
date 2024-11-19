@@ -30,7 +30,7 @@ const ToySupplierPage = () => {
   });
   const [selectedToy, setSelectedToy] = useState(null);
   useEffect(() => {
-    const userDataCookie = Cookies.get("userDataReal");
+    const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
       const parsedUserData = JSON.parse(userDataCookie);
       setUserData(parsedUserData);

@@ -310,25 +310,13 @@ const Home = () => {
     try {
       if (!cartId) {
         console.error("Không tìm thấy cartId");
+        alert("Giỏ hàng không hợp lệ.");
         return;
       }
 
-      // Chỉ sử dụng giá gốc khi mua sản phẩm
-      const purchaseData = {
-        price: toy.price, // Sử dụng giá gốc
-        quantity: toy.buyQuantity,
-        cartId: cartId,
-        toyId: toy.id,
-        toyName: toy.name,
-        toyPrice: toy.toyPrice, // Giá gốc
-        toyImgUrls: toy.imageUrls,
-        status: "success",
-      };
-
-      // Gửi dữ liệu đến API để lưu vào cơ sở dữ liệu
-      const response = await axios.post(
-        "https://localhost:44350/api/v1/CartItems", // Đảm bảo API đúng với mục đích mua hàng
-        purchaseData,
+      // Gọi API để kiểm tra giỏ hàng
+      const response = await axios.get(
+        `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
         {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -336,13 +324,60 @@ const Home = () => {
         }
       );
 
-      console.log("Sản phẩm đã được thêm vào danh sách mua:", response.data);
-      alert("Sản phẩm đã được thêm vào danh sách mua!");
+      const cartItems = response.data || [];
+      const existingItem = cartItems.find((item) => item.toyId === toy.id);
+
+      if (existingItem) {
+        // Nếu sản phẩm đã tồn tại, tăng quantity lên 1
+        const updatedQuantity = existingItem.quantity + 1;
+
+        await axios.put(
+          `https://localhost:44350/api/v1/CartItems/${existingItem.id}`,
+          {
+            ...existingItem,
+            quantity: updatedQuantity,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        );
+
+        console.log(`Đã cập nhật số lượng sản phẩm: ${updatedQuantity}`);
+        alert("Số lượng sản phẩm đã được cập nhật!");
+      } else {
+        // Nếu sản phẩm chưa tồn tại, thêm mới
+        const purchaseData = {
+          price: toy.price,
+          quantity: 1, // Bắt đầu với số lượng 1
+          cartId: cartId,
+          toyId: toy.id,
+          toyName: toy.name,
+          toyPrice: toy.toyPrice,
+          toyImgUrls: toy.imageUrls,
+          status: "success",
+        };
+
+        await axios.post(
+          "https://localhost:44350/api/v1/CartItems",
+          purchaseData,
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        );
+
+        console.log("Sản phẩm đã được thêm vào danh sách mua mới.");
+        alert("Sản phẩm đã được thêm vào giỏ hàng!");
+      }
     } catch (error) {
       console.error("Lỗi khi thêm sản phẩm vào danh sách mua:", error);
-      alert("Có lỗi xảy ra khi thêm sản phẩm vào danh sách mua.");
+      alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
     }
   };
+
   // Mở modal, đặt thời gian thuê mặc định và tính giá
   const openModal = (toy) => {
     setSelectedToy(toy);
