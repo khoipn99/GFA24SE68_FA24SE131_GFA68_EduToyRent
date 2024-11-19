@@ -442,7 +442,7 @@ const ToySupplierPage = () => {
                 {/* Input ẩn để chọn ảnh */}
                 <input
                   type="file"
-                  accept=".jpeg, .png"
+                  accept=".jpg, .png"
                   onChange={handleFileChange} // Gọi hàm xử lý khi người dùng chọn file
                   className="hidden"
                   id="fileInput"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import HeaderForStaff from "../../Component/HeaderForStaff/HeaderForStaff";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import Cookies from "js-cookie"; // Import thư viện Cookies
+import apiToys from "../../service/ApiToys";
 const StaffPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("orders");
@@ -31,9 +32,7 @@ const StaffPage = () => {
   useEffect(() => {
     const fetchToys = async () => {
       try {
-        const response = await fetch(
-          "https://localhost:44350/api/v1/Toys?pageIndex=1&pageSize=20"
-        );
+        const response = apiToys.get("?pageIndex=1&pageSize=100");
         const data = await response.json();
         setToys(data);
       } catch (error) {

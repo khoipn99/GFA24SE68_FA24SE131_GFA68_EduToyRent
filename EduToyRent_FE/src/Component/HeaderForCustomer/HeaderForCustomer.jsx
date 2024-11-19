@@ -65,7 +65,7 @@ const HeaderForCustomer = () => {
           Cookies.set("userDataReal", JSON.stringify(response.data), {
             expires: 7,
           });
-
+          console.log("Dữ liệu trả về đã lưu:", response.data);
           if (response.data && response.data.length > 0) {
             const user = response.data[0];
             setUserData(user);
@@ -92,24 +92,25 @@ const HeaderForCustomer = () => {
       // Hàm lấy giỏ hàng của người dùng theo userId
       const fetchUserCart = async (userId) => {
         try {
-          const response = await apiCart.get(
-            `?userId=${userId}&pageIndex=1&pageSize=5`,
-            {
-              headers: {
-                Authorization: `Bearer ${Cookies.get("userToken")}`,
-              },
-            }
+          const response = await apiCart.get(`?pageIndex=1&pageSize=50`, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          });
+
+          console.log("Tất cả giỏ hàng:", response.data);
+
+          // Lọc giỏ hàng theo userId
+          const userCart = response.data.filter(
+            (cart) => cart.userId === userId
           );
 
-          console.log("Giỏ hàng của người dùng:", response.data);
-
-          if (response.data && response.data.length > 0) {
-            const cart = response.data[0];
+          if (userCart.length > 0) {
+            const cart = userCart[0];
             const cartId = cart.id;
-            // Lưu cartId vào state
-            setCartId(cartId);
-            // Sau khi có cartId, gọi API CartItems
-            fetchCartItems(cartId);
+
+            setCartId(cartId); // Lưu cartId vào state
+            fetchCartItems(cartId); // Gọi API lấy CartItems
           } else {
             console.error("Không tìm thấy giỏ hàng cho người dùng.");
           }
@@ -181,6 +182,7 @@ const HeaderForCustomer = () => {
     // Chuyển hướng về trang đăng nhập
     navigate("/");
   };
+
   const toggleCart = () => {
     // Mở hoặc đóng giỏ hàng
     setCartVisible(!cartVisible);
@@ -190,7 +192,7 @@ const HeaderForCustomer = () => {
   };
 
   // Load giỏ hàng từ database
-  const loadCartFromDatabase = async (id) => {
+  const loadCartFromDatabase = async () => {
     setLoading(true);
     try {
       if (!cartId) {
@@ -211,7 +213,7 @@ const HeaderForCustomer = () => {
         .filter((item) => item.quantity === -1)
         .map((item) => ({
           ...item,
-          rentalDuration: calculateRentalDuration(item.startDate, item.endDate),
+          rentalDuration: calculateRentalDuration(item.orderTypeId), // Chuyển sang dùng orderTypeId
         }));
       const buyItems = response.data.filter((item) => item.quantity >= 1);
 
@@ -244,14 +246,11 @@ const HeaderForCustomer = () => {
       }
 
       // Gọi API để lấy danh sách sản phẩm trong giỏ hàng theo cartId
-      const response = await axios.get(
-        `https://localhost:44350/api/v1/CartItems/ByCartId/${cartId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
+      const response = await apiCartItem.get(`/ByCartId/${cartId}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
 
       // Kiểm tra nếu có dữ liệu trong giỏ hàng
       const cartItems = response.data || [];
@@ -267,16 +266,17 @@ const HeaderForCustomer = () => {
       const updatedItemData = {
         price: existingItem.price,
         quantity: newQuantity, // Sử dụng số lượng mới
-        startDate: existingItem.startDate,
-        endDate: existingItem.endDate,
         status: existingItem.status,
         cartId: existingItem.cartId,
         toyId: existingItem.toyId,
+        toyName: existingItem.toyName,
+        orderTypeId: existingItem.orderTypeId,
+        toyImgUrls: existingItem.toyImgUrls,
       };
 
       // Gửi yêu cầu PUT để cập nhật số lượng trong giỏ hàng
-      const updateResponse = await axios.put(
-        `https://localhost:44350/api/v1/CartItems/${existingItem.id}`, // URL yêu cầu API với ID sản phẩm
+      const updateResponse = await apiCartItem.put(
+        `/${existingItem.id}`, // URL yêu cầu API với ID sản phẩm
         updatedItemData // Dữ liệu gửi đi
       );
 
@@ -319,9 +319,8 @@ const HeaderForCustomer = () => {
     }
   }, [cartId]);
 
-  async function removeItem(itemId, type) {
+  const removeItem = async (itemId, type) => {
     try {
-      // Gọi API để xóa sản phẩm khỏi giỏ hàng
       const response = await apiCartItem.delete(`/${itemId}`, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -330,20 +329,17 @@ const HeaderForCustomer = () => {
 
       if (response.status === 204) {
         if (type === "rent") {
-          // Xóa sản phẩm khỏi danh sách giỏ hàng "rent" trong state
           const updatedRentItems = rentItems.filter(
             (item) => item.id !== itemId
           );
           setRentItems(updatedRentItems);
           console.log("Đã xoá sản phẩm thuê khỏi giỏ hàng");
         } else {
-          // Xóa sản phẩm khỏi danh sách giỏ hàng "buy" trong state
           const updatedBuyItems = buyItems.filter((item) => item.id !== itemId);
           setBuyItems(updatedBuyItems);
           console.log("Đã xoá sản phẩm bán khỏi giỏ hàng");
         }
 
-        // Tải lại giỏ hàng từ cơ sở dữ liệu để hiển thị thông tin chính xác
         loadCartFromDatabase();
       } else {
         console.error(
@@ -354,38 +350,90 @@ const HeaderForCustomer = () => {
     } catch (error) {
       console.error("Đã xảy ra lỗi khi xóa sản phẩm:", error);
     }
-  }
+  };
 
-  const calculateRentalPrice = (price, duration) => {
+  const calculateRentalPrice = (toyPrice, duration) => {
     let rentalPrice = 0;
     switch (duration) {
       case "1 tuần":
-        rentalPrice = price * 0.15;
+        rentalPrice = toyPrice * 0.15;
         break;
       case "2 tuần":
-        rentalPrice = price * 0.25;
+        rentalPrice = toyPrice * 0.25;
         break;
       case "1 tháng":
-        rentalPrice = price * 0.3;
+        rentalPrice = toyPrice * 0.3;
+        break;
+      case "Mua":
+        rentalPrice = toyPrice; // 100% giá
         break;
       default:
-        rentalPrice = 0;
+        rentalPrice = 0; // Giá trị mặc định nếu duration không hợp lệ
     }
     return rentalPrice;
   };
-  // Hàm để tính thời gian thuê dựa vào startDate và endDate
-  const calculateRentalDuration = (startDate, endDate) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 7) return "1 tuần";
-    if (diffDays === 14) return "2 tuần";
-    if (diffDays === 30) return "1 tháng";
-    return `${diffDays} ngày`;
+  const calculateRentalDuration = (orderTypeId) => {
+    switch (orderTypeId) {
+      case 4:
+        return "1 tuần";
+      case 5:
+        return "2 tuần";
+      case 6:
+        return "1 tháng";
+      case 7:
+        return "Mua";
+      default:
+        return "Loại đơn hàng không hợp lệ";
+    }
   };
   // Hàm cập nhật thời gian thuê khi người dùng nhấn vào nút
+  const updateOrderTypeId = async (cartItemId, newOrderTypeId) => {
+    try {
+      if (!cartId) {
+        console.error("Không tìm thấy cartId");
+        alert("Giỏ hàng không hợp lệ.");
+        return;
+      }
+
+      const response = await apiCartItem.get(`/ByCartId/${cartId}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      const cartItems = response.data || [];
+      const existingItem = cartItems.find((item) => item.id === cartItemId);
+
+      if (!existingItem) {
+        console.log("Không tìm thấy sản phẩm trong giỏ hàng.");
+        alert("Không tìm thấy sản phẩm trong giỏ hàng.");
+        return;
+      }
+
+      const updatedItemData = {
+        ...existingItem,
+        orderTypeId: newOrderTypeId, // Cập nhật orderTypeId
+      };
+
+      const updateResponse = await apiCartItem.put(
+        `/${existingItem.id}`,
+        updatedItemData
+      );
+
+      if (updateResponse.status === 204) {
+        console.log(`OrderTypeId đã được cập nhật: ${newOrderTypeId}`);
+        alert("Thời gian thuê đã được cập nhật!");
+        loadCartFromDatabase();
+      } else {
+        console.error("Lỗi khi cập nhật orderTypeId", updateResponse);
+        alert("Có lỗi xảy ra khi cập nhật thời gian thuê.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi gọi API:", error);
+      alert("Có lỗi xảy ra khi cập nhật giỏ hàng.");
+    }
+  };
   const updateRentalDuration = (itemId, duration) => {
     setRentItems((prevItems) =>
       prevItems.map((item) =>
@@ -393,7 +441,6 @@ const HeaderForCustomer = () => {
       )
     );
   };
-
   return (
     <>
       {Cookies.get("userData") ? (
@@ -531,7 +578,7 @@ const HeaderForCustomer = () => {
                               className="flex items-center mb-4 relative"
                             >
                               <img
-                                src={item.image}
+                                src={item.toyImgUrls}
                                 alt={item.toyName}
                                 className="w-20 h-20 object-cover mr-4"
                               />
@@ -541,7 +588,7 @@ const HeaderForCustomer = () => {
                                   {/* Chọn thời gian thuê */}
                                   <div className="flex justify-between items-center mb-2">
                                     <p className="mr-4">
-                                      Giá gốc: {item.price} VNĐ
+                                      Giá gốc: {item.toyPrice} VNĐ
                                     </p>
                                   </div>
                                   <div className="flex space-x-4">
@@ -551,9 +598,10 @@ const HeaderForCustomer = () => {
                                           ? "bg-blue-500 text-white"
                                           : ""
                                       }`}
-                                      onClick={() =>
-                                        updateRentalDuration(item.id, "1 tuần")
-                                      }
+                                      onClick={() => {
+                                        updateRentalDuration(item.id, "1 tuần"); // Cập nhật state
+                                        updateOrderTypeId(item.id, 4); // Cập nhật orderTypeId = 4 cho "1 tuần"
+                                      }}
                                     >
                                       1 tuần
                                     </button>
@@ -563,9 +611,10 @@ const HeaderForCustomer = () => {
                                           ? "bg-blue-500 text-white"
                                           : ""
                                       }`}
-                                      onClick={() =>
-                                        updateRentalDuration(item.id, "2 tuần")
-                                      }
+                                      onClick={() => {
+                                        updateRentalDuration(item.id, "2 tuần"); // Cập nhật state
+                                        updateOrderTypeId(item.id, 5); // Cập nhật orderTypeId = 5 cho "2 tuần"
+                                      }}
                                     >
                                       2 tuần
                                     </button>
@@ -575,9 +624,13 @@ const HeaderForCustomer = () => {
                                           ? "bg-blue-500 text-white"
                                           : ""
                                       }`}
-                                      onClick={() =>
-                                        updateRentalDuration(item.id, "1 tháng")
-                                      }
+                                      onClick={() => {
+                                        updateRentalDuration(
+                                          item.id,
+                                          "1 tháng"
+                                        ); // Cập nhật state
+                                        updateOrderTypeId(item.id, 6); // Cập nhật orderTypeId = 6 cho "1 tháng"
+                                      }}
                                     >
                                       1 tháng
                                     </button>
@@ -587,7 +640,7 @@ const HeaderForCustomer = () => {
                                     <p className="font-bold">
                                       Giá thuê:{" "}
                                       {calculateRentalPrice(
-                                        item.price,
+                                        item.toyPrice,
                                         item.rentalDuration
                                       )}{" "}
                                       VNĐ
@@ -624,7 +677,7 @@ const HeaderForCustomer = () => {
                               className="flex items-center mb-4 relative"
                             >
                               <img
-                                src={item.image}
+                                src={item.toyImgUrls}
                                 alt={item.toyName}
                                 className="w-20 h-20 object-cover mr-4"
                               />
@@ -794,211 +847,7 @@ const HeaderForCustomer = () => {
                     <path d="M222.14,58.87A8,8,0,0,0,216,56H54.68L49.79,29.14A16,16,0,0,0,34.05,16H16a8,8,0,0,0,0,16h18L59.56,172.29a24,24,0,0,0,5.33,11.27,28,28,0,1,0,44.4,8.44h45.42A27.75,27.75,0,0,0,152,204a28,28,0,1,0,28-28H83.17a8,8,0,0,1-7.87-6.57L72.13,152h116a24,24,0,0,0,23.61-19.71l12.16-66.86A8,8,0,0,0,222.14,58.87ZM96,204a12,12,0,1,1-12-12A12,12,0,0,1,96,204Zm96,0a12,12,0,1,1-12-12A12,12,0,0,1,192,204Zm4-74.57A8,8,0,0,1,188.1,136H69.22L57.59,72H206.41Z"></path>
                   </svg>
                 </div>
-              </button>
-              {cartVisible && (
-                <div
-                  className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-end z-50"
-                  onClick={toggleCart}
-                >
-                  <div
-                    className="cart-modal bg-white p-4 shadow-md rounded-md w-[700px] h-full flex flex-col justify-between"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex-grow overflow-y-auto">
-                      <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold">Giỏ hàng của bạn</h2>
-                        <button
-                          className="text-gray-600 hover:text-gray-800 text-2xl"
-                          onClick={toggleCart}
-                        >
-                          &times;
-                        </button>
-                      </div>
-                      <h3 className="font-bold mb-2 mt-4">Đơn Thuê Sản Phẩm</h3>
-                      <div className="flex-grow overflow-y-auto max-h-72">
-                        {rentItems.length === 0 ? (
-                          <p>Giỏ hàng thuê trống.</p>
-                        ) : (
-                          rentItems.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex items-center mb-4 relative"
-                            >
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                className="w-20 h-20 object-cover mr-4"
-                              />
-                              <div className="flex-grow">
-                                <h3 className="font-bold">{item.name}</h3>
-                                <div className="flex flex-col">
-                                  {/* Chọn thời gian thuê */}
-                                  <div className="flex justify-between items-center mb-2">
-                                    <p className="mr-4">
-                                      Giá gốc: {item.price} VNĐ
-                                    </p>
-                                  </div>
-                                  <div className="flex space-x-4">
-                                    <button
-                                      className={`border px-4 py-2 ${
-                                        item.rentalDuration === "1 tuần"
-                                          ? "bg-blue-500 text-white"
-                                          : ""
-                                      }`}
-                                      onClick={() =>
-                                        updateRentalDuration(item.id, "1 tuần")
-                                      }
-                                    >
-                                      1 tuần
-                                    </button>
-                                    <button
-                                      className={`border px-4 py-2 ${
-                                        item.rentalDuration === "2 tuần"
-                                          ? "bg-blue-500 text-white"
-                                          : ""
-                                      }`}
-                                      onClick={() =>
-                                        updateRentalDuration(item.id, "2 tuần")
-                                      }
-                                    >
-                                      2 tuần
-                                    </button>
-                                    <button
-                                      className={`border px-4 py-2 ${
-                                        item.rentalDuration === "1 tháng"
-                                          ? "bg-blue-500 text-white"
-                                          : ""
-                                      }`}
-                                      onClick={() =>
-                                        updateRentalDuration(item.id, "1 tháng")
-                                      }
-                                    >
-                                      1 tháng
-                                    </button>
-                                  </div>
-                                  {/* Hiển thị giá thay đổi theo thời gian thuê */}
-                                  <div className="mt-2">
-                                    <p className="font-bold">
-                                      Giá thuê:{" "}
-                                      {calculateRentalPrice(
-                                        item.price,
-                                        item.rentalDuration
-                                      )}{" "}
-                                      VNĐ
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                              <button
-                                className="absolute top-0 right-0 text-red-500 hover:text-red-700 text-xl font-bold"
-                                onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      "Bạn có chắc chắn muốn xóa sản phẩm này không?"
-                                    )
-                                  ) {
-                                    removeItem(item.id, "rent"); // Xóa item với id tương ứng
-                                  }
-                                }}
-                              >
-                                &times;
-                              </button>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      <h3 className="font-bold mb-2 mt-4">Đơn Mua Sản Phẩm</h3>
-                      <div className="flex-grow overflow-y-auto max-h-72">
-                        {buyItems.length === 0 ? (
-                          <p>Giỏ hàng mua trống.</p>
-                        ) : (
-                          buyItems.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex items-center mb-4 relative"
-                            >
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                className="w-20 h-20 object-cover mr-4"
-                              />
-                              <div className="flex-grow">
-                                <h3 className="font-bold">{item.name}</h3>
-                                <div className="flex justify-between items-center">
-                                  <p className="mr-4">Giá: {item.price} VNĐ</p>
-                                  <div className="flex items-center">
-                                    <button
-                                      className="border px-2 py-1 mr-2"
-                                      onClick={() =>
-                                        updateCartQuantity(
-                                          item.id,
-                                          item.quantity - 1,
-                                          "buy"
-                                        )
-                                      }
-                                      disabled={item.quantity <= 1}
-                                    >
-                                      -
-                                    </button>
-                                    <span>{item.quantity}</span>
-                                    <button
-                                      className="border px-2 py-1 ml-2"
-                                      onClick={() =>
-                                        updateCartQuantity(
-                                          item.id,
-                                          item.quantity + 1,
-                                          "buy"
-                                        )
-                                      }
-                                    >
-                                      +
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                              <button
-                                className="absolute top-0 right-0 text-red-500 hover:text-red-700 text-xl font-bold"
-                                onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      "Bạn có chắc chắn muốn xóa sản phẩm này không?"
-                                    )
-                                  ) {
-                                    removeItem(item.id, "buy"); // Xóa item với id tương ứng
-                                  }
-                                }}
-                              >
-                                &times;
-                              </button>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Phần tổng tiền nằm ở đáy */}
-                    <div className="border-t border-gray-200 bg-white py-4">
-                      <h4 className="text-md font-semibold">
-                        Tổng tiền thuê: {totalRentPrice} VNĐ
-                      </h4>
-                      <h4 className="text-md font-semibold">
-                        Tổng tiền mua: {totalBuyPrice} VNĐ
-                      </h4>
-                      <h4 className="text-md font-semibold">
-                        Tổng tiền: {totalRentPrice + totalBuyPrice} VNĐ
-                      </h4>
-                      <button className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-                        Thanh toán
-                      </button>
-                    </div>
-                    <Link to="/cart">
-                      <p className="text-blue-500 underline">
-                        Chuyển đến giỏ hàng của bạn
-                      </p>
-                    </Link>
-                  </div>
-                </div>
-              )}{" "}
+              </button>{" "}
             </div>{" "}
           </div>{" "}
         </div>
