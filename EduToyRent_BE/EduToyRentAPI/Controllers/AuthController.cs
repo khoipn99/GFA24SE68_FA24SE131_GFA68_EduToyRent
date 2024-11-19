@@ -32,6 +32,7 @@ namespace EduToyRentAPI.Controllers
 
             var response = new LoginResponse
             {
+                UserId = user.Id,
                 Email = user.Email,
                 FullName = user.FullName,
                 RoleId = user.RoleId,
