@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import { Link } from "react-router-dom";
+import Cookies from "js-cookie";
+import apiToys from "../../service/ApiToys";
+import apiMedia from "../../service/ApiMedia";
+import apiRatings from "../../service/ApiRatings";
 
 const ToysDetails = () => {
   const starRating = 4.0; // Số sao (giả sử)
@@ -14,30 +18,50 @@ const ToysDetails = () => {
     { score: 1, percentage: 5 },
   ];
 
-  // Giá thuê theo thời gian
-  const prices = {
-    week: 15, // Giá thuê cho 1 tuần
-    twoWeeks: 25, // Giá thuê cho 2 tuần
-    month: 50, // Giá thuê cho 1 tháng
-  };
+  const [prices, setPrices] = useState(0);
+  const [currentPrice, setCurrentPrice] = useState(0);
+  const [selectedDuration, setSelectedDuration] = useState("week");
 
-  // State để lưu giá hiện tại và thời gian thuê đã chọn
-  const [currentPrice, setCurrentPrice] = useState(prices.week);
-  const [selectedDuration, setSelectedDuration] = useState("week"); // Mặc định chọn 1 tuần
-
-  // Hàm thay đổi giá khi nhấn nút
   const handlePriceChange = (duration) => {
-    setCurrentPrice(prices[duration]);
-    setSelectedDuration(duration); // Cập nhật thời gian thuê đã chọn
+    if (duration == "week") {
+      setCurrentPrice(prices * 0.15);
+    } else if (duration == "twoWeeks") {
+      setCurrentPrice(prices * 0.25);
+    } else if (duration == "month") {
+      setCurrentPrice(prices * 0.3);
+    }
+
+    setSelectedDuration(duration);
   };
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Số lượng đánh giá hiển thị trên mỗi trang
+  const [currentToy, setCurrentToy] = useState({});
+  const [owner, setOwner] = useState({});
+  const [reviews, setReviews] = useState([]);
+
+  useEffect(() => {
+    apiToys.get("/" + Cookies.get("toyRentDetailId")).then((response) => {
+      console.log(response.data);
+      setOwner(response.data.owner);
+      setCurrentToy(response.data);
+      setCurrentPrice(response.data.price * 0.15);
+      setPrices(response.data.price);
+      try {
+        apiRatings.get("/ByToyId/" + response.data.id).then((response) => {
+          setReviews(response.data);
+        });
+      } catch (error) {
+        console.log("");
+      }
+    });
+  }, []);
+
+  const itemsPerPage = 5;
 
   const indexOfLastReview = currentPage * itemsPerPage;
   const indexOfFirstReview = indexOfLastReview - itemsPerPage;
-  const currentReviews = ratings.slice(indexOfFirstReview, indexOfLastReview);
-  const totalPages = Math.ceil(reviewCount / itemsPerPage);
+  const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
+  const totalPages = Math.ceil(reviews.length / itemsPerPage);
 
   const recommendedToys = [
     {
@@ -82,7 +106,7 @@ const ToysDetails = () => {
                 /
               </span>
               <span className="text-[#0e141b] text-base font-medium leading-normal">
-                Rainbow Stacker
+                {currentToy.name}
               </span>
             </div>
             <div className="container">
@@ -96,7 +120,7 @@ const ToysDetails = () => {
                 ></div>
                 <div className="flex flex-col lg:w-1/2 gap-6 justify-center">
                   <h1 className="text-[#0e141b] text-4xl font-black leading-tight tracking-[-0.033em]">
-                    Rainbow Stacker
+                    {currentToy.name}
                   </h1>
                   {/* Hiển thị số lượng sao và số lượt đánh giá */}
                   <div className="flex items-center">
@@ -105,7 +129,7 @@ const ToysDetails = () => {
                         <img
                           key={index}
                           src={
-                            index < Math.floor(starRating)
+                            index < Math.floor(currentToy.star)
                               ? "https://cdn-icons-png.flaticon.com/512/616/616489.png" // Hình ảnh sao đầy
                               : "https://cdn-icons-png.flaticon.com/512/616/616505.png" // Hình ảnh sao rỗng
                           }
@@ -113,17 +137,22 @@ const ToysDetails = () => {
                           className="w-5 h-5"
                         />
                       ))}
-                      <span className="text-[#0e141b] ml-2">{starRating}</span>
+                      <span className="text-[#0e141b] ml-2">
+                        {currentToy.star}
+                      </span>
                     </div>
                     <span className="text-[#0e141b] text-sm">
                       ({reviewCount} đánh giá)
                     </span>
                   </div>
                   <h2 className="text-[#0e141b] text-sm font-normal leading-normal">
-                    Địa chỉ :
+                    Địa chỉ :{owner.address}
                   </h2>
                   <p className="text-[#0e141b] text-lg font-bold mt-2">
-                    Giá gốc: 100$
+                    Giá cọc: {(currentToy.price || 0).toLocaleString()} VNĐ
+                  </p>
+                  <p className="text-[#0e141b] text-lg font-bold mt-2">
+                    Giá thuê: {(currentPrice || 0).toLocaleString()} VNĐ
                   </p>
 
                   {/* Nút thời gian thuê */}
@@ -161,9 +190,7 @@ const ToysDetails = () => {
                   </div>
 
                   <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#1980e6] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] mt-4">
-                    <span className="truncate">
-                      Thêm vào giỏ hàng với giá ${currentPrice}
-                    </span>
+                    <span className="truncate">Thêm vào giỏ hàng</span>
                   </button>
                 </div>
               </div>
@@ -292,11 +319,11 @@ const ToysDetails = () => {
                 ))}
               </div>
 
-              <div className="flex flex-wrap gap-x-8 gap-y-6 p-0">
+              <div className="w-full flex flex-wrap gap-x-8 gap-y-6 p-0">
                 {currentReviews.map((rating, index) => (
                   <div
                     key={index}
-                    className="flex flex-col gap-3 bg-slate-50 border border-gray-300 rounded-lg p-4"
+                    className="w-full flex flex-col gap-3 bg-slate-50 border border-gray-300 rounded-lg p-4"
                   >
                     <div className="flex items-center gap-3">
                       <div
@@ -308,15 +335,19 @@ const ToysDetails = () => {
                       ></div>
                       <div className="flex-1">
                         <p className="text-[#0e141b] text-base font-medium leading-normal">
-                          Sarah {/* Tên người đánh giá */}
+                          {rating.userName}
                         </p>
                         <p className="text-[#4e7397] text-sm font-normal leading-normal">
-                          Sep 20, 2023 {/* Ngày đánh giá */}
+                          {
+                            new Date(rating.ratingDate)
+                              .toISOString()
+                              .split("T")[0]
+                          }
                         </p>
                       </div>
                     </div>
                     <div className="flex gap-0.5">
-                      {Array(5)
+                      {Array(rating.star)
                         .fill(0)
                         .map((_, starIndex) => (
                           <div key={starIndex} className="text-[#1980e6]">
@@ -333,9 +364,7 @@ const ToysDetails = () => {
                         ))}
                     </div>
                     <p className="text-[#0e141b] text-base font-normal leading-normal">
-                      My son loves this toy! The colors are vibrant, and the
-                      pieces are just the right size for his little hands. I
-                      highly recommend it to other parents.
+                      {rating.comment}
                     </p>
                   </div>
                 ))}

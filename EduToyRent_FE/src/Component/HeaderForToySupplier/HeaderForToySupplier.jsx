@@ -116,6 +116,8 @@ const HeaderForToySupplier = () => {
 
     // Xóa cookie userData
     Cookies.remove("userData", { path: "/" });
+    Cookies.remove("userToken");
+    Cookies.remove("userDataReal");
 
     // Log cookie sau khi xóa
     console.log("Sau khi xóa:", Cookies.get("userData")); // Kết quả nên là undefined nếu cookie đã bị xóa
