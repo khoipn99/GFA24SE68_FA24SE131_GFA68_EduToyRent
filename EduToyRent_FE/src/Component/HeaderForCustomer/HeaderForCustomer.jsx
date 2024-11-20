@@ -8,6 +8,8 @@ import apiToys from "../../service/ApiToys";
 import apiWallets from "../../service/ApiWallets";
 import apiCart from "../../service/ApiCart";
 import apiCartItem from "../../service/ApiCartItem";
+import exampleImage from "../../assets/UserUnknow.png";
+
 const HeaderForCustomer = () => {
   const [cartVisible, setCartVisible] = useState(false);
   const [rentItems, setRentItems] = useState([]);
@@ -92,7 +94,7 @@ const HeaderForCustomer = () => {
       // Hàm lấy giỏ hàng của người dùng theo userId
       const fetchUserCart = async (userId) => {
         try {
-          const response = await apiCart.get(`?pageIndex=1&pageSize=50`, {
+          const response = await apiCart.get(`?pageIndex=1&pageSize=1000`, {
             headers: {
               Authorization: `Bearer ${Cookies.get("userToken")}`,
             },
@@ -136,7 +138,7 @@ const HeaderForCustomer = () => {
           console.log("Các mục trong giỏ hàng:", response.data);
           // Thực hiện thêm các bước xử lý với dữ liệu CartItems (ví dụ: setCartItems(response.data))
         } catch (error) {
-          console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
+          //console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
         }
       };
 
@@ -227,7 +229,7 @@ const HeaderForCustomer = () => {
       console.log("Purchase Items:", buyItems);
     } catch (error) {
       console.error("Lỗi khi tải giỏ hàng từ cơ sở dữ liệu:", error);
-      alert("Có lỗi xảy ra khi tải giỏ hàng.");
+      //alert("Có lỗi xảy ra khi tải giỏ hàng.");
     } finally {
       setLoading(false);
     }
@@ -443,6 +445,10 @@ const HeaderForCustomer = () => {
       )
     );
   };
+
+  const HandlePayment = () => {
+    navigate("/payment");
+  };
   return (
     <>
       {Cookies.get("userData") ? (
@@ -513,15 +519,27 @@ const HeaderForCustomer = () => {
                 onMouseLeave={handleMouseLeave}
                 className="relative flex items-center space-x-2"
               >
-                <div className="text-[#0e161b]">
-                  <img
-                    src={userData.avatarUrl}
-                    alt="User Avatar"
-                    width="40px"
-                    height="40px"
-                    className="rounded-full"
-                  />
-                </div>
+                {userData.avatarUrl ? (
+                  <div className="text-[#0e161b]">
+                    <img
+                      src={userData.avatarUrl}
+                      alt="User Avatar"
+                      width="40px"
+                      height="40px"
+                      className="rounded-full"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-[#0e161b]">
+                    <img
+                      src={exampleImage}
+                      alt="User Avatar"
+                      width="40px"
+                      height="40px"
+                      className="rounded-full"
+                    />
+                  </div>
+                )}
 
                 <div className="flex justify-center items-center">
                   <p>{userData.fullName || userData.name}</p>
@@ -750,7 +768,12 @@ const HeaderForCustomer = () => {
                       <h4 className="text-md font-semibold">
                         Tổng tiền: {totalRentPrice + totalBuyPrice} VNĐ
                       </h4>
-                      <button className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+                      <button
+                        onClick={() => {
+                          HandlePayment();
+                        }}
+                        className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+                      >
                         Thanh toán
                       </button>
                     </div>

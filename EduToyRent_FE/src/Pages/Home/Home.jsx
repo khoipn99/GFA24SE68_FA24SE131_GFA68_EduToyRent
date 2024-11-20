@@ -561,17 +561,13 @@ const Home = () => {
                   key={index}
                   className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
                 >
-
                   <div
-                    className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                    style={{
-                      backgroundImage: `url(${deal.media.mediaUrl})`,
+                    onClick={() => {
+                      HandleToyDetail(deal);
                     }}
-                  ></div>
-                  <div>
-                    <p
-                      className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
-
+                  >
+                    <div
+                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
                       style={{
                         backgroundImage: `url(${deal.media.mediaUrl})`,
                       }}
