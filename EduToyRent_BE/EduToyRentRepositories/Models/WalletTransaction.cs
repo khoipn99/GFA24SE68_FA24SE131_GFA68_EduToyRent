@@ -17,13 +17,14 @@ namespace EduToyRentRepositories.Models
         public int Id { get; set; }
         public string TransactionType { get; set; }
         public int Amount { get; set; }
+        public DateTime? Date { get; set; }
         public int WalletId { get; set; }
         [ForeignKey(nameof(WalletId))]
         public virtual Wallet Wallet { get; set; } = null!;
         public int PaymentTypeId { get; set; }
         [ForeignKey(nameof(PaymentTypeId))]
         public virtual PaymentType PaymentType { get; set; } = null!;
-        public int OrderId { get; set; }
+        public int? OrderId { get; set; }
         [ForeignKey(nameof(OrderId))]
         public virtual Order Order { get; set; } = null!;
         public int SenderId { get; set; }
