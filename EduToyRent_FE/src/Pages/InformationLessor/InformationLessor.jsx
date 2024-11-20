@@ -7,6 +7,7 @@ import apiOrder from "../../service/ApiOrder";
 import apiToys from "../../service/ApiToys";
 import apiCategory from "../../service/ApiCategory";
 import apiMedia from "../../service/ApiMedia";
+import { useNavigate } from "react-router-dom";
 
 const InformationLessor = () => {
   const [selectedTab, setSelectedTab] = useState("orders");
@@ -18,12 +19,18 @@ const InformationLessor = () => {
   const [orderDetails, setOrderDetails] = useState([]);
   const [categories, setCategories] = useState([]);
 
+  const navigate = useNavigate();
+
   // Sample data for orders
   useEffect(() => {
-    getUserInfo();
-    getOrderInfo();
-    getProductInfo();
-    getCategoryInfo();
+    if (Cookies.get("userToken")) {
+      getUserInfo();
+      getOrderInfo();
+      getProductInfo();
+      getCategoryInfo();
+    } else {
+      navigate("/Login");
+    }
   }, []);
 
   const getUserInfo = () => {
@@ -213,7 +220,9 @@ const InformationLessor = () => {
 
       apiMedia
         .post("/upload-toy-images/" + response.data.id, formData)
-        .then((response) => {});
+        .then((response) => {
+          getProductInfo();
+        });
     });
 
     console.log("New product:", newProduct);
@@ -242,7 +251,25 @@ const InformationLessor = () => {
   };
 
   const handleSaveClick = () => {
-    //onSaveProduct(editedProduct); // Call a function to save the edited product
+    console.log(editedProduct);
+
+    apiToys
+      .put("/" + editedProduct.id, {
+        name: editedProduct.name,
+        description: editedProduct.description,
+        price: editedProduct.price,
+        buyQuantity: editedProduct.buyQuantity,
+        origin: editedProduct.origin,
+        age: editedProduct.age,
+        brand: editedProduct.brand,
+        categoryId: editedProduct.category.id,
+        rentCount: editedProduct.rentCount,
+        rentTime: editedProduct.rentTime,
+      })
+      .then((response) => {
+        getProductInfo();
+      });
+
     setIsEditMode(false);
     setSelectedProduct(editedProduct); // Update the displayed details with saved changes
   };
@@ -252,6 +279,18 @@ const InformationLessor = () => {
     setEditedProduct((prevProduct) => ({
       ...prevProduct,
       [name]: value,
+    }));
+  };
+
+  const handleChangeCategory = (event) => {
+    const selectedCategoryId = event.target.value;
+    const selectedCategory = categories.find(
+      (category) => category.id === parseInt(selectedCategoryId)
+    );
+
+    setEditedProduct((prevProduct) => ({
+      ...prevProduct,
+      category: selectedCategory,
     }));
   };
 
@@ -463,7 +502,7 @@ const InformationLessor = () => {
                     <label className="block mb-2">
                       Tuổi:
                       <input
-                        type="number"
+                        type="text"
                         name="age"
                         value={newProduct.age}
                         onChange={handleInputChange}
@@ -592,7 +631,11 @@ const InformationLessor = () => {
                   className="p-4 border border-gray-300 rounded-lg flex items-center"
                 >
                   <img
-                    src="https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png"
+                    src={
+                      product.media && product.media.mediaUrl
+                        ? product.media.mediaUrl
+                        : ""
+                    }
                     alt={product.name}
                     className="w-24 h-24 object-cover mr-4"
                   />
@@ -618,7 +661,11 @@ const InformationLessor = () => {
                     {isEditMode ? "Sửa sản phẩm" : "Chi tiết sản phẩm"}
                   </h3>
                   <img
-                    src={editedProduct.image}
+                    src={
+                      editedProduct.media && editedProduct.media.mediaUrl
+                        ? editedProduct.media.mediaUrl
+                        : ""
+                    }
                     alt={editedProduct.name}
                     className="w-full h-48 object-cover mb-4"
                   />
@@ -630,6 +677,7 @@ const InformationLessor = () => {
                         onChange={handleChange}
                         className="mb-2 w-full p-2 border border-gray-300 rounded"
                         placeholder="Tên đồ chơi"
+                        required
                       />
                       <input
                         name="price"
@@ -638,20 +686,16 @@ const InformationLessor = () => {
                         className="mb-2 w-full p-2 border border-gray-300 rounded"
                         placeholder="Giá"
                         type="number"
+                        required
                       />
-                      <input
-                        name="status"
-                        value={editedProduct.status}
-                        onChange={handleChange}
-                        className="mb-2 w-full p-2 border border-gray-300 rounded"
-                        placeholder="Trạng thái"
-                      />
+
                       <textarea
-                        name="details"
+                        name="description"
                         value={editedProduct.description}
                         onChange={handleChange}
                         className="mb-2 w-full p-2 border border-gray-300 rounded"
                         placeholder="Chi tiết"
+                        required
                       />
                       <input
                         name="age"
@@ -660,6 +704,7 @@ const InformationLessor = () => {
                         className="mb-2 w-full p-2 border border-gray-300 rounded"
                         placeholder="Tuổi"
                         type="number"
+                        required
                       />
                       <input
                         name="brand"
@@ -667,20 +712,28 @@ const InformationLessor = () => {
                         onChange={handleChange}
                         className="mb-2 w-full p-2 border border-gray-300 rounded"
                         placeholder="Hãng"
+                        required
                       />
-                      <input
+                      <select
                         name="category"
-                        value={editedProduct.category.name}
-                        onChange={handleChange}
+                        value={editedProduct.category.id}
+                        onChange={handleChangeCategory}
                         className="mb-2 w-full p-2 border border-gray-300 rounded"
-                        placeholder="Loại đồ chơi"
-                      />
+                      >
+                        {categories.map((category, index) => (
+                          <option key={index} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+
                       <input
                         name="origin"
                         value={editedProduct.origin}
                         onChange={handleChange}
                         className="mb-2 w-full p-2 border border-gray-300 rounded"
                         placeholder="Nguồn gốc"
+                        required
                       />
                       <button
                         onClick={handleSaveClick}
@@ -967,7 +1020,9 @@ const InformationLessor = () => {
       <main className="flex flex-grow justify-center py-4">
         <div className="flex w-3/4 bg-white shadow-md rounded-lg">
           <div className="w-1/4 p-4">
-            <h2 className="text-lg font-semibold mb-4">Cho thuê</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              Cửa hàng cho thuê của tôi
+            </h2>
             <button
               onClick={() => setSelectedTab("orders")}
               className={`block w-full text-left p-2 rounded hover:bg-gray-200 ${

@@ -160,7 +160,7 @@ const HeaderForCustomer = () => {
 
       fetchUserData();
     } else {
-      console.error("Không tìm thấy thông tin người dùng trong cookie.");
+      //console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
 
     const userWalletsCookie = Cookies.get("userData");
@@ -168,7 +168,7 @@ const HeaderForCustomer = () => {
       const parsedUserWallets = JSON.parse(userWalletsCookie);
       setUserWallets(parsedUserWallets);
     } else {
-      console.error("Không tìm thấy thông tin người dùng trong cookie.");
+      //console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
   }, []);
   const logOut = () => {
@@ -177,6 +177,8 @@ const HeaderForCustomer = () => {
 
     // Xóa cookie userData
     Cookies.remove("userData", { path: "/" });
+    Cookies.remove("userToken");
+    Cookies.remove("userDataReal");
 
     // Log cookie sau khi xóa
     console.log("Sau khi xóa:", Cookies.get("userData")); // Kết quả nên là undefined nếu cookie đã bị xóa
@@ -383,7 +385,7 @@ const HeaderForCustomer = () => {
           </label> */}
             <div className="flex gap-2">
               <div className="flex justify-center items-center">
-                <p>Số dư : {userWallet.balance} VND</p>
+                <p>Số dư : {(userWallet.balance || 0).toLocaleString()} VND</p>
               </div>
               <button
                 className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"

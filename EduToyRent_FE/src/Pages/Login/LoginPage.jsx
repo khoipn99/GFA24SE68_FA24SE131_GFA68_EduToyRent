@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -11,6 +11,12 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (Cookies.get("userToken")) {
+      navigate("/");
+    }
+  });
 
   // Hàm đăng nhập qua API riêng
   const handleApiLoginSubmit = async (e) => {
@@ -54,7 +60,7 @@ const LoginPage = () => {
 
           console.log("Dữ liệu trả về:", response.data);
           Cookies.set("userDataReal", JSON.stringify(response.data[0]), {
-            expires: 1,
+            expires: 7,
           });
         } catch (error) {
           console.error("Lỗi khi lấy dữ liệu người dùng:", error);

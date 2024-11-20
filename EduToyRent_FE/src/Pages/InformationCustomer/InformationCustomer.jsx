@@ -4,6 +4,9 @@ import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustom
 import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
 import apiOrderDetail from "../../service/ApiOrderDetail";
 import apiOrder from "../../service/ApiOrder";
+import { useNavigate } from "react-router-dom";
+import apiWallets from "../../service/ApiWallets";
+import apiWalletTransaction from "../../service/ApiWalletTransaction";
 
 const InformationCustomer = () => {
   const [selectedTab, setSelectedTab] = useState("info");
@@ -15,9 +18,18 @@ const InformationCustomer = () => {
   const [orders, setOrders] = useState([]);
   const [orderDetails, setOrderDetails] = useState([]);
 
+  const [walletInfo, setWalletInfo] = useState({});
+  const [walletTransaction, setWalletTransaction] = useState({});
+
+  const navigate = useNavigate();
+
   useEffect(() => {
-    getUserInfo();
-    getOrderInfo();
+    if (Cookies.get("userToken")) {
+      getUserInfo();
+      getOrderInfo();
+    } else {
+      navigate("/Login");
+    }
   }, []);
 
   const getUserInfo = () => {
@@ -26,6 +38,18 @@ const InformationCustomer = () => {
       const parsedUserData = JSON.parse(userDataCookie);
       setCustomerInfo(parsedUserData[0]);
       console.log(parsedUserData[0]);
+      apiWallets.get("/" + parsedUserData[0].walletId).then((response) => {
+        setWalletInfo(response.data);
+      });
+      apiWalletTransaction
+        .get(
+          "/ByWalletId?walletId=" +
+            parsedUserData[0].walletId +
+            "&pageIndex=1&pageSize=10"
+        )
+        .then((response) => {
+          setWalletTransaction(response.data);
+        });
     }
   };
 
@@ -40,8 +64,8 @@ const InformationCustomer = () => {
           "&pageIndex=1&pageSize=1000"
       )
       .then((response) => {
-        setOrders(response.data);
-        console.log(response.data);
+        setOrders(response.data.orders);
+        console.log(response.data.orders);
       });
   };
 
@@ -196,9 +220,9 @@ const InformationCustomer = () => {
                   <label className="flex justify-between items-center space-x-12 block">
                     <p className="font-semibold w-4/10">Mật khẩu:</p>
                     <input
-                      type="email"
-                      name="email"
-                      value={customerInfo.email}
+                      type="password"
+                      name="password"
+                      value={customerInfo.password}
                       onChange={handleInputChange}
                       className="w-6/10 border border-gray-300 rounded p-1"
                     />
@@ -267,7 +291,9 @@ const InformationCustomer = () => {
 
                   <div className="flex justify-between items-center space-x-12">
                     <p className="font-semibold w-4/10">Mật khẩu:</p>
-                    <p className="w-6/10">{customerInfo.password}</p>
+                    <p className="w-6/10" type="password">
+                      {"*".repeat(customerInfo.password)}
+                    </p>
                   </div>
 
                   <button
@@ -372,7 +398,9 @@ const InformationCustomer = () => {
                   className="p-4 border border-gray-300 rounded-lg"
                 >
                   <div className="flex justify-between mb-2">
-                    <h4 className="font-semibold">Đặt hàng từ:</h4>
+                    <h4 className="font-semibold">
+                      Đặt hàng từ: {order.shopName}
+                    </h4>
                     <span className="font-medium">{order.status}</span>
                   </div>
                   <hr className="border-gray-300 mb-2" />
@@ -423,6 +451,65 @@ const InformationCustomer = () => {
                 </li>
               ))}
             </ul>
+          </div>
+        );
+
+      case "wallet":
+        return (
+          <div className="p-4">
+            {/* Phần trên: Thông tin tài khoản */}
+            <div className="bg-gray-100 p-4 rounded shadow mb-4">
+              <h2 className="text-xl font-semibold mb-2">
+                Thông tin tài khoản
+              </h2>
+              <p>
+                <strong>Số dư khả dụng:</strong>{" "}
+                {(walletInfo.balance || 0).toLocaleString()} VNĐ
+              </p>
+              <p>
+                <strong>Số tài khoản:</strong> {walletInfo.withdrawInfo}
+              </p>
+              <p>
+                <strong>Ngân hàng:</strong> {walletInfo.withdrawMethod}
+              </p>
+            </div>
+
+            {/* Phần dưới: Lịch sử giao dịch */}
+            <div className="bg-white p-4 rounded shadow">
+              <h2 className="text-xl font-semibold mb-2">Lịch sử giao dịch</h2>
+              {walletTransaction.length > 0 ? (
+                <ul className="space-y-4">
+                  {walletTransaction.map((transaction) => (
+                    <li
+                      key={transaction.id}
+                      className="p-4 border border-gray-300 rounded-lg"
+                    >
+                      <div className="flex justify-between mb-2">
+                        <h4 className="font-semibold">
+                          {transaction.senderId} {transaction.transactionType}
+                        </h4>
+                        <span className="font-medium">
+                          {(transaction.amount || 0).toLocaleString()} VNĐ
+                        </span>
+                      </div>
+
+                      <div className="flex items-center mb-2">
+                        <p className="font-semibold">
+                          Ngày Nạp :{" "}
+                          {/* {
+                            new Date(transaction.orderDate)
+                              .toISOString()
+                              .split("T")[0]
+                          } */}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>Không có giao dịch nào.</p>
+              )}
+            </div>
           </div>
         );
       default:
@@ -651,6 +738,14 @@ const InformationCustomer = () => {
               }`}
             >
               Đơn hàng đã đặt
+            </button>
+            <button
+              onClick={() => setSelectedTab("wallet")}
+              className={`block w-full text-left p-2 rounded hover:bg-gray-200 ${
+                selectedTab === "wallet" ? "bg-gray-300" : ""
+              }`}
+            >
+              Ví tiền
             </button>
           </div>
           <div className="w-3/4 p-4 border-l">{renderContent()}</div>

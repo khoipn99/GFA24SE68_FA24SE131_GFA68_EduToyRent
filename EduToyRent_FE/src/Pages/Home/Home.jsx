@@ -409,6 +409,16 @@ const Home = () => {
   const FilterCategory = (category) => {
     navigate("/filter-toys");
   };
+  const HandleToyDetail = (toy) => {
+    console.log(toy);
+    if (toy.buyQuantity >= 0) {
+      Cookies.set("toySaleDetailId", toy.id, { expires: 30 });
+      navigate("/toys-sale-details");
+    } else if (toy.buyQuantity < 0) {
+      Cookies.set("toyRentDetailId", toy.id, { expires: 30 });
+      navigate("/toys-rent-details");
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
@@ -532,58 +542,60 @@ const Home = () => {
                   key={index}
                   className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
                 >
-                  <div
-                    className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                    style={{
-                      backgroundImage: `url(https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png)`,
-                    }}
-                  ></div>
-                  <div>
-                    <p
-                      className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                  <div onClick={() => HandleToyDetail(deal)}>
+                    <div
+                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
                       style={{
-                        display: "-webkit-box",
-                        WebkitBoxOrient: "vertical",
-                        WebkitLineClamp: 2,
-                        lineClamp: 2,
-                        maxHeight: "3rem", // Ensures space for two lines
-                        lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                        backgroundImage: `url(${deal.media.mediaUrl})`,
                       }}
-                    >
-                      {deal.name}
-                    </p>
+                    ></div>
+                    <div>
+                      <p
+                        className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                        style={{
+                          display: "-webkit-box",
+                          WebkitBoxOrient: "vertical",
+                          WebkitLineClamp: 2,
+                          lineClamp: 2,
+                          maxHeight: "3rem", // Ensures space for two lines
+                          lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                        }}
+                      >
+                        {deal.name}
+                      </p>
 
-                    <p className="text-[#507a95] text-sm">
-                      Age group: {deal.age}
-                    </p>
-                    <div className="flex items-center gap-1">
-                      {renderStars(deal.star)}
+                      <p className="text-[#507a95] text-sm">
+                        Age group: {deal.age}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        {renderStars(deal.star)}
+                      </div>
+                      {deal.buyQuantity >= 0 ? (
+                        <p className="text-[#0e161b] text-lg font-bold">
+                          {(deal.price || 0).toLocaleString()} VNĐ
+                        </p>
+                      ) : (
+                        <p className="text-[#0e161b] text-lg font-bold">
+                          {(deal.price || 0).toLocaleString()} VNĐ
+                        </p>
+                      )}
                     </div>
-                    {deal.buyQuantity >= 0 ? (
-                      <p className="text-[#0e161b] text-lg font-bold">
-                        {deal.price} VNĐ
-                      </p>
-                    ) : (
-                      <p className="text-[#0e161b] text-lg font-bold">
-                        {deal.price} VNĐ
-                      </p>
-                    )}
-                    {deal.buyQuantity >= 0 ? (
-                      <button
-                        onClick={() => addToPurchase(deal)}
-                        className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
-                      >
-                        Mua
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => openModal(deal)}
-                        className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
-                      >
-                        Thuê
-                      </button>
-                    )}
                   </div>
+                  {deal.buyQuantity >= 0 ? (
+                    <button
+                      onClick={() => addToPurchase(deal)}
+                      className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                    >
+                      Mua
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => openModal(deal)}
+                      className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                    >
+                      Thuê
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -601,7 +613,7 @@ const Home = () => {
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
                       style={{
-                        backgroundImage: `url(https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png)`,
+                        backgroundImage: `url(${toy.media.mediaUrl})`,
                       }}
                     ></div>
                   </Link>
@@ -626,7 +638,7 @@ const Home = () => {
                       {renderStars(toy.star)}
                     </div>
                     <p className="text-[#0e161b] text-lg font-bold">
-                      {toy.price} VNĐ
+                      {(toy.price || 0).toLocaleString()} VNĐ
                     </p>
                   </div>
                   <button
@@ -672,10 +684,10 @@ const Home = () => {
                       {renderStars(selectedToy.star)}
                     </div>
                     <p className="text-lg font-bold text-[#0e161b] mb-2">
-                      Giá: {selectedToy.price} VNĐ
+                      Giá: {(selectedToy.price || 0).toLocaleString()} VNĐ
                     </p>
                     <p className="text-lg font-bold text-[#0e161b] mb-2">
-                      Giá thuê: {calculatedPrice} VNĐ
+                      Giá thuê: {(calculatedPrice || 0).toLocaleString()} VNĐ
                     </p>
 
                     <div className="mt-4">
@@ -748,7 +760,7 @@ const Home = () => {
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
                       style={{
-                        backgroundImage: `url(https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png)`,
+                        backgroundImage: `url(${toy.media.mediaUrl})`,
                       }}
                     ></div>
                   </Link>
@@ -773,7 +785,7 @@ const Home = () => {
                       {renderStars(toy.star)}
                     </div>
                     <p className="text-[#0e161b] text-lg font-bold">
-                      {toy.price} VNĐ
+                      {(toy.price || 0).toLocaleString()} VNĐ
                     </p>
                   </div>
                   {/* Nút thêm vào giỏ hàng */}
