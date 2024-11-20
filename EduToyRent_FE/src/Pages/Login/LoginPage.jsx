@@ -5,7 +5,8 @@ import Cookies from "js-cookie";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import LoginBG from "../../assets/bg.png";
-
+import apiLogin from "../../service/ApiLogin";
+import apiUser from "../../service/ApiUser";
 const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -16,10 +17,7 @@ const LoginPage = () => {
   const handleApiLoginSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "https://localhost:44350/api/Auth/login",
-        { email, password }
-      );
+      const response = await apiLogin.post("", { email, password });
 
       // Kiểm tra xem phản hồi có dữ liệu cần thiết hay không
       if (response.data && response.data.token) {
@@ -29,6 +27,7 @@ const LoginPage = () => {
           email: response.data.email,
           roleId: response.data.roleId,
           fullName: response.data.fullName,
+          userId: response.data.userId,
         };
         Cookies.set("userData", JSON.stringify(userData), { expires: 7 });
         try {
@@ -40,17 +39,12 @@ const LoginPage = () => {
             return;
           }
 
-          // Gọi API lấy thông tin người dùng dựa trên email
-          const response = await axios.get(
-            `https://localhost:44350/api/v1/Users/ByEmail?email=${encodeURIComponent(
-              userData.email
-            )}&pageIndex=1&pageSize=5`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          // Gọi API lấy thông tin người dùng dựa trên userid
+          const response = await apiUser.get(`/${userData.userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
           console.log("Dữ liệu trả về:", response.data);
           Cookies.set("userDataReal", JSON.stringify(response.data[0]), {

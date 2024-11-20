@@ -56,7 +56,7 @@ const HeaderForCustomer = () => {
             )}&pageIndex=1&pageSize=5`,
             {
               headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
