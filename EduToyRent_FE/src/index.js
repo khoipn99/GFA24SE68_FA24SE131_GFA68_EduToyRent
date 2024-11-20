@@ -21,11 +21,15 @@ import InformationLessor from "./Pages/InformationLessor/InformationLessor";
 import CartPage from "./Pages/Cart/CartPage";
 import ToySupplierPage from "./Pages/ToySupplier/ToySupplierPage";
 import TopUpSuccess from "./Pages/TopUp/TopUpSuccess";
-
+import Payment from "./Pages/Payment/Payment";
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/payment",
+    element: <Payment />,
   },
   {
     path: "/filter-toys",
