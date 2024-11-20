@@ -9,6 +9,7 @@ import apiToys from "../../service/ApiToys";
 import apiCategory from "../../service/ApiCategory";
 import apiMedia from "../../service/ApiMedia";
 import apiUser from "../../service/ApiUser";
+import axios from "axios";
 const ToySupplierPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("info");
@@ -29,6 +30,7 @@ const ToySupplierPage = () => {
     confirm: false,
   });
   const [selectedToy, setSelectedToy] = useState(null);
+  const [isCardVisible, setIsCardVisible] = useState(false);
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -51,7 +53,7 @@ const ToySupplierPage = () => {
             )}&pageIndex=1&pageSize=5`,
             {
               headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
@@ -69,12 +71,12 @@ const ToySupplierPage = () => {
               `/user/${user.id}?pageIndex=1&pageSize=20000`,
               {
                 headers: {
-                  Authorization: `Bearer ${token}`,
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
                 },
               }
             );
 
-            console.log("Dữ liệu đồ chơi:", toyResponse.data);
+            console.log("Dữ liệu đồ chơi của người dùng:", toyResponse.data);
 
             // Cập nhật dữ liệu đồ chơi (nếu cần thiết)
             setToysData(toyResponse.data);
@@ -91,6 +93,35 @@ const ToySupplierPage = () => {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      console.log("Gọi LoadToy với userId:", userId);
+      LoadToy(userId);
+    } else {
+      console.warn("userId chưa được thiết lập.");
+    }
+  }, [userId]);
+
+  // Hàm load đồ chơi theo userId
+  const LoadToy = async (userId) => {
+    if (!userId) {
+      console.error("Không tìm thấy userId để tải đồ chơi.");
+      return;
+    }
+    try {
+      const response = await apiToys.get(`/user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+      setToysData(response.data);
+      console.log("Danh sách đồ chơi:", response.data);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách đồ chơi:", error);
+    }
+  };
+
   const handleUpdate = async () => {
     if (userId) {
       try {
@@ -257,7 +288,90 @@ const ToySupplierPage = () => {
       [field]: !prevState[field],
     }));
   };
+  const handleSubmit = async () => {
+    const formData = {
+      name: document.getElementById("name").value,
+      description: document.getElementById("description").value,
+      price: parseFloat(document.getElementById("price").value),
+      buyQuantity: 0, // Default value
+      origin: document.getElementById("origin").value,
+      age: document.getElementById("age").value,
+      brand: document.getElementById("brand").value,
+      categoryId: 1, // Default value
+      rentCount: 0, // Default value
+      rentTime: document.getElementById("rentTime").value,
+    };
 
+    // Kiểm tra dữ liệu cần thiết
+    if (!formData.name || !formData.price || !formData.origin) {
+      alert("Vui lòng điền đầy đủ thông tin!");
+      return;
+    }
+
+    // Lấy file từ input hình ảnh
+    const imageInput = document.getElementById("imageUpload");
+    const imageFile = imageInput.files[0];
+
+    if (!imageFile) {
+      alert("Vui lòng tải lên hình ảnh sản phẩm!");
+      return;
+    }
+
+    try {
+      const token = Cookies.get("userToken"); // Lấy token từ cookie
+      console.log("Token được gửi:", token);
+
+      // Gửi yêu cầu tạo sản phẩm
+      const response = await apiToys.post("", formData, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      const newToy = response.data;
+      const toyId = newToy.id;
+      console.log("Sản phẩm đã tạo:", newToy);
+
+      // Gửi file hình ảnh lên server
+      const imageData = new FormData();
+      imageData.append("mediaUrls", imageFile); // Gắn file hình ảnh vào form data
+
+      try {
+        const uploadResponse = await apiMedia.post(
+          `/upload-toy-images/${toyId}`,
+          imageData,
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        console.log("Hình ảnh đã được tạo:", uploadResponse.data);
+        alert("Sản phẩm và hình ảnh đã được thêm thành công!");
+      } catch (uploadError) {
+        console.error("Đã xảy ra lỗi khi tạo hình ảnh:", uploadError);
+        alert("Sản phẩm đã được thêm nhưng không thể tạo hình ảnh!");
+      }
+
+      // Cập nhật danh sách sản phẩm
+      LoadToy(userId);
+      setIsCardVisible(false); // Ẩn card sau khi thêm thành công
+    } catch (error) {
+      console.error("Đã xảy ra lỗi khi thêm sản phẩm:", error);
+      alert("Đã xảy ra lỗi khi thêm sản phẩm!");
+    }
+  };
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log("File uploaded:", file);
+      // Có thể thực hiện thêm xử lý, ví dụ gửi file lên server qua API
+    } else {
+      console.error("No file selected!");
+    }
+  };
   const renderContent = () => {
     switch (selectedTab) {
       case "info":
@@ -456,9 +570,8 @@ const ToySupplierPage = () => {
                 </button>
 
                 <p className="text-sm text-gray-500 mt-2 text-center">
-                  Dung lượng file tối đa 1 MB
                   <br />
-                  Định dạng: .JPEG, .PNG
+                  Định dạng: .JPG, .PNG
                 </p>
               </div>
             </div>
@@ -648,7 +761,8 @@ const ToySupplierPage = () => {
                   <div className="flex items-center mt-4 sm:mt-0 sm:ml-4">
                     <button
                       type="button"
-                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-500 dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-green-700"
+                      onClick={() => setIsCardVisible(true)}
+                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-500"
                     >
                       <svg
                         className="w-4 h-4 mr-2"
@@ -664,6 +778,124 @@ const ToySupplierPage = () => {
                       </svg>
                       Thêm sản phẩm
                     </button>
+                    {/* Card popup */}
+                    {isCardVisible && (
+                      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+                        <div className="bg-white w-full max-w-3xl rounded-xl shadow-lg p-8 relative">
+                          {/* Nút đóng card */}
+                          <button
+                            onClick={() => setIsCardVisible(false)}
+                            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                          >
+                            <svg
+                              className="w-6 h-6"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                          <h3 className="text-2xl font-bold mb-6 text-center">
+                            Thêm Sản Phẩm
+                          </h3>
+                          <form className="space-y-4">
+                            <div>
+                              <label className="block font-medium">
+                                Tên sản phẩm:
+                              </label>
+                              <input
+                                type="text"
+                                id="name"
+                                className="w-full border rounded-lg px-4 py-2"
+                              />
+                            </div>
+                            <div>
+                              <label className="block font-medium">
+                                Mô tả:
+                              </label>
+                              <textarea
+                                id="description"
+                                className="w-full border rounded-lg px-4 py-2"
+                              />
+                            </div>
+                            <div>
+                              <label className="block font-medium">Giá:</label>
+                              <input
+                                type="number"
+                                id="price"
+                                className="w-full border rounded-lg px-4 py-2"
+                              />
+                            </div>
+                            <div>
+                              <label className="block font-medium">
+                                Nguồn gốc:
+                              </label>
+                              <input
+                                type="text"
+                                id="origin"
+                                className="w-full border rounded-lg px-4 py-2"
+                              />
+                            </div>
+                            <div>
+                              <label className="block font-medium">
+                                Độ tuổi:
+                              </label>
+                              <input
+                                type="text"
+                                id="age"
+                                className="w-full border rounded-lg px-4 py-2"
+                              />
+                            </div>
+                            <div>
+                              <label className="block font-medium">
+                                Thương hiệu:
+                              </label>
+                              <input
+                                type="text"
+                                id="brand"
+                                className="w-full border rounded-lg px-4 py-2"
+                              />
+                            </div>
+                            <div>
+                              <label className="block font-medium">
+                                Thời gian thuê:
+                              </label>
+                              <input
+                                type="text"
+                                id="rentTime"
+                                className="w-full border rounded-lg px-4 py-2"
+                              />
+                            </div>
+                            <div>
+                              <label className="block font-medium">
+                                Hình ảnh:
+                              </label>
+                              <input
+                                type="file"
+                                id="imageUpload"
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e)}
+                                className="w-full border rounded-lg px-4 py-2"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleSubmit}
+                              className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            >
+                              Thêm sản phẩm
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -871,41 +1103,57 @@ const ToySupplierPage = () => {
             </div>
             {selectedToy && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
-                <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
-                  <h2 className="text-xl font-bold mb-4">Toy Details</h2>
-                  <div>
-                    <p>
-                      <strong>Name:</strong> {selectedToy.name}
-                    </p>
-                    <p>
-                      <strong>Price:</strong> {selectedToy.price}
-                    </p>
-                    <p>
-                      <strong>Origin:</strong> {selectedToy.origin}
-                    </p>
-                    <p>
-                      <strong>Age:</strong> {selectedToy.age}
-                    </p>
-                    <p>
-                      <strong>Brand:</strong> {selectedToy.brand}
-                    </p>
-                    <p>
-                      <strong>Create Date:</strong>{" "}
-                      {new Date(selectedToy.createDate).toLocaleDateString()}
-                    </p>
-                    <p>
-                      <strong>Rent Time:</strong> {selectedToy.rentTime}
-                    </p>
-                    <p>
-                      <strong>Status:</strong> {selectedToy.status}
-                    </p>
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[90%] overflow-auto">
+                  <div className="flex flex-wrap lg:flex-nowrap gap-10">
+                    {/* Phần hình ảnh */}
+                    <div className="flex-1 flex justify-center items-center">
+                      <img
+                        src={selectedToy.media.mediaUrl}
+                        alt={selectedToy.name}
+                        className="max-w-full max-h-[500px] object-contain rounded-lg shadow-lg"
+                      />
+                    </div>
+
+                    {/* Phần thông tin */}
+                    <div className="flex-1 text-xl space-y-6">
+                      <h2 className="text-4xl font-bold mb-10 text-center">
+                        Toy Details
+                      </h2>
+                      <p>
+                        <strong>Name:</strong> {selectedToy.name}
+                      </p>
+                      <p>
+                        <strong>Price:</strong> {selectedToy.price}
+                      </p>
+                      <p>
+                        <strong>Origin:</strong> {selectedToy.origin}
+                      </p>
+                      <p>
+                        <strong>Age:</strong> {selectedToy.age}
+                      </p>
+                      <p>
+                        <strong>Brand:</strong> {selectedToy.brand}
+                      </p>
+                      <p>
+                        <strong>Create Date:</strong>{" "}
+                        {new Date(selectedToy.createDate).toLocaleDateString()}
+                      </p>
+                      <p>
+                        <strong>Rent Time:</strong> {selectedToy.rentTime}
+                      </p>
+                      <p>
+                        <strong>Status:</strong> {selectedToy.status}
+                      </p>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => setSelectedToy(null)} // Đóng card khi bấm nút
-                    className="mt-4 bg-red-500 text-white p-2 rounded-lg"
-                  >
-                    Close
-                  </button>
+                  <div className="flex justify-end mt-10">
+                    <button
+                      onClick={() => setSelectedToy(null)} // Đóng card khi bấm nút
+                      className="bg-red-600 text-white py-2 px-4 rounded-xl text-2xl shadow-md hover:bg-red-700"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
