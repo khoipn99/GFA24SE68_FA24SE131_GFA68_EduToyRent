@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import các biểu tượng sao
 import { useNavigate } from "react-router-dom";
 import apiToys from "../../service/ApiToys";
+
 import apiCategory from "../../service/ApiCategory";
 import apiCartItem from "../../service/ApiCartItem";
 import apiUser from "../../service/ApiUser";
@@ -115,10 +116,12 @@ const Home = () => {
 
           // Gọi API lấy thông tin người dùng dựa trên email
           const response = await apiUser.get(
-            `ByEmail?email=${encodeURIComponent(email)}&pageIndex=1&pageSize=5`,
+            `/ByEmail?email=${encodeURIComponent(
+              email
+            )}&pageIndex=1&pageSize=5`,
             {
               headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             }
           );
