@@ -19,5 +19,9 @@ namespace EduToyRentRepositories.DTO.Request
         public float DepositBackMoney { get; set; }
         [Required]
         public string Status { get; set; }
+        [Required]
+        public int OrderDetailId { get; set; }
+        [Required]
+        public int TransactionId { get; set; }
     }
 }
