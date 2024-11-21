@@ -12,6 +12,7 @@ using Mapster;
 using EduToyRentRepositories.DTO.Request;
 using EduToyRentAPI.FireBaseService;
 using Microsoft.AspNetCore.OData.Query;
+using System.Drawing.Printing;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -201,5 +202,50 @@ namespace EduToyRentAPI.Controllers
             return Ok(mediaResponses);
         }
 
+        [HttpPut("update-toy-images/{toyId}")]
+        [EnableQuery]
+        public async Task<IActionResult> UpdateToyImages([FromForm] List<IFormFile> mediaUrls, int toyId)
+        {
+            var toy = _unitOfWork.ToyRepository.GetByID(toyId);
+
+            if (toy == null)
+            {
+                return NotFound();
+            }
+
+            if (mediaUrls == null || mediaUrls.Count == 0)
+            {
+                return BadRequest("No image was uploaded.");
+            }
+
+            var oldImageUrls = _unitOfWork.MediaRepository.Get(
+                media => media.ToyId == toyId,
+                includeProperties: "Toy")                
+                .Select(media => media.MediaUrl).ToList();
+
+            await _fireBaseService.DeleteImagesAsync(oldImageUrls);
+
+            var imageUrls = await _fireBaseService.UploadImagesAsync(mediaUrls);
+
+            var medias = imageUrls.Select(mediaUrl => new Media
+            {
+                MediaUrl = mediaUrl,
+                Status = "Pending",
+                ToyId = toyId
+            }).ToList();
+
+            _unitOfWork.MediaRepository.InsertList(medias);
+            _unitOfWork.Save();
+
+            var mediaResponses = medias.Select(media => new MediaResponse
+            {
+                Id = media.Id,
+                MediaUrl = media.MediaUrl,
+                Status = media.Status,
+                ToyId = media.ToyId
+            }).ToList();
+
+            return Ok(mediaResponses);
+        }
     }
 }
