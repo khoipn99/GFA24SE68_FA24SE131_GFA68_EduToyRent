@@ -15,6 +15,6 @@ namespace EduToyRentRepositories.DTO.Response
         public float OwnerReceiveMoney { get; set; }
         public float DepositBackMoney { get; set; }
         public string Status { get; set; }
-        public Order Order { get; set; }
+        public int OrderId { get; set; }
     }
 }
