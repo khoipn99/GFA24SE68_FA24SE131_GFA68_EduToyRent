@@ -127,11 +127,33 @@ namespace EduToyRentRepositories.Implement
             dbSet.Remove(entityToDelete);
         }
 
+        public virtual void DeleteList(IEnumerable<TEntity> entitiesToDelete)
+        {
+            foreach (var entity in entitiesToDelete)
+            {
+                if (context.Entry(entity).State == EntityState.Detached)
+                {
+                    dbSet.Attach(entity);
+                }
+                dbSet.Remove(entity);
+            }
+        }
+
         public virtual void Update(TEntity entityToUpdate)
         {
             dbSet.Attach(entityToUpdate);
             context.Entry(entityToUpdate).State = EntityState.Modified;
         }
+
+        public virtual void UpdateList(IEnumerable<TEntity> entitiesToUpdate)
+        {
+            foreach (var entity in entitiesToUpdate)
+            {
+                dbSet.Attach(entity);
+                context.Entry(entity).State = EntityState.Modified;
+            }
+        }
+
         public TEntity Get(Expression<Func<TEntity, bool>> predicate)
         {
             return dbSet.FirstOrDefault(predicate);

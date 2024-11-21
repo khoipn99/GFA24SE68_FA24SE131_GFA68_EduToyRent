@@ -94,7 +94,7 @@ namespace EduToyRentAPI.Controllers
                     }
                 } : null,
                 MediaUrls = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => media.MediaUrl).ToList()
             }).ToList();
@@ -168,7 +168,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     MediaUrls = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => media.MediaUrl).ToList()
                 }).ToList();
@@ -255,7 +255,7 @@ namespace EduToyRentAPI.Controllers
                     Role = approverRole
                 } : null,
                 MediaUrls = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => media.MediaUrl).ToList()
             };
@@ -494,7 +494,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     MediaUrls = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => media.MediaUrl).ToList()
                 }).ToList();
@@ -582,7 +582,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     MediaUrls = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => media.MediaUrl).ToList()
                 }).ToList();
@@ -659,7 +659,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     MediaUrls = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => media.MediaUrl).ToList()
                 }).ToList();
@@ -810,7 +810,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     MediaUrls = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => media.MediaUrl).ToList()
                 })
@@ -885,7 +885,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     MediaUrls = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => media.MediaUrl).ToList()
                 })
