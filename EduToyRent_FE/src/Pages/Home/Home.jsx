@@ -567,14 +567,20 @@ const Home = () => {
                     onClick={() => {
                       HandleToyDetail(deal);
                     }}
-
                   >
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
+                      style={{
+                        backgroundImage: `url(${
+                          deal.mediaUrls && deal.mediaUrls[0]
+                            ? deal.mediaUrls[0]
+                            : ""
+                        })`,
+                      }}
+                    ></div>
 
                     <p
                       className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
-
                       style={{
                         display: "-webkit-box",
                         WebkitBoxOrient: "vertical",
@@ -602,22 +608,22 @@ const Home = () => {
                         {deal.price} VNĐ
                       </p>
                     )}
-                    {deal.buyQuantity >= 0 ? (
-                      <button
-                        onClick={() => addToPurchase(deal)}
-                        className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
-                      >
-                        Mua
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => openModal(deal)}
-                        className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
-                      >
-                        Thuê
-                      </button>
-                    )}
                   </div>
+                  {deal.buyQuantity >= 0 ? (
+                    <button
+                      onClick={() => addToPurchase(deal)}
+                      className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                    >
+                      Mua
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => openModal(deal)}
+                      className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                    >
+                      Thuê
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -631,37 +637,46 @@ const Home = () => {
                   key={toy.id}
                   className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
                 >
-                  <Link to="/toys-rent-details">
+                  <div
+                    onClick={() => {
+                      HandleToyDetail(toy);
+                    }}
+                  >
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
                       style={{
-                        backgroundImage: `url(${toy.media.mediaUrl})`,
+                        backgroundImage: `url(${
+                          toy.mediaUrls && toy.mediaUrls[0]
+                            ? toy.mediaUrls[0]
+                            : ""
+                        })`,
                       }}
                     ></div>
-                  </Link>
-                  <div>
-                    <p
-                      className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
-                      style={{
-                        display: "-webkit-box",
-                        WebkitBoxOrient: "vertical",
-                        WebkitLineClamp: 2,
-                        lineClamp: 2,
-                        maxHeight: "3rem", // Ensures space for two lines
-                        lineHeight: "1.5rem", // Each line takes up 1.5rem height
-                      }}
-                    >
-                      {toy.name}
-                    </p>
-                    <p className="text-[#507a95] text-sm">
-                      Age group: {toy.ageGroup}
-                    </p>
-                    <div className="flex items-center gap-1">
-                      {renderStars(toy.star)}
+
+                    <div>
+                      <p
+                        className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                        style={{
+                          display: "-webkit-box",
+                          WebkitBoxOrient: "vertical",
+                          WebkitLineClamp: 2,
+                          lineClamp: 2,
+                          maxHeight: "3rem", // Ensures space for two lines
+                          lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                        }}
+                      >
+                        {toy.name}
+                      </p>
+                      <p className="text-[#507a95] text-sm">
+                        Age group: {toy.ageGroup}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        {renderStars(toy.star)}
+                      </div>
+                      <p className="text-[#0e161b] text-lg font-bold">
+                        {toy.price} VNĐ
+                      </p>
                     </div>
-                    <p className="text-[#0e161b] text-lg font-bold">
-                      {toy.price} VNĐ
-                    </p>
                   </div>
                   <button
                     className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
@@ -778,37 +793,46 @@ const Home = () => {
                   key={toy.id}
                   className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
                 >
-                  <Link to="/toys-sale-details">
+                  <div
+                    onClick={() => {
+                      HandleToyDetail(toy);
+                    }}
+                  >
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
                       style={{
-                        backgroundImage: `url(${toy.media.mediaUrl})`,
+                        backgroundImage: `url(${
+                          toy.mediaUrls && toy.mediaUrls[0]
+                            ? toy.mediaUrls[0]
+                            : ""
+                        })`,
                       }}
                     ></div>
-                  </Link>
-                  <div>
-                    <p
-                      className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
-                      style={{
-                        display: "-webkit-box",
-                        WebkitBoxOrient: "vertical",
-                        WebkitLineClamp: 2,
-                        lineClamp: 2,
-                        maxHeight: "3rem", // Ensures space for two lines
-                        lineHeight: "1.5rem", // Each line takes up 1.5rem height
-                      }}
-                    >
-                      {toy.name}
-                    </p>
-                    <p className="text-[#507a95] text-sm">
-                      Age group: {toy.age}
-                    </p>
-                    <div className="flex items-center gap-1">
-                      {renderStars(toy.star)}
+
+                    <div>
+                      <p
+                        className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                        style={{
+                          display: "-webkit-box",
+                          WebkitBoxOrient: "vertical",
+                          WebkitLineClamp: 2,
+                          lineClamp: 2,
+                          maxHeight: "3rem", // Ensures space for two lines
+                          lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                        }}
+                      >
+                        {toy.name}
+                      </p>
+                      <p className="text-[#507a95] text-sm">
+                        Age group: {toy.age}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        {renderStars(toy.star)}
+                      </div>
+                      <p className="text-[#0e161b] text-lg font-bold">
+                        {toy.price} VNĐ
+                      </p>
                     </div>
-                    <p className="text-[#0e161b] text-lg font-bold">
-                      {toy.price} VNĐ
-                    </p>
                   </div>
                   {/* Nút thêm vào giỏ hàng */}
                   <button

@@ -162,7 +162,7 @@ namespace EduToyRentAPI.Controllers
                 ReceivePhone = order.ReceivePhone,
                 Status = order.Status,
                 UserId = order.UserId,
-                UserName = order.User.FullName, 
+                //UserName = order.User.FullName, 
             };
 
             return CreatedAtAction("GetOrder", new { id = order.Id }, orderResponse);

@@ -45,10 +45,11 @@ const InformationCustomer = () => {
         .get(
           "/ByWalletId?walletId=" +
             parsedUserData[0].walletId +
-            "&pageIndex=1&pageSize=10"
+            "&pageIndex=1&pageSize=100"
         )
         .then((response) => {
           setWalletTransaction(response.data);
+          console.log(parsedUserData[0].walletId);
         });
     }
   };
@@ -582,7 +583,7 @@ const InformationCustomer = () => {
                       <div>
                         <div className="flex items-center mb-2">
                           <img
-                            src={item.image}
+                            src={item.toyImgUrls}
                             alt={item.name}
                             className="w-20 h-20 object-cover mr-4"
                           />
@@ -599,19 +600,19 @@ const InformationCustomer = () => {
                             </p>
                             <p>
                               Ngày thuê:{" "}
-                              {
-                                new Date(item.startDate)
-                                  .toISOString()
-                                  .split("T")[0]
-                              }
+                              {item.startDate
+                                ? new Date(item.startDate)
+                                    .toISOString()
+                                    .split("T")[0]
+                                : "Đang chờ"}
                             </p>
                             <p>
                               Ngày trả hàng:{" "}
-                              {
-                                new Date(item.endDate)
-                                  .toISOString()
-                                  .split("T")[0]
-                              }
+                              {item.startDate
+                                ? new Date(item.endDate)
+                                    .toISOString()
+                                    .split("T")[0]
+                                : "Đang chờ"}
                             </p>
                           </div>
                           {item.status === "await" && (

@@ -3,18 +3,25 @@ import HeaderForStaff from "../../Component/HeaderForStaff/HeaderForStaff";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import Cookies from "js-cookie"; // Import thư viện Cookies
 import apiToys from "../../service/ApiToys";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getStorage, ref, getDownloadURL } from "firebase/storage";
+
 const StaffPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("orders");
   const [isEditing, setIsEditing] = useState(false);
+  const [pageIndex, setPageIndex] = useState(1);
   const [customerInfo, setCustomerInfo] = useState({
     name: "Nguyễn Văn A",
     email: "nguyenvana@example.com",
     phone: "0123456789",
   });
   const [toys, setToys] = useState([]);
-  const [selectedToy, setSelectedToy] = useState(null);
-
+  const [selectedToy, setSelectedToy] = useState([]);
+  const [selectedVideo, setSelectedVideo] = useState("");
+  const [isOpen, setIsOpen] = useState(false); // State để kiểm tra form có mở hay không
+  const [currentMedia, setCurrentMedia] = useState([]);
+  const [currentPicture, setCurrentPicture] = useState([]);
   useEffect(() => {
     try {
       const userDataCookie = Cookies.get("userData");
@@ -30,20 +37,41 @@ const StaffPage = () => {
   }, []);
 
   useEffect(() => {
-    const fetchToys = async () => {
-      try {
-        const response = apiToys.get("?pageIndex=1&pageSize=100");
-        const data = await response.json();
-        setToys(data);
-      } catch (error) {
-        console.error("Error fetching toys:", error);
-      }
-    };
-
     fetchToys();
-  }, []);
+  }, [pageIndex]);
 
-  // Function to handle updating a toy
+  const fetchToys = async () => {
+    try {
+      const response = await apiToys.get(
+        `?pageIndex=${pageIndex}&pageSize=100`
+      );
+      const inactiveToys = response.data.filter(
+        (item) => item.status == "Inactive"
+      );
+      setToys(inactiveToys);
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error fetching toys:", error);
+    }
+  };
+  const getVideos = (mediaUrls) => {
+    return mediaUrls.filter((url) => {
+      const fileExtension = url.split("?")[0];
+      return /\.(mp4|mov|avi|mkv)$/i.test(fileExtension);
+    });
+  };
+
+  const getImages = (mediaUrls) => {
+    return mediaUrls.filter((url) => {
+      const fileExtension = url.split("?")[0]; // Tách URL và loại bỏ phần query string
+      return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(fileExtension); // Kiểm tra đuôi file hình ảnh
+    });
+  };
+
+  const handleMediaClick = (mediaUrl) => {
+    setCurrentMedia(mediaUrl);
+  };
+
   const handleUpdate = async () => {
     if (!selectedToy) return;
 
@@ -60,7 +88,7 @@ const StaffPage = () => {
       );
 
       if (response.ok) {
-        const updatedToy = await response.json();
+        const updatedToy = await response.data;
         setToys((prevToys) =>
           prevToys.map((toy) => (toy.id === updatedToy.id ? updatedToy : toy))
         );
@@ -93,6 +121,41 @@ const StaffPage = () => {
       } catch (error) {
         console.error("Error deleting toy:", error);
       }
+    }
+  };
+
+  const handleNextPage = () => {
+    setPageIndex((prevIndex) => prevIndex + 1);
+  };
+
+  const handlePreviousPage = () => {
+    setPageIndex((prevIndex) => Math.max(prevIndex - 1, 1));
+  };
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handleDetails = async (toyId) => {
+    setIsOpen(!isOpen);
+    setIsLoading(true); // Set isLoading trước khi bắt đầu tải dữ liệu
+
+    try {
+      apiToys
+        .get(`https://localhost:44350/api/v1/Toys/${toyId}`)
+        .then((response) => {
+          console.log("Chi tiết đồ chơi:", response.data);
+
+          // Cập nhật các giá trị cùng một lúc
+
+          // Cập nhật state với dữ liệu mới
+          setSelectedToy(response.data);
+          setSelectedVideo(getVideos(response.data.mediaUrls)[0]);
+          setCurrentMedia(response.data.mediaUrls[0]);
+          setCurrentPicture(getImages(response.data.mediaUrls));
+          setIsLoading(false); // Đặt lại isLoading khi tải xong
+        });
+    } catch (error) {
+      console.error("Lỗi khi kết nối đến API:", error);
+      setIsLoading(false); // Đặt lại isLoading khi có lỗi
     }
   };
 
@@ -227,6 +290,7 @@ const StaffPage = () => {
                               </label>
                             </div>
                           </th>
+
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
@@ -240,72 +304,14 @@ const StaffPage = () => {
                           >
                             Price
                           </th>
+
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
                           >
-                            Star
+                            Người cho thuê
                           </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            Origin
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            Age
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            Brand
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            RentCount
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            BuyQuantity
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            CreateDate
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            RentTime
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            Status
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            UserId
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            CategoryId
-                          </th>
+
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
@@ -314,6 +320,7 @@ const StaffPage = () => {
                           </th>
                         </tr>
                       </thead>
+
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                         {toys.map((toy) => (
                           <tr
@@ -344,40 +351,21 @@ const StaffPage = () => {
                             <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                               {toy.price}
                             </td>
-                            <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                              {toy.star}
-                            </td>
-                            <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                              {toy.origin}
-                            </td>
-                            <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                              {toy.age}
-                            </td>
-                            <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                              {toy.brand}
-                            </td>
-                            <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                              {toy.rentCount}
-                            </td>
-                            <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                              {toy.buyQuantity}
-                            </td>
-                            <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                              {toy.createDate}
-                            </td>
-                            <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                              {toy.rentTime}
-                            </td>
-                            <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                              {toy.status}
-                            </td>
+
                             <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                               {toy.owner.fullName}
                             </td>
                             <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                              {toy.category.name}
+                              <button
+                                type="button"
+                                onClick={() => handleDetails(toy.id)} // Gọi hàm update khi nhấn nút
+                                className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                              >
+                                Chi tiết đồ chơi
+                              </button>
                             </td>
-                            <td className="p-4 space-x-2 whitespace-nowrap">
+
+                            {/* <td className="p-4 space-x-2 whitespace-nowrap">
                               <button
                                 type="button"
                                 onClick={() => handleUpdate(toy)} // Gọi hàm update khi nhấn nút
@@ -392,7 +380,7 @@ const StaffPage = () => {
                               >
                                 Reject
                               </button>
-                            </td>
+                            </td> */}
                           </tr>
                         ))}
                       </tbody>
@@ -401,39 +389,180 @@ const StaffPage = () => {
                 </div>
               </div>
             </div>
+            {isOpen && (
+              <>
+                {/* Overlay mờ phía sau */}
+                <div
+                  style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    zIndex: 100,
+                  }}
+                  onClick={() => setIsOpen(false)}
+                />
+
+                {/* Form chi tiết đồ chơi */}
+                <div
+                  className="toy-detail-container"
+                  style={{
+                    position: "fixed",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    display: "flex",
+                    padding: "20px",
+                    backgroundColor: "white",
+                    zIndex: 101,
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                    borderRadius: "10px",
+                  }}
+                >
+                  {/* Nút đóng */}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    style={{
+                      position: "absolute",
+                      top: "10px",
+                      right: "10px",
+                      backgroundColor: "red",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "50%",
+                      width: "30px",
+                      height: "30px",
+                      fontSize: "18px",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                  >
+                    X
+                  </button>
+
+                  {/* Phần bên trái: Video và hình ảnh */}
+                  <div
+                    className="toy-media"
+                    style={{
+                      flex: 2, // Tăng flex để phần này chiếm diện tích lớn hơn
+                      paddingRight: "40px", // Tăng khoảng cách bên phải để có thêm không gian
+                      textAlign: "center", // Căn giữa nội dung
+                      width: "100%", // Đảm bảo phần tử chiếm toàn bộ chiều rộng của phần chứa
+                    }}
+                  >
+                    {" "}
+                    <div style={{ marginBottom: "10px" }}>
+                      {selectedVideo ? (
+                        <video
+                          controls
+                          style={{
+                            width: "500px", // Chiều rộng cố định
+                            height: "340px", // Chiều cao cố định
+                            objectFit: "cover", // Căn chỉnh nội dung video
+                          }}
+                        >
+                          <source src={selectedVideo} type="video/mp4" />
+                          Trình duyệt của bạn không hỗ trợ thẻ video.
+                        </video>
+                      ) : (
+                        <div>Đang tải video...</div> // Placeholder hoặc loader
+                      )}
+                    </div>
+                    {/* Hình ảnh lớn */}
+                    <div style={{ marginBottom: "10px" }}>
+                      <img
+                        src={currentMedia}
+                        alt="Toy"
+                        style={{
+                          width: "500px", // Chiều rộng cố định
+                          height: "340px", // Chiều cao cố định
+                          objectFit: "cover", // Căn chỉnh hình ảnh
+                        }}
+                      />
+                    </div>
+                    {/* Các hình ảnh và video nhỏ bên dưới */}
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                      {currentPicture &&
+                        currentPicture.map((url, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              marginRight: "10px",
+                              cursor: "pointer",
+                              border:
+                                currentMedia === url
+                                  ? "2px solid blue"
+                                  : "none",
+                            }}
+                            onClick={() => handleMediaClick(url)}
+                          >
+                            {
+                              <img
+                                src={url}
+                                alt="Thumbnail"
+                                style={{ width: "80px", height: "auto" }}
+                              />
+                            }
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Phần bên phải: Chi tiết đồ chơi và các nút duyệt, từ chối */}
+                  <div className="toy-details" style={{ flex: 2 }}>
+                    <h2>{selectedToy.name}</h2>
+                    <p>{selectedToy.description}</p>
+                    <p>Giá: {selectedToy.price} VND</p>
+                    <p>
+                      Danh mục:{" "}
+                      {selectedToy.category && selectedToy.category.name
+                        ? selectedToy.category.name
+                        : ""}
+                    </p>
+
+                    {/* Các nút duyệt và từ chối */}
+                    <div style={{ marginTop: "20px" }}>
+                      <button
+                        onClick={() => handleUpdate()}
+                        style={{ marginRight: "10px" }}
+                      >
+                        Duyệt
+                      </button>
+                      <button onClick={() => handleDelete()}>Từ chối</button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center mb-4 sm:mb-0"></div>
               <div className="flex items-center space-x-3">
-                <button className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
-                  <svg
-                    className="w-5 h-5 mr-1 -ml-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg>
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={pageIndex === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center ${
+                    pageIndex === 1
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-blue-500"
+                  }`}
+                >
                   Previous
                 </button>
-                <button className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+                <button
+                  onClick={handleNextPage}
+                  disabled={toys.length === 0}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center ${
+                    toys.length === 0
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-blue-500"
+                  }`}
+                >
                   Next
-                  <svg
-                    className="w-5 h-5 ml-1 -mr-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg>
                 </button>
               </div>
             </div>
