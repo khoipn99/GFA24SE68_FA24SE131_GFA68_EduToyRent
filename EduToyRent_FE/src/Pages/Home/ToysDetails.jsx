@@ -38,6 +38,19 @@ const ToysDetails = () => {
   const [currentToy, setCurrentToy] = useState({});
   const [owner, setOwner] = useState({});
   const [reviews, setReviews] = useState([]);
+  const [currentPicture, setCurrentPicture] = useState([]);
+  const [currentMedia, setCurrentMedia] = useState([]);
+
+  const handleMediaClick = (mediaUrl) => {
+    setCurrentMedia(mediaUrl);
+  };
+
+  const isVideoUrl = (url) => {
+    if (url != "") {
+      const fileExtension = url.split("?")[0];
+      return /\.(mp4|mov|avi|mkv)$/i.test(fileExtension);
+    }
+  };
 
   useEffect(() => {
     apiToys.get("/" + Cookies.get("toyRentDetailId")).then((response) => {
@@ -46,15 +59,26 @@ const ToysDetails = () => {
       setCurrentToy(response.data);
       setCurrentPrice(response.data.price * 0.15);
       setPrices(response.data.price);
-      try {
-        apiRatings.get("/ByToyId/" + response.data.id).then((response) => {
-          setReviews(response.data);
-        });
-      } catch (error) {
-        console.log("");
-      }
+      loadReviews(response.data.id);
+
+      setCurrentMedia(response.data.mediaUrls[0]);
+      setCurrentPicture(response.data.mediaUrls);
     });
   }, []);
+
+  const loadReviews = async (id) => {
+    try {
+      const response = await apiRatings.get("/ByToyId/" + id, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      setReviews(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const itemsPerPage = 5;
 
@@ -112,12 +136,116 @@ const ToysDetails = () => {
             <div className="container">
               <div className="flex flex-col lg:flex-row gap-6 px-4 py-10">
                 <div
-                  className="w-full lg:w-1/2 bg-center bg-no-repeat aspect-video bg-cover rounded-xl"
                   style={{
-                    backgroundImage:
-                      'url("https://cdn.usegalileo.ai/sdxl10/122ecb42-c292-4141-a041-c800f08a9fd3.png")',
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
                   }}
-                ></div>
+                >
+                  {
+                    !isVideoUrl(currentMedia) ? (
+                      <div
+                        className="media-container"
+                        style={{
+                          width: "550px", // Chiều rộng cố định
+                          height: "400px", // Chiều cao cố định
+                          backgroundImage: `url(${
+                            currentMedia ? currentMedia : ""
+                          })`,
+                          backgroundSize: "contain", // Đảm bảo toàn bộ hình ảnh nằm gọn trong thẻ
+                          backgroundRepeat: "no-repeat", // Không lặp lại hình ảnh
+                          backgroundPosition: "center", // Căn giữa hình ảnh
+                          borderRadius: "12px",
+                          display:
+                            currentMedia && !isVideoUrl(currentMedia)
+                              ? "block"
+                              : "none", // Hiển thị nếu không phải video
+                        }}
+                      ></div>
+                    ) : currentMedia ? (
+                      <video
+                        controls
+                        className="media-container"
+                        style={{
+                          width: "550px", // Chiều rộng cố định
+                          height: "400px", // Chiều cao cố định
+                          borderRadius: "12px",
+                          objectFit: "cover", // Đảm bảo video lấp đầy khung
+                        }}
+                      >
+                        <source src={currentMedia} type="video/mp4" />
+                        Trình duyệt của bạn không hỗ trợ thẻ video.
+                      </video>
+                    ) : (
+                      <div>Đang tải video...</div> // Placeholder hoặc loader
+                    ) // Không render gì nếu là video
+                  }
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      marginTop: "20px",
+                    }}
+                  >
+                    {currentPicture &&
+                      currentPicture.map(
+                        (url, index) =>
+                          !isVideoUrl(url) ? ( // Kiểm tra nếu không phải là video
+                            <div
+                              key={index}
+                              style={{
+                                marginRight: "10px",
+                                cursor: "pointer",
+                                border:
+                                  currentMedia === url
+                                    ? "2px solid blue"
+                                    : "none",
+                              }}
+                              onClick={() => handleMediaClick(url)}
+                            >
+                              <img
+                                src={url}
+                                alt="Thumbnail"
+                                style={{
+                                  width: "80px",
+                                  height: "auto",
+                                  borderRadius: "8px",
+                                }}
+                              />
+                            </div>
+                          ) : url ? (
+                            <div
+                              key={index}
+                              style={{
+                                marginRight: "10px",
+                                cursor: "pointer",
+                                border:
+                                  currentMedia === url
+                                    ? "2px solid blue"
+                                    : "none",
+                              }}
+                              onClick={() => handleMediaClick(url)}
+                            >
+                              <video
+                                controls
+                                style={{
+                                  width: "80px",
+                                  height: "auto",
+                                  borderRadius: "8px",
+                                }}
+                              >
+                                <source src={url} type="video/mp4" />
+                                Trình duyệt của bạn không hỗ trợ thẻ video.
+                              </video>
+                            </div>
+                          ) : (
+                            <div>Đang tải video...</div> // Placeholder hoặc loader
+                          ) // Không render gì nếu là video
+                      )}
+                  </div>
+                </div>
+
                 <div className="flex flex-col lg:w-1/2 gap-6 justify-center">
                   <h1 className="text-[#0e141b] text-4xl font-black leading-tight tracking-[-0.033em]">
                     {currentToy.name}
@@ -199,12 +327,21 @@ const ToysDetails = () => {
             <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-6">
               <div className="flex items-center mb-2">
                 <img
-                  src="https://cdn.iconscout.com/icon/free/png-256/user-1194416-1003670.png" // Thay thế bằng đường dẫn đến ảnh đại diện của cửa hàng
+                  src={
+                    currentToy.owner && currentToy.owner.avatarUrl
+                      ? currentToy.owner.avatarUrl
+                      : ""
+                  }
                   alt="Store Icon"
                   className="w-12 h-12 rounded-full mr-3"
                 />
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold">Người Cho Thuê: TCS</h3>
+                  <h3 className="text-lg font-semibold">
+                    Người Cho Thuê:{" "}
+                    {currentToy.owner && currentToy.owner.fullName
+                      ? currentToy.owner.fullName
+                      : ""}
+                  </h3>
 
                   <div className="flex space-x-2 mt-2">
                     <button className="border border-blue-500 text-blue-500 font-semibold px-4 py-2 rounded">
@@ -236,7 +373,10 @@ const ToysDetails = () => {
             </h2>
             <div className="bg-white p-4 rounded-lg shadow-md mb-6">
               <div className="mb-2">
-                <span className="font-semibold">Danh Mục:</span> Đồ chơi trí não
+                <span className="font-semibold">Danh Mục:</span>{" "}
+                {currentToy.category && currentToy.category.name
+                  ? currentToy.category.name
+                  : ""}
               </div>
               <div className="mb-2">
                 <span className="font-semibold">Kho:</span> 1

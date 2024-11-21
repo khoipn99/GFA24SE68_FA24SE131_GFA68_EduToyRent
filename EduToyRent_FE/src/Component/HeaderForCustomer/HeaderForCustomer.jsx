@@ -447,7 +447,11 @@ const HeaderForCustomer = () => {
   };
 
   const HandlePayment = () => {
-    navigate("/payment");
+    if (rentItems || buyItems) {
+      navigate("/payment");
+    } else {
+      alert("Bạn chưa chọn sản phẩm nào.");
+    }
   };
   return (
     <>
