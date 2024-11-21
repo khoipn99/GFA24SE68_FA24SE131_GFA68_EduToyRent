@@ -31,7 +31,11 @@ namespace EduToyRentRepositories.Interface
 
         void Delete(TEntity entityToDelete);
 
+        void DeleteList(IEnumerable<TEntity> entitiesToDelete);
+
         void Update(TEntity entityToUpdate);
+
+        void UpdateList(IEnumerable<TEntity> entitiesToUpdate);
 
         TEntity Get(Expression<Func<TEntity, bool>> predicate);
     }
