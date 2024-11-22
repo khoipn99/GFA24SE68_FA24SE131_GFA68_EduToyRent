@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import { Link } from "react-router-dom";
+import Cookies from "js-cookie";
+import apiToys from "../../service/ApiToys";
+import apiMedia from "../../service/ApiMedia";
+import apiRatings from "../../service/ApiRatings";
 
 const ToysSaleDetails = () => {
   const starRating = 4.0; // Số sao (giả sử)
@@ -22,6 +26,7 @@ const ToysSaleDetails = () => {
   };
 
   const [currentPrice, setCurrentPrice] = useState(15);
+  const [prices, setPrices] = useState(0);
 
   const totalPrice = (currentPrice * quantity).toFixed(2);
 
@@ -32,6 +37,51 @@ const ToysSaleDetails = () => {
   const indexOfFirstReview = indexOfLastReview - itemsPerPage;
   const currentReviews = ratings.slice(indexOfFirstReview, indexOfLastReview);
   const totalPages = Math.ceil(reviewCount / itemsPerPage);
+
+  const [currentToy, setCurrentToy] = useState({});
+  const [owner, setOwner] = useState({});
+  const [reviews, setReviews] = useState([]);
+
+  const [currentPicture, setCurrentPicture] = useState([]);
+  const [currentMedia, setCurrentMedia] = useState([]);
+
+  const handleMediaClick = (mediaUrl) => {
+    setCurrentMedia(mediaUrl);
+  };
+
+  const isVideoUrl = (url) => {
+    if (url != "") {
+      const fileExtension = url.split("?")[0];
+      return /\.(mp4|mov|avi|mkv)$/i.test(fileExtension);
+    }
+  };
+
+  useEffect(() => {
+    apiToys.get("/" + Cookies.get("toySaleDetailId")).then((response) => {
+      console.log(response.data);
+      setOwner(response.data.owner);
+      setCurrentToy(response.data);
+      setCurrentPrice(response.data.price);
+      setPrices(response.data.price);
+      loadReviews(response.data.id);
+      setCurrentMedia(response.data.mediaUrls[0]);
+      setCurrentPicture(response.data.mediaUrls);
+    });
+  }, []);
+
+  const loadReviews = async (id) => {
+    try {
+      const response = await apiRatings.get("/ByToyId/" + id, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      setReviews(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const recommendedToys = [
     {
@@ -76,21 +126,124 @@ const ToysSaleDetails = () => {
                 /
               </span>
               <span className="text-[#0e141b] text-base font-medium leading-normal">
-                Rainbow Stacker
+                {currentToy.name}
               </span>
             </div>
             <div className="container">
               <div className="flex flex-col lg:flex-row gap-6 px-4 py-10">
                 <div
-                  className="w-full lg:w-1/2 bg-center bg-no-repeat aspect-video bg-cover rounded-xl"
                   style={{
-                    backgroundImage:
-                      'url("https://cdn.usegalileo.ai/sdxl10/122ecb42-c292-4141-a041-c800f08a9fd3.png")',
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
                   }}
-                ></div>
+                >
+                  {
+                    !isVideoUrl(currentMedia) ? (
+                      <div
+                        className="media-container"
+                        style={{
+                          width: "550px", // Chiều rộng cố định
+                          height: "400px", // Chiều cao cố định
+                          backgroundImage: `url(${
+                            currentMedia ? currentMedia : ""
+                          })`,
+                          backgroundSize: "contain", // Đảm bảo toàn bộ hình ảnh nằm gọn trong thẻ
+                          backgroundRepeat: "no-repeat", // Không lặp lại hình ảnh
+                          backgroundPosition: "center", // Căn giữa hình ảnh
+                          borderRadius: "12px",
+                          display:
+                            currentMedia && !isVideoUrl(currentMedia)
+                              ? "block"
+                              : "none", // Hiển thị nếu không phải video
+                        }}
+                      ></div>
+                    ) : currentMedia ? (
+                      <video
+                        controls
+                        className="media-container"
+                        style={{
+                          width: "550px", // Chiều rộng cố định
+                          height: "400px", // Chiều cao cố định
+                          borderRadius: "12px",
+                          objectFit: "cover", // Đảm bảo video lấp đầy khung
+                        }}
+                      >
+                        <source src={currentMedia} type="video/mp4" />
+                        Trình duyệt của bạn không hỗ trợ thẻ video.
+                      </video>
+                    ) : (
+                      <div>Đang tải video...</div> // Placeholder hoặc loader
+                    ) // Không render gì nếu là video
+                  }
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      marginTop: "20px",
+                    }}
+                  >
+                    {currentPicture &&
+                      currentPicture.map(
+                        (url, index) =>
+                          !isVideoUrl(url) ? ( // Kiểm tra nếu không phải là video
+                            <div
+                              key={index}
+                              style={{
+                                marginRight: "10px",
+                                cursor: "pointer",
+                                border:
+                                  currentMedia === url
+                                    ? "2px solid blue"
+                                    : "none",
+                              }}
+                              onClick={() => handleMediaClick(url)}
+                            >
+                              <img
+                                src={url}
+                                alt="Thumbnail"
+                                style={{
+                                  width: "80px",
+                                  height: "auto",
+                                  borderRadius: "8px",
+                                }}
+                              />
+                            </div>
+                          ) : url ? (
+                            <div
+                              key={index}
+                              style={{
+                                marginRight: "10px",
+                                cursor: "pointer",
+                                border:
+                                  currentMedia === url
+                                    ? "2px solid blue"
+                                    : "none",
+                              }}
+                              onClick={() => handleMediaClick(url)}
+                            >
+                              <video
+                                controls
+                                style={{
+                                  width: "80px",
+                                  height: "auto",
+                                  borderRadius: "8px",
+                                }}
+                              >
+                                <source src={url} type="video/mp4" />
+                                Trình duyệt của bạn không hỗ trợ thẻ video.
+                              </video>
+                            </div>
+                          ) : (
+                            <div>Đang tải video...</div> // Placeholder hoặc loader
+                          ) // Không render gì nếu là video
+                      )}
+                  </div>
+                </div>
                 <div className="flex flex-col lg:w-1/2 gap-6 justify-center">
                   <h1 className="text-[#0e141b] text-4xl font-black leading-tight tracking-[-0.033em]">
-                    Rainbow Stacker
+                    {currentToy.name}
                   </h1>
                   {/* Hiển thị số lượng sao và số lượt đánh giá */}
                   <div className="flex items-center">
@@ -99,7 +252,7 @@ const ToysSaleDetails = () => {
                         <img
                           key={index}
                           src={
-                            index < Math.floor(starRating)
+                            index < Math.floor(currentToy.star)
                               ? "https://cdn-icons-png.flaticon.com/512/616/616489.png" // Hình ảnh sao đầy
                               : "https://cdn-icons-png.flaticon.com/512/616/616505.png" // Hình ảnh sao rỗng
                           }
@@ -107,14 +260,16 @@ const ToysSaleDetails = () => {
                           className="w-5 h-5"
                         />
                       ))}
-                      <span className="text-[#0e141b] ml-2">{starRating}</span>
+                      <span className="text-[#0e141b] ml-2">
+                        {currentToy.star}
+                      </span>
                     </div>
                     <span className="text-[#0e141b] text-sm">
                       ({reviewCount} đánh giá)
                     </span>
                   </div>
                   <h2 className="text-[#0e141b] text-sm font-normal leading-normal">
-                    Địa chỉ :
+                    Địa chỉ : {owner.address}
                   </h2>
 
                   {/* Phần điều chỉnh số lượng */}
@@ -134,18 +289,17 @@ const ToysSaleDetails = () => {
                     </span>
                   </div>
                   <p className="text-[#0e141b] text-lg font-bold mt-2">
-                    Giá sản phẩm: 15$
+                    Giá sản phẩm: {(currentToy.price || 0).toLocaleString()} VNĐ
                   </p>
 
                   {/* Hiển thị giá tiền */}
                   <p className="text-[#0e141b] text-lg font-bold mt-2">
-                    Tổng giá: {totalPrice}$
+                    Tổng giá:{" "}
+                    {(currentToy.price * quantity || 0).toLocaleString()} VNĐ
                   </p>
 
                   <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#1980e6] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] mt-4">
-                    <span className="truncate">
-                      Thêm vào giỏ hàng với giá ${totalPrice}
-                    </span>
+                    <span className="truncate">Thêm vào giỏ hàng</span>
                   </button>
                 </div>
               </div>
@@ -154,13 +308,20 @@ const ToysSaleDetails = () => {
             <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-6">
               <div className="flex items-center mb-2">
                 <img
-                  src="https://cdn.iconscout.com/icon/free/png-256/user-1194416-1003670.png" // Thay thế bằng đường dẫn đến ảnh đại diện của cửa hàng
+                  src={
+                    currentToy.owner && currentToy.owner.avatarUrl
+                      ? currentToy.owner.avatarUrl
+                      : ""
+                  }
                   alt="Store Icon"
                   className="w-12 h-12 rounded-full mr-3"
                 />
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold">
-                    Cửa Hàng Đồ Chơi : TCS
+                    Cửa Hàng Đồ Chơi :{" "}
+                    {currentToy.owner && currentToy.owner.fullName
+                      ? currentToy.owner.fullName
+                      : ""}
                   </h3>
 
                   <div className="flex space-x-2 mt-2">
@@ -193,16 +354,25 @@ const ToysSaleDetails = () => {
             </h2>
             <div className="bg-white p-4 rounded-lg shadow-md mb-6">
               <div className="mb-2">
-                <span className="font-semibold">Danh Mục:</span> Đồ chơi trí não
+                <span className="font-semibold">Danh Mục:</span>{" "}
+                {currentToy.category && currentToy.category.name
+                  ? currentToy.category.name
+                  : ""}
               </div>
               <div className="mb-2">
-                <span className="font-semibold">Kho:</span> 20
+                <span className="font-semibold">Kho:</span>{" "}
+                {currentToy.buyQuantity}
               </div>
               <div className="mb-2">
-                <span className="font-semibold">Thương hiệu:</span> Lego
+                <span className="font-semibold">Thương hiệu:</span>{" "}
+                {currentToy.brand}
               </div>
               <div className="mb-2">
-                <span className="font-semibold">Gửi từ:</span> Hà Nội
+                <span className="font-semibold">Nguồn gốc:</span>{" "}
+                {currentToy.origin}
+              </div>
+              <div className="mb-2">
+                <span className="font-semibold">Gửi từ:</span> {owner.address}
               </div>
             </div>
 
@@ -210,10 +380,7 @@ const ToysSaleDetails = () => {
               MÔ TẢ SẢN PHẨM
             </h2>
             <p class="text-[#0e141b] text-base font-normal leading-normal pb-3 pt-1 px-4">
-              This classic wooden stacking toy is perfect for kids aged 1-3. It
-              helps develop fine motor skills, hand-eye coordination, and
-              cognitive thinking. The bright colors and fun shapes will keep
-              your little one entertained for hours.
+              {currentToy.description}
             </p>
 
             <h2 class="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">

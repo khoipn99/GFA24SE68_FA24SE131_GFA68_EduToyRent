@@ -177,7 +177,7 @@ const InformationLessor = () => {
   const [newProduct, setNewProduct] = useState({
     name: "",
     description: "",
-    price: "",
+    price: 0,
     buyQuantity: -1,
     origin: "",
     age: "",
@@ -194,6 +194,10 @@ const InformationLessor = () => {
 
   const [newImage, setNewImage] = useState([]);
   const [newImage2, setNewImage2] = useState([]);
+  const [newImage3, setNewImage3] = useState([]);
+  const [newImage4, setNewImage4] = useState([]);
+  const [newImage5, setNewImage5] = useState([]);
+  const [newVideo, setNewVideo] = useState([]);
 
   const handleImageChange = (e) => {
     setNewImage(e.target.files[0]);
@@ -201,6 +205,19 @@ const InformationLessor = () => {
 
   const handleImageChange2 = (e) => {
     setNewImage2(e.target.files[0]);
+  };
+
+  const handleImageChange3 = (e) => {
+    setNewImage3(e.target.files[0]);
+  };
+  const handleImageChange4 = (e) => {
+    setNewImage4(e.target.files[0]);
+  };
+  const handleImageChange5 = (e) => {
+    setNewImage5(e.target.files[0]);
+  };
+  const handleVideo = (e) => {
+    setNewVideo(e.target.files[0]);
   };
 
   const openModal = () => {
@@ -211,19 +228,29 @@ const InformationLessor = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    apiToys.post("", newProduct).then((response) => {
-      getProductInfo();
-      var formData = new FormData();
+    apiToys
+      .post("", newProduct, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        getProductInfo();
+        var formData = new FormData();
 
-      formData.append(`mediaUrls`, newImage);
-      formData.append(`mediaUrls`, newImage2);
+        formData.append(`mediaUrls`, newImage);
+        formData.append(`mediaUrls`, newImage2);
+        formData.append(`mediaUrls`, newImage3);
+        formData.append(`mediaUrls`, newImage4);
+        formData.append(`mediaUrls`, newImage5);
+        formData.append(`mediaUrls`, newVideo);
 
-      apiMedia
-        .post("/upload-toy-images/" + response.data.id, formData)
-        .then((response) => {
-          getProductInfo();
-        });
-    });
+        apiMedia
+          .post("/upload-toy-images/" + response.data.id, formData)
+          .then((response) => {
+            getProductInfo();
+          });
+      });
 
     console.log("New product:", newProduct);
     closeModal();
@@ -451,122 +478,169 @@ const InformationLessor = () => {
             </div>
             {isModalOpen && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="bg-white p-6 rounded shadow-lg w-96">
+                <div className="bg-white p-6 rounded shadow-lg w-120">
                   <h3 className="text-lg font-semibold mb-4">
                     Thêm Sản Phẩm Mới
                   </h3>
-                  <form onSubmit={handleSubmit}>
-                    <label className="block mb-2">
-                      Tên đồ chơi:
-                      <input
-                        type="text"
-                        name="name"
-                        value={newProduct.name}
-                        onChange={handleInputChange}
-                        className="border border-gray-300 rounded p-1 w-full"
-                        required
-                      />
-                    </label>
-                    <label className="block mb-2">
-                      Chi tiết:
-                      <textarea
-                        name="description"
-                        value={newProduct.description}
-                        onChange={handleInputChange}
-                        className="border border-gray-300 rounded p-1 w-full"
-                        required
-                      />
-                    </label>
-                    <label className="block mb-2">
-                      Giá:
-                      <input
-                        type="number"
-                        name="price"
-                        value={newProduct.price}
-                        onChange={handleInputChange}
-                        className="border border-gray-300 rounded p-1 w-full"
-                        required
-                      />
-                    </label>
-                    <label className="block mb-2">
-                      Nguồn gốc:
-                      <input
-                        type="text"
-                        name="origin"
-                        value={newProduct.origin}
-                        onChange={handleInputChange}
-                        className="border border-gray-300 rounded p-1 w-full"
-                        required
-                      />
-                    </label>
-                    <label className="block mb-2">
-                      Tuổi:
-                      <input
-                        type="text"
-                        name="age"
-                        value={newProduct.age}
-                        onChange={handleInputChange}
-                        className="border border-gray-300 rounded p-1 w-full"
-                        required
-                      />
-                    </label>
-                    <label className="block mb-2">
-                      Hãng:
-                      <input
-                        type="text"
-                        name="brand"
-                        value={newProduct.brand}
-                        onChange={handleInputChange}
-                        className="border border-gray-300 rounded p-1 w-full"
-                        required
-                      />
-                    </label>
-                    <label className="block mb-2">
-                      Loại đồ chơi:
-                      <select
-                        name="categoryId"
-                        type="number"
-                        value={newProduct.categoryId}
-                        onChange={handleInputChange}
-                        className="border border-gray-300 rounded p-1 w-full"
+                  <form
+                    onSubmit={handleSubmit}
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    {/* Phần thông tin đồ chơi */}
+                    <div style={{ flex: 1, paddingRight: "20px" }}>
+                      <label className="block mb-2">
+                        Tên đồ chơi:
+                        <input
+                          type="text"
+                          name="name"
+                          value={newProduct.name}
+                          onChange={handleInputChange}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          required
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Chi tiết:
+                        <textarea
+                          name="description"
+                          value={newProduct.description}
+                          onChange={handleInputChange}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          required
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Giá:
+                        <input
+                          type="number"
+                          name="price"
+                          value={newProduct.price}
+                          onChange={handleInputChange}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          required
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Nguồn gốc:
+                        <input
+                          type="text"
+                          name="origin"
+                          value={newProduct.origin}
+                          onChange={handleInputChange}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          required
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Tuổi:
+                        <input
+                          type="text"
+                          name="age"
+                          value={newProduct.age}
+                          onChange={handleInputChange}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          required
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Hãng:
+                        <input
+                          type="text"
+                          name="brand"
+                          value={newProduct.brand}
+                          onChange={handleInputChange}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          required
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Loại đồ chơi:
+                        <select
+                          name="categoryId"
+                          value={newProduct.categoryId}
+                          onChange={handleInputChange}
+                          className="border border-gray-300 rounded p-1 w-full"
+                        >
+                          {categories.map((category, index) => (
+                            <option key={index} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    {/* Phần đăng hình ảnh và video */}
+                    <div style={{ flex: 1 }}>
+                      <label className="block mb-2">
+                        Hình ảnh:
+                        <input
+                          type="file"
+                          onChange={handleImageChange}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          accept="image/*"
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Hình ảnh 2:
+                        <input
+                          type="file"
+                          onChange={handleImageChange2}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          accept="image/*"
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Hình ảnh 3:
+                        <input
+                          type="file"
+                          onChange={handleImageChange3}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          accept="image/*"
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Hình ảnh 4:
+                        <input
+                          type="file"
+                          onChange={handleImageChange4}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          accept="image/*"
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Hình ảnh 5:
+                        <input
+                          type="file"
+                          onChange={handleImageChange5}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          accept="image/*"
+                        />
+                      </label>
+                      <label className="block mb-2">
+                        Video xác thực đồ chơi:
+                        <input
+                          type="file"
+                          onChange={handleVideo}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          accept="video/*"
+                        />
+                      </label>
+                      <button
+                        type="submit"
+                        className="mt-4 p-2 bg-blue-500 text-white rounded"
                       >
-                        {categories.map((category, index) => (
-                          <option key={index} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="block mb-2">
-                      Hình ảnh:
-                      <input
-                        type="file"
-                        onChange={handleImageChange}
-                        className="border border-gray-300 rounded p-1 w-full"
-                        accept="image/*"
-                      />
-                    </label>
-                    <label className="block mb-2">
-                      Hình ảnh 2:
-                      <input
-                        type="file"
-                        onChange={handleImageChange2}
-                        className="border border-gray-300 rounded p-1 w-full"
-                        accept="image/*"
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      className="mt-4 p-2 bg-blue-500 text-white rounded"
-                    >
-                      Tạo sản phẩm
-                    </button>
-                    <button
-                      onClick={closeModal}
-                      className="mt-4 p-2 bg-red-500 text-white rounded ml-2"
-                    >
-                      Đóng
-                    </button>
+                        Tạo sản phẩm
+                      </button>
+                      <button
+                        onClick={closeModal}
+                        className="mt-4 p-2 bg-red-500 text-white rounded ml-2"
+                      >
+                        Đóng
+                      </button>
+                    </div>
+
+                    {/* Các nút gửi và đóng */}
                   </form>
                 </div>
               </div>
@@ -632,8 +706,8 @@ const InformationLessor = () => {
                 >
                   <img
                     src={
-                      product.media && product.media.mediaUrl
-                        ? product.media.mediaUrl
+                      product.mediaUrls && product.mediaUrls[0]
+                        ? product.mediaUrls[0]
                         : ""
                     }
                     alt={product.name}
@@ -662,8 +736,8 @@ const InformationLessor = () => {
                   </h3>
                   <img
                     src={
-                      editedProduct.media && editedProduct.media.mediaUrl
-                        ? editedProduct.media.mediaUrl
+                      editedProduct.mediaUrls && editedProduct.mediaUrls[0]
+                        ? editedProduct.mediaUrls[0]
                         : ""
                     }
                     alt={editedProduct.name}
