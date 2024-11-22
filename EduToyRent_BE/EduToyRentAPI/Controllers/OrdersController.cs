@@ -224,41 +224,15 @@ namespace EduToyRentAPI.Controllers
             });
         }
 
-
-        // GET: api/Orders/User/5
-        [HttpGet("User/{userId}")]
-        public ActionResult<IEnumerable<OrderResponse>> GetOrdersByUserId(int userId)
-        {
-            var orders = _unitOfWork.OrderRepository.Get(filter: o => o.UserId == userId);
-
-            if (orders == null || !orders.Any())
-            {
-                return NotFound("No orders found for this user.");
-            }
-
-            var orderResponses = orders.Select(order => new OrderResponse
-            {
-                Id = order.Id,
-                OrderDate = order.OrderDate,
-                ReceiveDate = order.ReceiveDate,
-                TotalPrice = order.TotalPrice,
-                RentPrice = order.RentPrice,
-                DepositeBackMoney = order.DepositeBackMoney,
-                ReceiveName = order.ReceiveName,
-                ReceiveAddress = order.ReceiveAddress,
-                ReceivePhone = order.ReceivePhone,
-                Status = order.Status,
-                UserId = order.UserId,
-                UserName = order.User.FullName,
-            }).ToList();
-
-            return Ok(orderResponses);
-        }
         // GET: api/Orders/Status/{status}
         [HttpGet("Status/{status}")]
-        public ActionResult<IEnumerable<OrderResponse>> GetOrdersByStatus(string status)
+        public ActionResult<IEnumerable<OrderResponse>> GetOrdersByStatus(string status, int pageIndex = 1, int pageSize = 20)
         {
-            var orders = _unitOfWork.OrderRepository.Get(filter: o => o.Status == status);
+            var orders = _unitOfWork.OrderRepository.Get(
+                includeProperties: "OrderDetails.Toy,User", 
+                filter: o => o.Status == status,
+                pageIndex: pageIndex,
+                pageSize: pageSize);
 
             if (orders == null || !orders.Any())
             {
@@ -279,6 +253,8 @@ namespace EduToyRentAPI.Controllers
                 Status = order.Status,
                 UserId = order.UserId,
                 UserName = order.User.FullName,
+                ShopId = order.OrderDetails.FirstOrDefault().Toy.User.Id,
+                ShopName = order.OrderDetails.FirstOrDefault().Toy.User.FullName
             }).ToList();
 
             return Ok(orderResponses);
