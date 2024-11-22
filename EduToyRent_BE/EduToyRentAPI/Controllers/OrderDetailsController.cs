@@ -187,7 +187,14 @@ namespace EduToyRentAPI.Controllers
             var order = _unitOfWork.OrderRepository.GetByID(orderDetail.OrderId);
             if (order != null)
             {
-                order.TotalPrice -= (orderDetail.UnitPrice * orderDetail.Quantity);
+                if (orderDetail.Quantity < 0)
+                {
+                    order.TotalPrice -= (orderDetail.UnitPrice);
+                }
+                else
+                {
+                    order.TotalPrice -= (orderDetail.UnitPrice * orderDetail.Quantity);
+                }
                 _unitOfWork.OrderRepository.Update(order);
             }
 
