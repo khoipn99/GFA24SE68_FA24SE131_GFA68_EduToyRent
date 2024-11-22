@@ -28,19 +28,33 @@ namespace EduToyRentAPI.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<CartItemResponse>> GetCartItems(int pageIndex = 1, int pageSize = 50)
         {
-            var cartItems = _unitOfWork.CartItemRepository.Get(pageIndex: pageIndex, pageSize: pageSize)
-                .Select(cartItem => new CartItemResponse
+            var cartItems = _unitOfWork.CartItemRepository.Get(pageIndex: pageIndex, pageSize: pageSize).ToList();
+            var cartItemResponses = cartItems.Select(ci =>
+            {
+                var mediaList = _unitOfWork.MediaRepository
+                    .GetV2(m => m.ToyId == ci.ToyId)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
+                return new CartItemResponse
                 {
-                    Id = cartItem.Id,
-                    Price = cartItem.Price,
-                    Quantity = cartItem.Quantity,
-                    Status = cartItem.Status,
-                    OrderTypeId = (int)cartItem.OrderTypeId,
-                    CartId = (int)cartItem.CartId,
-                    ToyId = (int)cartItem.ToyId
-                }).ToList();
-
-            return Ok(cartItems);
+                    Id = ci.Id,
+                    Price = ci.Price,
+                    Quantity = ci.Quantity,
+                    OrderTypeId = (int)ci.OrderTypeId,
+                    Status = ci.Status,
+                    CartId = (int)ci.CartId,
+                    ToyId = (int)ci.ToyId,
+                    ToyName = _unitOfWork.ToyRepository.GetByID(ci.ToyId).Name,
+                    ToyPrice = _unitOfWork.ToyRepository.GetByID(ci.ToyId).Price,
+                    ShopId = _unitOfWork.ToyRepository.GetByID(ci.ToyId).UserId,
+                    ToyImgUrls = mediaList
+                };
+            }).ToList();
+            if (!cartItemResponses.Any())
+            {
+                return Ok("Empty List!");
+            }
+            return Ok(cartItemResponses);
         }
 
         // GET: api/CartItems/5
@@ -219,10 +233,14 @@ namespace EduToyRentAPI.Controllers
                     ToyId = (int)ci.ToyId,
                     ToyName = _unitOfWork.ToyRepository.GetByID(ci.ToyId).Name,
                     ToyPrice = _unitOfWork.ToyRepository.GetByID(ci.ToyId).Price,
+                    ShopId = _unitOfWork.ToyRepository.GetByID(ci.ToyId).UserId,
                     ToyImgUrls = mediaList 
                 };
             }).ToList();
-
+            if (!cartItemResponses.Any())
+            {
+                return Ok("Empty List!");
+            }
             return Ok(cartItemResponses); 
         }
 
