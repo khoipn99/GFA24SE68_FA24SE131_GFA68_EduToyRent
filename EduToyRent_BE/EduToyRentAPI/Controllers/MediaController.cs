@@ -269,7 +269,7 @@ namespace EduToyRentAPI.Controllers
                 return NotFound();
             }
 
-            var validStatuses = new List<string> { "Active", "Inactive", "Checking"};
+            var validStatuses = new List<string> { "Active", "Inactive", "Awaiting" };
             if (!validStatuses.Contains(newStatus))
             {
                 return BadRequest(new { Message = "Invalid status value" });
@@ -306,7 +306,7 @@ namespace EduToyRentAPI.Controllers
                 return NotFound();
             }
 
-            var validStatuses = new List<string> { "Active", "Inactive", "Checking" };
+            var validStatuses = new List<string> { "Active", "Inactive", "Awaiting" };
             if (!validStatuses.Contains(status))
             {
                 return BadRequest(new { Message = "Invalid status value" });
