@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EduToyRentRepositories.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,6 +25,6 @@ namespace EduToyRentRepositories.DTO.Response
         public UserResponse Owner { get; set; }
         public UserResponse Approver { get; set; }
         public CategoryResponse Category { get; set; }
-        public List<string> MediaUrls { get; set; }
+        public List<MediaResponse> Media { get; set; }
     }
 }
