@@ -83,6 +83,7 @@ namespace EduToyRentAPI.Controllers
                 OrderTypeId = (int)cartItem.OrderTypeId,
                 ToyName = _unitOfWork.ToyRepository.GetByID(cartItem.ToyId).Name,
                 ToyPrice = _unitOfWork.ToyRepository.GetByID(cartItem.ToyId).Price,
+                ShopId = _unitOfWork.ToyRepository.GetByID(cartItem.ToyId).UserId,
                 ToyImgUrls = mediaList
             };
 
@@ -102,7 +103,7 @@ namespace EduToyRentAPI.Controllers
 
             cartItem.Price = cartItemRequest.Price;
             cartItem.Quantity = cartItemRequest.Quantity;
-            cartItem.OrderTypeId = (int)cartItem.OrderTypeId;
+            cartItem.OrderTypeId = cartItemRequest.OrderTypeId;
             cartItem.Status = cartItemRequest.Status;
             cartItem.CartId = cartItemRequest.CartId;
             cartItem.ToyId = cartItemRequest.ToyId;
@@ -127,7 +128,7 @@ namespace EduToyRentAPI.Controllers
             {
                 Price = cartItemRequest.Price,
                 Quantity = cartItemRequest.Quantity,
-                OrderTypeId = (int)cartItemRequest.OrderTypeId,
+                OrderTypeId = cartItemRequest.OrderTypeId,
                 Status = cartItemRequest.Status,
                 CartId = cartItemRequest.CartId,
                 ToyId = cartItemRequest.ToyId
