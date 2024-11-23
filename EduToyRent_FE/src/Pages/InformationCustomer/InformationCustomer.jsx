@@ -127,7 +127,7 @@ const InformationCustomer = () => {
   const handleExtendRental = (order) => {};
   const handleReturnOrderDetail = (order) => {
     var tmp = order;
-    tmp.status = "returning";
+    tmp.status = "Delivering";
 
     apiOrderDetail.put("/" + order.id, tmp).then((response) => {
       ViewDetails();
@@ -341,9 +341,9 @@ const InformationCustomer = () => {
                 Tất cả
               </button>
               <button
-                onClick={() => handleFilterChange("Inactive")}
+                onClick={() => handleFilterChange("Pending")}
                 className={`p-2 rounded ${
-                  filterStatus === "Inactive"
+                  filterStatus === "Pending"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -351,9 +351,9 @@ const InformationCustomer = () => {
                 Chờ xác nhận
               </button>
               <button
-                onClick={() => handleFilterChange("Active")}
+                onClick={() => handleFilterChange("Delivering")}
                 className={`p-2 rounded ${
-                  filterStatus === "Active"
+                  filterStatus === "Delivering"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -361,9 +361,9 @@ const InformationCustomer = () => {
                 Đang vận chuyển
               </button>
               <button
-                onClick={() => handleFilterChange("Progress")}
+                onClick={() => handleFilterChange("Processing")}
                 className={`p-2 rounded ${
-                  filterStatus === "Progress"
+                  filterStatus === "Processing"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -372,9 +372,9 @@ const InformationCustomer = () => {
               </button>
 
               <button
-                onClick={() => handleFilterChange("Finish")}
+                onClick={() => handleFilterChange("Complete")}
                 className={`p-2 rounded ${
-                  filterStatus === "Finish"
+                  filterStatus === "Complete"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -438,7 +438,7 @@ const InformationCustomer = () => {
                         </button>
                       </div>
                     )}
-                    {order.status === "Inactive" && (
+                    {order.status === "Pending" && (
                       <div className="flex space-x-2 mt-2">
                         <button
                           onClick={() => handleCancelOrder(order)}
@@ -521,7 +521,7 @@ const InformationCustomer = () => {
   const renderOrderDetails = () => {
     if (!selectedOrder) return null;
 
-    const stages = ["renting", "await", "returning", "finish"];
+    const stages = ["Processing", "Expired", "Delivering", "Complete"];
     const getStatusIndex = (status) => stages.indexOf(status);
 
     return (
@@ -583,7 +583,11 @@ const InformationCustomer = () => {
                       <div>
                         <div className="flex items-center mb-2">
                           <img
-                            src={item.toyImgUrls}
+                            src={
+                              item.toyImgUrls && item.toyImgUrls[0]
+                                ? item.toyImgUrls[0]
+                                : ""
+                            }
                             alt={item.name}
                             className="w-20 h-20 object-cover mr-4"
                           />
@@ -615,7 +619,7 @@ const InformationCustomer = () => {
                                 : "Đang chờ"}
                             </p>
                           </div>
-                          {item.status === "await" && (
+                          {item.status === "Expired" && (
                             <div>
                               <button
                                 className="flex items-center mb-2 px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
@@ -660,16 +664,16 @@ const InformationCustomer = () => {
                                 >
                                   {index + 1}
                                 </div>
-                                {stage === "renting" && (
+                                {stage === "Processing" && (
                                   <div className="text-sm">Đang thuê</div>
                                 )}
-                                {stage === "await" && (
+                                {stage === "Expired" && (
                                   <div className="text-sm">Chờ trả hàng</div>
                                 )}
-                                {stage === "returning" && (
+                                {stage === "Delivering" && (
                                   <div className="text-sm">Đang trả hàng</div>
                                 )}
-                                {stage === "finish" && (
+                                {stage === "Complete" && (
                                   <div className="text-sm">Hoàn thành</div>
                                 )}
                               </div>

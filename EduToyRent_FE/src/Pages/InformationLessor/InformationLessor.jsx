@@ -125,6 +125,22 @@ const InformationLessor = () => {
     apiOrderDetail.get("/Order/" + selectedOrder.id).then((response) => {
       setOrderDetails(response.data);
       console.log(response.data);
+
+      var tmp = true;
+      response.data.map((item) => {
+        if (item.status != "Complete") {
+          tmp = false;
+        }
+      });
+
+      if (tmp) {
+        var orderTmp = selectedOrder;
+        orderTmp.status = "Complete";
+
+        apiOrder.put("/" + selectedOrder.id, orderTmp).then((response) => {
+          getOrderInfo();
+        });
+      }
     });
   };
 
@@ -138,7 +154,7 @@ const InformationLessor = () => {
 
   const handleFinishOrderDetail = (order) => {
     var tmp = order;
-    tmp.status = "finish";
+    tmp.status = "Complete";
 
     apiOrderDetail.put("/" + order.id, tmp).then((response) => {
       ViewDetails();
@@ -147,7 +163,7 @@ const InformationLessor = () => {
 
   const handleAcceptOrder = (order) => {
     var tmp = order;
-    tmp.status = "Active";
+    tmp.status = "Delivering";
 
     apiOrder.put("/" + order.id, tmp).then((response) => {
       getOrderInfo();
@@ -165,10 +181,30 @@ const InformationLessor = () => {
 
   const handleFinishDeliveryOrder = (order) => {
     var tmp = order;
-    tmp.status = "Progress";
+    tmp.status = "Processing";
 
     apiOrder.put("/" + order.id, tmp).then((response) => {
-      getOrderInfo();
+      orderDetails.map((item) => {
+        var tmp = item;
+        tmp.status = "Processing";
+        tmp.startDate = new Date().toISOString();
+        if (tmp.orderTypeId == "4") {
+          const currentDate = new Date();
+          currentDate.setDate(currentDate.getDate() + 7);
+          tmp.endDate = currentDate.toISOString();
+        } else if (tmp.orderTypeId == "5") {
+          const currentDate = new Date();
+          currentDate.setDate(currentDate.getDate() + 14);
+          tmp.endDate = currentDate.toISOString();
+        } else if (tmp.orderTypeId == "6") {
+          const currentDate = new Date();
+          currentDate.setDate(currentDate.getDate() + 30);
+          tmp.endDate = currentDate.toISOString();
+        }
+        apiOrderDetail.put("/" + item.id, tmp).then((response) => {
+          getOrderInfo();
+        });
+      });
     });
   };
 
@@ -339,9 +375,9 @@ const InformationLessor = () => {
                 Tất cả
               </button>
               <button
-                onClick={() => handleFilterChange("Inactive")}
+                onClick={() => handleFilterChange("Pending")}
                 className={`p-2 rounded ${
-                  filterStatus === "Inactive"
+                  filterStatus === "Pending"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -349,9 +385,9 @@ const InformationLessor = () => {
                 Chờ xác nhận
               </button>
               <button
-                onClick={() => handleFilterChange("Active")}
+                onClick={() => handleFilterChange("Delivering")}
                 className={`p-2 rounded ${
-                  filterStatus === "Active"
+                  filterStatus === "Delivering"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -359,9 +395,9 @@ const InformationLessor = () => {
                 Đang vận chuyển
               </button>
               <button
-                onClick={() => handleFilterChange("Progress")}
+                onClick={() => handleFilterChange("Processing")}
                 className={`p-2 rounded ${
-                  filterStatus === "Progress"
+                  filterStatus === "Processing"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -370,9 +406,9 @@ const InformationLessor = () => {
               </button>
 
               <button
-                onClick={() => handleFilterChange("Finish")}
+                onClick={() => handleFilterChange("Complete")}
                 className={`p-2 rounded ${
-                  filterStatus === "Finish"
+                  filterStatus === "Complete"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -426,7 +462,7 @@ const InformationLessor = () => {
                       Tổng tiền: {order.totalPrice.toLocaleString()} VNĐ
                     </p>
 
-                    {order.status === "Active" && (
+                    {order.status === "Delivering" && (
                       <div className="flex space-x-2 mt-2">
                         <button
                           onClick={() => handleFinishDeliveryOrder(order)}
@@ -436,7 +472,7 @@ const InformationLessor = () => {
                         </button>
                       </div>
                     )}
-                    {order.status === "Inactive" && (
+                    {order.status === "Pending" && (
                       <div className="flex items-center justify-between">
                         <div className="flex space-x-2 mt-2">
                           <button
@@ -907,7 +943,7 @@ const InformationLessor = () => {
   const renderOrderDetails = () => {
     if (!selectedOrder) return null;
 
-    const stages = ["renting", "await", "returning", "finish"];
+    const stages = ["Processing", "Expired", "Delivering", "Complete"];
     const getStatusIndex = (status) => stages.indexOf(status);
 
     return (
@@ -969,7 +1005,11 @@ const InformationLessor = () => {
                       <div>
                         <div className="flex items-center mb-2">
                           <img
-                            src={item.image}
+                            src={
+                              item.toyImgUrls && item.toyImgUrls[0]
+                                ? item.toyImgUrls[0]
+                                : ""
+                            }
                             alt={item.name}
                             className="w-20 h-20 object-cover mr-4"
                           />
@@ -1002,7 +1042,7 @@ const InformationLessor = () => {
                             </p>
                           </div>
 
-                          {item.status === "returning" && (
+                          {item.status === "Delivering" && (
                             <div>
                               <button
                                 className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
@@ -1031,16 +1071,16 @@ const InformationLessor = () => {
                                 >
                                   {index + 1}
                                 </div>
-                                {stage === "renting" && (
+                                {stage === "Processing" && (
                                   <div className="text-sm">Đang thuê</div>
                                 )}
-                                {stage === "await" && (
+                                {stage === "Expired" && (
                                   <div className="text-sm">Chờ trả hàng</div>
                                 )}
-                                {stage === "returning" && (
+                                {stage === "Delivering" && (
                                   <div className="text-sm">Đang trả hàng</div>
                                 )}
-                                {stage === "finish" && (
+                                {stage === "Complete" && (
                                   <div className="text-sm">Hoàn thành</div>
                                 )}
                               </div>
