@@ -31,6 +31,11 @@ const ToySupplierPage = () => {
   });
   const [selectedToy, setSelectedToy] = useState(null);
   const [isCardVisible, setIsCardVisible] = useState(false);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [videoFile, setVideoFile] = useState([]); // State lưu video
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -87,7 +92,7 @@ const ToySupplierPage = () => {
           console.error("Lỗi khi lấy dữ liệu:", error);
         }
       };
-
+      loadCategories();
       fetchUserData();
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
@@ -110,13 +115,37 @@ const ToySupplierPage = () => {
       return;
     }
     try {
-      const response = await apiToys.get(`/user/${userId}`, {
+      const toyResponse = await apiToys.get(
+        `/user/${userId}?pageIndex=1&pageSize=20000`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      console.log("Dữ liệu đồ chơi của người dùng 2:", toyResponse.data);
+
+      // Cập nhật dữ liệu đồ chơi (nếu cần thiết)
+      setToysData(toyResponse.data);
+
+      console.log("Danh sách đồ chơi:", toyResponse.data);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách đồ chơi:", error);
+    }
+  };
+  // Hàm load category từ API
+  const loadCategories = async () => {
+    try {
+      // Gửi yêu cầu GET để lấy danh sách categories
+      const response = await apiCategory.get("?pageIndex=1&pageSize=50", {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
       });
-      setToysData(response.data);
-      console.log("Danh sách đồ chơi:", response.data);
+      setCategories(response.data); // Lưu dữ liệu vào state
+
+      console.log("Danh sách categories:", response.data);
     } catch (error) {
       console.error("Lỗi khi tải danh sách đồ chơi:", error);
     }
@@ -257,6 +286,101 @@ const ToySupplierPage = () => {
     }
   };
   // Hàm để gửi ảnh lên API
+  const handleUpdateToy = async () => {
+    const toyId = selectedToy?.id; // Lấy toyId từ selectedToy
+
+    if (!toyId) {
+      console.error("Không tìm thấy toyId.");
+      return;
+    }
+
+    try {
+      // Chuẩn bị dữ liệu dưới dạng JSON thay vì formData
+      const updatedToy = {
+        name: selectedToy.name || "Default Toy Name",
+        description: selectedToy.description || "Default Description",
+        price: selectedToy.price || "0",
+        buyQuantity: selectedToy.buyQuantity || "0",
+        origin: selectedToy.origin || "Default Origin",
+        age: selectedToy.age || "All Ages",
+        brand: selectedToy.brand || "Default Brand",
+        categoryId: selectedCategory || "1",
+        rentCount: selectedToy.rentCount || "0",
+        rentTime: selectedToy.rentTime || "Default Rent Time",
+      };
+      console.log("Dữ liệu gửi đi1:", updatedToy);
+      console.log("Dữ liệu gửi đi:", selectedToy);
+      // Gửi PUT request với Content-Type là application/json
+      const response = await apiToys.put(`/${toyId}`, updatedToy, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+          "Content-Type": "application/json", // Sử dụng application/json thay vì multipart/form-data
+        },
+      });
+
+      console.log("Cập nhật toy thành công:", response.data);
+      setToyData(response.data); // Cập nhật lại dữ liệu của toy sau khi update
+      setIsEditing(null); // Dừng trạng thái chỉnh sửa
+      LoadToy(userId);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật toy:", error);
+    }
+  };
+
+  const handleDelete = async (toyId) => {
+    // Hiển thị hộp thoại xác nhận
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this toy?"
+    );
+
+    // Nếu người dùng không xác nhận, dừng lại
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
+      const requestBody = "Inactive"; // Thay đổi thành chuỗi trực tiếp
+
+      // Log request body trước khi gửi đi
+      console.log("Request body:", requestBody);
+
+      // Gửi yêu cầu PATCH
+      const response = await apiToys.patch(
+        `/${toyId}/update-status`,
+        requestBody, // Gửi body như chuỗi
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Log dữ liệu nhận được từ API khi thành công
+      console.log("Response on success:", response);
+
+      if (response.status === 200) {
+        // Cập nhật lại state
+        setToysData((prevData) =>
+          prevData.map((toy) =>
+            toy.id === toyId ? { ...toy, status: "Inactive" } : toy
+          )
+        );
+        LoadToy(userId);
+      } else {
+        throw new Error(`Failed to update status for toy with ID ${toyId}`);
+      }
+    } catch (error) {
+      // Log lỗi chi tiết nhận được từ API khi có lỗi
+      if (error.response) {
+        console.error("Error response:", error.response);
+      } else {
+        console.error("Error message:", error.message);
+      }
+    }
+  };
+  // Hàm mở modal và thiết lập ID toy cần xóa
 
   const handleEditClick = () => {
     setEditedData(userData);
@@ -289,31 +413,58 @@ const ToySupplierPage = () => {
     }));
   };
   const handleSubmit = async () => {
+    // Thu thập thông tin từ form
     const formData = {
       name: document.getElementById("name").value,
       description: document.getElementById("description").value,
       price: parseFloat(document.getElementById("price").value),
-      buyQuantity: 0, // Default value
+      buyQuantity: 0, // Giá trị mặc định
       origin: document.getElementById("origin").value,
       age: document.getElementById("age").value,
       brand: document.getElementById("brand").value,
-      categoryId: 1, // Default value
-      rentCount: 0, // Default value
-      rentTime: document.getElementById("rentTime").value,
+      categoryId: selectedCategory, // Lấy categoryId đã chọn
+      rentCount: 0, // Giá trị mặc định
+      rentTime: "0 Week",
     };
 
-    // Kiểm tra dữ liệu cần thiết
+    // Kiểm tra thông tin cơ bản
     if (!formData.name || !formData.price || !formData.origin) {
-      alert("Vui lòng điền đầy đủ thông tin!");
+      alert("Vui lòng điền tên, giá và nguồn gốc!");
       return;
     }
 
-    // Lấy file từ input hình ảnh
-    const imageInput = document.getElementById("imageUpload");
-    const imageFile = imageInput.files[0];
+    // Lấy các tệp hình ảnh và video từ input
+    const imageInput = document.getElementById("mediaUpload");
+    const files = imageInput.files;
 
-    if (!imageFile) {
-      alert("Vui lòng tải lên hình ảnh sản phẩm!");
+    const imageFiles = [];
+    let videoFile = null;
+
+    // Kiểm tra các tệp tải lên và phân loại chúng thành hình ảnh và video
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith("image/")) {
+        if (imageFiles.length < 5) {
+          // Tối đa 5 hình ảnh
+          imageFiles.push(file);
+        } else {
+          alert("Chỉ được tải lên tối đa 5 hình ảnh!");
+          return;
+        }
+      } else if (file.type.startsWith("video/")) {
+        if (!videoFile) {
+          // Chỉ được tải lên 1 video
+          videoFile = file;
+        } else {
+          alert("Chỉ được tải lên 1 video!");
+          return;
+        }
+      }
+    }
+
+    // Chỉ gửi dữ liệu hình ảnh hoặc video nếu có tệp được chọn
+    if (imageFiles.length === 0 && !videoFile) {
+      alert("Vui lòng tải lên ít nhất một hình ảnh hoặc video!");
       return;
     }
 
@@ -332,14 +483,20 @@ const ToySupplierPage = () => {
       const toyId = newToy.id;
       console.log("Sản phẩm đã tạo:", newToy);
 
-      // Gửi file hình ảnh lên server
-      const imageData = new FormData();
-      imageData.append("mediaUrls", imageFile); // Gắn file hình ảnh vào form data
+      // Gửi các hình ảnh và video lên server nếu có
+      const mediaData = new FormData();
+      imageFiles.forEach((image) => {
+        mediaData.append("mediaUrls", image); // Thêm mỗi hình ảnh vào FormData
+      });
+      if (videoFile) {
+        mediaData.append("mediaUrls", videoFile); // Thêm video vào FormData nếu có
+      }
 
+      // Gửi yêu cầu tải lên hình ảnh và video
       try {
         const uploadResponse = await apiMedia.post(
-          `/upload-toy-images/${toyId}`,
-          imageData,
+          `/upload-toy-images/${toyId}`, // Đảm bảo đường dẫn đúng
+          mediaData,
           {
             headers: {
               Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -348,30 +505,58 @@ const ToySupplierPage = () => {
           }
         );
 
-        console.log("Hình ảnh đã được tạo:", uploadResponse.data);
-        alert("Sản phẩm và hình ảnh đã được thêm thành công!");
+        console.log("Hình ảnh và video đã được tạo:", uploadResponse.data);
+        alert("Sản phẩm, hình ảnh và video đã được thêm thành công!");
       } catch (uploadError) {
-        console.error("Đã xảy ra lỗi khi tạo hình ảnh:", uploadError);
-        alert("Sản phẩm đã được thêm nhưng không thể tạo hình ảnh!");
+        console.error("Đã xảy ra lỗi khi tạo hình ảnh và video:", uploadError);
+        alert("Sản phẩm đã được thêm nhưng không thể tạo hình ảnh và video!");
       }
 
+      setIsCardVisible(false); // Ẩn card sau khi thêm thành công
       // Cập nhật danh sách sản phẩm
       LoadToy(userId);
-      setIsCardVisible(false); // Ẩn card sau khi thêm thành công
     } catch (error) {
       console.error("Đã xảy ra lỗi khi thêm sản phẩm:", error);
       alert("Đã xảy ra lỗi khi thêm sản phẩm!");
     }
   };
   const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      console.log("File uploaded:", file);
-      // Có thể thực hiện thêm xử lý, ví dụ gửi file lên server qua API
-    } else {
-      console.error("No file selected!");
+    const files = e.target.files;
+    const imageFiles = [];
+    let videoFile = null;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      // Kiểm tra nếu là hình ảnh
+      if (file.type.startsWith("image/")) {
+        if (imageFiles.length < 5) {
+          // Tối đa 5 hình ảnh
+          imageFiles.push(file);
+        } else {
+          alert("Chỉ được tải lên tối đa 5 hình ảnh!");
+          return;
+        }
+      }
+      // Kiểm tra nếu là video
+      else if (file.type.startsWith("video/")) {
+        if (!videoFile) {
+          // Chỉ được tải lên 1 video
+          videoFile = file;
+        } else {
+          alert("Chỉ được tải lên 1 video!");
+          return;
+        }
+      }
     }
+
+    // Sau khi đã kiểm tra và phân loại, bạn có thể lưu các tệp vào state hoặc gửi chúng lên server
+    console.log("Hình ảnh:", imageFiles);
+    console.log("Video:", videoFile);
+
+    // Tiếp theo, bạn có thể xử lý các tệp này như muốn, ví dụ như thêm vào FormData để gửi lên server
   };
+
   const renderContent = () => {
     switch (selectedTab) {
       case "info":
@@ -781,8 +966,7 @@ const ToySupplierPage = () => {
                     {/* Card popup */}
                     {isCardVisible && (
                       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white w-full max-w-3xl rounded-xl shadow-lg p-8 relative">
-                          {/* Nút đóng card */}
+                        <div className="bg-white w-full max-w-3xl h-auto max-h-[90vh] overflow-y-auto rounded-xl shadow-lg p-8 relative">
                           <button
                             onClick={() => setIsCardVisible(false)}
                             className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
@@ -806,89 +990,110 @@ const ToySupplierPage = () => {
                             Thêm Sản Phẩm
                           </h3>
                           <form className="space-y-4">
-                            <div>
-                              <label className="block font-medium">
-                                Tên sản phẩm:
-                              </label>
-                              <input
-                                type="text"
-                                id="name"
-                                className="w-full border rounded-lg px-4 py-2"
-                              />
+                            <div className="grid grid-cols-2 gap-6">
+                              <div>
+                                <label className="block font-medium">
+                                  Tên sản phẩm:
+                                </label>
+                                <input
+                                  type="text"
+                                  id="name"
+                                  className="w-full border rounded-lg px-4 py-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block font-medium">
+                                  Mô tả:
+                                </label>
+                                <textarea
+                                  id="description"
+                                  className="w-full border rounded-lg px-4 py-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block font-medium">
+                                  Giá:
+                                </label>
+                                <input
+                                  type="number"
+                                  id="price"
+                                  className="w-full border rounded-lg px-4 py-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block font-medium">
+                                  Nguồn gốc:
+                                </label>
+                                <input
+                                  type="text"
+                                  id="origin"
+                                  className="w-full border rounded-lg px-4 py-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block font-medium">
+                                  Độ tuổi:
+                                </label>
+                                <input
+                                  type="text"
+                                  id="age"
+                                  className="w-full border rounded-lg px-4 py-2"
+                                />
+                              </div>
+                              <div>
+                                <label className="block font-medium">
+                                  Thương hiệu:
+                                </label>
+                                <input
+                                  type="text"
+                                  id="brand"
+                                  className="w-full border rounded-lg px-4 py-2"
+                                />
+                              </div>
+                              <div>
+                                <label htmlFor="category">Danh mục:</label>
+                                <select
+                                  id="category"
+                                  value={selectedCategory || ""}
+                                  onChange={(e) =>
+                                    setSelectedCategory(e.target.value)
+                                  }
+                                  required
+                                  className="w-full border rounded-lg px-4 py-2"
+                                >
+                                  <option value="" disabled>
+                                    Chọn danh mục
+                                  </option>
+                                  {categories.map((category) => (
+                                    <option
+                                      key={category.id}
+                                      value={category.id}
+                                    >
+                                      {category.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block font-medium">
+                                  Chọn hình ảnh và video (Tối đa 5 hình ảnh và 1
+                                  video):
+                                </label>
+                                <input
+                                  type="file"
+                                  id="mediaUpload"
+                                  accept="image/*, video/*"
+                                  multiple
+                                  className="w-full border rounded-lg px-4 py-2"
+                                  onChange={(e) => handleFileUpload(e)}
+                                />
+                              </div>
                             </div>
-                            <div>
-                              <label className="block font-medium">
-                                Mô tả:
-                              </label>
-                              <textarea
-                                id="description"
-                                className="w-full border rounded-lg px-4 py-2"
-                              />
-                            </div>
-                            <div>
-                              <label className="block font-medium">Giá:</label>
-                              <input
-                                type="number"
-                                id="price"
-                                className="w-full border rounded-lg px-4 py-2"
-                              />
-                            </div>
-                            <div>
-                              <label className="block font-medium">
-                                Nguồn gốc:
-                              </label>
-                              <input
-                                type="text"
-                                id="origin"
-                                className="w-full border rounded-lg px-4 py-2"
-                              />
-                            </div>
-                            <div>
-                              <label className="block font-medium">
-                                Độ tuổi:
-                              </label>
-                              <input
-                                type="text"
-                                id="age"
-                                className="w-full border rounded-lg px-4 py-2"
-                              />
-                            </div>
-                            <div>
-                              <label className="block font-medium">
-                                Thương hiệu:
-                              </label>
-                              <input
-                                type="text"
-                                id="brand"
-                                className="w-full border rounded-lg px-4 py-2"
-                              />
-                            </div>
-                            <div>
-                              <label className="block font-medium">
-                                Thời gian thuê:
-                              </label>
-                              <input
-                                type="text"
-                                id="rentTime"
-                                className="w-full border rounded-lg px-4 py-2"
-                              />
-                            </div>
-                            <div>
-                              <label className="block font-medium">
-                                Hình ảnh:
-                              </label>
-                              <input
-                                type="file"
-                                id="imageUpload"
-                                accept="image/*"
-                                onChange={(e) => handleFileUpload(e)}
-                                className="w-full border rounded-lg px-4 py-2"
-                              />
-                            </div>
+
                             <button
                               type="button"
                               onClick={handleSubmit}
-                              className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                              className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mt-4"
                             >
                               Thêm sản phẩm
                             </button>
@@ -987,7 +1192,6 @@ const ToySupplierPage = () => {
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={toy.id}
-                              onClick={() => setSelectedToy(toy)} // Cập nhật selectedToy khi bấm vào dòng
                             >
                               <td className="w-4 p-4">
                                 <div className="flex items-center">
@@ -1035,16 +1239,34 @@ const ToySupplierPage = () => {
                               </td>
 
                               <td className="p-4 space-x-2 whitespace-nowrap">
+                                {/* Nút "Detail" */}
                                 <button
                                   type="button"
-                                  // onClick={() => handleUpdate(toy)} // Gọi hàm update khi nhấn nút
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedToy(toy); // Lưu thông tin toy vào state
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
+                                >
+                                  Detail
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setIsEditing(true); // Bật form chỉnh sửa
+                                    setSelectedToy(toy); // Lưu thông tin toy vào selectedToy
+                                  }}
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                                 >
                                   Edit
                                 </button>
                                 <button
                                   type="button"
-                                  // onClick={() => handleDelete(toy.id)} // Gọi hàm delete khi nhấn nút
+                                  onClick={(event) => {
+                                    event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
+                                    handleDelete(toy.id); // Gọi hàm handleDelete
+                                  }}
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
                                 >
                                   Delete
@@ -1101,9 +1323,18 @@ const ToySupplierPage = () => {
                 </button>
               </div>
             </div>
-            {selectedToy && (
+            {selectedToy && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[90%] overflow-auto">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[90%] overflow-auto relative">
+                  {/* Nút đóng ở góc phải */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedToy(null)} // Đóng chi tiết khi bấm nút
+                    className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-700"
+                  >
+                    &times;
+                  </button>
+
                   <div className="flex flex-wrap lg:flex-nowrap gap-10">
                     {/* Phần hình ảnh */}
                     <div className="flex-1 flex justify-center items-center">
@@ -1131,8 +1362,12 @@ const ToySupplierPage = () => {
                       <p>
                         <strong>Age:</strong> {selectedToy.age}
                       </p>
+
                       <p>
-                        <strong>Brand:</strong> {selectedToy.brand}
+                        <strong>Thương Hiệu:</strong> {selectedToy.brand}
+                      </p>
+                      <p>
+                        <strong>Danh mục:</strong> {selectedToy.category.name}
                       </p>
                       <p>
                         <strong>Create Date:</strong>{" "}
@@ -1146,14 +1381,190 @@ const ToySupplierPage = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex justify-end mt-10">
-                    <button
-                      onClick={() => setSelectedToy(null)} // Đóng card khi bấm nút
-                      className="bg-red-600 text-white py-2 px-4 rounded-xl text-2xl shadow-md hover:bg-red-700"
-                    >
-                      Close
-                    </button>
-                  </div>
+                </div>
+              </div>
+            )}
+
+            {isEditing && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
+                  <h2 className="text-4xl font-bold mb-4 text-center">
+                    {" "}
+                    Chỉnh sửa đồ chơi
+                  </h2>
+                  <form className="space-y-6">
+                    <div className="mb-4">
+                      <label htmlFor="name" className="block text-gray-700">
+                        Tên
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        className="w-full p-2 border border-gray-300 rounded"
+                        value={selectedToy.name}
+                        onChange={(e) =>
+                          setSelectedToy({
+                            ...selectedToy,
+                            name: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="description"
+                        className="block text-gray-700"
+                      >
+                        Miêu tả
+                      </label>
+                      <input
+                        type="text"
+                        id="description"
+                        name="description"
+                        className="w-full p-2 border border-gray-300 rounded"
+                        value={selectedToy.description}
+                        onChange={(e) =>
+                          setSelectedToy({
+                            ...selectedToy,
+                            description: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label htmlFor="price" className="block text-gray-700">
+                        Giá
+                      </label>
+                      <input
+                        type="number"
+                        id="price"
+                        name="price"
+                        className="w-full p-2 border border-gray-300 rounded"
+                        value={selectedToy.price}
+                        onChange={(e) =>
+                          setSelectedToy({
+                            ...selectedToy,
+                            price: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label htmlFor="price" className="block text-gray-700">
+                        Số lượng:
+                      </label>
+                      <input
+                        type="number"
+                        id="buyQuantity"
+                        name="buyQuantity"
+                        className="w-full p-2 border border-gray-300 rounded"
+                        value={selectedToy.buyQuantity}
+                        onChange={(e) =>
+                          setSelectedToy({
+                            ...selectedToy,
+                            buyQuantity: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label htmlFor="price" className="block text-gray-700">
+                        Nguồn gốc:
+                      </label>
+                      <input
+                        type="text"
+                        id="origin"
+                        name="origin"
+                        className="w-full p-2 border border-gray-300 rounded"
+                        value={selectedToy.origin}
+                        onChange={(e) =>
+                          setSelectedToy({
+                            ...selectedToy,
+                            origin: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label htmlFor="price" className="block text-gray-700">
+                        Tuổi:
+                      </label>
+                      <input
+                        type="number"
+                        id="age"
+                        name="age"
+                        className="w-full p-2 border border-gray-300 rounded"
+                        value={selectedToy.age}
+                        onChange={(e) =>
+                          setSelectedToy({
+                            ...selectedToy,
+                            age: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label htmlFor="price" className="block text-gray-700">
+                        Thương hiệu:
+                      </label>
+                      <input
+                        type="text"
+                        id="brand"
+                        name="brand"
+                        className="w-full p-2 border border-gray-300 rounded"
+                        value={selectedToy.brand}
+                        onChange={(e) =>
+                          setSelectedToy({
+                            ...selectedToy,
+                            brand: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="category">Danh mục:</label>
+                      <select
+                        id="category"
+                        value={selectedCategory || ""}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        required
+                        className="w-full border rounded-lg px-4 py-2"
+                      >
+                        <option value="" disabled>
+                          Chọn danh mục
+                        </option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="submit" // Sử dụng type="submit" để kích hoạt hành động form
+                        onClick={() => {
+                          handleUpdateToy();
+                          setIsEditing(false);
+                          setSelectedToy(null); // Đảm bảo khi cancel không mở lại chi tiết
+                        }}
+                        className="px-4 py-2 bg-blue-500 text-white rounded mr-2"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditing(false);
+                          setSelectedToy(null); // Đảm bảo khi cancel không mở lại chi tiết
+                        }}
+                        className="px-4 py-2 bg-gray-500 text-white rounded"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}
