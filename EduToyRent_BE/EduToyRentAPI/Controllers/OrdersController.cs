@@ -9,6 +9,7 @@ using EduToyRentRepositories.Models;
 using EduToyRentRepositories.DTO.Request;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
+using Google.Apis.Storage.v1.Data;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -46,8 +47,8 @@ namespace EduToyRentAPI.Controllers
                     Status = order.Status,
                     UserId = order.UserId,
                     UserName = order.User.FullName,
-                    ShopId = order.OrderDetails.FirstOrDefault().Toy.User.Id,
-                    ShopName = order.OrderDetails.FirstOrDefault().Toy.User.FullName
+                    ShopId = order.OrderDetails.FirstOrDefault().Toy.UserId,
+                    ShopName = _unitOfWork.UserRepository.GetByID(order.OrderDetails.FirstOrDefault().Toy.UserId).FullName
                 }).ToList();
 
             return Ok(orders);
@@ -78,8 +79,8 @@ namespace EduToyRentAPI.Controllers
                 Status = order.Status,
                 UserId = order.UserId,
                 UserName = order.User.FullName,
-                ShopId = order.OrderDetails.FirstOrDefault().Toy.User.Id,
-                ShopName = order.OrderDetails.FirstOrDefault().Toy.User.FullName
+                ShopId = order.OrderDetails.FirstOrDefault().Toy.UserId,
+                ShopName =_unitOfWork.UserRepository.GetByID(order.OrderDetails.FirstOrDefault().Toy.UserId).FullName
             };
 
             return Ok(orderResponse);
@@ -213,8 +214,8 @@ namespace EduToyRentAPI.Controllers
                     Status = o.Status,
                     UserId = o.UserId,
                     UserName = o.User.FullName,
-                    ShopId = o.OrderDetails.FirstOrDefault().Toy.User.Id, 
-                    ShopName = o.OrderDetails.FirstOrDefault().Toy.User.FullName 
+                    ShopId = o.OrderDetails.FirstOrDefault().Toy.User.Id,
+                    ShopName = _unitOfWork.UserRepository.GetByID(o.OrderDetails.FirstOrDefault().Toy.UserId).FullName
                 }).ToList();
 
             return Ok(new
@@ -254,7 +255,7 @@ namespace EduToyRentAPI.Controllers
                 UserId = order.UserId,
                 UserName = order.User.FullName,
                 ShopId = order.OrderDetails.FirstOrDefault().Toy.User.Id,
-                ShopName = order.OrderDetails.FirstOrDefault().Toy.User.FullName
+                ShopName = _unitOfWork.UserRepository.GetByID(order.OrderDetails.FirstOrDefault().Toy.UserId).FullName
             }).ToList();
 
             return Ok(orderResponses);
@@ -290,7 +291,7 @@ namespace EduToyRentAPI.Controllers
                 UserId = o.UserId,
                 UserName = o.User.FullName, 
                 ShopId = shopId,
-                ShopName = _unitOfWork.UserRepository.GetByID(shopId).FullName
+                ShopName = _unitOfWork.UserRepository.GetByID(o.OrderDetails.FirstOrDefault().Toy.UserId).FullName
             })
             .ToList();
 
