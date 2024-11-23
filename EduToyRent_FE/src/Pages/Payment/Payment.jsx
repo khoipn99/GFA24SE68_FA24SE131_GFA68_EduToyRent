@@ -35,10 +35,6 @@ const Payment = () => {
   const [discount, setDiscount] = useState(0);
   const [wallet, setWallet] = useState({});
 
-  const [citiesTmp, setCitiesTmp] = useState(""); // Thành phố
-  const [districtsTmp, setDistrictsTmp] = useState(""); // Quận/Huyện
-  const [wardsTmp, setWardsTmp] = useState(""); // Phường/Xã
-
   useEffect(() => {
     const userDataCookie = Cookies.get("userDataReal");
     if (userDataCookie) {
@@ -254,7 +250,7 @@ const Payment = () => {
               receiveAddress:
                 shippingInfo.detail + "," + war + "," + distric + "," + city,
               receivePhone: shippingInfo.phoneNumber,
-              status: "Inactive",
+              status: "Pending",
               userId: customerInfo.id,
             })
             .then((response) => {
@@ -275,7 +271,7 @@ const Payment = () => {
                   quantity: -1,
                   startDate: null,
                   endDate: null,
-                  status: "delivery",
+                  status: "Await",
                   orderId: response.data.id,
                   toyId: item.toyId,
                   orderTypeId: item.orderTypeId,
@@ -286,6 +282,49 @@ const Payment = () => {
         }
         if (buyItems != "") {
           console.log(buyItems);
+
+          var totalDepositTmp = 0;
+          buyItems.map((item, index) => {
+            totalDepositTmp += item.price * item.quantity;
+          });
+          console.log(totalDepositTmp);
+          console.log(shippingInfo.fullName);
+          console.log(
+            shippingInfo.detail + "," + war + "," + distric + "," + city
+          );
+
+          apiOrder
+            .post("", {
+              orderDate: new Date().toISOString(),
+              receiveDate: null,
+              totalPrice: totalDepositTmp,
+              rentPrice: 0,
+              depositeBackMoney: 0,
+              receiveName: shippingInfo.fullName,
+              receiveAddress:
+                shippingInfo.detail + "," + war + "," + distric + "," + city,
+              receivePhone: shippingInfo.phoneNumber,
+              status: "Delivering",
+              userId: customerInfo.id,
+            })
+            .then((response) => {
+              console.log(response.data);
+              buyItems.map((item, index) => {
+                apiOrderDetail.post("", {
+                  rentPrice: 0,
+                  deposit: item.price,
+                  unitPrice: item.price,
+                  quantity: item.quantity,
+                  startDate: null,
+                  endDate: null,
+                  status: "Await",
+                  orderId: response.data.id,
+                  toyId: item.toyId,
+                  orderTypeId: item.orderTypeId,
+                  ratingId: null,
+                });
+              });
+            });
         }
       } else {
         alert("Bạn nhập thiếu thông tin giao hàng!");
