@@ -9,7 +9,7 @@ import apiToys from "../../service/ApiToys";
 import apiCategory from "../../service/ApiCategory";
 import apiMedia from "../../service/ApiMedia";
 import apiUser from "../../service/ApiUser";
-import axios from "axios";
+
 const ToySupplierPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("info");
@@ -35,7 +35,13 @@ const ToySupplierPage = () => {
   const [videoFile, setVideoFile] = useState([]); // State lưu video
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [orders, setOrders] = useState([]); // State để lưu trữ danh sách đơn hàng
+  const [loading, setLoading] = useState(true); // State để quản lý trạng thái tải dữ liệu
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [selectedOrderDetail, setSelectedOrderDetail] = useState(null);
+  const [selectedMedia, setSelectedMedia] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -103,11 +109,18 @@ const ToySupplierPage = () => {
     if (userId) {
       console.log("Gọi LoadToy với userId:", userId);
       LoadToy(userId);
+      LoadOrderShop(userId);
     } else {
       console.warn("userId chưa được thiết lập.");
     }
   }, [userId]);
 
+  // Khi dữ liệu `selectedToy` được tải xong, bạn có thể sử dụng ảnh/video đầu tiên trong media làm mặc định
+  useEffect(() => {
+    if (selectedToy && selectedToy.media && selectedToy.media.length > 0) {
+      setSelectedMedia(selectedToy.media[0].mediaUrl); // Đặt ảnh/video đầu tiên làm mặc định
+    }
+  }, [selectedToy]);
   // Hàm load đồ chơi theo userId
   const LoadToy = async (userId) => {
     if (!userId) {
@@ -134,6 +147,109 @@ const ToySupplierPage = () => {
       console.error("Lỗi khi tải danh sách đồ chơi:", error);
     }
   };
+  const LoadOrderShop = async (userId) => {
+    if (!userId || userId <= 0) {
+      console.error("userId không hợp lệ:", userId);
+      alert("Không thể tải danh sách đơn hàng. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    const userToken = Cookies.get("userToken");
+    if (!userToken) {
+      alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    try {
+      // Lấy danh sách đơn hàng
+      const OrderResponse = await apiOrder.get(
+        `/ByShop?shopId=${userId}&pageIndex=1&pageSize=20000`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+
+      const orders = OrderResponse.data;
+      console.log("Danh sách đơn hàng:", orders);
+
+      if (!Array.isArray(orders) || orders.length === 0) {
+        alert("Không có đơn hàng nào được tìm thấy.");
+        return;
+      }
+
+      const orderIds = orders.map((order) => order.id);
+
+      const orderDetailsPromises = orderIds.map(async (orderId) => {
+        try {
+          const orderDetailsResponse = await apiOrderDetail.get(
+            `/Order/${orderId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${userToken}`,
+              },
+            }
+          );
+
+          const orderDetails = orderDetailsResponse.data;
+
+          console.log(`Chi tiết đơn hàng ${orderId}:`, orderDetails);
+
+          return {
+            orderId,
+            toyImgUrls:
+              orderDetails.length > 0 &&
+              Array.isArray(orderDetails[0]?.toyImgUrls)
+                ? orderDetails[0].toyImgUrls
+                : ["default_image_url_here"], // Giá trị mặc định
+            ...orderDetails[0],
+          };
+        } catch (error) {
+          console.error(`Lỗi khi tải chi tiết đơn hàng ${orderId}:`, error);
+          return null; // Trả về null nếu lỗi
+        }
+      });
+
+      const allOrderDetails = await Promise.all(orderDetailsPromises);
+
+      const validOrderDetails = allOrderDetails.filter(
+        (orderDetail) => orderDetail !== null
+      );
+
+      const updatedOrders = orders.map((order) => {
+        const matchingOrderDetail = validOrderDetails.find(
+          (detail) => detail.orderId === order.id
+        );
+
+        return {
+          ...order,
+          toyImgUrls: matchingOrderDetail?.toyImgUrls || [
+            "default_image_url_here",
+          ],
+        };
+      });
+
+      setOrders(updatedOrders);
+      setOrderDetails(validOrderDetails);
+      setLoading(false);
+    } catch (error) {
+      console.error(
+        "Lỗi khi tải danh sách đơn hàng hoặc chi tiết đơn hàng:",
+        error
+      );
+      setLoading(false);
+
+      if (error.response) {
+        alert(
+          `Lỗi: ${error.response.data.message || "Không thể tải dữ liệu."}`
+        );
+      } else {
+        alert("Có lỗi xảy ra. Vui lòng thử lại sau.");
+      }
+    }
+  };
+
   // Hàm load category từ API
   const loadCategories = async () => {
     try {
@@ -556,6 +672,19 @@ const ToySupplierPage = () => {
 
     // Tiếp theo, bạn có thể xử lý các tệp này như muốn, ví dụ như thêm vào FormData để gửi lên server
   };
+  const toggleOrderDetails = (orderId) => {
+    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
+  };
+  const openOrderDetail = (orderId) => {
+    const orderDetail = orderDetails.find(
+      (detail) => detail.orderId === orderId
+    );
+    setSelectedOrderDetail(orderDetail || null);
+  };
+
+  const closeOrderDetail = () => {
+    setSelectedOrderDetail(null);
+  };
 
   const renderContent = () => {
     switch (selectedTab) {
@@ -917,8 +1046,129 @@ const ToySupplierPage = () => {
         );
       case "orders":
         return (
-          <div>
-            <h3 className="text-lg font-semibold">Danh sách sản phẩm</h3>
+          <div className="container mx-auto py-4">
+            <h2 className="text-2xl font-semibold">Danh sách đơn hàng</h2>
+            {orders.map((order) => (
+              <div
+                key={order.id}
+                className="bg-white shadow-lg rounded-lg overflow-hidden mt-4"
+              >
+                <div className="flex items-center p-4 border-b">
+                  <img
+                    src={order.toyImgUrls?.[0] || "default_image_url_here"}
+                    alt={`Ảnh đồ chơi cho đơn hàng ${order.id}`}
+                    style={{ width: "100px", height: "100px", margin: "5px" }}
+                  />
+                  <div className="ml-4 flex-1">
+                    <h3 className="text-lg font-semibold">
+                      Người nhận: {order.userName}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Địa chỉ nhận: {order.receiveAddress}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Số điện thoại: {order.receiveAddress}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end ml-4">
+                    <h1 className="text-lg font-bold text-gray-600">
+                      {order.status}
+                    </h1>
+                    <p className="text-sm text-gray-500">
+                      Tổng tiền: {order.totalPrice}₫
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-between p-4">
+                  <div className="ml-auto flex gap-4">
+                    <button
+                      className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                      onClick={() => openOrderDetail(order.id)}
+                    >
+                      Xem chi tiết
+                    </button>
+                    <button className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+                      Hoàn Thành
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Modal hiển thị chi tiết đơn hàng */}
+            {selectedOrderDetail && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-lg p-6 w-3/4 max-w-lg">
+                  <h3 className="text-xl font-semibold mb-4">
+                    Chi tiết đơn hàng
+                  </h3>
+
+                  {/* Hiển thị ảnh đồ chơi */}
+                  <div className="mb-4">
+                    <img
+                      src={
+                        selectedOrderDetail.toyImgUrls[0] ||
+                        "default_image_url_here"
+                      }
+                      alt={selectedOrderDetail.toyName}
+                      className="w-full h-48 object-cover rounded-md mb-4"
+                    />
+                  </div>
+
+                  {/* Hiển thị thông tin đơn hàng */}
+                  <div className="space-y-2">
+                    <p>
+                      <strong>Mã đơn hàng:</strong>{" "}
+                      {selectedOrderDetail.orderId}
+                    </p>
+                    <p>
+                      <strong>Tên đồ chơi:</strong>{" "}
+                      {selectedOrderDetail.toyName}
+                    </p>
+                    <p>
+                      <strong>Giá thuê:</strong> {selectedOrderDetail.rentPrice}
+                      ₫
+                    </p>
+                    <p>
+                      <strong>Tiền đặt cọc:</strong>{" "}
+                      {selectedOrderDetail.deposit}₫
+                    </p>
+                    <p>
+                      <strong>Giá một đơn vị:</strong>{" "}
+                      {selectedOrderDetail.unitPrice}₫
+                    </p>
+                    <p>
+                      <strong>Số lượng:</strong> {selectedOrderDetail.quantity}
+                    </p>
+                    <p>
+                      <strong>Ngày bắt đầu:</strong>{" "}
+                      {new Date(
+                        selectedOrderDetail.startDate
+                      ).toLocaleDateString()}
+                    </p>
+                    <p>
+                      <strong>Ngày kết thúc:</strong>{" "}
+                      {new Date(
+                        selectedOrderDetail.endDate
+                      ).toLocaleDateString()}
+                    </p>
+                    <p>
+                      <strong>Tình trạng:</strong> {selectedOrderDetail.status}
+                    </p>
+                  </div>
+
+                  {/* Đóng modal */}
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                      onClick={closeOrderDetail}
+                    >
+                      Đóng
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case "products":
@@ -1337,12 +1587,68 @@ const ToySupplierPage = () => {
 
                   <div className="flex flex-wrap lg:flex-nowrap gap-10">
                     {/* Phần hình ảnh */}
-                    <div className="flex-1 flex justify-center items-center">
-                      <img
-                        src={selectedToy.media.mediaUrl}
-                        alt={selectedToy.name}
-                        className="max-w-full max-h-[500px] object-contain rounded-lg shadow-lg"
-                      />
+                    <div className="flex-1 flex justify-center items-center flex-col">
+                      {/* Hiển thị ảnh hoặc video */}
+                      <div className="w-80 h-80 mb-6">
+                        {selectedMedia &&
+                        selectedToy.media.some(
+                          (media) => media.mediaUrl === selectedMedia
+                        ) ? (
+                          selectedMedia.endsWith(".mp4?alt=media") ? (
+                            <video
+                              src={selectedMedia}
+                              controls
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          ) : (
+                            <img
+                              src={selectedMedia}
+                              alt="Media"
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          )
+                        ) : null}
+                      </div>
+
+                      {/* Ảnh/video nhỏ */}
+                      <div className="flex gap-4 flex-wrap justify-center">
+                        {" "}
+                        {/* Giữ cho các ảnh nhỏ xếp dưới ảnh lớn */}
+                        {selectedToy.media.map((media, index) => (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center"
+                          >
+                            {/* Hiển thị video nếu media là video */}
+                            {media.mediaUrl.endsWith(".mp4?alt=media") ? (
+                              <video
+                                src={media.mediaUrl}
+                                alt={`Video ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+              ${
+                selectedMedia === media.mediaUrl
+                  ? "border-orange-500 scale-105"
+                  : "border-gray-300"
+              }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn video
+                              />
+                            ) : (
+                              // Hiển thị ảnh nếu media là ảnh
+                              <img
+                                src={media.mediaUrl}
+                                alt={`Hình ảnh ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+              ${
+                selectedMedia === media.mediaUrl
+                  ? "border-orange-500 scale-105"
+                  : "border-gray-300"
+              }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn ảnh
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Phần thông tin */}
@@ -1621,9 +1927,9 @@ const ToySupplierPage = () => {
             </button>
 
             <button
-              onClick={() => setSelectedTab("order")}
+              onClick={() => setSelectedTab("orders")}
               className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
-                selectedTab === "order" ? "bg-gray-300" : ""
+                selectedTab === "orders" ? "bg-gray-300" : ""
               }`}
             >
               <span className="icon-class mr-2">👥</span> Danh sách đơn hàng
