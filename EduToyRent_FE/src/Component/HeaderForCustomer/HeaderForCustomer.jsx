@@ -27,7 +27,7 @@ const HeaderForCustomer = () => {
   const [loading, setLoading] = useState(false);
   const handleMouseEnter = () => setIsDropdownOpen(true);
   const handleMouseLeave = () => setIsDropdownOpen(false);
-
+  const [totalDeposit, setTotalDeposit] = useState(0); // Thêm state để lưu tổng tiền cọc
   const navigateTo = (url) => {
     navigate(url);
   };
@@ -214,12 +214,19 @@ const HeaderForCustomer = () => {
 
       console.log("Dữ liệu trả về từ API:", response.data);
 
+      // Kiểm tra nếu giỏ hàng trống
+      if (!response.data || response.data.length === 0) {
+        console.log("Giỏ hàng trống");
+        setRentItems([]);
+        setBuyItems([]);
+        return; // Giỏ hàng trống, có thể hiển thị thông báo cho người dùng
+      }
       // Tạo các danh sách rentItems và buyItems dựa vào quantity
       const rentItems = response.data
         .filter((item) => item.quantity === -1)
         .map((item) => ({
           ...item,
-          rentalDuration: calculateRentalDuration(item.orderTypeId), // Chuyển sang dùng orderTypeId
+          rentalDuration: calculateRentalDuration(item.orderTypeId),
         }));
       const buyItems = response.data.filter((item) => item.quantity >= 1);
 
@@ -230,8 +237,14 @@ const HeaderForCustomer = () => {
       console.log("Rental Items:", rentItems);
       console.log("Purchase Items:", buyItems);
     } catch (error) {
-      console.error("Lỗi khi tải giỏ hàng từ cơ sở dữ liệu:", error);
-      //alert("Có lỗi xảy ra khi tải giỏ hàng.");
+      // Kiểm tra lỗi 404 và xử lý giỏ hàng trống
+      // if (error.response && error.response.status === 404) {
+      //   console.log("Giỏ hàng trống với ID:", cartId);
+      //   setRentItems([]);
+      //   setBuyItems([]);
+      //   return; // Xử lý giỏ hàng trống
+      // }
+      // console.error("Lỗi khi tải giỏ hàng từ cơ sở dữ liệu:", error);
     } finally {
       setLoading(false);
     }
@@ -305,18 +318,37 @@ const HeaderForCustomer = () => {
 
   useEffect(() => {
     console.log("Rent items:", rentItems);
+
+    // Tính tổng giá thuê và tiền cọc
     const newTotalRentPrice = rentItems.reduce((total, item) => {
-      console.log("Item:", item); // Log each item to check
+      console.log("Item:", item); // Log mỗi sản phẩm để kiểm tra
+
+      // Tính giá thuê cho sản phẩm
       const rentalPrice = calculateRentalPrice(
         item.toyPrice,
         item.rentalDuration
       );
-      console.log("Rental Price for this item:", rentalPrice); // Log rental price
+      console.log("Rental Price for this item:", rentalPrice); // Log giá thuê
+
+      // Tính tiền cọc (cọc = giá thật của toy)
+      const depositPrice = item.toyPrice;
+      console.log("Deposit Price for this item:", depositPrice); // Log tiền cọc
+
+      // Cộng cả tiền thuê và tiền cọc vào tổng
       return total + rentalPrice;
     }, 0);
-    console.log("Total Rent Price:", newTotalRentPrice); // Log total rent price
-    setTotalRentPrice(newTotalRentPrice);
-  }, [rentItems]);
+
+    // Tính tổng tiền cọc cho tất cả các sản phẩm
+    const newTotalDeposit = rentItems.reduce((total, item) => {
+      return total + item.toyPrice; // Cộng tiền cọc (giá thật của toy) cho mỗi item
+    }, 0);
+
+    console.log("Total Rent Price including deposit:", newTotalRentPrice); // Log tổng giá thuê và tiền cọc
+    console.log("Total Deposit:", newTotalDeposit); // Log tổng tiền cọc
+
+    setTotalRentPrice(newTotalRentPrice); // Cập nhật state tổng giá thuê và tiền cọc
+    setTotalDeposit(newTotalDeposit); // Cập nhật state tổng tiền cọc
+  }, [rentItems]); // Hook này sẽ chạy lại mỗi khi rentItems thay đổi
   useEffect(() => {
     const newTotalBuyPrice = buyItems.reduce(
       (total, item) => total + item.price * item.quantity,
@@ -770,16 +802,21 @@ const HeaderForCustomer = () => {
                     </div>
 
                     {/* Phần tổng tiền nằm ở đáy */}
-                    <div className="border-t border-gray-200 bg-white py-4">
-                      <h4 className="text-md font-semibold">
+                    <div className="border-t border-gray-200 bg-white py-4 flex flex-col items-center justify-center">
+                      <p className="text-sm self-start ml-4">
                         Tổng tiền thuê: {totalRentPrice} VNĐ
-                      </h4>
-                      <h4 className="text-md font-semibold">
+                      </p>
+                      <p className="text-sm self-start ml-4">
+                        Tổng tiền cọc: {totalDeposit} VNĐ
+                      </p>
+                      <p className="text-sm self-start ml-4">
                         Tổng tiền mua: {totalBuyPrice} VNĐ
-                      </h4>
-                      <h4 className="text-md font-semibold">
-                        Tổng tiền: {totalRentPrice + totalBuyPrice} VNĐ
-                      </h4>
+                      </p>
+
+                      <h1 className="text-md font-semibold text-red-700">
+                        Tổng tiền:{" "}
+                        {totalRentPrice + totalBuyPrice + totalDeposit} VNĐ
+                      </h1>
                       <button
                         onClick={() => {
                           HandlePayment();

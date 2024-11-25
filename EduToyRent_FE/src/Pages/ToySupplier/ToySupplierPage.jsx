@@ -720,7 +720,7 @@ const ToySupplierPage = () => {
       receiveName: orderToUpdate.receiveName, // Cập nhật tên người nhận nếu cần
       receiveAddress: orderToUpdate.receiveAddress, // Cập nhật địa chỉ nhận nếu cần
       receivePhone: orderToUpdate.receivePhone, // Cập nhật số điện thoại nếu cần
-      status: "Hoàn Thành", // Cập nhật trạng thái đơn hàng
+      status: "Complete", // Cập nhật trạng thái đơn hàng
       userId: orderToUpdate.userId, // ID người dùng
     };
 
@@ -1120,21 +1120,21 @@ const ToySupplierPage = () => {
               </button>
               <button
                 className={`px-4 py-2 border rounded-md transition-all duration-200 ${
-                  status === "Đang Giao"
+                  status === "Delivering"
                     ? "bg-green-500 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
-                onClick={() => handleStatusChange("Đang Giao")}
+                onClick={() => handleStatusChange("Delivering")}
               >
                 Đang giao
               </button>
               <button
                 className={`px-4 py-2 border rounded-md transition-all duration-200 ${
-                  status === "Hoàn Thành"
+                  status === "Complete"
                     ? "bg-green-500 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
-                onClick={() => handleStatusChange("Hoàn Thành")}
+                onClick={() => handleStatusChange("Complete")}
               >
                 Hoàn thành
               </button>
