@@ -6,7 +6,12 @@ import Cookies from "js-cookie";
 import apiToys from "../../service/ApiToys";
 import apiMedia from "../../service/ApiMedia";
 import apiRatings from "../../service/ApiRatings";
-
+import apiCategory from "../../service/ApiCategory";
+import apiCartItem from "../../service/ApiCartItem";
+import apiUser from "../../service/ApiUser";
+import { useNavigate } from "react-router-dom";
+import apiWallets from "../../service/ApiWallets";
+import apiCart from "../../service/ApiCart";
 const ToysSaleDetails = () => {
   const starRating = 4.0; // Số sao (giả sử)
   const reviewCount = 25; // Số lượt đánh giá (giả sử)
@@ -29,12 +34,13 @@ const ToysSaleDetails = () => {
       setQuantity(newQuantity);
     }
   };
-
+  const [userData, setUserData] = useState("");
+  const [userId, setUserId] = useState(null);
   const [currentPrice, setCurrentPrice] = useState(15);
   const [prices, setPrices] = useState(0);
-
+  const [editedData, setEditedData] = useState({});
   const totalPrice = (currentPrice * quantity).toFixed(2);
-
+  const [cartId, setCartId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; // Số lượng đánh giá hiển thị trên mỗi trang
 
@@ -49,7 +55,7 @@ const ToysSaleDetails = () => {
 
   const [currentPicture, setCurrentPicture] = useState([]);
   const [currentMedia, setCurrentMedia] = useState([]);
-
+  const navigate = useNavigate();
   const handleMediaClick = (mediaUrl) => {
     setCurrentMedia(mediaUrl);
   };
@@ -75,7 +81,109 @@ const ToysSaleDetails = () => {
       console.log(response.data.media);
     });
   }, []);
+  useEffect(() => {
+    const userDataCookie = Cookies.get("userData");
+    if (userDataCookie) {
+      const parsedUserData = JSON.parse(userDataCookie);
+      setUserData(parsedUserData);
+      const email = parsedUserData.email;
 
+      const fetchUserData = async () => {
+        try {
+          const token = Cookies.get("userToken");
+          if (!token) {
+            console.error("Token không hợp lệ hoặc hết hạn.");
+            return;
+          }
+
+          // Gọi API lấy thông tin người dùng dựa trên email
+          const response = await apiUser.get(
+            `/ByEmail?email=${encodeURIComponent(
+              email
+            )}&pageIndex=1&pageSize=5`,
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+
+          console.log("Dữ liệu trả về:", response.data);
+
+          if (response.data && response.data.length > 0) {
+            const user = response.data[0]; // Lấy đối tượng người dùng đầu tiên trong mảng
+            setUserData(user);
+            setUserId(user.id);
+            setEditedData(user); // Cập nhật dữ liệu chỉnh sửa với thông tin của người dùng
+
+            // Sau khi có userId, gọi API giỏ hàng
+            fetchUserCart(user.id);
+          } else {
+            console.error("Không tìm thấy thông tin người dùng.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+        }
+      };
+
+      const fetchUserCart = async (userId) => {
+        try {
+          const response = await apiCart.get(`?pageIndex=1&pageSize=50`, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          });
+
+          console.log("Tất cả giỏ hàng:", response.data);
+
+          // Log userId để đảm bảo giá trị userId được truyền vào đúng
+          console.log("UserId cần lọc:", userId);
+
+          // Lọc giỏ hàng theo userId
+          const userCart = response.data.filter(
+            (cart) => cart.userId === userId
+          );
+
+          // Log kết quả của userCart sau khi lọc
+          console.log("Giỏ hàng sau khi lọc theo userId:", userCart);
+
+          if (userCart.length > 0) {
+            const cart = userCart[0];
+            const cartId = cart.id;
+
+            console.log("CartId được chọn:", cartId);
+
+            setCartId(cartId); // Lưu cartId vào state
+            fetchCartItems(cartId); // Gọi API lấy CartItems
+          } else {
+            console.error("Không tìm thấy giỏ hàng cho người dùng.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy giỏ hàng của người dùng:", error);
+        }
+      };
+
+      // Hàm lấy các mục trong giỏ hàng theo cartId
+      const fetchCartItems = async (cartId) => {
+        try {
+          const response = await apiCartItem.get(`/ByCartId/${cartId}`, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          });
+
+          console.log("Các mục trong giỏ hàng:", response.data);
+          // Thực hiện thêm các bước xử lý với dữ liệu CartItems (ví dụ: setCartItems(response.data))
+        } catch (error) {
+          console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
+        }
+      };
+
+      fetchUserData();
+    } else {
+      console.error("Không tìm thấy thông tin người dùng trong cookie.");
+    }
+  }, []);
   const loadReviews = async (id) => {
     try {
       const response = await apiRatings.get("/ByToyId/" + id, {
@@ -113,6 +221,59 @@ const ToysSaleDetails = () => {
         "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
     },
   ];
+  const addToPurchase = async (toy) => {
+    try {
+      if (!cartId) {
+        console.error("Không tìm thấy cartId");
+        alert("Bạn cần đăng nhập để sử dụng chức năng này.");
+        navigate("/");
+        return;
+      }
+
+      // Gọi API để kiểm tra giỏ hàng
+      const response = await apiCartItem.get(`/ByCartId/${cartId}`);
+
+      const cartItems = response.data || [];
+      console.log("cartItems trong addToPurchase", cartItems);
+      const existingItem = cartItems.find(
+        (item) => item.toyId === currentToy.id
+      );
+      console.log("existingItem trong addToPurchase", existingItem);
+      if (existingItem) {
+        // Nếu sản phẩm đã tồn tại, tăng quantity lên 1
+        const updatedQuantity = existingItem.quantity + 1;
+
+        await apiCartItem.put(`/${existingItem.id}`, {
+          ...existingItem,
+          quantity: updatedQuantity,
+        });
+
+        console.log(`Đã cập nhật số lượng sản phẩm: ${updatedQuantity}`);
+        alert("Số lượng sản phẩm đã được cập nhật!");
+      } else {
+        // Nếu sản phẩm chưa tồn tại, thêm mới
+        const purchaseData = {
+          price: currentToy.price,
+          quantity: 1, // Bắt đầu với số lượng 1
+          cartId: cartId,
+          toyId: currentToy.id,
+          toyName: currentToy.name,
+          toyPrice: currentToy.toyPrice,
+          toyImgUrls: currentToy.imageUrls,
+          status: "success",
+          orderTypeId: 7, // Sử dụng orderTypeId thay cho startDate và endDate
+        };
+
+        await apiCartItem.post("", purchaseData);
+
+        console.log("Sản phẩm đã được thêm vào danh sách mua mới.");
+        alert("Sản phẩm đã được thêm vào giỏ hàng!");
+      }
+    } catch (error) {
+      console.error("Lỗi khi thêm sản phẩm vào danh sách mua:", error);
+      alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
@@ -305,8 +466,11 @@ const ToysSaleDetails = () => {
                     {(currentToy.price * quantity || 0).toLocaleString()} VNĐ
                   </p>
 
-                  <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#1980e6] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] mt-4">
-                    <span className="truncate">Thêm vào giỏ hàng</span>
+                  <button
+                    className="bg-[red] text-white px-4 py-2  w-full rounded-md transition duration-200 hover:bg-[#507a95]"
+                    onClick={addToPurchase}
+                  >
+                    Thêm vào giỏ
                   </button>
                 </div>
               </div>

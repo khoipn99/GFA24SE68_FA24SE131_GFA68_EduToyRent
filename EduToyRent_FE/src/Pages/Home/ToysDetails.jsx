@@ -4,10 +4,23 @@ import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustom
 import { Link } from "react-router-dom";
 import Cookies from "js-cookie";
 import apiToys from "../../service/ApiToys";
-import apiMedia from "../../service/ApiMedia";
 import apiRatings from "../../service/ApiRatings";
-
+import apiCategory from "../../service/ApiCategory";
+import apiCartItem from "../../service/ApiCartItem";
+import apiUser from "../../service/ApiUser";
+import apiMedia from "../../service/ApiMedia";
+import apiWallets from "../../service/ApiWallets";
+import apiCart from "../../service/ApiCart";
+import { useNavigate } from "react-router-dom";
 const ToysDetails = () => {
+  const [userData, setUserData] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [editedData, setEditedData] = useState({});
+  const [cartId, setCartId] = useState(null);
+  const navigate = useNavigate();
+  const [rentalDuration, setRentalDuration] = useState("1 tuần");
+  const [calculatedPrice, setCalculatedPrice] = useState(0);
+  const [selectedToy, setSelectedToy] = useState(null);
   const starRating = 4.0; // Số sao (giả sử)
   const reviewCount = 25; // Số lượt đánh giá (giả sử)
   const ratings = [
@@ -20,19 +33,6 @@ const ToysDetails = () => {
 
   const [prices, setPrices] = useState(0);
   const [currentPrice, setCurrentPrice] = useState(0);
-  const [selectedDuration, setSelectedDuration] = useState("week");
-
-  const handlePriceChange = (duration) => {
-    if (duration == "week") {
-      setCurrentPrice(prices * 0.15);
-    } else if (duration == "twoWeeks") {
-      setCurrentPrice(prices * 0.25);
-    } else if (duration == "month") {
-      setCurrentPrice(prices * 0.3);
-    }
-
-    setSelectedDuration(duration);
-  };
 
   const [currentPage, setCurrentPage] = useState(1);
   const [currentToy, setCurrentToy] = useState({});
@@ -41,6 +41,12 @@ const ToysDetails = () => {
   const [currentPicture, setCurrentPicture] = useState([]);
   const [currentMedia, setCurrentMedia] = useState([]);
 
+  // Mặc định tính giá thuê 1 tuần khi mở trang
+  useEffect(() => {
+    if (currentToy) {
+      handleDurationChange("1 tuần");
+    }
+  }, [currentToy]); // Chỉ chạy khi currentToy thay đổi
   const handleMediaClick = (mediaUrl) => {
     setCurrentMedia(mediaUrl);
   };
@@ -110,7 +116,193 @@ const ToysDetails = () => {
         "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
     },
   ];
+  useEffect(() => {
+    const userDataCookie = Cookies.get("userData");
+    if (userDataCookie) {
+      const parsedUserData = JSON.parse(userDataCookie);
+      setUserData(parsedUserData);
+      const email = parsedUserData.email;
 
+      const fetchUserData = async () => {
+        try {
+          const token = Cookies.get("userToken");
+          if (!token) {
+            console.error("Token không hợp lệ hoặc hết hạn.");
+            return;
+          }
+
+          // Gọi API lấy thông tin người dùng dựa trên email
+          const response = await apiUser.get(
+            `/ByEmail?email=${encodeURIComponent(
+              email
+            )}&pageIndex=1&pageSize=5`,
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+
+          console.log("Dữ liệu trả về:", response.data);
+
+          if (response.data && response.data.length > 0) {
+            const user = response.data[0]; // Lấy đối tượng người dùng đầu tiên trong mảng
+            setUserData(user);
+            setUserId(user.id);
+            setEditedData(user); // Cập nhật dữ liệu chỉnh sửa với thông tin của người dùng
+
+            // Sau khi có userId, gọi API giỏ hàng
+            fetchUserCart(user.id);
+          } else {
+            console.error("Không tìm thấy thông tin người dùng.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+        }
+      };
+
+      const fetchUserCart = async (userId) => {
+        try {
+          const response = await apiCart.get(`?pageIndex=1&pageSize=50`, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          });
+
+          console.log("Tất cả giỏ hàng:", response.data);
+
+          // Log userId để đảm bảo giá trị userId được truyền vào đúng
+          console.log("UserId cần lọc:", userId);
+
+          // Lọc giỏ hàng theo userId
+          const userCart = response.data.filter(
+            (cart) => cart.userId === userId
+          );
+
+          // Log kết quả của userCart sau khi lọc
+          console.log("Giỏ hàng sau khi lọc theo userId:", userCart);
+
+          if (userCart.length > 0) {
+            const cart = userCart[0];
+            const cartId = cart.id;
+
+            console.log("CartId được chọn:", cartId);
+
+            setCartId(cartId); // Lưu cartId vào state
+            fetchCartItems(cartId); // Gọi API lấy CartItems
+          } else {
+            console.error("Không tìm thấy giỏ hàng cho người dùng.");
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy giỏ hàng của người dùng:", error);
+        }
+      };
+
+      // Hàm lấy các mục trong giỏ hàng theo cartId
+      const fetchCartItems = async (cartId) => {
+        try {
+          const response = await apiCartItem.get(`/ByCartId/${cartId}`, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          });
+
+          console.log("Các mục trong giỏ hàng:", response.data);
+          // Thực hiện thêm các bước xử lý với dữ liệu CartItems (ví dụ: setCartItems(response.data))
+        } catch (error) {
+          console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
+        }
+      };
+
+      fetchUserData();
+    } else {
+      console.error("Không tìm thấy thông tin người dùng trong cookie.");
+    }
+  }, []);
+  const addToCart = async () => {
+    try {
+      if (!cartId) {
+        console.error("Không tìm thấy cartId");
+        alert("Bạn cần đăng nhập để sử dụng chức năng này.");
+        navigate("/"); // Chuyển hướng người dùng về trang đăng nhập
+        return;
+      }
+
+      // Kiểm tra giá trị orderTypeId và tính giá thuê
+      const orderTypeId = rentalDuration
+        ? calculateOrderTypeId(rentalDuration)
+        : 1; // 7 là giá trị mặc định cho "Mua"
+
+      // Tính giá thuê dựa trên rentalDuration (orderTypeId)
+      let rentalPrice = 0;
+      if (rentalDuration) {
+        rentalPrice = calculateRentalPrice(currentToy.price, rentalDuration); // Tính giá thuê
+      }
+
+      const cartItemData = {
+        price: rentalPrice, // Sử dụng giá thuê
+        quantity: currentToy.buyQuantity, // Đảm bảo có số lượng mặc định nếu không có
+        status: "success",
+        cartId: cartId,
+        toyId: currentToy.id,
+        toyName: currentToy.name,
+        toyPrice: rentalPrice, // Lưu giá thuê vào database
+        toyImgUrls: currentToy.media.map((m) => m.url), // Chuyển đổi media thành danh sách URL
+        orderTypeId: orderTypeId, // Sử dụng orderTypeId thay cho startDate và endDate
+      };
+
+      console.log("Quantity before saving: " + cartItemData.quantity);
+      const response = await apiCartItem.post("", cartItemData);
+
+      console.log("Sản phẩm đã được thêm vào giỏ hàng:", response.data);
+      alert("Sản phẩm đã được thêm vào giỏ hàng!");
+    } catch (error) {
+      console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
+      alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
+    }
+  };
+  const calculateOrderTypeId = (rentalDuration) => {
+    switch (rentalDuration) {
+      case "1 tuần":
+        return 4; // orderTypeId cho 1 tuần
+      case "2 tuần":
+        return 5; // orderTypeId cho 2 tuần
+      case "1 tháng":
+        return 6; // orderTypeId cho 1 tháng
+      case "Mua":
+        return 7; // orderTypeId cho mua
+      default:
+        return 1; // Nếu không có rentalDuration, mặc định là mua
+    }
+  };
+  // Cập nhật giá khi người dùng chọn thời gian thuê
+  const handleDurationChange = (duration) => {
+    if (currentToy) {
+      setRentalDuration(duration); // Cập nhật thời gian thuê trong state
+      const price = calculateRentalPrice(currentToy.price, duration); // Tính giá thuê
+      setCalculatedPrice(price); // Cập nhật giá thuê đã tính vào state
+    }
+  };
+  const calculateRentalPrice = (price, duration) => {
+    let rentalPrice = 0;
+    switch (duration) {
+      case "1 tuần":
+        rentalPrice = price * 0.15;
+        break;
+      case "2 tuần":
+        rentalPrice = price * 0.25;
+        break;
+      case "1 tháng":
+        rentalPrice = price * 0.3;
+        break;
+      case "Mua":
+        rentalPrice = price; // 100% giá
+        break;
+      default:
+        rentalPrice = 0; // Giá trị mặc định nếu duration không hợp lệ
+    }
+    return rentalPrice;
+  };
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
       <header>
@@ -280,45 +472,48 @@ const ToysDetails = () => {
                     Giá cọc: {(currentToy.price || 0).toLocaleString()} VNĐ
                   </p>
                   <p className="text-[#0e141b] text-lg font-bold mt-2">
-                    Giá thuê: {(currentPrice || 0).toLocaleString()} VNĐ
+                    Giá thuê: {(calculatedPrice || 0).toLocaleString()} VNĐ
                   </p>
 
                   {/* Nút thời gian thuê */}
                   <div className="flex gap-4 mt-4">
                     <button
                       className={`flex-1 h-10 rounded ${
-                        selectedDuration === "week"
+                        rentalDuration === "1 tuần"
                           ? "bg-[#0e141b] text-white"
                           : "bg-[#1980e6] text-white"
                       } font-bold`}
-                      onClick={() => handlePriceChange("week")}
+                      onClick={() => handleDurationChange("1 tuần")}
                     >
                       1 Tuần
                     </button>
                     <button
                       className={`flex-1 h-10 rounded ${
-                        selectedDuration === "twoWeeks"
+                        rentalDuration === "2 tuần"
                           ? "bg-[#0e141b] text-white"
                           : "bg-[#1980e6] text-white"
                       } font-bold`}
-                      onClick={() => handlePriceChange("twoWeeks")}
+                      onClick={() => handleDurationChange("2 tuần")}
                     >
                       2 Tuần
                     </button>
                     <button
                       className={`flex-1 h-10 rounded ${
-                        selectedDuration === "month"
+                        rentalDuration === "1 tháng"
                           ? "bg-[#0e141b] text-white"
                           : "bg-[#1980e6] text-white"
                       } font-bold`}
-                      onClick={() => handlePriceChange("month")}
+                      onClick={() => handleDurationChange("1 tháng")}
                     >
                       1 Tháng
                     </button>
                   </div>
 
-                  <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#1980e6] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] mt-4">
-                    <span className="truncate">Thêm vào giỏ hàng</span>
+                  <button
+                    className="bg-[red] text-white px-4 py-2  w-full rounded-md transition duration-200 hover:bg-[#507a95]"
+                    onClick={addToCart}
+                  >
+                    Thêm vào giỏ
                   </button>
                 </div>
               </div>
