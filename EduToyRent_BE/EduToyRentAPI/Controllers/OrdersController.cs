@@ -195,12 +195,22 @@ namespace EduToyRentAPI.Controllers
             }
 
             var orders = _unitOfWork.OrderRepository.Get(
-                includeProperties: "OrderDetails.Toy.User,User", 
-                filter: o => o.UserId == userId && (string.IsNullOrEmpty(status) || o.Status == status),
-                pageIndex: pageIndex,
-                pageSize: pageSize)
-                .OrderByDescending(o => o.Id)
-                .Select(o => new OrderResponse
+            includeProperties: "OrderDetails.Toy.User,User",
+            filter: o => o.UserId == userId && (string.IsNullOrEmpty(status) || o.Status == status),
+            pageIndex: pageIndex,
+            pageSize: pageSize)
+            .OrderByDescending(o => o.Id)
+            .Select(o =>
+            {
+                var orderDetails = _unitOfWork.OrderDetailRepository.Get(
+                    filter: od => od.OrderId == o.Id,
+                    includeProperties: "Toy.User").ToList();
+
+                var firstOrderDetail = orderDetails.FirstOrDefault();
+                var toy = firstOrderDetail?.Toy;
+                var shopId = toy?.UserId ?? 0; 
+                var shopName = toy?.User?.FullName ?? string.Empty;
+                return new OrderResponse
                 {
                     Id = o.Id,
                     OrderDate = o.OrderDate,
@@ -214,10 +224,10 @@ namespace EduToyRentAPI.Controllers
                     Status = o.Status,
                     UserId = o.UserId,
                     UserName = o.User.FullName,
-                    ShopId = o.OrderDetails.FirstOrDefault().Toy.User.Id,
-                    ShopName = _unitOfWork.UserRepository.GetByID(o.OrderDetails.FirstOrDefault().Toy.UserId).FullName
-                }).ToList();
-
+                    ShopId = shopId,
+                    ShopName = shopName,
+                };
+            }).ToList();
             return Ok(new
             {
                 UserRentingName = user.FullName,
@@ -254,7 +264,7 @@ namespace EduToyRentAPI.Controllers
                 Status = order.Status,
                 UserId = order.UserId,
                 UserName = order.User.FullName,
-                ShopId = order.OrderDetails.FirstOrDefault().Toy.User.Id,
+                ShopId = order.OrderDetails.FirstOrDefault().Toy.UserId,
                 ShopName = _unitOfWork.UserRepository.GetByID(order.OrderDetails.FirstOrDefault().Toy.UserId).FullName
             }).ToList();
 
@@ -291,7 +301,7 @@ namespace EduToyRentAPI.Controllers
                 UserId = o.UserId,
                 UserName = o.User.FullName, 
                 ShopId = shopId,
-                ShopName = _unitOfWork.UserRepository.GetByID(o.OrderDetails.FirstOrDefault().Toy.UserId).FullName
+                ShopName = _unitOfWork.UserRepository.GetByID(shopId).FullName
             })
             .ToList();
 
