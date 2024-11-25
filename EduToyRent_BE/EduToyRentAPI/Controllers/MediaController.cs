@@ -73,73 +73,7 @@ namespace EduToyRentAPI.Controllers
             };
 
             return Ok(mediaResponse);
-        }
-
-        //// PUT: api/Media/5
-        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> PutMedia(int id, [FromForm] MediaRequest mediaRequest)
-        //{
-        //    var media = _unitOfWork.MediaRepository.GetByID(id);
-
-        //    if (media == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    if (mediaRequest.MediaUrl != null)
-        //    {
-        //        media.MediaUrl = await _fireBaseService.UploadImageAsync(mediaRequest.MediaUrl);
-        //    }
-
-        //    media.Status = mediaRequest.Status;
-        //    media.ToyId = mediaRequest.ToyId;
-
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!MediaExists(id))
-        //        {
-        //            return NotFound();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
-
-        //    return NoContent();
-        //}
-
-        //// POST: api/Media
-        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPost]
-        //public async Task<ActionResult<Media>> PostMedia(Media media)
-        //{
-        //    _context.Media.Add(media);
-        //    await _context.SaveChangesAsync();
-
-        //    return CreatedAtAction("GetMedia", new { id = media.Id }, media);
-        //}
-
-        //// DELETE: api/Media/5
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteMedia(int id)
-        //{
-        //    var media = await _context.Media.FindAsync(id);
-        //    if (media == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    _context.Media.Remove(media);
-        //    await _context.SaveChangesAsync();
-
-        //    return NoContent();
-        //}
+        } 
 
         //POST: api/Media/upload-toy-media/5
         [HttpPost("upload-toy-media/{toyId}")]
@@ -260,7 +194,7 @@ namespace EduToyRentAPI.Controllers
 
         [HttpPatch("update-toy-media-status/{toyId}")]
         [EnableQuery]
-        public ActionResult UpdateToyMediaStatus(int toyId, [FromBody] string newStatus)
+        public ActionResult UpdateToyMediaStatus(int toyId, string newStatus)
         {
             var toy = _unitOfWork.ToyRepository.GetByID(toyId);
 
@@ -297,7 +231,7 @@ namespace EduToyRentAPI.Controllers
 
         [HttpDelete("delete-toy-media-by-status/{toyId}")]
         [EnableQuery]
-        public async Task<IActionResult> DeleteCheckingToyMedia(int toyId, [FromBody] string status)
+        public async Task<IActionResult> DeleteCheckingToyMedia(int toyId, string status)
         {
             var toy = _unitOfWork.ToyRepository.GetByID(toyId);
 
