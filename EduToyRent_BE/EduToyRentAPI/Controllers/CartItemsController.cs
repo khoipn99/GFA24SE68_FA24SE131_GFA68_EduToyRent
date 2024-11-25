@@ -10,6 +10,7 @@ using EduToyRentRepositories.DTO.Request;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
 using Microsoft.AspNetCore.Authorization;
+using Humanizer;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -100,6 +101,29 @@ namespace EduToyRentAPI.Controllers
             {
                 return NotFound();
             }
+            var toy = _unitOfWork.ToyRepository.GetByID(cartItemRequest.ToyId);
+            if (toy == null)
+            {
+                return NotFound(new { Message = "Toy not found" });
+            }
+            if (toy.BuyQuantity > 0)
+            {
+                if (cartItemRequest.Quantity > toy.BuyQuantity)
+                {
+                    return BadRequest(new { Message = "Understocking: Quantity exceeds available stock." });
+                }
+                else if (cartItemRequest.Quantity < toy.BuyQuantity)
+                {
+                    var cart = _unitOfWork.CartRepository.GetByID(cartItemRequest.CartId);
+                    if (cart == null)
+                    {
+                        return NotFound(new { Message = "Cart not found" });
+                    }
+                    cart.TotalPrice -= cartItem.Price * cartItem.Quantity;
+                    cart.TotalPrice += cartItem.Price * cartItemRequest.Quantity;
+                    _unitOfWork.CartRepository.Update(cart);
+                }
+            }
 
             cartItem.Price = cartItemRequest.Price;
             cartItem.Quantity = cartItemRequest.Quantity;
@@ -158,9 +182,7 @@ namespace EduToyRentAPI.Controllers
             }
             else 
             {
-
-               // cartItem.Quantity = 1;
-
+                //cartItem.Quantity = 1;
                 var cart =  _unitOfWork.CartRepository.GetByID(cartItemRequest.CartId);
                 if (cart == null)
                 {
@@ -197,7 +219,26 @@ namespace EduToyRentAPI.Controllers
             {
                 return NotFound();
             }
-
+            var toy = _unitOfWork.ToyRepository.GetByID(cartItem.ToyId);
+            if (toy == null)
+            {
+                return NotFound(new { Message = "Toy not found" });
+            }
+            var cart = _unitOfWork.CartRepository.GetByID(cartItem.CartId);
+            if (cart == null)
+            {
+                return NotFound(new { Message = "Cart not found" });
+            }
+            if(toy.BuyQuantity > 0)
+            {
+                cart.TotalPrice -= cartItem.Price * cartItem.Quantity;
+                _unitOfWork.CartRepository.Update(cart);
+            }
+            else if (toy.BuyQuantity < 0)
+            {
+                cart.TotalPrice -= cartItem.Price;
+                _unitOfWork.CartRepository.Update(cart);
+            }
             _unitOfWork.CartItemRepository.Delete(cartItem);
             _unitOfWork.Save();
 
