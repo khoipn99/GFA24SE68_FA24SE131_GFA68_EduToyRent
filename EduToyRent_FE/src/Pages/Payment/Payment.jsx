@@ -266,6 +266,31 @@ const Payment = () => {
               }
             )
             .then((response) => {
+              apiWallets.put(
+                `/${customerInfo.walletId}`,
+                {
+                  balance: wallet.balance - totalDepositTmp,
+                  withdrawMethod: wallet.withdrawMethod,
+                  withdrawInfo: wallet.withdrawInfo,
+                  status: wallet.status,
+                  userId: wallet.userId,
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                }
+              );
+
+              apiWalletTransaction.post("", {
+                transactionType: "Thanh toán đơn hàng",
+                amount: -totalDepositTmp,
+                date: new new Date().toISOString(),
+                walletId: customerInfo.walletId,
+                paymentTypeId: 5,
+                orderId: response.data.id,
+              });
+
               console.log(response.data);
               rentItems.map((item, index) => {
                 var rentPriceTmp = 0;
@@ -348,6 +373,32 @@ const Payment = () => {
             )
             .then((response) => {
               console.log(response.data);
+
+              apiWallets.put(
+                `/${customerInfo.walletId}`,
+                {
+                  balance: wallet.balance - totalDepositTmp,
+                  withdrawMethod: wallet.withdrawMethod,
+                  withdrawInfo: wallet.withdrawInfo,
+                  status: wallet.status,
+                  userId: wallet.userId,
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                }
+              );
+
+              apiWalletTransaction.post("", {
+                transactionType: "Thanh toán đơn hàng",
+                amount: -totalDepositTmp,
+                date: new new Date().toISOString(),
+                walletId: customerInfo.walletId,
+                paymentTypeId: 5,
+                orderId: response.data.id,
+              });
+
               buyItems.map((item, index) => {
                 apiOrderDetail.post(
                   "",
@@ -432,22 +483,6 @@ const Payment = () => {
             totalPrice: 0,
             status: "active",
             userId: cart.userId,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("userToken")}`,
-            },
-          }
-        );
-
-        apiWallets.put(
-          `/${customerInfo.walletId}`,
-          {
-            balance: wallet.balance - cart.totalPrice,
-            withdrawMethod: wallet.withdrawMethod,
-            withdrawInfo: wallet.withdrawInfo,
-            status: wallet.status,
-            userId: wallet.userId,
           },
           {
             headers: {

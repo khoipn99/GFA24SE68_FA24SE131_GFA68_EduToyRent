@@ -8,6 +8,9 @@ import apiToys from "../../service/ApiToys";
 import apiCategory from "../../service/ApiCategory";
 import apiMedia from "../../service/ApiMedia";
 import { useNavigate } from "react-router-dom";
+import apiWallets from "../../service/ApiWallets";
+import apiWalletTransaction from "../../service/ApiWalletTransaction";
+import apiUser from "../../service/ApiUser";
 
 const InformationLessor = () => {
   const [selectedTab, setSelectedTab] = useState("orders");
@@ -119,6 +122,7 @@ const InformationLessor = () => {
 
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
+    console.log(order);
 
     apiOrderDetail.get("/Order/" + order.id).then((response) => {
       setOrderDetails(response.data);
@@ -161,9 +165,104 @@ const InformationLessor = () => {
     var tmp = order;
     tmp.status = "Complete";
 
-    apiOrderDetail.put("/" + order.id, tmp).then((response) => {
-      ViewDetails();
-    });
+    apiUser
+      .get("/" + selectedOrder.userId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        console.log(response.data);
+        const userTmp = response.data;
+        apiWallets
+          .get("/" + userTmp.walletId, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then((response2) => {
+            const walletTmp = response2.data;
+            console.log(walletTmp.id);
+            apiWallets.put(
+              "/" + walletTmp.id,
+              {
+                balance: walletTmp.balance + (order.deposit - order.rentPrice),
+                withdrawMethod: walletTmp.withdrawMethod,
+                withdrawInfo: walletTmp.withdrawInfo,
+                status: walletTmp.status,
+                userId: walletTmp.userId,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+            apiWalletTransaction.post(
+              "",
+              {
+                transactionType: "Nhận lại tiền cọc",
+                amount: order.deposit - order.rentPrice,
+                date: new Date().toISOString(),
+                walletId: walletTmp.id,
+                paymentTypeId: 5,
+                orderId: selectedOrder.id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+          });
+      });
+    apiWallets
+      .get("/" + customerInfo.walletId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response2) => {
+        const walletTmp = response2.data;
+        console.log(walletTmp.id);
+        apiWallets.put(
+          "/" + walletTmp.id,
+          {
+            balance: walletTmp.balance + order.rentPrice * 0.85,
+            withdrawMethod: walletTmp.withdrawMethod,
+            withdrawInfo: walletTmp.withdrawInfo,
+            status: walletTmp.status,
+            userId: walletTmp.userId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        );
+        apiWalletTransaction
+          .post(
+            "",
+            {
+              transactionType: "Nhận tiền từ đơn hàng",
+              amount: order.rentPrice * 0.85,
+              date: new Date().toISOString(),
+              walletId: walletTmp.id,
+              paymentTypeId: 5,
+              orderId: selectedOrder.id,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          )
+          .then((response3) => {
+            apiOrderDetail.put("/" + order.id, tmp).then((response) => {
+              ViewDetails();
+            });
+          });
+      });
   };
 
   const handleAcceptOrder = (order) => {
@@ -179,9 +278,63 @@ const InformationLessor = () => {
     var tmp = order;
     tmp.status = "Cancel";
 
+    console.log(order.userId);
+
     apiOrder.put("/" + order.id, tmp).then((response) => {
       getOrderInfo();
     });
+
+    apiUser
+      .get("/" + order.userId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        console.log(response.data);
+        const userTmp = response.data;
+        apiWallets
+          .get("/" + userTmp.walletId, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then((response2) => {
+            const walletTmp = response2.data;
+            console.log(walletTmp.id);
+            apiWallets.put(
+              "/" + walletTmp.id,
+              {
+                balance: walletTmp.balance + order.totalPrice,
+                withdrawMethod: walletTmp.withdrawMethod,
+                withdrawInfo: walletTmp.withdrawInfo,
+                status: walletTmp.status,
+                userId: walletTmp.userId,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+            apiWalletTransaction.post(
+              "",
+              {
+                transactionType: "Nhận lại tiền cọc",
+                amount: order.totalPrice,
+                date: new Date().toISOString(),
+                walletId: walletTmp.id,
+                paymentTypeId: 5,
+                orderId: order.id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+          });
+      });
   };
 
   const handleFinishDeliveryOrder = (order) => {
@@ -448,6 +601,8 @@ const InformationLessor = () => {
                         ? "Đang giao hàng"
                         : order.status == "Processing"
                         ? "Đơn hàng đang thuê"
+                        : order.status == "Cancel"
+                        ? "Đơn hàng bị hủy"
                         : "Hoàn thành"}
                     </span>
                   </div>
@@ -706,9 +861,9 @@ const InformationLessor = () => {
                 Tất cả sản phẩm
               </button>
               <button
-                onClick={() => handleProductFilterChange("rented")}
+                onClick={() => handleProductFilterChange("Renting")}
                 className={`p-2 rounded ${
-                  productFilter === "rented"
+                  productFilter === "Renting"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -726,14 +881,24 @@ const InformationLessor = () => {
                 Chờ duyệt
               </button>
               <button
-                onClick={() => handleProductFilterChange("approved")}
+                onClick={() => handleProductFilterChange("Active")}
                 className={`p-2 rounded ${
-                  productFilter === "approved"
+                  productFilter === "Active"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
               >
                 Đã duyệt
+              </button>
+              <button
+                onClick={() => handleProductFilterChange("Awaiting")}
+                className={`p-2 rounded ${
+                  productFilter === "Awaiting"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Chờ duyệt lại
               </button>
               <button
                 onClick={() => handleProductFilterChange("banned")}
@@ -755,7 +920,7 @@ const InformationLessor = () => {
                 >
                   <img
                     src={
-                      product.media && product.media[0].mediaUrl
+                      product.media[0] && product.media[0].mediaUrl
                         ? product.media[0].mediaUrl
                         : ""
                     }
@@ -765,7 +930,18 @@ const InformationLessor = () => {
                   <div className="flex-grow">
                     <h4 className="font-semibold">{product.name}</h4>
                     <p>Giá: {product.price.toLocaleString()} VNĐ</p>
-                    <p>Trạng thái: {product.status}</p>
+                    <p>
+                      Trạng thái:{" "}
+                      {product.status == "Active"
+                        ? "Đã duyệt"
+                        : product.status == "Inactive"
+                        ? "Chờ duyệt"
+                        : product.status == "Renting"
+                        ? "Đang cho thuê"
+                        : product.status == "Banned"
+                        ? "Bị cấm"
+                        : "đợi duyệt lại"}
+                    </p>
                   </div>
                   <button
                     onClick={() => openDetailModal(product)}
@@ -1036,6 +1212,11 @@ const InformationLessor = () => {
 
                             <p>
                               Giá thuê: {(item.rentPrice || 0).toLocaleString()}{" "}
+                              VNĐ
+                            </p>
+                            <p>
+                              Phí nền tảng:{" "}
+                              {(item.rentPrice * 0.15 || 0).toLocaleString()}{" "}
                               VNĐ
                             </p>
                             <p>
