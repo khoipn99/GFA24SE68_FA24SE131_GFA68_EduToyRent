@@ -14,12 +14,62 @@ using System.Text;
 using Google.Cloud.Storage.V1;
 using EduToyRentAPI.FireBaseService;
 using EduToyRentAPI.Middlewares;
+using EduToyRentAPI.KeyVaultService;
+using Microsoft.Azure.KeyVault;
+using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.Extensions.Configuration.AzureKeyVault;
+using Azure.Security.KeyVault.Secrets;
+using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("MyDB");
-builder.Services.AddDbContext<EduToyRentDBContext>(options =>
-    options.UseSqlServer(connectionString));
+if (builder.Environment.IsProduction())
+{
+    var keyVaultUrl = builder.Configuration["KeyVault:KeyVaultURL"];
+
+    var client = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
+
+    builder.Services.AddDbContext<EduToyRentDBContext>(options =>
+    {
+        var connectionString = client.GetSecret("ProdConnection").Value.Value.ToString();
+        options.UseSqlServer(connectionString);
+    });
+
+
+    //var keyVaultURL = builder.Configuration.GetSection("KeyVault:KeyVaultURL");
+
+    //var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback));
+
+    //builder.Configuration.AddAzureKeyVault(keyVaultURL.Value!.ToString(), new DefaultKeyVaultSecretManager());
+
+    //var client = new SecretClient(new Uri(keyVaultURL!.Value!.ToString()), new DefaultAzureCredential());
+
+    //var connectionString = client.GetSecret("ProdConnection").Value.Value.ToString();
+    //Console.WriteLine("Connection String: " + connectionString);
+
+    //builder.Services.AddDbContext<EduToyRentDBContext>(option =>
+    //{        
+    //    option.UseSqlServer(connectionString);
+    //});
+
+    var connectionString = builder.Configuration.GetConnectionString("MyDB");
+    builder.Services.AddDbContext<EduToyRentDBContext>(options =>
+        options.UseSqlServer(connectionString));
+
+    var jsonContent = client.GetSecret("firebase-adminsdk").Value.Value;
+    File.WriteAllText("google-credentials.json", jsonContent);
+    Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "google-credentials.json");
+}
+
+if (builder.Environment.IsDevelopment())
+{
+    var connectionString = builder.Configuration.GetConnectionString("MyDB");
+    builder.Services.AddDbContext<EduToyRentDBContext>(options =>
+        options.UseSqlServer(connectionString));
+
+    Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", builder.Configuration["FirebaseCredentials:Path"]);
+}
+
 // Add services to the container.
 builder.Services.AddSingleton<IJwtGeneratorTokenService, JwtGeneratorTokenService>();
 builder.Services.AddSingleton(opt => StorageClient.Create());
@@ -91,15 +141,13 @@ builder.Services.AddSwaggerGen(option =>
         }
     });
 });
-Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", builder.Configuration["FirebaseCredentials:Path"]);
+
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 static IEdmModel GetEdmModel()

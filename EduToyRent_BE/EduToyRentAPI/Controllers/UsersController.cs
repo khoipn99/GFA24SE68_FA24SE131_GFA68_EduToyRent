@@ -325,7 +325,7 @@ namespace EduToyRentAPI.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok();
         }
 
         private bool UserExists(int id)
