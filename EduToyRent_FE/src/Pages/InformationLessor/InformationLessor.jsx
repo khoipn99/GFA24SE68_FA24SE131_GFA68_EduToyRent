@@ -8,6 +8,9 @@ import apiToys from "../../service/ApiToys";
 import apiCategory from "../../service/ApiCategory";
 import apiMedia from "../../service/ApiMedia";
 import { useNavigate } from "react-router-dom";
+import apiWallets from "../../service/ApiWallets";
+import apiWalletTransaction from "../../service/ApiWalletTransaction";
+import apiUser from "../../service/ApiUser";
 
 const InformationLessor = () => {
   const [selectedTab, setSelectedTab] = useState("orders");
@@ -161,9 +164,104 @@ const InformationLessor = () => {
     var tmp = order;
     tmp.status = "Complete";
 
-    apiOrderDetail.put("/" + order.id, tmp).then((response) => {
-      ViewDetails();
-    });
+    apiUser
+      .get("/" + selectedOrder.userId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        console.log(response.data);
+        const userTmp = response.data;
+        apiWallets
+          .get("/" + userTmp.walletId, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then((response2) => {
+            const walletTmp = response2.data;
+            console.log(walletTmp.id);
+            apiWallets.put(
+              "/" + walletTmp.id,
+              {
+                balance: walletTmp.balance + (order.deposit - order.rentPrice),
+                withdrawMethod: walletTmp.withdrawMethod,
+                withdrawInfo: walletTmp.withdrawInfo,
+                status: walletTmp.status,
+                userId: walletTmp.userId,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+            apiWalletTransaction.post(
+              "",
+              {
+                transactionType: "Nhận lại tiền cọc",
+                amount: order.deposit - order.rentPrice,
+                date: new Date().toISOString(),
+                walletId: walletTmp.id,
+                paymentTypeId: 5,
+                orderId: selectedOrder.id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+          });
+      });
+    apiWallets
+      .get("/" + customerInfo.walletId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response2) => {
+        const walletTmp = response2.data;
+        console.log(walletTmp.id);
+        apiWallets.put(
+          "/" + walletTmp.id,
+          {
+            balance: walletTmp.balance + order.rentPrice * 0.85,
+            withdrawMethod: walletTmp.withdrawMethod,
+            withdrawInfo: walletTmp.withdrawInfo,
+            status: walletTmp.status,
+            userId: walletTmp.userId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        );
+        apiWalletTransaction
+          .post(
+            "",
+            {
+              transactionType: "Nhận tiền từ đơn hàng",
+              amount: order.rentPrice * 0.85,
+              date: new Date().toISOString(),
+              walletId: walletTmp.id,
+              paymentTypeId: 5,
+              orderId: selectedOrder.id,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          )
+          .then((response3) => {
+            apiOrderDetail.put("/" + order.id, tmp).then((response) => {
+              ViewDetails();
+            });
+          });
+      });
   };
 
   const handleAcceptOrder = (order) => {
@@ -179,9 +277,63 @@ const InformationLessor = () => {
     var tmp = order;
     tmp.status = "Cancel";
 
+    console.log(order.userId);
+
     apiOrder.put("/" + order.id, tmp).then((response) => {
       getOrderInfo();
     });
+
+    apiUser
+      .get("/" + order.userId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        console.log(response.data);
+        const userTmp = response.data;
+        apiWallets
+          .get("/" + userTmp.walletId, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then((response2) => {
+            const walletTmp = response2.data;
+            console.log(walletTmp.id);
+            apiWallets.put(
+              "/" + walletTmp.id,
+              {
+                balance: walletTmp.balance + order.totalPrice,
+                withdrawMethod: walletTmp.withdrawMethod,
+                withdrawInfo: walletTmp.withdrawInfo,
+                status: walletTmp.status,
+                userId: walletTmp.userId,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+            apiWalletTransaction.post(
+              "",
+              {
+                transactionType: "Nhận lại tiền cọc",
+                amount: order.totalPrice,
+                date: new Date().toISOString(),
+                walletId: walletTmp.id,
+                paymentTypeId: 5,
+                orderId: order.id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+          });
+      });
   };
 
   const handleFinishDeliveryOrder = (order) => {
