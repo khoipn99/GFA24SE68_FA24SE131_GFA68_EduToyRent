@@ -232,6 +232,7 @@ const Payment = () => {
               totalRentPriceTmp += item.price * 0.3;
             }
           });
+          console.log(totalRentPriceTmp);
 
           var totalDepositTmp = 0;
           rentItems.map((item, index) => {
@@ -285,7 +286,7 @@ const Payment = () => {
               apiWalletTransaction.post("", {
                 transactionType: "Thanh toán đơn hàng",
                 amount: -totalDepositTmp,
-                date: new new Date().toISOString(),
+                date: new Date().toISOString(),
                 walletId: customerInfo.walletId,
                 paymentTypeId: 5,
                 orderId: response.data.id,
@@ -339,11 +340,11 @@ const Payment = () => {
         if (buyItems != "") {
           console.log(buyItems);
 
-          var totalDepositTmp = 0;
+          var totalDepositTmp2 = 0;
           buyItems.map((item, index) => {
-            totalDepositTmp += item.price * item.quantity;
+            totalDepositTmp2 += item.price * item.quantity;
           });
-          console.log(totalDepositTmp);
+          console.log(totalDepositTmp2);
           console.log(shippingInfo.fullName);
           console.log(
             shippingInfo.detail + "," + war + "," + distric + "," + city
@@ -355,7 +356,7 @@ const Payment = () => {
               {
                 orderDate: new Date().toISOString(),
                 receiveDate: null,
-                totalPrice: totalDepositTmp,
+                totalPrice: totalDepositTmp2,
                 rentPrice: 0,
                 depositeBackMoney: 0,
                 receiveName: shippingInfo.fullName,
@@ -374,29 +375,31 @@ const Payment = () => {
             .then((response) => {
               console.log(response.data);
 
-              apiWallets.put(
-                `/${customerInfo.walletId}`,
-                {
-                  balance: wallet.balance - totalDepositTmp,
-                  withdrawMethod: wallet.withdrawMethod,
-                  withdrawInfo: wallet.withdrawInfo,
-                  status: wallet.status,
-                  userId: wallet.userId,
-                },
-                {
-                  headers: {
-                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+              apiWallets.get("/" + customerInfo.walletId).then((response2) => {
+                apiWallets.put(
+                  `/${customerInfo.walletId}`,
+                  {
+                    balance: response2.data.balance - totalDepositTmp2,
+                    withdrawMethod: response2.data.withdrawMethod,
+                    withdrawInfo: response2.data.withdrawInfo,
+                    status: response2.data.status,
+                    userId: response2.data.userId,
                   },
-                }
-              );
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                );
 
-              apiWalletTransaction.post("", {
-                transactionType: "Thanh toán đơn hàng",
-                amount: -totalDepositTmp,
-                date: new new Date().toISOString(),
-                walletId: customerInfo.walletId,
-                paymentTypeId: 5,
-                orderId: response.data.id,
+                apiWalletTransaction.post("", {
+                  transactionType: "Thanh toán đơn hàng",
+                  amount: -totalDepositTmp2,
+                  date: new Date().toISOString(),
+                  walletId: customerInfo.walletId,
+                  paymentTypeId: 5,
+                  orderId: response.data.id,
+                });
               });
 
               buyItems.map((item, index) => {
@@ -451,45 +454,51 @@ const Payment = () => {
                         }
                       )
                       .then((response) => {
-                        apiToys.patch(
-                          `/${item.toyId}/update-status`,
-                          JSON.stringify("Active"),
-                          {
-                            headers: {
-                              "Content-Type": "application/json", // Specify the correct Content-Type
-                              Authorization: `Bearer ${Cookies.get(
-                                "userToken"
-                              )}`,
-                            },
-                          }
-                        );
+                        apiToys
+                          .patch(
+                            `/${item.toyId}/update-status`,
+                            JSON.stringify("Active"),
+                            {
+                              headers: {
+                                "Content-Type": "application/json", // Specify the correct Content-Type
+                                Authorization: `Bearer ${Cookies.get(
+                                  "userToken"
+                                )}`,
+                              },
+                            }
+                          )
+                          .then((response) => {
+                            cartItems.map((item) => {
+                              apiCartItem.delete("/" + item.id, {
+                                headers: {
+                                  Authorization: `Bearer ${Cookies.get(
+                                    "userToken"
+                                  )}`,
+                                },
+                              });
+                            });
+
+                            apiCart.put(
+                              `/${cart.id}`,
+                              {
+                                totalPrice: 0,
+                                status: "active",
+                                userId: cart.userId,
+                              },
+                              {
+                                headers: {
+                                  Authorization: `Bearer ${Cookies.get(
+                                    "userToken"
+                                  )}`,
+                                },
+                              }
+                            );
+                          });
                       });
                   });
               });
             });
         }
-
-        cartItems.map((item) => {
-          apiCartItem.delete("/" + item.id, {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("userToken")}`,
-            },
-          });
-        });
-
-        apiCart.put(
-          `/${cart.id}`,
-          {
-            totalPrice: 0,
-            status: "active",
-            userId: cart.userId,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("userToken")}`,
-            },
-          }
-        );
 
         navigate("/payments-success");
       } else {
