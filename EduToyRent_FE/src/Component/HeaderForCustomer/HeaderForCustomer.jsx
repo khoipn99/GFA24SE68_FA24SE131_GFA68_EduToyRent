@@ -814,8 +814,7 @@ const HeaderForCustomer = () => {
                       </p>
 
                       <h1 className="text-md font-semibold text-red-700">
-                        Tổng tiền:{" "}
-                        {totalRentPrice + totalBuyPrice + totalDeposit} VNĐ
+                        Tổng tiền: {totalRentPrice + totalBuyPrice} VNĐ
                       </h1>
                       <button
                         onClick={() => {

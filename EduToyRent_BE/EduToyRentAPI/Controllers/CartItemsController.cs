@@ -189,7 +189,7 @@ namespace EduToyRentAPI.Controllers
                     return NotFound(new { Message = "Cart not found" });
                 }
 
-                cart.TotalPrice += cartItem.Price * cartItem.Quantity;
+                cart.TotalPrice += cartItem.Price ;
                 _unitOfWork.CartRepository.Update(cart);
             }
 

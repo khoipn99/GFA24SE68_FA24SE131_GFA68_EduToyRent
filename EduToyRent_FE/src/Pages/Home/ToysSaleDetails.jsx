@@ -222,56 +222,56 @@ const ToysSaleDetails = () => {
     },
   ];
   const addToPurchase = async (toy) => {
+    if (!cartId) {
+      console.error("Không tìm thấy cartId");
+      alert("Bạn cần đăng nhập để sử dụng chức năng này.");
+
+      return;
+    }
+
     try {
-      if (!cartId) {
-        console.error("Không tìm thấy cartId");
-        alert("Bạn cần đăng nhập để sử dụng chức năng này.");
-
-        return;
-      }
-
+      var existingItem;
       // Gọi API để kiểm tra giỏ hàng
       const response = await apiCartItem.get(`/ByCartId/${cartId}`);
 
       const cartItems = response.data || [];
       console.log("cartItems trong addToPurchase", cartItems);
-      const existingItem = cartItems.find(
-        (item) => item.toyId === currentToy.id
-      );
-      console.log("existingItem trong addToPurchase", existingItem);
-      if (existingItem) {
-        // Nếu sản phẩm đã tồn tại, tăng quantity lên 1
-        const updatedQuantity = existingItem.quantity + 1;
-
-        await apiCartItem.put(`/${existingItem.id}`, {
-          ...existingItem,
-          quantity: updatedQuantity,
-        });
-
-        console.log(`Đã cập nhật số lượng sản phẩm: ${updatedQuantity}`);
-        alert("Số lượng sản phẩm đã được cập nhật!");
-      } else {
-        // Nếu sản phẩm chưa tồn tại, thêm mới
-        const purchaseData = {
-          price: currentToy.price,
-          quantity: 1, // Bắt đầu với số lượng 1
-          cartId: cartId,
-          toyId: currentToy.id,
-          toyName: currentToy.name,
-          toyPrice: currentToy.toyPrice,
-          toyImgUrls: currentToy.imageUrls,
-          status: "success",
-          orderTypeId: 7, // Sử dụng orderTypeId thay cho startDate và endDate
-        };
-
-        await apiCartItem.post("", purchaseData);
-
-        console.log("Sản phẩm đã được thêm vào danh sách mua mới.");
-        alert("Sản phẩm đã được thêm vào giỏ hàng!");
-      }
+      existingItem = cartItems.find((item) => item.toyId === currentToy.id);
     } catch (error) {
       console.error("Lỗi khi thêm sản phẩm vào danh sách mua:", error);
-      alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
+      //alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
+    }
+
+    console.log("existingItem trong addToPurchase", existingItem);
+    if (existingItem) {
+      // Nếu sản phẩm đã tồn tại, tăng quantity lên 1
+      const updatedQuantity = existingItem.quantity + 1;
+
+      await apiCartItem.put(`/${existingItem.id}`, {
+        ...existingItem,
+        quantity: updatedQuantity,
+      });
+
+      console.log(`Đã cập nhật số lượng sản phẩm: ${updatedQuantity}`);
+      alert("Số lượng sản phẩm đã được cập nhật!");
+    } else {
+      // Nếu sản phẩm chưa tồn tại, thêm mới
+      const purchaseData = {
+        price: currentToy.price,
+        quantity: 1, // Bắt đầu với số lượng 1
+        cartId: cartId,
+        toyId: currentToy.id,
+        toyName: currentToy.name,
+        toyPrice: currentToy.toyPrice,
+        toyImgUrls: currentToy.imageUrls,
+        status: "success",
+        orderTypeId: 7, // Sử dụng orderTypeId thay cho startDate và endDate
+      };
+
+      await apiCartItem.post("", purchaseData);
+
+      console.log("Sản phẩm đã được thêm vào danh sách mua mới.");
+      alert("Sản phẩm đã được thêm vào giỏ hàng!");
     }
   };
 

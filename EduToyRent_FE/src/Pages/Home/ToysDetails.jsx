@@ -220,45 +220,60 @@ const ToysDetails = () => {
     }
   }, []);
   const addToCart = async () => {
-    try {
-      if (!cartId) {
-        console.error("Không tìm thấy cartId");
-        alert("Bạn cần đăng nhập để sử dụng chức năng này.");
+    if (!cartId) {
+      console.error("Không tìm thấy cartId");
+      alert("Bạn cần đăng nhập để sử dụng chức năng này.");
 
-        return;
+      return;
+    }
+    if (currentToy.owner.id !== userId) {
+      var existingItem;
+      try {
+        const response = await apiCartItem.get(`/ByCartId/${cartId}`);
+        const cartItems = response.data || [];
+
+        // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
+        existingItem = cartItems.find((item) => item.toyId == currentToy.id);
+      } catch (error) {
+        console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
+        //alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
       }
+      if (existingItem) {
+        // Nếu sản phẩm đã có trong giỏ hàng, thông báo cho người dùng
+        alert("Sản phẩm đã có trong giỏ hàng!");
+        console.log("Sản phẩm đã có trong giỏ hàng.");
+      } else {
+        // Kiểm tra giá trị orderTypeId và tính giá thuê
+        const orderTypeId = rentalDuration
+          ? calculateOrderTypeId(rentalDuration)
+          : 1; // 7 là giá trị mặc định cho "Mua"
 
-      // Kiểm tra giá trị orderTypeId và tính giá thuê
-      const orderTypeId = rentalDuration
-        ? calculateOrderTypeId(rentalDuration)
-        : 1; // 7 là giá trị mặc định cho "Mua"
+        // Tính giá thuê dựa trên rentalDuration (orderTypeId)
+        let rentalPrice = 0;
+        if (rentalDuration) {
+          rentalPrice = calculateRentalPrice(currentToy.price, rentalDuration); // Tính giá thuê
+        }
 
-      // Tính giá thuê dựa trên rentalDuration (orderTypeId)
-      let rentalPrice = 0;
-      if (rentalDuration) {
-        rentalPrice = calculateRentalPrice(currentToy.price, rentalDuration); // Tính giá thuê
+        const cartItemData = {
+          price: currentToy.price, // Sử dụng giá thuê
+          quantity: currentToy.buyQuantity, // Đảm bảo có số lượng mặc định nếu không có
+          status: "success",
+          cartId: cartId,
+          toyId: currentToy.id,
+          toyName: currentToy.name,
+          toyPrice: currentToy.price, // Lưu giá thuê vào database
+          toyImgUrls: currentToy.media.map((m) => m.url), // Chuyển đổi media thành danh sách URL
+          orderTypeId: orderTypeId, // Sử dụng orderTypeId thay cho startDate và endDate
+        };
+
+        console.log("Quantity before saving: " + cartItemData.quantity);
+        const response = await apiCartItem.post("", cartItemData);
+
+        console.log("Sản phẩm đã được thêm vào giỏ hàng:", response.data);
+        alert("Sản phẩm đã được thêm vào giỏ hàng!");
       }
-
-      const cartItemData = {
-        price: rentalPrice, // Sử dụng giá thuê
-        quantity: currentToy.buyQuantity, // Đảm bảo có số lượng mặc định nếu không có
-        status: "success",
-        cartId: cartId,
-        toyId: currentToy.id,
-        toyName: currentToy.name,
-        toyPrice: rentalPrice, // Lưu giá thuê vào database
-        toyImgUrls: currentToy.media.map((m) => m.url), // Chuyển đổi media thành danh sách URL
-        orderTypeId: orderTypeId, // Sử dụng orderTypeId thay cho startDate và endDate
-      };
-
-      console.log("Quantity before saving: " + cartItemData.quantity);
-      const response = await apiCartItem.post("", cartItemData);
-
-      console.log("Sản phẩm đã được thêm vào giỏ hàng:", response.data);
-      alert("Sản phẩm đã được thêm vào giỏ hàng!");
-    } catch (error) {
-      console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
-      alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
+    } else {
+      alert("Bạn không thể thuê đồ chơi của chính mình");
     }
   };
   const calculateOrderTypeId = (rentalDuration) => {
