@@ -59,9 +59,7 @@ const HeaderForToySupplier = () => {
           );
 
           console.log("Dữ liệu trả về:", response.data);
-          Cookies.set("userDataReal", JSON.stringify(response.data), {
-            expires: 7,
-          });
+
           if (response.data && response.data.length > 0) {
             const user = response.data[0];
             setUserData(user);
@@ -116,8 +114,8 @@ const HeaderForToySupplier = () => {
 
     // Xóa cookie userData
     Cookies.remove("userData", { path: "/" });
-    Cookies.remove("userToken");
-    Cookies.remove("userDataReal");
+    Cookies.remove("userToken", { path: "/" });
+    Cookies.remove("userDataReal", { path: "/" });
 
     // Log cookie sau khi xóa
     console.log("Sau khi xóa:", Cookies.get("userData")); // Kết quả nên là undefined nếu cookie đã bị xóa

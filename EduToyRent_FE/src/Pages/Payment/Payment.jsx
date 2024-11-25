@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Outlet } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import Sidebar from "../../Component/Sidebar/Sidebar";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
@@ -28,23 +28,24 @@ const Payment = () => {
   const [cities, setCities] = useState([]); // Thành phố
   const [districts, setDistricts] = useState([]); // Quận/Huyện
   const [wards, setWards] = useState([]); // Phường/Xã
-  const [cartId, setCartId] = useState("");
+  const [cart, setCart] = useState({});
   const [customerInfo, setCustomerInfo] = useState({});
   const [rentItems, setRentItems] = useState([]);
   const [buyItems, setBuyItems] = useState([]);
   const [voucher, setVoucher] = useState("");
   const [discount, setDiscount] = useState(0);
   const [wallet, setWallet] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     const userDataCookie = Cookies.get("userDataReal");
     if (userDataCookie) {
       const parsedUserData = JSON.parse(userDataCookie);
-      setCustomerInfo(parsedUserData[0]);
-      console.log(parsedUserData[0]);
-      fetchUserCart(parsedUserData[0].id);
+      setCustomerInfo(parsedUserData);
+      console.log(parsedUserData);
+      fetchUserCart(parsedUserData.id);
 
-      apiWallets.get("/" + parsedUserData[0].walletId).then((response) => {
+      apiWallets.get("/" + parsedUserData.walletId).then((response) => {
         setWallet(response.data);
       });
     }
@@ -66,13 +67,14 @@ const Payment = () => {
       console.log("Tất cả giỏ hàng:", response.data);
 
       // Lọc giỏ hàng theo userId
-      const userCart = response.data.filter((cart) => cart.userId === userId);
+      const userCart = response.data.filter((cart) => cart.userId == userId);
 
       if (userCart.length > 0) {
         const cart = userCart[0];
         const cartId = cart.id;
+        console.log(cart);
 
-        setCartId(cartId); // Lưu cartId vào state
+        setCart(cart); // Lưu cartId vào state
         fetchCartItems(cartId); // Gọi API lấy CartItems
       } else {
         console.error("Không tìm thấy giỏ hàng cho người dùng.");
@@ -110,6 +112,7 @@ const Payment = () => {
           // Lưu vào state
           setRentItems(rentItems);
           setBuyItems(buyItems);
+          console.log(buyItems);
         });
 
       console.log("Các mục trong giỏ hàng:", response.data);
@@ -241,19 +244,27 @@ const Payment = () => {
           );
 
           apiOrder
-            .post("", {
-              orderDate: new Date().toISOString(),
-              receiveDate: null,
-              totalPrice: totalDepositTmp,
-              rentPrice: totalRentPriceTmp,
-              depositeBackMoney: 0,
-              receiveName: shippingInfo.fullName,
-              receiveAddress:
-                shippingInfo.detail + "," + war + "," + distric + "," + city,
-              receivePhone: shippingInfo.phoneNumber,
-              status: "Pending",
-              userId: customerInfo.id,
-            })
+            .post(
+              "",
+              {
+                orderDate: new Date().toISOString(),
+                receiveDate: null,
+                totalPrice: totalDepositTmp,
+                rentPrice: totalRentPriceTmp,
+                depositeBackMoney: 0,
+                receiveName: shippingInfo.fullName,
+                receiveAddress:
+                  shippingInfo.detail + "," + war + "," + distric + "," + city,
+                receivePhone: shippingInfo.phoneNumber,
+                status: "Pending",
+                userId: customerInfo.id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
             .then((response) => {
               console.log(response.data);
               rentItems.map((item, index) => {
@@ -265,21 +276,38 @@ const Payment = () => {
                 } else if (item.orderTypeId == 6) {
                   rentPriceTmp = item.price * 0.3;
                 }
-                apiOrderDetail.post("", {
-                  rentPrice: rentPriceTmp,
-                  deposit: item.price,
-                  unitPrice: item.price,
-                  quantity: -1,
-                  startDate: null,
-                  endDate: null,
-                  status: "Await",
-                  orderId: response.data.id,
-                  toyId: item.toyId,
-                  orderTypeId: item.orderTypeId,
-                  ratingId: null,
-                });
+                apiOrderDetail.post(
+                  "",
+                  {
+                    rentPrice: rentPriceTmp,
+                    deposit: item.price,
+                    unitPrice: item.price,
+                    quantity: -1,
+                    startDate: null,
+                    endDate: null,
+                    status: "Await",
+                    orderId: response.data.id,
+                    toyId: item.toyId,
+                    orderTypeId: item.orderTypeId,
+                    ratingId: null,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                );
 
-                apiToys.patch("/" + item.id + "/update-status", "Renting");
+                apiToys.patch(
+                  `/${item.toyId}/update-status`,
+                  JSON.stringify("Renting"), // Adjust the key as per API requirements
+                  {
+                    headers: {
+                      "Content-Type": "application/json", // Specify the correct Content-Type
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                );
               });
             });
         }
@@ -297,38 +325,138 @@ const Payment = () => {
           );
 
           apiOrder
-            .post("", {
-              orderDate: new Date().toISOString(),
-              receiveDate: null,
-              totalPrice: totalDepositTmp,
-              rentPrice: 0,
-              depositeBackMoney: 0,
-              receiveName: shippingInfo.fullName,
-              receiveAddress:
-                shippingInfo.detail + "," + war + "," + distric + "," + city,
-              receivePhone: shippingInfo.phoneNumber,
-              status: "Delivering",
-              userId: customerInfo.id,
-            })
+            .post(
+              "",
+              {
+                orderDate: new Date().toISOString(),
+                receiveDate: null,
+                totalPrice: totalDepositTmp,
+                rentPrice: 0,
+                depositeBackMoney: 0,
+                receiveName: shippingInfo.fullName,
+                receiveAddress:
+                  shippingInfo.detail + "," + war + "," + distric + "," + city,
+                receivePhone: shippingInfo.phoneNumber,
+                status: "Delivering",
+                userId: customerInfo.id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
             .then((response) => {
               console.log(response.data);
               buyItems.map((item, index) => {
-                apiOrderDetail.post("", {
-                  rentPrice: 0,
-                  deposit: item.price,
-                  unitPrice: item.price,
-                  quantity: item.quantity,
-                  startDate: null,
-                  endDate: null,
-                  status: "Await",
-                  orderId: response.data.id,
-                  toyId: item.toyId,
-                  orderTypeId: item.orderTypeId,
-                  ratingId: null,
-                });
+                apiOrderDetail.post(
+                  "",
+                  {
+                    rentPrice: 0,
+                    deposit: 0,
+                    unitPrice: item.price,
+                    quantity: item.quantity,
+                    startDate: null,
+                    endDate: null,
+                    status: "Delivering",
+                    orderId: response.data.id,
+                    toyId: item.toyId,
+                    orderTypeId: item.orderTypeId,
+                    ratingId: null,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                );
+                apiToys
+                  .get("/" + item.toyId, {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  })
+                  .then((response) => {
+                    apiToys
+                      .put(
+                        "/" + item.toyId,
+                        {
+                          name: response.data.name,
+                          description: response.data.description,
+                          price: response.data.price,
+                          buyQuantity:
+                            response.data.buyQuantity - item.quantity,
+                          origin: response.data.origin,
+                          age: response.data.age,
+                          brand: response.data.brand,
+                          categoryId: response.data.category.id,
+                          rentCount: response.data.rentCount,
+                          rentTime: response.data.rentTime,
+                        },
+                        {
+                          headers: {
+                            Authorization: `Bearer ${Cookies.get("userToken")}`,
+                          },
+                        }
+                      )
+                      .then((response) => {
+                        apiToys.patch(
+                          `/${item.toyId}/update-status`,
+                          JSON.stringify("Active"),
+                          {
+                            headers: {
+                              "Content-Type": "application/json", // Specify the correct Content-Type
+                              Authorization: `Bearer ${Cookies.get(
+                                "userToken"
+                              )}`,
+                            },
+                          }
+                        );
+                      });
+                  });
               });
             });
         }
+
+        cartItems.map((item) => {
+          apiCartItem.delete("/" + item.id, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          });
+        });
+
+        apiCart.put(
+          `/${cart.id}`,
+          {
+            totalPrice: 0,
+            status: "active",
+            userId: cart.userId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        );
+
+        apiWallets.put(
+          `/${customerInfo.walletId}`,
+          {
+            balance: wallet.balance - cart.totalPrice,
+            withdrawMethod: wallet.withdrawMethod,
+            withdrawInfo: wallet.withdrawInfo,
+            status: wallet.status,
+            userId: wallet.userId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        );
+
+        navigate("/payments-success");
       } else {
         alert("Bạn nhập thiếu thông tin giao hàng!");
       }
@@ -452,7 +580,7 @@ const Payment = () => {
                 >
                   <div className="col-span-2 flex items-center gap-4">
                     <img
-                      src={item.toyImgUrls}
+                      src={item.toyImgUrls[0]}
                       alt={item.toyName}
                       className="w-16 h-16 object-cover"
                     />
@@ -503,7 +631,7 @@ const Payment = () => {
                   {/* Sản phẩm */}
                   <div className="col-span-2 flex items-center gap-4">
                     <img
-                      src={item.toyImgUrls}
+                      src={item.toyImgUrls[0]}
                       alt={item.toyName}
                       className="w-16 h-16 object-cover"
                     />

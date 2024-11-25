@@ -21,8 +21,13 @@ const ToysSaleDetails = () => {
   const [quantity, setQuantity] = useState(1); // Số lượng sản phẩm
 
   const handleQuantityChange = (event) => {
-    const newQuantity = Math.max(1, Number(event.target.value)); // Đảm bảo số lượng tối thiểu là 1
-    setQuantity(newQuantity);
+    //console.log(event.target.value);
+
+    if (event.target.value <= currentToy.buyQuantity) {
+      const newQuantity = Math.max(1, Number(event.target.value)); // Đảm bảo số lượng tối thiểu là 1
+
+      setQuantity(newQuantity);
+    }
   };
 
   const [currentPrice, setCurrentPrice] = useState(15);
@@ -287,7 +292,7 @@ const ToysSaleDetails = () => {
                       min="1"
                     />
                     <span className="ml-2 text-[#0e141b] text-sm">
-                      20 đồ chơi có sẵn
+                      {currentToy.buyQuantity} đồ chơi có sẵn
                     </span>
                   </div>
                   <p className="text-[#0e141b] text-lg font-bold mt-2">

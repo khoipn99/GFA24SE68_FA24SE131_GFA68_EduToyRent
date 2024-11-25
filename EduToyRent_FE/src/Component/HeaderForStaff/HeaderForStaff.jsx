@@ -84,8 +84,8 @@ const HeaderForStaff = () => {
 
     // Xóa cookie userData
     Cookies.remove("userData", { path: "/" });
-    Cookies.remove("userToken");
-    Cookies.remove("userDataReal");
+    Cookies.remove("userToken", { path: "/" });
+    Cookies.remove("userDataReal", { path: "/" });
     // Log cookie sau khi xóa
     console.log("Sau khi xóa:", Cookies.get("userData")); // Kết quả nên là undefined nếu cookie đã bị xóa
 

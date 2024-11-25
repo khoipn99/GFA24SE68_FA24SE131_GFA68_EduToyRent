@@ -53,7 +53,7 @@ const LoginPage = () => {
           });
 
           console.log("Dữ liệu trả về:", response.data);
-          Cookies.set("userDataReal", JSON.stringify(response.data[0]), {
+          Cookies.set("userDataReal", JSON.stringify(response.data), {
             expires: 7,
           });
         } catch (error) {

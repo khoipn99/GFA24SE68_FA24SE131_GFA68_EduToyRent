@@ -40,7 +40,9 @@ const HeaderForCustomer = () => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
       const parsedUserData = JSON.parse(userDataCookie);
-      setUserData(parsedUserData);
+      console.log(parsedUserData);
+
+      //setUserData(parsedUserData);
       const email = parsedUserData.email;
 
       const fetchUserData = async () => {
@@ -64,13 +66,13 @@ const HeaderForCustomer = () => {
           );
 
           console.log("Dữ liệu trả về:", response.data);
-          Cookies.set("userDataReal", JSON.stringify(response.data), {
-            expires: 7,
-          });
+
           console.log("Dữ liệu trả về đã lưu:", response.data);
           if (response.data && response.data.length > 0) {
             const user = response.data[0];
             setUserData(user);
+            console.log(user);
+
             setUserId(user.id);
             setEditedData(user);
 
@@ -177,8 +179,8 @@ const HeaderForCustomer = () => {
 
     // Xóa cookie userData
     Cookies.remove("userData", { path: "/" });
-    Cookies.remove("userToken");
-    Cookies.remove("userDataReal");
+    Cookies.remove("userToken", { path: "/" });
+    Cookies.remove("userDataReal", { path: "/" });
 
     // Log cookie sau khi xóa
     console.log("Sau khi xóa:", Cookies.get("userData")); // Kết quả nên là undefined nếu cookie đã bị xóa
@@ -427,7 +429,7 @@ const HeaderForCustomer = () => {
 
       if (updateResponse.status === 204) {
         console.log(`OrderTypeId đã được cập nhật: ${newOrderTypeId}`);
-        alert("Thời gian thuê đã được cập nhật!");
+        //alert("Thời gian thuê đã được cập nhật!");
         loadCartFromDatabase();
       } else {
         console.error("Lỗi khi cập nhật orderTypeId", updateResponse);
@@ -447,7 +449,7 @@ const HeaderForCustomer = () => {
   };
 
   const HandlePayment = () => {
-    if (rentItems || buyItems) {
+    if (rentItems != "" || buyItems != "") {
       navigate("/payment");
     } else {
       alert("Bạn chưa chọn sản phẩm nào.");
@@ -602,7 +604,7 @@ const HeaderForCustomer = () => {
                               className="flex items-center mb-4 relative"
                             >
                               <img
-                                src={item.toyImgUrls}
+                                src={item.toyImgUrls[0]}
                                 alt={item.toyName}
                                 className="w-20 h-20 object-cover mr-4"
                               />
@@ -701,7 +703,7 @@ const HeaderForCustomer = () => {
                               className="flex items-center mb-4 relative"
                             >
                               <img
-                                src={item.toyImgUrls}
+                                src={item.toyImgUrls[0]}
                                 alt={item.toyName}
                                 className="w-20 h-20 object-cover mr-4"
                               />
