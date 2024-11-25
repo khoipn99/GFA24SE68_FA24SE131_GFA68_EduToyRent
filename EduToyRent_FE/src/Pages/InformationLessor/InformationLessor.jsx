@@ -36,9 +36,16 @@ const InformationLessor = () => {
   const getUserInfo = () => {
     const userDataCookie = Cookies.get("userDataReal");
     if (userDataCookie) {
-      const parsedUserData = JSON.parse(userDataCookie);
-      setCustomerInfo(parsedUserData[0]);
-      console.log(parsedUserData[0]);
+      var parsedUserData;
+      try {
+        parsedUserData = JSON.parse(userDataCookie);
+        setCustomerInfo(parsedUserData); // Adjust based on your app's logic
+        console.log("Parsed user data:", parsedUserData);
+      } catch (error) {
+        console.error("Error parsing userDataCookie:", error);
+      }
+    } else {
+      console.warn("Cookie 'userDataReal' is missing or undefined.");
     }
   };
 
@@ -53,9 +60,7 @@ const InformationLessor = () => {
     const parsedUserData = JSON.parse(userDataCookie);
 
     apiOrder
-      .get(
-        "/ByShop?shopId=" + parsedUserData[0].id + "&pageIndex=1&pageSize=1000"
-      )
+      .get("/ByShop?shopId=" + parsedUserData.id + "&pageIndex=1&pageSize=1000")
       .then((response) => {
         setOrders(response.data);
         console.log(response.data);
@@ -74,7 +79,7 @@ const InformationLessor = () => {
     const parsedUserData = JSON.parse(userDataCookie);
 
     apiToys
-      .get("/user/" + parsedUserData[0].id + "?pageIndex=1&pageSize=1000")
+      .get("/user/" + parsedUserData.id + "?pageIndex=1&pageSize=1000")
       .then((response) => {
         setProducts(response.data);
         console.log(response.data);
@@ -436,7 +441,15 @@ const InformationLessor = () => {
                     <h4 className="font-semibold">
                       Người đặt hàng: {order.userName}
                     </h4>
-                    <span className="font-medium">{order.status}</span>
+                    <span className="font-medium">
+                      {order.status == "Pending"
+                        ? "Đợi người cho thuê chấp nhận đơn hàng"
+                        : order.status == "Delivering"
+                        ? "Đang giao hàng"
+                        : order.status == "Processing"
+                        ? "Đơn hàng đang thuê"
+                        : "Hoàn thành"}
+                    </span>
                   </div>
                   <hr className="border-gray-300 mb-2" />
                   <div className="flex items-center mb-2">

@@ -36,20 +36,21 @@ const InformationCustomer = () => {
     const userDataCookie = Cookies.get("userDataReal");
     if (userDataCookie) {
       const parsedUserData = JSON.parse(userDataCookie);
-      setCustomerInfo(parsedUserData[0]);
-      console.log(parsedUserData[0]);
-      apiWallets.get("/" + parsedUserData[0].walletId).then((response) => {
+      setCustomerInfo(parsedUserData);
+      console.log(parsedUserData);
+
+      apiWallets.get("/" + parsedUserData.walletId).then((response) => {
         setWalletInfo(response.data);
       });
       apiWalletTransaction
         .get(
           "/ByWalletId?walletId=" +
-            parsedUserData[0].walletId +
+            parsedUserData.walletId +
             "&pageIndex=1&pageSize=100"
         )
         .then((response) => {
           setWalletTransaction(response.data);
-          console.log(parsedUserData[0].walletId);
+          console.log(parsedUserData.walletId);
         });
     }
   };
@@ -60,9 +61,7 @@ const InformationCustomer = () => {
 
     apiOrder
       .get(
-        "/ByUserId?userId=" +
-          parsedUserData[0].id +
-          "&pageIndex=1&pageSize=1000"
+        "/ByUserId?userId=" + parsedUserData.id + "&pageIndex=1&pageSize=1000"
       )
       .then((response) => {
         setOrders(response.data.orders);
@@ -402,7 +401,15 @@ const InformationCustomer = () => {
                     <h4 className="font-semibold">
                       Đặt hàng từ: {order.shopName}
                     </h4>
-                    <span className="font-medium">{order.status}</span>
+                    <span className="font-medium">
+                      {order.status == "Pending"
+                        ? "Đợi người cho thuê chấp nhận đơn hàng"
+                        : order.status == "Delivering"
+                        ? "Đang giao hàng"
+                        : order.status == "Processing"
+                        ? "Đơn hàng đang thuê"
+                        : "Hoàn thành"}
+                    </span>
                   </div>
                   <hr className="border-gray-300 mb-2" />
                   <div className="flex items-center mb-2">
@@ -579,7 +586,7 @@ const InformationCustomer = () => {
                     key={item.id}
                     className="p-4 border border-gray-300 rounded-lg flex flex-col"
                   >
-                    {item.quantity === -1 && (
+                    {item.quantity == -1 && (
                       <div>
                         <div className="flex items-center mb-2">
                           <img
@@ -686,7 +693,7 @@ const InformationCustomer = () => {
                     {item.quantity >= 1 && (
                       <div className="flex items-center mb-2">
                         <img
-                          src={item.image}
+                          src={item.toyImgUrls[0]}
                           alt={item.name}
                           className="w-20 h-20 object-cover mr-4"
                         />
