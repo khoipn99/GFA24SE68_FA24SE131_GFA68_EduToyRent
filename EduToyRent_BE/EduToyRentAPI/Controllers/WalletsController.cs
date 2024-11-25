@@ -71,7 +71,6 @@ namespace EduToyRentAPI.Controllers
 
         // PUT: api/Wallets/5
         [HttpPut("{id}")]
-        [Authorize(Roles = "1")]
         public async Task<IActionResult> PutWallet(int id, WalletRequest walletRequest)
         {
             var wallet = _unitOfWork.WalletRepository.GetByID(id);
@@ -149,7 +148,6 @@ namespace EduToyRentAPI.Controllers
 
         // DELETE: api/Wallets/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "1")]
         public async Task<IActionResult> DeleteWallet(int id)
         {
             var wallet = _unitOfWork.WalletRepository.GetByID(id);

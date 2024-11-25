@@ -365,6 +365,7 @@ namespace EduToyRentAPI.Controllers
             else if (userRole == 3)
             {
                 buyQuantity = (int)toyRequest.BuyQuantity;
+                toy.Status = "Inactive";
             }
             toy.Name = toyRequest.Name;
             toy.Description = toyRequest.Description;
@@ -376,7 +377,7 @@ namespace EduToyRentAPI.Controllers
             toy.RentCount = toyRequest.RentCount;
             toy.RentTime = toyRequest.RentTime;
             toy.CategoryId = toyRequest.CategoryId;
-            toy.Status = "Inactive";
+            toy.Status = "Active";
             toy.CreateDate = DateTime.Now;
 
             _unitOfWork.ToyRepository.Update(toy);
