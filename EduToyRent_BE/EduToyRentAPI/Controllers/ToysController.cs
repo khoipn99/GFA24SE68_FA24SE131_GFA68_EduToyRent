@@ -795,7 +795,7 @@ namespace EduToyRentAPI.Controllers
         {
             var toys = _unitOfWork.ToyRepository.Get(
                 includeProperties: "Category,User,User.Role,Approver,Approver.Role",
-                filter: toy => toy.Status == "Active" && toy.BuyQuantity > -1,
+                filter: toy => toy.Status == "Active" && toy.BuyQuantity > 0,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(toy => toy.Id)
