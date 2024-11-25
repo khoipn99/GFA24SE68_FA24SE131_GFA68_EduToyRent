@@ -302,13 +302,19 @@ const HeaderForCustomer = () => {
   };
 
   useEffect(() => {
+    console.log("Rent items:", rentItems);
     const newTotalRentPrice = rentItems.reduce((total, item) => {
-      const rentalPrice = calculateRentalPrice(item.price, item.rentalDuration);
+      console.log("Item:", item); // Log each item to check
+      const rentalPrice = calculateRentalPrice(
+        item.toyPrice,
+        item.rentalDuration
+      );
+      console.log("Rental Price for this item:", rentalPrice); // Log rental price
       return total + rentalPrice;
     }, 0);
+    console.log("Total Rent Price:", newTotalRentPrice); // Log total rent price
     setTotalRentPrice(newTotalRentPrice);
   }, [rentItems]);
-
   useEffect(() => {
     const newTotalBuyPrice = buyItems.reduce(
       (total, item) => total + item.price * item.quantity,
@@ -602,7 +608,7 @@ const HeaderForCustomer = () => {
                               className="flex items-center mb-4 relative"
                             >
                               <img
-                                src={item.toyImgUrls}
+                                src={item.toyImgUrls[0]}
                                 alt={item.toyName}
                                 className="w-20 h-20 object-cover mr-4"
                               />

@@ -159,7 +159,7 @@ namespace EduToyRentAPI.Controllers
             else 
             {
 
-                cartItem.Quantity = 1;
+               // cartItem.Quantity = 1;
 
                 var cart =  _unitOfWork.CartRepository.GetByID(cartItemRequest.CartId);
                 if (cart == null)
