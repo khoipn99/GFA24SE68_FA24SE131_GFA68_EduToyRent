@@ -1,10 +1,16 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import apiWallets from "../../service/ApiWallets";
+import apiWalletTransaction from "../../service/ApiWalletTransaction";
+import apiUser from "../../service/ApiUser";
+import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
 
 const TopUpSuccess = () => {
+  const location = useLocation();
   const navigate = useNavigate();
+  const [customerInfo, setCustomerInfo] = useState({});
 
   const handleGoHome = () => {
     navigate("/");
@@ -13,6 +19,88 @@ const TopUpSuccess = () => {
   const handleTopUpAgain = () => {
     navigate("/top-up");
   };
+
+  useEffect(() => {
+    // Parse query parameters
+    const searchParams = new URLSearchParams(location.search);
+    const code = searchParams.get("code");
+    const id = searchParams.get("id");
+    const cancel = searchParams.get("cancel");
+    const status = searchParams.get("status");
+    const orderCode = searchParams.get("orderCode");
+
+    const userDataCookie = Cookies.get("userDataReal");
+    var parsedUserData;
+    if (userDataCookie) {
+      try {
+        parsedUserData = JSON.parse(userDataCookie);
+        setCustomerInfo(parsedUserData); // Adjust based on your app's logic
+        console.log("Parsed user data:", parsedUserData);
+      } catch (error) {
+        console.error("Error parsing userDataCookie:", error);
+      }
+    } else {
+      console.warn("Cookie 'userDataReal' is missing or undefined.");
+    }
+    apiWallets
+      .get("/" + parsedUserData.walletId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response2) => {
+        console.log(
+          response2.data.balance + parseFloat(Cookies.get("PaymentPrice"))
+        );
+      });
+
+    if (cancel == "false") {
+      apiWallets
+        .get("/" + parsedUserData.walletId, {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response2) => {
+          const walletTmp = response2.data;
+          console.log(walletTmp.id);
+          apiWallets.put(
+            "/" + walletTmp.id,
+            {
+              balance:
+                walletTmp.balance + parseFloat(Cookies.get("PaymentPrice")),
+              withdrawMethod: walletTmp.withdrawMethod,
+              withdrawInfo: walletTmp.withdrawInfo,
+              status: walletTmp.status,
+              userId: walletTmp.userId,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+          apiWalletTransaction.post(
+            "",
+            {
+              transactionType: "Nạp tiền",
+              amount: parseFloat(Cookies.get("PaymentPrice")),
+              date: new Date().toISOString(),
+              walletId: walletTmp.id,
+              paymentTypeId: 5,
+              orderId: null,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+        });
+
+      navigate("/topup-complete");
+    }
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">

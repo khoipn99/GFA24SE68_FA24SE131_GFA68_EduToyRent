@@ -23,10 +23,15 @@ import ToySupplierPage from "./Pages/ToySupplier/ToySupplierPage";
 import TopUpSuccess from "./Pages/TopUp/TopUpSuccess";
 import Payment from "./Pages/Payment/Payment";
 import PaymentSuccess from "./Pages/Payment/PaymentSuccess";
+import TopUpComplete from "./Pages/TopUp/TopUpComplete";
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/topup-complete",
+    element: <TopUpComplete />,
   },
   {
     path: "/payments-success",

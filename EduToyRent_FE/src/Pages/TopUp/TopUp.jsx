@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import apiPayment from "../../service/ApiPayment";
+import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
 
 const TopUp = () => {
   const [amount, setAmount] = useState("");
@@ -21,6 +22,7 @@ const TopUp = () => {
 
     const numericAmount = parseInt(amount.replace(/\./g, ""), 10);
 
+    Cookies.set("PaymentPrice", numericAmount, { expires: 7 });
     apiPayment
       .post(
         "/create-payment-link?totalAmount=" + numericAmount + "&orderId=6368"
