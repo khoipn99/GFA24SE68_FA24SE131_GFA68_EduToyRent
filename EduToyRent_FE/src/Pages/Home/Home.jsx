@@ -572,8 +572,8 @@ const Home = () => {
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
                       style={{
                         backgroundImage: `url(${
-                          deal.mediaUrls && deal.mediaUrls[0]
-                            ? deal.mediaUrls[0]
+                          deal.media && deal.media[0].mediaUrl
+                            ? deal.media[0].mediaUrl
                             : ""
                         })`,
                       }}
@@ -646,8 +646,8 @@ const Home = () => {
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
                       style={{
                         backgroundImage: `url(${
-                          toy.mediaUrls && toy.mediaUrls[0]
-                            ? toy.mediaUrls[0]
+                          toy.media && toy.media[0].mediaUrl
+                            ? toy.media[0].mediaUrl
                             : ""
                         })`,
                       }}
@@ -705,7 +705,7 @@ const Home = () => {
                   </button>
                   {selectedToy && (
                     <img
-                      src={selectedToy.media.mediaUrl}
+                      src={selectedToy.media[0].mediaUrl}
                       alt={selectedToy.name}
                       className="w-1/2 h-full object-cover rounded-l-lg"
                     />
@@ -802,8 +802,8 @@ const Home = () => {
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
                       style={{
                         backgroundImage: `url(${
-                          toy.mediaUrls && toy.mediaUrls[0]
-                            ? toy.mediaUrls[0]
+                          toy.media && toy.media[0].mediaUrl
+                            ? toy.media[0].mediaUrl
                             : ""
                         })`,
                       }}

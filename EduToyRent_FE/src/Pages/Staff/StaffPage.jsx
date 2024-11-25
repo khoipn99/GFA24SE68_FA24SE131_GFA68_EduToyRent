@@ -56,14 +56,14 @@ const StaffPage = () => {
   };
   const getVideos = (mediaUrls) => {
     return mediaUrls.filter((url) => {
-      const fileExtension = url.split("?")[0];
+      const fileExtension = url.mediaUrl.split("?")[0];
       return /\.(mp4|mov|avi|mkv)$/i.test(fileExtension);
     });
   };
 
   const getImages = (mediaUrls) => {
     return mediaUrls.filter((url) => {
-      const fileExtension = url.split("?")[0]; // Tách URL và loại bỏ phần query string
+      const fileExtension = url.mediaUrl.split("?")[0]; // Tách URL và loại bỏ phần query string
       return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(fileExtension); // Kiểm tra đuôi file hình ảnh
     });
   };
@@ -148,9 +148,9 @@ const StaffPage = () => {
 
           // Cập nhật state với dữ liệu mới
           setSelectedToy(response.data);
-          setSelectedVideo(getVideos(response.data.mediaUrls)[0]);
-          setCurrentMedia(response.data.mediaUrls[0]);
-          setCurrentPicture(getImages(response.data.mediaUrls));
+          setSelectedVideo(getVideos(response.data.media)[0]);
+          setCurrentMedia(response.data.media[0]);
+          setCurrentPicture(getImages(response.data.media));
           setIsLoading(false); // Đặt lại isLoading khi tải xong
         });
     } catch (error) {
@@ -465,7 +465,10 @@ const StaffPage = () => {
                             objectFit: "cover", // Căn chỉnh nội dung video
                           }}
                         >
-                          <source src={selectedVideo} type="video/mp4" />
+                          <source
+                            src={selectedVideo.mediaUrl}
+                            type="video/mp4"
+                          />
                           Trình duyệt của bạn không hỗ trợ thẻ video.
                         </video>
                       ) : (
@@ -475,7 +478,7 @@ const StaffPage = () => {
                     {/* Hình ảnh lớn */}
                     <div style={{ marginBottom: "10px" }}>
                       <img
-                        src={currentMedia}
+                        src={currentMedia.mediaUrl}
                         alt="Toy"
                         style={{
                           width: "500px", // Chiều rộng cố định
@@ -494,7 +497,7 @@ const StaffPage = () => {
                               marginRight: "10px",
                               cursor: "pointer",
                               border:
-                                currentMedia === url
+                                currentMedia.mediaUrl === url.mediaUrl
                                   ? "2px solid blue"
                                   : "none",
                             }}
@@ -502,7 +505,7 @@ const StaffPage = () => {
                           >
                             {
                               <img
-                                src={url}
+                                src={url.mediaUrl}
                                 alt="Thumbnail"
                                 style={{ width: "80px", height: "auto" }}
                               />

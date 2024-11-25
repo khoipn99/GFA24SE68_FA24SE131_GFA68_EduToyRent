@@ -13,6 +13,7 @@ import apiCart from "../../service/ApiCart";
 import apiCartItem from "../../service/ApiCartItem";
 import apiTransaction from "../../service/ApiTransaction";
 import apiTransactionDetail from "../../service/ApiTransactionDetail";
+import apiToys from "../../service/ApiToys";
 
 const Payment = () => {
   const [cartItems, setCartItems] = useState([]); // Danh sách sản phẩm
@@ -277,6 +278,8 @@ const Payment = () => {
                   orderTypeId: item.orderTypeId,
                   ratingId: null,
                 });
+
+                apiToys.patch("/" + item.id + "/update-status", "Renting");
               });
             });
         }
