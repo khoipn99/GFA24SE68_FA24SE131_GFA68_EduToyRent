@@ -497,13 +497,21 @@ const InformationCustomer = () => {
                           {transaction.senderId} {transaction.transactionType}
                         </h4>
                         <span className="font-medium">
-                          {(transaction.amount || 0).toLocaleString()} VNĐ
+                          {transaction.amount >= 0
+                            ? "+" + (transaction.amount || 0).toLocaleString()
+                            : (transaction.amount || 0).toLocaleString()}{" "}
+                          VNĐ
                         </span>
                       </div>
 
                       <div className="flex items-center mb-2">
                         <p className="font-semibold">
                           Ngày Nạp :{" "}
+                          {
+                            new Date(transaction.date)
+                              .toISOString()
+                              .split("T")[0]
+                          }
                           {/* {
                             new Date(transaction.orderDate)
                               .toISOString()
@@ -591,7 +599,7 @@ const InformationCustomer = () => {
                         <div className="flex items-center mb-2">
                           <img
                             src={
-                              item.toyImgUrls && item.toyImgUrls[0]
+                              item.toyImgUrls[0] && item.toyImgUrls[0]
                                 ? item.toyImgUrls[0]
                                 : ""
                             }
