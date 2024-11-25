@@ -50,9 +50,10 @@ const ToysSaleDetails = () => {
   };
 
   const isVideoUrl = (url) => {
-    if (url != "") {
-      const fileExtension = url.split("?")[0];
-      return /\.(mp4|mov|avi|mkv)$/i.test(fileExtension);
+    if (url && url.mediaUrl) {
+      // Kiểm tra url tồn tại và có thuộc tính mediaUrl
+      const fileExtension = url.mediaUrl.split("?")[0]; // Loại bỏ query string
+      return /\.(mp4|mov|avi|mkv)$/i.test(fileExtension); // Kiểm tra phần mở rộng
     }
   };
 
@@ -64,8 +65,9 @@ const ToysSaleDetails = () => {
       setCurrentPrice(response.data.price);
       setPrices(response.data.price);
       loadReviews(response.data.id);
-      setCurrentMedia(response.data.mediaUrls[0]);
-      setCurrentPicture(response.data.mediaUrls);
+      setCurrentMedia(response.data.media[0]);
+      setCurrentPicture(response.data.media);
+      console.log(response.data.media);
     });
   }, []);
 
@@ -146,19 +148,19 @@ const ToysSaleDetails = () => {
                           width: "550px", // Chiều rộng cố định
                           height: "400px", // Chiều cao cố định
                           backgroundImage: `url(${
-                            currentMedia ? currentMedia : ""
+                            currentMedia.mediaUrl ? currentMedia.mediaUrl : ""
                           })`,
                           backgroundSize: "contain", // Đảm bảo toàn bộ hình ảnh nằm gọn trong thẻ
                           backgroundRepeat: "no-repeat", // Không lặp lại hình ảnh
                           backgroundPosition: "center", // Căn giữa hình ảnh
                           borderRadius: "12px",
                           display:
-                            currentMedia && !isVideoUrl(currentMedia)
+                            currentMedia.mediaUrl && !isVideoUrl(currentMedia)
                               ? "block"
                               : "none", // Hiển thị nếu không phải video
                         }}
                       ></div>
-                    ) : currentMedia ? (
+                    ) : currentMedia.mediaUrl ? (
                       <video
                         controls
                         className="media-container"
@@ -169,7 +171,7 @@ const ToysSaleDetails = () => {
                           objectFit: "cover", // Đảm bảo video lấp đầy khung
                         }}
                       >
-                        <source src={currentMedia} type="video/mp4" />
+                        <source src={currentMedia.mediaUrl} type="video/mp4" />
                         Trình duyệt của bạn không hỗ trợ thẻ video.
                       </video>
                     ) : (
@@ -194,14 +196,14 @@ const ToysSaleDetails = () => {
                                 marginRight: "10px",
                                 cursor: "pointer",
                                 border:
-                                  currentMedia === url
+                                  currentMedia.mediaUrl == url.mediaUrl
                                     ? "2px solid blue"
                                     : "none",
                               }}
                               onClick={() => handleMediaClick(url)}
                             >
                               <img
-                                src={url}
+                                src={url.mediaUrl}
                                 alt="Thumbnail"
                                 style={{
                                   width: "80px",
@@ -217,7 +219,7 @@ const ToysSaleDetails = () => {
                                 marginRight: "10px",
                                 cursor: "pointer",
                                 border:
-                                  currentMedia === url
+                                  currentMedia.mediaUrl == url.mediaUrl
                                     ? "2px solid blue"
                                     : "none",
                               }}
@@ -231,7 +233,7 @@ const ToysSaleDetails = () => {
                                   borderRadius: "8px",
                                 }}
                               >
-                                <source src={url} type="video/mp4" />
+                                <source src={url.mediaUrl} type="video/mp4" />
                                 Trình duyệt của bạn không hỗ trợ thẻ video.
                               </video>
                             </div>

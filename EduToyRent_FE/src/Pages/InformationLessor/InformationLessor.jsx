@@ -742,8 +742,8 @@ const InformationLessor = () => {
                 >
                   <img
                     src={
-                      product.mediaUrls && product.mediaUrls[0]
-                        ? product.mediaUrls[0]
+                      product.media && product.media[0].mediaUrl
+                        ? product.media[0].mediaUrl
                         : ""
                     }
                     alt={product.name}
@@ -772,8 +772,9 @@ const InformationLessor = () => {
                   </h3>
                   <img
                     src={
-                      editedProduct.mediaUrls && editedProduct.mediaUrls[0]
-                        ? editedProduct.mediaUrls[0]
+                      editedProduct.media[0].mediaUrl &&
+                      editedProduct.media[0].mediaUrl
+                        ? editedProduct.media[0].mediaUrl
                         : ""
                     }
                     alt={editedProduct.name}
