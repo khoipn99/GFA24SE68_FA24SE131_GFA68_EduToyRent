@@ -224,7 +224,7 @@ const ToysDetails = () => {
       if (!cartId) {
         console.error("Không tìm thấy cartId");
         alert("Bạn cần đăng nhập để sử dụng chức năng này.");
-        navigate("/"); // Chuyển hướng người dùng về trang đăng nhập
+
         return;
       }
 
