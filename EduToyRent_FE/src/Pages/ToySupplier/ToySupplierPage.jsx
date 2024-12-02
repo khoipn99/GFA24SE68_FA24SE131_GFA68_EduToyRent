@@ -9,7 +9,8 @@ import apiToys from "../../service/ApiToys";
 import apiCategory from "../../service/ApiCategory";
 import apiMedia from "../../service/ApiMedia";
 import apiUser from "../../service/ApiUser";
-
+import apiWallets from "../../service/ApiWallets";
+import apiWalletTransaction from "../../service/ApiWalletTransaction";
 const ToySupplierPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("info");
@@ -42,8 +43,14 @@ const ToySupplierPage = () => {
   const [selectedOrderDetail, setSelectedOrderDetail] = useState(null);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
-
+  const [toyForDetails, setToyForDetail] = useState([]);
   const [status, setStatus] = useState(""); // Initialize state
+  const [walletInfo, setWalletInfo] = useState({});
+  const [walletTransaction, setWalletTransaction] = useState({});
+
+  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
+  const itemsPerPage = 5; // Số mục trên mỗi trang
+  const [searchKeyword, setSearchKeyword] = useState(""); // Lưu từ khóa tìm kiếm
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -81,7 +88,7 @@ const ToySupplierPage = () => {
             setImageUrl(user.avatarUrl); // Đặt URL ảnh nếu có
             // Lấy danh sách đồ chơi của người dùng
             const toyResponse = await apiToys.get(
-              `/user/${user.id}?pageIndex=1&pageSize=20000`,
+              `/user/${user.id}?pageIndex=1&pageSize=5`,
               {
                 headers: {
                   Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -93,6 +100,18 @@ const ToySupplierPage = () => {
 
             // Cập nhật dữ liệu đồ chơi (nếu cần thiết)
             setToysData(toyResponse.data);
+            // Lấy thông tin ví của người dùng từ walletId
+            const walletResponse = await apiWallets.get(
+              `/${user.walletId}` // Sử dụng user.walletId thay vì userResponse.walletId
+            );
+            console.log("Dữ liệu ví của người dùng:", walletResponse.data);
+            setWalletInfo(walletResponse.data);
+
+            const walletTransaction = await apiWalletTransaction.get(
+              `/ByWalletId?walletId=${user.walletId}&pageIndex=1&pageSize=100`
+            );
+            setWalletTransaction(walletTransaction.data);
+            console.log("Dữ liệu giao dịch trong vi:", walletTransaction.data);
           } else {
             console.error("Không tìm thấy thông tin người dùng.");
           }
@@ -111,7 +130,7 @@ const ToySupplierPage = () => {
     if (userId) {
       console.log("Gọi LoadToy với userId:", userId);
       LoadToy(userId);
-      LoadOrderShop(userId);
+
       LoadOrderShop(userId, "");
     } else {
       console.warn("userId chưa được thiết lập.");
@@ -129,14 +148,14 @@ const ToySupplierPage = () => {
   // }, [userId]);
 
   // Hàm load đồ chơi theo userId
-  const LoadToy = async (userId) => {
+  const LoadToy = async (userId, pageIndex = 1, pageSize = 5) => {
     if (!userId) {
       console.error("Không tìm thấy userId để tải đồ chơi.");
       return;
     }
     try {
       const toyResponse = await apiToys.get(
-        `/user/${userId}?pageIndex=1&pageSize=20000`,
+        `/user/${userId}?pageIndex=${pageIndex}&pageSize=${pageSize}`,
         {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -144,16 +163,47 @@ const ToySupplierPage = () => {
         }
       );
 
-      console.log("Dữ liệu đồ chơi của người dùng 2:", toyResponse.data);
+      console.log(
+        `Dữ liệu đồ chơi của người dùng tại trang ${pageIndex}:`,
+        toyResponse.data
+      );
 
-      // Cập nhật dữ liệu đồ chơi (nếu cần thiết)
+      // Cập nhật dữ liệu đồ chơi
       setToysData(toyResponse.data);
-
-      console.log("Danh sách đồ chơi:", toyResponse.data);
     } catch (error) {
       console.error("Lỗi khi tải danh sách đồ chơi:", error);
     }
   };
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+      LoadToy(userId, currentPage - 1, itemsPerPage);
+    }
+  };
+  const handleNext = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+    LoadToy(userId, currentPage + 1, itemsPerPage);
+  };
+  const handleSearchChange = (e) => {
+    setSearchKeyword(e.target.value); // Cập nhật từ khóa khi nhập
+  };
+  const handleSearch = async (e) => {
+    e.preventDefault(); // Ngăn form reload
+    try {
+      const response = await apiToys.get(
+        `/user/${userId}?name=${searchKeyword}`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+      setToysData(response.data); // Cập nhật danh sách đồ chơi sau khi tìm kiếm
+    } catch (error) {
+      console.error("Lỗi khi tìm kiếm:", error);
+    }
+  };
+
   const LoadOrderShop = async (userId, statusFilter) => {
     if (!userId || userId <= 0) {
       console.error("userId không hợp lệ:", userId);
@@ -181,11 +231,6 @@ const ToySupplierPage = () => {
       const orders = OrderResponse.data;
       console.log("Danh sách đơn hàng:", orders);
 
-      // if (!Array.isArray(orders) || orders.length === 0) {
-      //   alert("Không có đơn hàng nào được tìm thấy.");
-      //   return;
-      // }
-
       const orderIds = orders.map((order) => order.id);
 
       const orderDetailsPromises = orderIds.map(async (orderId) => {
@@ -200,8 +245,31 @@ const ToySupplierPage = () => {
           );
 
           const orderDetails = orderDetailsResponse.data;
-
           console.log(`Chi tiết đơn hàng ${orderId}:`, orderDetails);
+
+          const toyId = orderDetails[0]?.toyId;
+
+          // Lấy thông tin đồ chơi trực tiếp
+          let toyDetails = null;
+          if (toyId) {
+            const toyResponse = await apiToys.get("", {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            });
+
+            const toys = toyResponse.data;
+
+            if (Array.isArray(toys) && toys.length > 0) {
+              toyDetails = toys.find((toy) => toy.id === toyId); // Lấy chi tiết toy từ danh sách
+            }
+
+            if (!toyDetails) {
+              console.error(`Không tìm thấy đồ chơi với toyId: ${toyId}`);
+            } else {
+              console.log(`Chi tiết đồ chơi ${toyId}:`, toyDetails);
+            }
+          }
 
           return {
             orderId,
@@ -210,6 +278,7 @@ const ToySupplierPage = () => {
               Array.isArray(orderDetails[0]?.toyImgUrls)
                 ? orderDetails[0].toyImgUrls
                 : ["default_image_url_here"], // Giá trị mặc định
+            toyDetails,
             ...orderDetails[0],
           };
         } catch (error) {
@@ -224,6 +293,7 @@ const ToySupplierPage = () => {
         (orderDetail) => orderDetail !== null
       );
 
+      // Cập nhật orders với toyImgUrls và toyDetails từ các đơn hàng
       const updatedOrders = orders.map((order) => {
         const matchingOrderDetail = validOrderDetails.find(
           (detail) => detail.orderId === order.id
@@ -234,11 +304,20 @@ const ToySupplierPage = () => {
           toyImgUrls: matchingOrderDetail?.toyImgUrls || [
             "default_image_url_here",
           ],
+          toyDetails: matchingOrderDetail?.toyDetails || null,
         };
       });
 
+      // Cập nhật state orders và orderDetails
       setOrders(updatedOrders);
       setOrderDetails(validOrderDetails);
+
+      // Nếu bạn muốn cập nhật tất cả toyDetails cho mỗi đơn hàng, bạn có thể làm như sau:
+      setToyForDetail(validOrderDetails.map((detail) => detail.toyDetails));
+
+      console.log("Danh sách đơn hàng:", updatedOrders);
+      console.log("Chi tiết đồ chơi khi log:", validOrderDetails);
+
       setLoading(false);
     } catch (error) {
       console.error(
@@ -279,6 +358,23 @@ const ToySupplierPage = () => {
   };
 
   const handleUpdate = async () => {
+    // Kiểm tra các điều kiện
+    const emailRegex = /^[\w-\.]+@gmail\.com$/;
+    const phoneRegex = /^\d{10}$/;
+
+    if (!emailRegex.test(editedData.email || "")) {
+      console.error("Email không hợp lệ: Phải có đuôi @gmail.com");
+      alert("Email không hợp lệ: Phải có đuôi @gmail.com");
+      return;
+    }
+
+    if (!phoneRegex.test(editedData.phone || "")) {
+      console.error("Số điện thoại không hợp lệ: Phải có đúng 10 chữ số");
+      alert("Số điện thoại không hợp lệ: Phải có đúng 10 chữ số");
+      return;
+    }
+
+    // Tiếp tục xử lý nếu các điều kiện hợp lệ
     if (userId) {
       try {
         const formData = new FormData();
@@ -297,6 +393,7 @@ const ToySupplierPage = () => {
         formData.append("status", editedData.status || "Active");
         formData.append("roleId", editedData.role.id || "");
         formData.append("avatarUrl", editedData.avatarUrl || "");
+
         const response = await apiUser.put(`/${userId}`, formData, {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -702,46 +799,190 @@ const ToySupplierPage = () => {
       return;
     }
 
-    // Tìm đơn hàng cần cập nhật trong mảng orders
+    // Tìm đơn hàng cần cập nhật
     const orderToUpdate = orders.find((order) => order.id === orderId);
-
+    console.log("Đơn hàng cần cập nhật:", orderToUpdate);
     if (!orderToUpdate) {
       alert("Không tìm thấy đơn hàng.");
       return;
     }
 
-    // Dữ liệu yêu cầu gửi đi khi cập nhật trạng thái
-    const updatedOrderData = {
-      orderDate: new Date().toISOString(), // Cập nhật ngày đơn hàng
-      receiveDate: new Date().toISOString(), // Cập nhật ngày nhận
-      totalPrice: orderToUpdate.totalPrice, // Lấy giá trị từ đơn hàng cần cập nhật
-      rentPrice: orderToUpdate.rentPrice, // Lấy giá trị từ đơn hàng cần cập nhật
-      depositeBackMoney: orderToUpdate.depositeBackMoney, // Lấy giá trị từ đơn hàng cần cập nhật
-      receiveName: orderToUpdate.receiveName, // Cập nhật tên người nhận nếu cần
-      receiveAddress: orderToUpdate.receiveAddress, // Cập nhật địa chỉ nhận nếu cần
-      receivePhone: orderToUpdate.receivePhone, // Cập nhật số điện thoại nếu cần
-      status: "Complete", // Cập nhật trạng thái đơn hàng
-      userId: orderToUpdate.userId, // ID người dùng
-    };
-
     try {
-      // Gọi API cập nhật trạng thái đơn hàng
-      const response = await apiOrder.put(`/${orderId}`, updatedOrderData, {
+      // 1. Lấy thông tin người dùng từ đơn hàng
+      const userResponse = await apiUser.get(`/${orderToUpdate.userId}`, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
-          "Content-Type": "application/json", // Đảm bảo Content-Type là application/json
         },
       });
+      const user = userResponse.data;
+      console.log("Nguoi dung mua hàng:", user);
 
-      console.log("Cập nhật đơn hàng thành công:", response.data);
+      //cập nhập ví người bán
+      // const userWalletResponse = await apiWallets.get(`/${user.walletId}`, {
+      //   headers: {
+      //     Authorization: `Bearer ${userToken}`,
+      //   },
+      // });
+      // const userWallet = userWalletResponse.data;
+      // console.log("Wallet người dùng:", userWallet);
+      // //vì nó mua nên không có tiền back lại
+      // const updatedBalance = userWallet.balance + 0;
+      // console.log("Giá trị balance sẽ gửi lên API:", updatedBalance);
 
-      // Cập nhật giao diện nếu cần
-      alert("Đơn hàng đã được hoàn thành.");
-      LoadOrderShop(userId);
+      // await apiWallets.put(
+      //   `/${userWallet.id}`,
+      //   {
+      //     balance: updatedBalance,
+      //     withdrawMethod: userWallet.withdrawMethod || "defaultMethod",
+      //     withdrawInfo: userWallet.withdrawInfo || "defaultInfo",
+      //     status: userWallet.status || "Active",
+      //     userId: userWallet.userId,
+      //   },
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${userToken}`,
+      //     },
+      //   }
+      // );
+
+      // await apiWalletTransaction.post(
+      //   "",
+      //   {
+      //     transactionType: "Nhận lại tiền cọc",
+      //     // amount: orderToUpdate.depositeBackMoney - orderToUpdate.rentPrice,
+      //     amount: 0,
+      //     date: new Date().toISOString(),
+      //     walletId: userWallet.id,
+      //     paymentTypeId: 5,
+      //     orderId: orderToUpdate.id,
+      //   },
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${userToken}`,
+      //     },
+      //   }
+      // );
+
+      // 3. Lấy thông tin ví của chủ sở hữu đồ chơi
+      const ownerWalletResponse = await apiWallets.get(
+        `/${orderToUpdate.shopId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      const ownerWallet = ownerWalletResponse.data;
+      console.log("Dữ liệu ví chủ sở hữu trước khi cập nhật:", ownerWallet);
+
+      const toyDetails = orderToUpdate.toyDetails; // hoặc cách khác nếu toyDetails nằm ở nơi khác
+      console.log("toyDetails bắt từ toyid:", toyDetails);
+      if (!toyDetails || !toyDetails.price) {
+        console.error("Không có thông tin giá trị từ toyDetails.");
+        return;
+      }
+
+      // Tính toán số tiền chủ sở hữu nhận được (giả sử là 85% giá trị của toyDetails.price)
+      const amountToAdd = toyDetails.price * 0.85;
+
+      // Chỉ cập nhật trường balance
+      const updatedWallet = {
+        ...ownerWallet,
+        balance: ownerWallet.balance + amountToAdd,
+      };
+      console.log("Dữ liệu ví chủ sở hữu trước khi cập nhật:", amountToAdd);
+      console.log("Dữ liệu ví chủ sở hữu sau khi cập nhật:", updatedWallet);
+
+      // Gửi yêu cầu PUT để cập nhật ví
+      const ownerWalletUpDate = await apiWallets.put(
+        `/${ownerWallet.id}`,
+        updatedWallet,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      // Log toàn bộ phản hồi từ server
+      console.log("Phản hồi từ server sau khi gửi PUT:", ownerWalletUpDate);
+      console.log("Dữ liệu trả về từ server:", ownerWalletUpDate.data);
+      console.log("Mã trạng thái trả về từ server:", ownerWalletUpDate.status);
+
+      // 1. Log dữ liệu trước khi gửi yêu cầu tạo giao dịch ví
+      console.log("Gửi yêu cầu tạo giao dịch ví:", {
+        transactionType: "Nhận tiền từ đơn hàng",
+        amount: amountToAdd,
+        date: new Date().toISOString(),
+        walletId: ownerWallet.id,
+        paymentTypeId: 5,
+        orderId: orderToUpdate.id,
+      });
+
+      const walletTransactionResponse = await apiWalletTransaction.post(
+        "",
+        {
+          transactionType: "Nhận tiền từ đơn hàng",
+          amount: amountToAdd,
+          date: new Date().toISOString(),
+          walletId: ownerWallet.id,
+          paymentTypeId: 5,
+          orderId: orderToUpdate.id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      // 2. Log dữ liệu sau khi hoàn thành yêu cầu tạo giao dịch ví
+      console.log(
+        "Phản hồi từ yêu cầu tạo giao dịch ví:",
+        walletTransactionResponse.data
+      );
+
+      // 3. Log dữ liệu trước khi gửi yêu cầu cập nhật trạng thái đơn hàng
+      console.log("Gửi yêu cầu cập nhật trạng thái đơn hàng:", {
+        ...orderToUpdate,
+        status: "Complete",
+      });
+
+      // Gửi yêu cầu PUT để cập nhật trạng thái đơn hàng
+      const orderUpdateResponse = await apiOrder.put(
+        `/${orderToUpdate.id}`,
+        { ...orderToUpdate, status: "Complete" },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      // 4. Log dữ liệu sau khi hoàn thành yêu cầu cập nhật trạng thái đơn hàng
+      console.log(
+        "Phản hồi từ yêu cầu cập nhật trạng thái đơn hàng:",
+        orderUpdateResponse.data
+      );
+
+      // 5. Làm mới giao diện
+      setOrders((prevOrders) =>
+        prevOrders.map((o) =>
+          o.id === orderId ? { ...o, status: "Complete" } : o
+        )
+      );
+      alert("Đơn hàng đã được hoàn tất.");
     } catch (error) {
-      console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
-      alert("Có lỗi xảy ra khi cập nhật trạng thái đơn hàng.");
+      console.error("Lỗi khi hoàn tất đơn hàng:", error);
+      alert("Đã xảy ra lỗi khi xử lý đơn hàng.");
     }
+  };
+
+  const statusMapping = {
+    Delivering: "Đang giao",
+    Complete: "Hoàn thành",
+    // Các trạng thái khác nếu có
   };
 
   const renderContent = () => {
@@ -778,7 +1019,16 @@ const ToySupplierPage = () => {
 
                 <div className="mb-4">
                   <label className="block text-gray-700 font-medium">
-                    <p>Ngày sinh: {userData.dob}</p>
+                    <p>
+                      Ngày sinh:{" "}
+                      {userData.dob
+                        ? new Date(userData.dob).toLocaleDateString("vi-VN", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })
+                        : "Chưa cập nhật"}
+                    </p>
                   </label>
                 </div>
 
@@ -847,6 +1097,24 @@ const ToySupplierPage = () => {
                         className="w-full p-2 border border-gray-300 rounded"
                       />
                     </div>
+
+                    <div className="mb-4">
+                      <label className="block text-gray-700">Ngày sinh</label>
+                      <input
+                        type="date"
+                        value={
+                          editedData.dob ? editedData.dob.split("T")[0] : ""
+                        } // Đảm bảo sử dụng đúng cú pháp
+                        onChange={(e) =>
+                          setEditedData({
+                            ...editedData,
+                            dob: e.target.value,
+                          })
+                        }
+                        className="w-full p-2 border border-gray-300 rounded"
+                      />
+                    </div>
+
                     <div className="mb-4">
                       <label className="block text-gray-700">Địa chỉ</label>
                       <input
@@ -861,23 +1129,6 @@ const ToySupplierPage = () => {
                         className="w-full p-2 border border-gray-300 rounded"
                       />
                     </div>
-
-                    {/* Trường chọn ảnh
-                    <div className="mb-4">
-                      <label className="block text-gray-700">
-                        Ảnh đại diện
-                      </label>
-                      <input
-                        type="file"
-                        onChange={(e) =>
-                          setEditedData({
-                            ...editedData,
-                            avatarUrl: e.target.files[0], // Lưu file đã chọn vào state
-                          })
-                        }
-                        className="w-full p-2 border border-gray-300 rounded"
-                      />
-                    </div> */}
 
                     {/* Nút lưu và hủy */}
                     <div className="flex justify-end space-x-2">
@@ -1158,12 +1409,13 @@ const ToySupplierPage = () => {
                       Địa chỉ nhận: {order.receiveAddress}
                     </p>
                     <p className="text-sm text-gray-600">
-                      Số điện thoại: {order.receiveAddress}
+                      Số điện thoại: {order.receivePhone}
                     </p>
                   </div>
                   <div className="flex flex-col items-end ml-4">
                     <h1 className="text-lg font-bold text-gray-600">
-                      {order.status}
+                      {statusMapping[order.status] ||
+                        "Trạng thái không xác định"}
                     </h1>
                     <p className="text-sm text-gray-500">
                       Tổng tiền: {order.totalPrice}₫
@@ -1178,12 +1430,14 @@ const ToySupplierPage = () => {
                     >
                       Xem chi tiết
                     </button>
-                    <button
-                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                      onClick={() => handleCompleteOrder(order.id)} // Gọi hàm cập nhật khi nhấn nút
-                    >
-                      Hoàn Thành
-                    </button>
+                    {order.status !== "Complete" && (
+                      <button
+                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                        onClick={() => handleCompleteOrder(order.id)}
+                      >
+                        Hoàn Thành
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1272,17 +1526,21 @@ const ToySupplierPage = () => {
               <div className="w-full mb-1">
                 <div className="items-center justify-between block sm:flex md:divide-x md:divide-gray-100 dark:divide-gray-700">
                   <div className="flex items-center mb-4 sm:mb-0">
-                    <form className="sm:pr-3" action="#" method="GET">
+                    <form
+                      className="sm:pr-3"
+                      onSubmit={handleSearch} // Gọi hàm tìm kiếm khi submit
+                    >
                       <label htmlFor="products-search" className="sr-only">
                         Search
                       </label>
                       <div className="relative w-48 mt-1 sm:w-64 xl:w-96">
                         <input
                           type="text"
-                          name="email"
                           id="products-search"
+                          value={searchKeyword} // Liên kết với state
+                          onChange={handleSearchChange} // Cập nhật từ khóa khi nhập
                           className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          placeholder="Search for products"
+                          placeholder="Search for toys by name"
                         />
                       </div>
                     </form>
@@ -1635,7 +1893,11 @@ const ToySupplierPage = () => {
             <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center mb-4 sm:mb-0"></div>
               <div className="flex items-center space-x-3">
-                <button className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+                <button
+                  onClick={handlePrevious}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                >
                   <svg
                     className="w-5 h-5 mr-1 -ml-1"
                     fill="currentColor"
@@ -1650,7 +1912,10 @@ const ToySupplierPage = () => {
                   </svg>
                   Previous
                 </button>
-                <button className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+                <button
+                  onClick={handleNext}
+                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                >
                   Next
                   <svg
                     className="w-5 h-5 ml-1 -mr-1"
@@ -1977,8 +2242,85 @@ const ToySupplierPage = () => {
             <p>Thông tin thống kê sẽ được hiển thị ở đây.</p>
           </div>
         );
+      case "Wallet":
+        return (
+          <div className="p-6 space-y-6">
+            {/* Phần trên: Thông tin tài khoản */}
+            <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                Thông tin tài khoản
+              </h2>
+              <div className="space-y-3 text-gray-700">
+                <p>
+                  <strong className="font-medium">Số dư khả dụng:</strong>{" "}
+                  <span className="text-green-600">
+                    {(walletInfo.balance || 0).toLocaleString()} VNĐ
+                  </span>
+                </p>
+                <p>
+                  <strong className="font-medium">Số tài khoản:</strong>{" "}
+                  {walletInfo.withdrawInfo}
+                </p>
+                <p>
+                  <strong className="font-medium">Ngân hàng:</strong>{" "}
+                  {walletInfo.withdrawMethod}
+                </p>
+              </div>
+            </div>
+
+            {/* Phần dưới: Lịch sử giao dịch */}
+            <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                Lịch sử giao dịch
+              </h2>
+              {walletTransaction.length > 0 ? (
+                <ul className="space-y-4">
+                  {walletTransaction.map((transaction) => (
+                    <li
+                      key={transaction.id}
+                      className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex justify-between mb-3">
+                        <h4 className="font-semibold text-gray-800">
+                          {transaction.senderId} {transaction.transactionType}
+                        </h4>
+                        <span
+                          className={`font-medium ${
+                            transaction.amount >= 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {transaction.amount >= 0
+                            ? "+" + (transaction.amount || 0).toLocaleString()
+                            : (transaction.amount || 0).toLocaleString()}{" "}
+                          VNĐ
+                        </span>
+                      </div>
+
+                      <div className="flex items-center mb-2">
+                        <p className="font-semibold text-gray-600">
+                          Ngày Nạp :{" "}
+                          {
+                            new Date(transaction.date)
+                              .toISOString()
+                              .split("T")[0]
+                          }
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-600">Không có giao dịch nào.</p>
+              )}
+            </div>
+          </div>
+        );
+
       case "Edit":
         return <div>hi</div>;
+
       default:
         return null;
     }
@@ -2028,7 +2370,15 @@ const ToySupplierPage = () => {
             >
               <span className="icon-class mr-2">👥</span> Danh sách đơn hàng
             </button>
-
+            <button
+              onClick={() => setSelectedTab("Wallet")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "Wallet" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">💼</span> {/* Biểu tượng ví */}
+              Lịch sử giao dịch
+            </button>
             <button
               onClick={() => setSelectedTab("Edit")}
               className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${

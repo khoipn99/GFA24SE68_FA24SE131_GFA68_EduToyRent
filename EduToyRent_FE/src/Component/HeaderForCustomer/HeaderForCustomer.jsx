@@ -561,7 +561,8 @@ const HeaderForCustomer = () => {
               <div
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                className="relative flex items-center space-x-2"
+                className="relative flex items-center space-x-2 "
+                style={{ zIndex: 9999 }}
               >
                 {userData.avatarUrl ? (
                   <div className="text-[#0e161b]">
