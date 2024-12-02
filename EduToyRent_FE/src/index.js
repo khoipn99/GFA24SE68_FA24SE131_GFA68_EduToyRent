@@ -23,6 +23,7 @@ import ToySupplierPage from "./Pages/ToySupplier/ToySupplierPage";
 import TopUpSuccess from "./Pages/TopUp/TopUpSuccess";
 import Payment from "./Pages/Payment/Payment";
 import PaymentSuccess from "./Pages/Payment/PaymentSuccess";
+import Chat from "./Pages/Chat/Chat";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -91,6 +92,10 @@ const router = createBrowserRouter([
   {
     path: "/staff",
     element: <StaffPage />,
+  },
+  {
+    path: "/chat",
+    element: <Chat />,
   },
   {
     path: "/dashboard",
