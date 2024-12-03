@@ -246,14 +246,19 @@ const ToysSaleDetails = () => {
     if (existingItem) {
       // Nếu sản phẩm đã tồn tại, tăng quantity lên 1
       const updatedQuantity = existingItem.quantity + 1;
+      try {
+        await apiCartItem.put(`/${existingItem.id}`, {
+          ...existingItem,
+          quantity: updatedQuantity,
+        });
 
-      await apiCartItem.put(`/${existingItem.id}`, {
-        ...existingItem,
-        quantity: updatedQuantity,
-      });
-
-      console.log(`Đã cập nhật số lượng sản phẩm: ${updatedQuantity}`);
-      alert("Số lượng sản phẩm đã được cập nhật!");
+        console.log(`Đã cập nhật số lượng sản phẩm: ${updatedQuantity}`);
+        alert("Số lượng sản phẩm đã được cập nhật!");
+      } catch (error) {
+        console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
+        alert("Sản phẩm đã có trong giỏ hàng.");
+        return;
+      }
     } else {
       // Nếu sản phẩm chưa tồn tại, thêm mới
       const purchaseData = {
@@ -268,10 +273,16 @@ const ToysSaleDetails = () => {
         orderTypeId: 7, // Sử dụng orderTypeId thay cho startDate và endDate
       };
 
-      await apiCartItem.post("", purchaseData);
+      try {
+        await apiCartItem.post("", purchaseData);
 
-      console.log("Sản phẩm đã được thêm vào danh sách mua mới.");
-      alert("Sản phẩm đã được thêm vào giỏ hàng!");
+        console.log("Sản phẩm đã được thêm vào danh sách mua mới.");
+        alert("Sản phẩm đã được thêm vào giỏ hàng!");
+      } catch (error) {
+        console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
+        alert("Sản phẩm đã hết hàng.");
+        return;
+      }
     }
   };
 

@@ -769,7 +769,7 @@ const ToysDetails = () => {
                           Age group: {toy.ageGroup}
                         </p>
                         <p className="text-[#0e161b] text-lg font-bold">
-                          ${toy.price}
+                          {(toy.price || 0).toLocaleString()} VNĐ
                         </p>
                       </div>
                     </div>

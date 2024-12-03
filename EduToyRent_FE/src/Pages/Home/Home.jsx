@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie"; // Import thư viện Cookies
 import { Outlet } from "react-router-dom";
-import Sidebar from "../../Component/Sidebar/Sidebar";
+
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import { Link } from "react-router-dom";
@@ -11,9 +11,7 @@ import apiToys from "../../service/ApiToys";
 
 import apiCategory from "../../service/ApiCategory";
 import apiCartItem from "../../service/ApiCartItem";
-import apiUser from "../../service/ApiUser";
-import apiMedia from "../../service/ApiMedia";
-import apiWallets from "../../service/ApiWallets";
+
 import apiCart from "../../service/ApiCart";
 const PictureCategory = [
   {
@@ -252,12 +250,15 @@ const Home = () => {
           toyImgUrls: toy.imageUrls,
           orderTypeId: orderTypeId, // Sử dụng orderTypeId thay cho startDate và endDate
         };
+        try {
+          console.log("Quantity before saving: " + cartItemData.quantity);
+          const addResponse = await apiCartItem.post("", cartItemData);
 
-        console.log("Quantity before saving: " + cartItemData.quantity);
-        const addResponse = await apiCartItem.post("", cartItemData);
-
-        console.log("Sản phẩm đã được thêm vào giỏ hàng:", addResponse.data);
-        alert("Sản phẩm đã được thêm vào giỏ hàng!");
+          console.log("Sản phẩm đã được thêm vào giỏ hàng:", addResponse.data);
+          alert("Sản phẩm đã được thêm vào giỏ hàng!");
+        } catch (error) {
+          alert("Sản phẩm này đã hết hàng");
+        }
       }
     } else {
       alert("Bạn không thể thuê đồ chơi của chính mình");
@@ -286,15 +287,19 @@ const Home = () => {
 
     if (existingItem) {
       // Nếu sản phẩm đã tồn tại, tăng quantity lên 1
-      const updatedQuantity = existingItem.quantity + 1;
+      try {
+        const updatedQuantity = existingItem.quantity + 1;
 
-      await apiCartItem.put(`/${existingItem.id}`, {
-        ...existingItem,
-        quantity: updatedQuantity,
-      });
+        await apiCartItem.put(`/${existingItem.id}`, {
+          ...existingItem,
+          quantity: updatedQuantity,
+        });
 
-      console.log(`Đã cập nhật số lượng sản phẩm: ${updatedQuantity}`);
-      alert("Số lượng sản phẩm đã được cập nhật!");
+        console.log(`Đã cập nhật số lượng sản phẩm: ${updatedQuantity}`);
+        alert("Số lượng sản phẩm đã được cập nhật!");
+      } catch (error) {
+        alert("Sản phẩm đã có trong giỏ hàng");
+      }
     } else {
       // Nếu sản phẩm chưa tồn tại, thêm mới
       const purchaseData = {
@@ -309,10 +314,14 @@ const Home = () => {
         orderTypeId: 7, // Sử dụng orderTypeId thay cho startDate và endDate
       };
 
-      await apiCartItem.post("", purchaseData);
+      try {
+        await apiCartItem.post("", purchaseData);
 
-      console.log("Sản phẩm đã được thêm vào danh sách mua mới.");
-      alert("Sản phẩm đã được thêm vào giỏ hàng!");
+        console.log("Sản phẩm đã được thêm vào danh sách mua mới.");
+        alert("Sản phẩm đã được thêm vào giỏ hàng!");
+      } catch (error) {
+        alert("Sản phẩm này đã hết hàng");
+      }
     }
   };
 
@@ -491,7 +500,7 @@ const Home = () => {
                 {featuredToys.map((category, index) => (
                   <div
                     key={index}
-                    className="flex h-full flex-1 flex-col gap-4 rounded-lg hover:shadow-lg hover:bg-gray-100 transition duration-300"
+                    className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
                     onClick={() => FilterCategory(category.id)}
                   >
                     <div
@@ -519,7 +528,7 @@ const Home = () => {
                 {featuredToys.map((category, index) => (
                   <div
                     key={index}
-                    className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
+                    className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
                     onClick={() => FilterCategory(category.id)}
                   >
                     <div
@@ -539,13 +548,13 @@ const Home = () => {
               </div>
             </div>
             <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
-              Khuyễn mãi hôm nay
+              Khuyến mãi hôm nay
             </h2>
             <div className="grid grid-cols-6 gap-3 p-4">
               {dealsOfTheDay.map((deal, index) => (
                 <div
                   key={index}
-                  className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
+                  className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
                 >
                   <div
                     onClick={() => {
@@ -578,18 +587,18 @@ const Home = () => {
                     </p>
 
                     <p className="text-[#507a95] text-sm">
-                      Age group: {deal.age}
+                      Nhóm tuổi: {deal.age}
                     </p>
                     <div className="flex items-center gap-1">
                       {renderStars(deal.star)}
                     </div>
                     {deal.buyQuantity >= 0 ? (
                       <p className="text-[#0e161b] text-lg font-bold">
-                        {deal.price} VNĐ
+                        {(deal.price || 0).toLocaleString()} VNĐ
                       </p>
                     ) : (
                       <p className="text-[#0e161b] text-lg font-bold">
-                        {deal.price} VNĐ
+                        {(deal.price * 0.15 || 0).toLocaleString()} VNĐ
                       </p>
                     )}
                   </div>
@@ -619,7 +628,7 @@ const Home = () => {
               {toysForRent.map((toy) => (
                 <div
                   key={toy.id}
-                  className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
+                  className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
                 >
                   <div
                     onClick={() => {
@@ -652,13 +661,13 @@ const Home = () => {
                         {toy.name}
                       </p>
                       <p className="text-[#507a95] text-sm">
-                        Age group: {toy.ageGroup}
+                        Nhóm tuổi: {toy.age}
                       </p>
                       <div className="flex items-center gap-1">
                         {renderStars(toy.star)}
                       </div>
                       <p className="text-[#0e161b] text-lg font-bold">
-                        {toy.price} VNĐ
+                        {(toy.price * 0.15 || 0).toLocaleString()} VNĐ
                       </p>
                     </div>
                   </div>
@@ -705,10 +714,10 @@ const Home = () => {
                       {renderStars(selectedToy.star)}
                     </div>
                     <p className="text-lg font-bold text-[#0e161b] mb-2">
-                      Giá: {selectedToy.price} VNĐ
+                      Giá Cọc: {(selectedToy.price || 0).toLocaleString()} VNĐ
                     </p>
                     <p className="text-lg font-bold text-[#0e161b] mb-2">
-                      Giá thuê: {calculatedPrice} VNĐ
+                      Giá thuê: {(calculatedPrice || 0).toLocaleString()} VNĐ
                     </p>
 
                     <div className="mt-4">
@@ -775,7 +784,7 @@ const Home = () => {
               {toysForSale.map((toy) => (
                 <div
                   key={toy.id}
-                  className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
+                  className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
                 >
                   <div
                     onClick={() => {
@@ -808,13 +817,13 @@ const Home = () => {
                         {toy.name}
                       </p>
                       <p className="text-[#507a95] text-sm">
-                        Age group: {toy.age}
+                        Nhóm tuổi: {toy.age}
                       </p>
                       <div className="flex items-center gap-1">
                         {renderStars(toy.star)}
                       </div>
                       <p className="text-[#0e161b] text-lg font-bold">
-                        {toy.price} VNĐ
+                        {(toy.price || 0).toLocaleString()} VNĐ
                       </p>
                     </div>
                   </div>

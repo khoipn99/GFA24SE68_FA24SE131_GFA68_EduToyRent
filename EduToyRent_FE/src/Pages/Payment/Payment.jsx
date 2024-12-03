@@ -335,7 +335,13 @@ const Payment = () => {
                         console.log(response.data);
 
                         apiWallets
-                          .get("/" + customerInfo.walletId)
+                          .get("/" + customerInfo.walletId, {
+                            headers: {
+                              Authorization: `Bearer ${Cookies.get(
+                                "userToken"
+                              )}`,
+                            },
+                          })
                           .then((response2) => {
                             apiWallets.put(
                               `/${customerInfo.walletId}`,
@@ -356,14 +362,24 @@ const Payment = () => {
                               }
                             );
 
-                            apiWalletTransaction.post("", {
-                              transactionType: "Thanh toán đơn hàng",
-                              amount: -totalDepositTmp2,
-                              date: new Date().toISOString(),
-                              walletId: customerInfo.walletId,
-                              paymentTypeId: 5,
-                              orderId: response.data.id,
-                            });
+                            apiWalletTransaction.post(
+                              "",
+                              {
+                                transactionType: "Thanh toán đơn hàng",
+                                amount: totalDepositTmp2,
+                                date: new Date().toISOString(),
+                                walletId: customerInfo.walletId,
+                                paymentTypeId: 5,
+                                orderId: response.data.id,
+                              },
+                              {
+                                headers: {
+                                  Authorization: `Bearer ${Cookies.get(
+                                    "userToken"
+                                  )}`,
+                                },
+                              }
+                            );
                           });
 
                         buyItems.map((item, index) => {
@@ -424,46 +440,31 @@ const Payment = () => {
                                   }
                                 )
                                 .then((response) => {
-                                  apiToys
-                                    .patch(
-                                      `/${item.toyId}/update-status`,
-                                      JSON.stringify("Active"),
-                                      {
-                                        headers: {
-                                          "Content-Type": "application/json", // Specify the correct Content-Type
-                                          Authorization: `Bearer ${Cookies.get(
-                                            "userToken"
-                                          )}`,
-                                        },
-                                      }
-                                    )
-                                    .then((response) => {
-                                      cartItems.map((item) => {
-                                        apiCartItem.delete("/" + item.id, {
-                                          headers: {
-                                            Authorization: `Bearer ${Cookies.get(
-                                              "userToken"
-                                            )}`,
-                                          },
-                                        });
-                                      });
-
-                                      apiCart.put(
-                                        `/${cart.id}`,
-                                        {
-                                          totalPrice: 0,
-                                          status: "active",
-                                          userId: cart.userId,
-                                        },
-                                        {
-                                          headers: {
-                                            Authorization: `Bearer ${Cookies.get(
-                                              "userToken"
-                                            )}`,
-                                          },
-                                        }
-                                      );
+                                  cartItems.map((item) => {
+                                    apiCartItem.delete("/" + item.id, {
+                                      headers: {
+                                        Authorization: `Bearer ${Cookies.get(
+                                          "userToken"
+                                        )}`,
+                                      },
                                     });
+                                  });
+
+                                  apiCart.put(
+                                    `/${cart.id}`,
+                                    {
+                                      totalPrice: 0,
+                                      status: "active",
+                                      userId: cart.userId,
+                                    },
+                                    {
+                                      headers: {
+                                        Authorization: `Bearer ${Cookies.get(
+                                          "userToken"
+                                        )}`,
+                                      },
+                                    }
+                                  );
                                 });
                             });
                         });
@@ -472,14 +473,22 @@ const Payment = () => {
                 });
 
               apiWalletTransaction
-                .post("", {
-                  transactionType: "Thanh toán đơn hàng",
-                  amount: -totalDepositTmp,
-                  date: new Date().toISOString(),
-                  walletId: customerInfo.walletId,
-                  paymentTypeId: 5,
-                  orderId: response.data.id,
-                })
+                .post(
+                  "",
+                  {
+                    transactionType: "Thanh toán đơn hàng",
+                    amount: totalDepositTmp,
+                    date: new Date().toISOString(),
+                    walletId: customerInfo.walletId,
+                    paymentTypeId: 5,
+                    orderId: response.data.id,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                )
                 .then((response) => {});
 
               console.log(response.data);
@@ -639,7 +648,7 @@ const Payment = () => {
           </h2>
           <div className="grid grid-cols-5 text-gray-700 font-semibold border-b pb-2 mb-4">
             <p className="col-span-2"></p>
-            <p className="text-center">Đơn giá</p>
+            <p className="text-center">Số ngày thuê</p>
             <p className="text-center">Giá thuê</p>
             <p className="text-center">Tiền cọc</p>
           </div>
@@ -662,17 +671,23 @@ const Payment = () => {
                   </div>
 
                   <p className="text-center">
-                    {(item.price || 0).toLocaleString()} ₫
+                    {item.orderTypeId === 4
+                      ? "7 ngày"
+                      : item.orderTypeId === 5
+                      ? "14 ngày"
+                      : item.orderTypeId === 6
+                      ? "1 tháng"
+                      : item.price.toLocaleString()}
                   </p>
 
                   <p className="text-center">
                     {item.orderTypeId === 4
-                      ? item.price * 0.15
+                      ? (item.price * 0.15).toLocaleString()
                       : item.orderTypeId === 5
-                      ? item.price * 0.25
+                      ? (item.price * 0.25).toLocaleString()
                       : item.orderTypeId === 6
-                      ? item.price * 0.3
-                      : item.price}
+                      ? (item.price * 0.3).toLocaleString()
+                      : item.price.toLocaleString()}
                   </p>
 
                   <p className="text-center font-medium">
@@ -685,6 +700,7 @@ const Payment = () => {
             )}
           </div>
         </div>
+        <br />
         <div className="bg-gray-100 p-6 rounded-md shadow-md overflow-y-auto ">
           <h2 className="text-xl font-semibold mb-4">Danh sách sản phẩm mua</h2>
           <div className="grid grid-cols-5 text-gray-700 font-semibold border-b pb-2 mb-4">
