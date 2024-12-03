@@ -1,132 +1,153 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import Cookies from "js-cookie"; // Import thư viện Cookies
+import { Outlet } from "react-router-dom";
+
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
-import apiToys from "../../service/ApiToys";
+import { Link } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import các biểu tượng sao
-import Cookies from "js-cookie"; // Import thư viện Cookies
+import { useNavigate } from "react-router-dom";
+import apiToys from "../../service/ApiToys";
 
-// Giả sử bạn đã có danh sách đồ chơi
-const toys = [
-  {
-    name: "Đồ chơi phát triển tư duy",
-    ageGroup: "Ages 3-5",
-    brand: "Brand A",
-    price: "19.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    type: "forSale",
-  },
-  {
-    name: "Remote Control Car",
-    ageGroup: "Ages 4-6",
-    brand: "Brand B",
-    price: "29.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    type: "forRent",
-  },
-  {
-    name: "Đồ chơi phát triển tư duy",
-    ageGroup: "Ages 3-5",
-    brand: "Brand A",
-    price: "19.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    type: "forSale",
-  },
-  {
-    name: "Remote Control Car",
-    ageGroup: "Ages 4-6",
-    brand: "Brand B",
-    price: "29.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    type: "forRent",
-  },
-  {
-    name: "Đồ chơi phát triển tư duy",
-    ageGroup: "Ages 3-5",
-    brand: "Brand A",
-    price: "19.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    type: "forSale",
-  },
-  {
-    name: "Remote Control Car",
-    ageGroup: "Ages 4-6",
-    brand: "Brand B",
-    price: "29.99",
-    image:
-      "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    type: "forRent",
-  },
-  // Thêm nhiều đồ chơi khác tại đây
-];
+import apiCategory from "../../service/ApiCategory";
 
 const FilterToys = () => {
   const [ageGroup, setAgeGroup] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [brand, setBrand] = useState("");
-  const [searchTerm, setSearchTerm] = useState(""); // Trạng thái cho tìm kiếm
-  const [toyType, setToyType] = useState(""); // Trạng thái để lọc giữa đồ chơi bán và cho thuê
-  const [filteredToys, setFilteredToys] = useState(toys); // Trạng thái cho đồ chơi đã lọc
+  const [searchTerm, setSearchTerm] = useState("");
+  const [toyType, setToyType] = useState("");
+  const [filteredToys, setFilteredToys] = useState([]);
   const [Toys, setToys] = useState([]);
   const [selectedToy, setSelectedToy] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [calculatedPrice, setCalculatedPrice] = useState(0);
-  const [rentalDuration, setRentalDuration] = useState(); // Giá trị mặc định là "1 tuần"
-  const [rentItems, setRentItems] = useState([]); // Khởi tạo giỏ hàng
+  const [rentalDuration, setRentalDuration] = useState();
+  const [rentItems, setRentItems] = useState([]);
+  const [pageNumbers, setPageNumbers] = useState([]);
+  const [category, setCategory] = useState([]);
+  const [selectCategory, setSelectCategory] = useState("");
+  const navigate = useNavigate();
 
-  // Thêm trạng thái cho phân trang
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4; // Số lượng đồ chơi mỗi trang
+  const itemsPerPage = 18;
 
   useEffect(() => {
-    apiToys.get("?pageIndex=1&pageSize=20").then((response) => {
+    apiToys.get("/active?pageIndex=1&pageSize=1000").then((response) => {
       console.log(response.data);
       setToys(response.data);
+      setFilteredToys(
+        response.data.slice(
+          currentPage * itemsPerPage - itemsPerPage,
+          currentPage * itemsPerPage
+        )
+      );
+      loadPageNumber(response.data);
+    });
+    apiCategory.get("?pageIndex=1&pageSize=100").then((response) => {
+      setCategory(response.data);
     });
   }, []);
   // Lọc đồ chơi theo tiêu chí
   const handleSearch = () => {
-    const newFilteredToys = toys.filter((toy) => {
-      const matchesAge = ageGroup ? toy.ageGroup === ageGroup : true;
-      const matchesPrice = maxPrice
-        ? parseFloat(toy.price) <= parseFloat(maxPrice)
-        : true;
-      const matchesBrand = brand ? toy.brand === brand : true;
-      const matchesSearch = toy.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesType = toyType ? toy.type === toyType : true;
+    // Dữ liệu bộ lọc từ người dùng
+    const filters = [];
 
-      return (
-        matchesAge &&
-        matchesPrice &&
-        matchesBrand &&
-        matchesSearch &&
-        matchesType
-      );
-    });
-    setFilteredToys(newFilteredToys); // Cập nhật danh sách đồ chơi đã lọc
-    setCurrentPage(1); // Reset trang về 1 khi tìm kiếm
+    if (maxPrice) {
+      switch (maxPrice) {
+        case "1":
+          filters.push(`price ge 0 and price le 1000000`);
+          break;
+        case "2":
+          filters.push(`price gt 1000000 and price le 2000000`);
+          break;
+        case "3":
+          filters.push(`price gt 2000000 and price le 3000000`);
+          break;
+        case "4":
+          filters.push(`price gt 3000000 and price le 4000000`);
+          break;
+        case "5":
+          filters.push(`price gt 4000000 and price le 5000000`);
+          break;
+        case "6":
+          filters.push(`price gt 5000000`);
+          break;
+        default:
+          break; // Không áp dụng bộ lọc giá nếu không có giá trị hợp lệ
+      }
+    }
+
+    if (toyType == "1") {
+      filters.push(`buyQuantity gt -1`);
+    } else if (toyType == "-1") {
+      filters.push(`buyQuantity le 0`);
+    }
+    if (selectCategory) filters.push(`category/name eq '${selectCategory}'`);
+    if (ageGroup) filters.push(`age eq '${ageGroup}'`);
+    if (brand != "") filters.push(`contains(brand, '${brand}')`);
+    if (searchTerm) filters.push(`contains(name, '${searchTerm}')`);
+
+    // Kết hợp các bộ lọc
+    const query = filters.length > 0 ? `?$filter=${filters.join(" and ")}` : "";
+
+    if (query != "") {
+      apiToys.get("/active" + query).then((response) => {
+        console.log(response.data);
+        setToys(response.data);
+        setFilteredToys(
+          response.data.slice(1 * itemsPerPage - itemsPerPage, 1 * itemsPerPage)
+        );
+        loadPageNumber(response.data);
+      });
+
+      setCurrentPage(1);
+    } else {
+      apiToys.get("/active?pageIndex=1&pageSize=1000").then((response) => {
+        console.log(response.data);
+        setToys(response.data);
+        setFilteredToys(
+          response.data.slice(
+            currentPage * itemsPerPage - itemsPerPage,
+            currentPage * itemsPerPage
+          )
+        );
+        loadPageNumber(response.data);
+      });
+    }
   };
 
-  // Tính toán phần tử trên trang hiện tại
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredToys.slice(indexOfFirstItem, indexOfLastItem);
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      handleSearch();
+    }
+  };
 
-  // Tạo danh sách số trang
-  const pageNumbers = [];
-  for (let i = 1; i <= Math.ceil(filteredToys.length / itemsPerPage); i++) {
-    pageNumbers.push(i);
-  }
+  const NextPage = (number) => {
+    setFilteredToys(
+      Toys.slice(
+        parseInt(number) * itemsPerPage - itemsPerPage,
+        parseInt(number) * itemsPerPage
+      )
+    );
+
+    setCurrentPage(parseInt(number));
+  };
 
   const openModal = (toy) => {
     setSelectedToy(toy);
     setIsModalOpen(true);
+    setRentalDuration("1 tuần");
+    const price = calculateRentalPrice(toy.price, "1 tuần"); // Tính giá thuê với thời gian 1 tuần
+    setCalculatedPrice(price); // Lưu giá thuê vào state
+  };
+
+  const loadPageNumber = (data) => {
+    const pages = [];
+    for (let i = 1; i <= Math.ceil(data.length / itemsPerPage); i++) {
+      pages.push(i);
+    }
+    setPageNumbers(pages);
   };
 
   const closeModal = () => {
@@ -236,77 +257,118 @@ const FilterToys = () => {
     alert("Sản phẩm đã được thêm vào giỏ hàng!");
   };
 
+  const HandleToyDetail = (toy) => {
+    console.log(toy);
+    if (toy.buyQuantity >= 0) {
+      Cookies.set("toySaleDetailId", toy.id, { expires: 30 });
+      navigate("/toys-sale-details");
+    } else if (toy.buyQuantity < 0) {
+      Cookies.set("toyRentDetailId", toy.id, { expires: 30 });
+      navigate("/toys-rent-details");
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
       <header>
         <HeaderForCustomer />
       </header>
       <div className="flex flex-1 justify-center py-5 bg-white shadow-md">
-        <div className="layout-content-container flex max-w-[1200px] w-full px-4 sm:px-6 lg:px-8">
+        <div className="layout-content-container flex max-w-[1500px] w-full px-4 sm:px-6 lg:px-8">
           {/* Thanh Filter bên trái */}
           <div className="w-1/4 p-4 bg-gray-100 rounded-lg shadow-sm">
             <h2 className="text-[#0e161b] text-xl font-bold mb-4">Filters</h2>
 
             <div className="mb-4">
-              <label className="mb-1">Age Group:</label>
+              <label className="mb-1">Nhóm tuổi:</label>
               <select
                 value={ageGroup}
                 onChange={(e) => setAgeGroup(e.target.value)}
                 className="border rounded p-2 w-full"
               >
                 <option value="">All</option>
-                <option value="Ages 3-5">Ages 3-5</option>
-                <option value="Ages 4-6">Ages 4-6</option>
-                <option value="Ages 6-8">Ages 6-8</option>
-                <option value="Ages 9-12">Ages 9-12</option>
+                <option value="1-3">Ages 1-3</option>
+                <option value="3-5">Ages 3-5</option>
+                <option value="5-7">Ages 5-7</option>
+                <option value="7-9">Ages 7-9</option>
+                <option value="9-11">Ages 9-11</option>
+                <option value="11-13">Ages 11-13</option>
+                <option value="13+">Ages 13+</option>
               </select>
             </div>
 
             <div className="mb-4">
-              <label className="mb-1">Max Price:</label>
+              <label className="mb-1">Mức giá:</label>
               <select
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
                 className="border rounded p-2 w-full"
               >
                 <option value="">All</option>
-                <option value="10">Up to $10</option>
-                <option value="20">Up to $20</option>
-                <option value="30">Up to $30</option>
-                <option value="40">Up to $40</option>
+                <option value="1">0 - 1 triệu VNĐ</option>
+                <option value="2">1 triệu - 2 triệu VNĐ</option>
+                <option value="3">2 triệu - 3 triệu VNĐ</option>
+                <option value="4">3 triệu - 4 triệu VNĐ</option>
+                <option value="5">4 triệu - 5 triệu VNĐ</option>
+                <option value="6">lớn hơn 5 triệu VNĐ</option>
               </select>
             </div>
-
             <div className="mb-4">
-              <label className="mb-1">Brand:</label>
+              <label className="mb-1">Loại đồ chơi:</label>
               <select
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
+                value={selectCategory}
+                onChange={(e) => setSelectCategory(e.target.value)}
                 className="border rounded p-2 w-full"
               >
                 <option value="">All</option>
-                <option value="Brand A">Brand A</option>
-                <option value="Brand B">Brand B</option>
+
+                {category.length > 0 ? (
+                  category.map((item, index) => (
+                    <option value={item.name}>{item.name}</option>
+                  ))
+                ) : (
+                  <option value=""></option>
+                )}
               </select>
             </div>
 
-            {/* Nút lọc đồ chơi bán và cho thuê */}
             <div className="mb-4">
+              <label className="mb-1">Thương hiệu:</label>
+
+              <input
+                type="text"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                className="border rounded p-2 w-full"
+                placeholder="Tìm kiếm bằng tên hãng đồ chơi"
+              />
+            </div>
+
+            {/* Nút lọc đồ chơi bán và cho thuê */}
+            <div className="mb-4 flex flex-col gap-2">
               <button
-                onClick={() => setToyType("forSale")}
+                onClick={() => setToyType("1")}
                 className={`${
-                  toyType === "forSale" ? "bg-green-800" : "bg-green-500"
-                } text-white px-4 py-2 rounded mb-2 w-full`}
+                  toyType === "1" ? "bg-green-800" : "bg-green-500"
+                } text-white px-4 py-2 rounded`}
               >
                 Đồ chơi bán
               </button>
               <button
-                onClick={() => setToyType("forRent")}
+                onClick={() => setToyType("-1")}
                 className={`${
-                  toyType === "forRent" ? "bg-green-800" : "bg-green-500"
-                } text-white px-4 py-2 rounded w-full`}
+                  toyType === "-1" ? "bg-green-800" : "bg-green-500"
+                } text-white px-4 py-2 rounded`}
               >
                 Đồ chơi cho thuê
+              </button>
+              <button
+                onClick={() => setToyType("")}
+                className={`${
+                  toyType === "" ? "bg-green-800" : "bg-green-500"
+                } text-white px-4 py-2 rounded`}
+              >
+                Tất cả đồ chơi
               </button>
             </div>
 
@@ -325,6 +387,7 @@ const FilterToys = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="border rounded p-2 w-full"
                 placeholder="Tìm kiếm bằng tên đồ chơi"
               />
@@ -333,20 +396,29 @@ const FilterToys = () => {
               Kết quả tìm kiếm cho từ khóa '{searchTerm}'
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Toys.length > 0 ? (
-                Toys.map((deal, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+              {filteredToys.length > 0 ? (
+                filteredToys.map((deal, index) => (
                   <div
                     key={index}
-                    className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg"
+                    className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
                   >
                     <div
-                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                      style={{
-                        backgroundImage: `url(https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png)`,
+                      onClick={() => {
+                        HandleToyDetail(deal);
                       }}
-                    ></div>
-                    <div>
+                    >
+                      <div
+                        className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
+                        style={{
+                          backgroundImage: `url(${
+                            deal.media[0] && deal.media[0].mediaUrl
+                              ? deal.media[0].mediaUrl
+                              : ""
+                          })`,
+                        }}
+                      ></div>
+
                       <p
                         className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
                         style={{
@@ -362,36 +434,36 @@ const FilterToys = () => {
                       </p>
 
                       <p className="text-[#507a95] text-sm">
-                        Age group: {deal.age}
+                        Nhóm tuổi: {deal.age}
                       </p>
                       <div className="flex items-center gap-1">
                         {renderStars(deal.star)}
                       </div>
                       {deal.buyQuantity >= 0 ? (
                         <p className="text-[#0e161b] text-lg font-bold">
-                          {deal.price} VNĐ
+                          {(deal.price || 0).toLocaleString()} VNĐ
                         </p>
                       ) : (
                         <p className="text-[#0e161b] text-lg font-bold">
-                          {deal.price} VNĐ
+                          {(deal.price * 0.15 || 0).toLocaleString()} VNĐ
                         </p>
                       )}
-                      {deal.buyQuantity >= 0 ? (
-                        <button
-                          onClick={() => addToPurchase(deal)}
-                          className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
-                        >
-                          Mua
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => openModal(deal)}
-                          className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
-                        >
-                          Thuê
-                        </button>
-                      )}
                     </div>
+                    {deal.buyQuantity >= 0 ? (
+                      <button
+                        onClick={() => addToPurchase(deal)}
+                        className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                      >
+                        Mua
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => openModal(deal)}
+                        className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                      >
+                        Thuê
+                      </button>
+                    )}
                   </div>
                 ))
               ) : (
@@ -415,7 +487,7 @@ const FilterToys = () => {
                   </button>
                   {selectedToy && (
                     <img
-                      src={selectedToy.image}
+                      src={selectedToy.media[0].mediaUrl}
                       alt={selectedToy.name}
                       className="w-1/2 h-full object-cover rounded-l-lg"
                     />
@@ -431,10 +503,10 @@ const FilterToys = () => {
                       {renderStars(selectedToy.star)}
                     </div>
                     <p className="text-lg font-bold text-[#0e161b] mb-2">
-                      Giá: {selectedToy.price} VNĐ
+                      Giá: {(selectedToy.price || 0).toLocaleString()} VNĐ
                     </p>
                     <p className="text-lg font-bold text-[#0e161b] mb-2">
-                      Giá thuê: {calculatedPrice} VNĐ
+                      Giá thuê: {(calculatedPrice || 0).toLocaleString()} VNĐ
                     </p>
 
                     <div className="mt-4">
@@ -493,7 +565,7 @@ const FilterToys = () => {
               {pageNumbers.map((number) => (
                 <button
                   key={number}
-                  onClick={() => setCurrentPage(number)}
+                  onClick={() => NextPage(number)}
                   className={`${
                     currentPage === number ? "bg-blue-800" : "bg-blue-500"
                   } text-white px-3 py-2 mx-1 rounded`}

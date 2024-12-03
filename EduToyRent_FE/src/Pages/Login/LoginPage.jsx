@@ -91,20 +91,79 @@ const LoginPage = () => {
       }
     }
   };
+  const logFormData = (formData) => {
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ": " + pair[1]);
+    }
+  };
   // Hàm đăng nhập Google
-  const handleGoogleSuccess = (response) => {
+  const handleGoogleSuccess = async (response) => {
     try {
-      // Giải mã JWT từ Google để lấy thông tin người dùng
+      // Giải mã JWT từ Google
       const decoded = jwtDecode(response.credential);
 
-      // Lưu token và dữ liệu người dùng vào cookies
-      Cookies.set("userToken", response.credential, { expires: 1 }); // Lưu trong 1 ngày
-      Cookies.set("userData", JSON.stringify(decoded), { expires: 1 });
+      // Lấy dữ liệu từ Google
+      const { email, name, picture, sub } = decoded;
 
-      navigate("/"); // Chuyển hướng đến trang chính
-      console.log(decoded);
+      // Gán giá trị mặc định nếu thiếu dữ liệu
+      const fullName = name || "Default Name";
+      const avatarUrl = picture || "https://example.com/default-avatar.png";
+      const userEmail = email || "default@example.com";
+      const userId = sub;
+
+      // Kiểm tra nếu email đã tồn tại
+      const checkUserResponse = await apiUser.get(
+        `/ByEmail?email=${userEmail}&pageIndex=1&pageSize=50`
+      );
+
+      if (
+        checkUserResponse.status === 200 &&
+        checkUserResponse.data.totalCount > 0
+      ) {
+        // Nếu người dùng đã tồn tại
+        alert(
+          "Tài khoản với email này đã tồn tại. Vui lòng sử dụng email khác."
+        );
+        return; // Dừng lại không tạo tài khoản mới
+      }
+
+      // Chuẩn bị dữ liệu người dùng mới dưới dạng FormData
+      const formData = new FormData();
+      formData.append("FullName", fullName);
+      formData.append("Email", userEmail);
+      formData.append("Password", "1"); // Nếu không cần password, có thể để trống
+      formData.append("Phone", "0");
+      formData.append("Dob", new Date().toISOString());
+      formData.append("Address", "string");
+      formData.append("AvatarUrl", avatarUrl);
+      formData.append("Status", "Active");
+      formData.append("WalletId", null);
+      formData.append("RoleId", 3);
+      formData.append("CreateDate", new Date().toISOString());
+
+      // Kiểm tra các trường đã được thêm vào FormData
+      logFormData(formData);
+
+      // Gửi dữ liệu tạo tài khoản mới dưới dạng form-data
+      const createUserResponse = await apiUser.post("", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (createUserResponse.status === 201) {
+        console.log("User created successfully.");
+        // Lưu JWT token và thông tin người dùng vào cookie
+        Cookies.set("userToken", response.credential, { expires: 1 }); // Lưu token trong 1 ngày
+        Cookies.set("userData", JSON.stringify(decoded), { expires: 1 }); // Lưu dữ liệu người dùng trong 1 ngày
+        navigate("/"); // Điều hướng sau khi tạo người dùng thành công
+      } else {
+        console.error("Error creating user:", createUserResponse.data);
+        alert("Đã có lỗi xảy ra khi tạo tài khoản. Vui lòng thử lại.");
+      }
     } catch (error) {
-      console.error("JWT Decode Error:", error);
+      console.error("Error during Google login:", error);
+      alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
     }
   };
 

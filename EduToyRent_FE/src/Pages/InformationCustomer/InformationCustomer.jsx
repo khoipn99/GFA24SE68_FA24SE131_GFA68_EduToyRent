@@ -559,9 +559,6 @@ const InformationCustomer = () => {
                 <strong>Ngày đặt:</strong>{" "}
                 {new Date(selectedOrder.orderDate).toISOString().split("T")[0]}
               </p>
-              <p>
-                <strong>Tình trạng:</strong> {selectedOrder.status}
-              </p>
 
               <p>
                 <strong>Địa chỉ nhận hàng:</strong>{" "}
@@ -627,7 +624,7 @@ const InformationCustomer = () => {
                             </p>
                             <p>
                               Ngày trả hàng:{" "}
-                              {item.startDate
+                              {item.endDate
                                 ? new Date(item.endDate)
                                     .toISOString()
                                     .split("T")[0]

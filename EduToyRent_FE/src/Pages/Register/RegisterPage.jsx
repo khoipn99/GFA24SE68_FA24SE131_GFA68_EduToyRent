@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import LoginBG from "../../assets/bg.png";
 import apiUser from "../../service/ApiUser";
 import Cookies from "js-cookie";
+import apiLogin from "../../service/ApiLogin";
+import apiWallets from "../../service/ApiWallets";
+import { jwtDecode } from "jwt-decode";
 const RegisterPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,91 +48,135 @@ const RegisterPage = () => {
     setConfirmPassword(newConfirmPassword);
     setPasswordsMatch(password === newConfirmPassword);
   };
-  // const handleRegister = async () => {
-  //   // Lấy giá trị ngày hiện tại
-  //   const createDate = new Date().toISOString(); // ISO format cho chuẩn API
-  //   console.log("Create Date:", createDate); // Log ngày hiện tại
+  const handleRegister = async () => {
+    const createDate = new Date().toISOString(); // ISO format cho chuẩn API
+    console.log("Create Date:", createDate);
 
-  //   // Lấy giá trị từ các trường nhập liệu
-  //   const fullName = document.getElementById("name").value || "string"; // Giá trị mặc định nếu không nhập
-  //   const email = document.getElementById("email").value || "string"; // Giá trị mặc định là rỗng
-  //   const phone = document.getElementById("phone").value || "string"; // Giá trị mặc định là rỗng
-  //   const passwordInput = password || ""; // Lấy từ state hoặc input đã validate, mặc định là rỗng
+    const fullName = document.getElementById("name").value || "string";
+    const email = document.getElementById("email").value || "string";
+    const phone = document.getElementById("phone").value || "string";
+    const passwordInput = password || "";
 
-  //   // Log giá trị các trường nhập liệu
-  //   console.log("Full Name:", fullName);
-  //   console.log("Email:", email);
-  //   console.log("Phone:", phone);
-  //   console.log("Password:", passwordInput);
+    console.log("Full Name:", fullName);
+    console.log("Email:", email);
+    console.log("Phone:", phone);
+    console.log("Password:", passwordInput);
 
-  //   // Kiểm tra các trường hợp thiếu thông tin
-  //   if (!fullName || !email || !phone || !passwordInput) {
-  //     alert("Vui lòng nhập đầy đủ tất cả các trường!");
-  //     console.log("Validation failed: Missing required fields");
-  //     return;
-  //   }
+    if (!fullName || !email || !phone || !passwordInput) {
+      alert("Vui lòng nhập đầy đủ tất cả các trường!");
+      console.log("Validation failed: Missing required fields");
+      return;
+    }
 
-  //   if (
-  //     !passwordsMatch ||
-  //     !passwordValidations.length ||
-  //     !passwordValidations.letter ||
-  //     !passwordValidations.number ||
-  //     !passwordValidations.specialChar
-  //   ) {
-  //     alert(
-  //       "Vui lòng kiểm tra lại mật khẩu và các yêu cầu về độ mạnh mật khẩu!"
-  //     );
-  //     console.log("Password validation failed:", passwordValidations);
-  //     return;
-  //   }
+    if (
+      !passwordsMatch ||
+      !passwordValidations.length ||
+      !passwordValidations.letter ||
+      !passwordValidations.number ||
+      !passwordValidations.specialChar
+    ) {
+      alert(
+        "Vui lòng kiểm tra lại mật khẩu và các yêu cầu về độ mạnh mật khẩu!"
+      );
+      console.log("Password validation failed:", passwordValidations);
+      return;
+    }
 
-  //   // Tạo đối tượng FormData
-  //   const formData = new FormData();
-  //   formData.append("fullName", fullName);
-  //   formData.append("email", email);
-  //   formData.append("password", passwordInput);
-  //   formData.append("phone", phone);
-  //   formData.append("dob", "2024-01-01T00:00:00Z"); // Ngày mặc định, hoặc yêu cầu người dùng chọn
-  //   formData.append("address", "string"); // Mặc định trống
-  //   formData.append("avatarUrl", null); // Có thể thêm logic upload file sau
-  //   formData.append("status", "Active"); // Trạng thái mặc định
-  //   formData.append("walletId", null); // Giá trị mặc định
-  //   formData.append("roleid", 3); // Vai trò mặc định là Member
-  //   formData.append("createDate", createDate); // Gán ngày hiện tại
+    const formData = new FormData();
+    formData.append("fullName", fullName);
+    formData.append("email", email);
+    formData.append("password", passwordInput);
+    formData.append("phone", phone);
+    formData.append("dob", "2024-01-01T00:00:00Z");
+    formData.append("address", "string");
+    formData.append("avatarUrl", null);
+    formData.append("status", "Active");
+    formData.append("walletId", null);
+    formData.append("roleid", 3);
+    formData.append("createDate", createDate);
 
-  //   // Log dữ liệu FormData
-  //   const formDataObj = {};
-  //   formData.forEach((value, key) => {
-  //     formDataObj[key] = value;
-  //   });
-  //   console.log("Form Data:", formDataObj); // Log form data trước khi gửi
+    const formDataObj = {};
+    formData.forEach((value, key) => {
+      formDataObj[key] = value;
+    });
+    console.log("Form Data:", formDataObj);
 
-  //   try {
-  //     // Gửi yêu cầu đăng ký
-  //     const response = await apiUser.post("", formData, {
-  //       headers: {
-  //         "Content-Type": "multipart/form-data",
-  //         Authorization: `Bearer ${Cookies.get("userToken")}`, // Sử dụng Cookies.get thay vì Cookies.set
-  //       },
-  //     });
+    try {
+      // Bước 1: Đăng ký người dùng
+      const response = await apiUser.post("", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-  //     // Log phản hồi từ server
-  //     console.log("Response status:", response.status);
-  //     console.log("Response data:", response.data);
+      console.log("Response status:", response.status);
+      console.log("Response data:", response.data);
 
-  //     if (response.status === 201) {
-  //       alert("Đăng ký thành công!");
-  //       console.log("User created:", response.data);
-  //       navigate("/login");
-  //     } else {
-  //       console.error("Error:", response.data);
-  //       alert(`Đăng ký thất bại: ${response.data.message || "Có lỗi xảy ra"}`);
-  //     }
-  //   } catch (error) {
-  //     console.error("Lỗi hệ thống:", error);
-  //     alert("Không thể kết nối đến server. Vui lòng thử lại sau!");
-  //   }
-  // };
+      if (response.status === 201) {
+        alert("Đăng ký thành công!");
+
+        // Bước 2: Gọi API login để lấy token
+        const loginResponse = await apiLogin.post("", {
+          email: email,
+          password: passwordInput,
+        });
+
+        if (loginResponse.data && loginResponse.data.token) {
+          const token = loginResponse.data.token;
+          // Lưu token vào cookie
+          Cookies.set("userToken", token, { expires: 7, path: "/" });
+          console.log("Token saved in cookie:", Cookies.get("userToken"));
+
+          // Sau khi đăng nhập thành công, gọi API tạo ví (ví dụ: api tạo ví)
+          const tokenFromCookie = Cookies.get("userToken");
+
+          if (tokenFromCookie) {
+            const decodedToken = jwtDecode(tokenFromCookie); // Giải mã token JWT
+            const userId = decodedToken.userId;
+
+            const walletData = {
+              balance: 0,
+              withdrawMethod: "string",
+              withdrawInfo: "string",
+              status: "Active",
+              userId: userId,
+            };
+
+            try {
+              const walletResponse = await apiWallets.post("", walletData, {
+                headers: {
+                  Authorization: `Bearer ${tokenFromCookie}`,
+                },
+              });
+
+              if (walletResponse.status === 201) {
+                console.log("Tạo ví thành công:", walletResponse.data);
+              } else {
+                console.error("Lỗi khi tạo ví:", walletResponse.data);
+              }
+            } catch (walletError) {
+              console.error("Lỗi khi gọi API tạo ví:", walletError);
+            }
+          }
+          // Xóa cookie chứa token trước khi chuyển trang
+          Cookies.remove("userToken");
+          // Chuyển hướng tới trang đăng nhập hoặc trang chính sau khi đăng ký và đăng nhập thành công
+          navigate("/login");
+        } else {
+          console.error("Lỗi: Không nhận được token từ API login");
+          alert(
+            "Đăng ký thành công nhưng không thể đăng nhập. Vui lòng thử lại."
+          );
+        }
+      } else {
+        console.error("Error:", response.data);
+        alert(`Đăng ký thất bại: ${response.data.message || "Có lỗi xảy ra"}`);
+      }
+    } catch (error) {
+      console.error("Lỗi hệ thống:", error);
+      alert("Không thể kết nối đến server. Vui lòng thử lại sau!");
+    }
+  };
 
   return (
     <div className="relative flex items-center justify-center min-h-screen">
@@ -290,7 +337,7 @@ const RegisterPage = () => {
         {/* Submit Button */}
         <button
           className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md py-2 px-4 w-full"
-          //onClick={handleRegister}
+          onClick={handleRegister}
         >
           Đăng ký
         </button>

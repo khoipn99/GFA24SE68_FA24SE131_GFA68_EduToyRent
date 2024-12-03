@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import apiPayment from "../../service/ApiPayment";
+import Cookies from "js-cookie";
 
 const TopUp = () => {
   const [amount, setAmount] = useState("");
@@ -26,6 +27,7 @@ const TopUp = () => {
         "/create-payment-link?totalAmount=" + numericAmount + "&orderId=6368"
       )
       .then((response) => {
+        Cookies.set("TopUpMoney", numericAmount, { expires: 1 });
         window.location.href = response.data.url;
       });
   };

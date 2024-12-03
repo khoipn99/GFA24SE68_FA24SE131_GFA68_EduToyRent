@@ -1,10 +1,89 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import Cookies from "js-cookie";
+import apiWallets from "../../service/ApiWallets";
+import apiWalletTransaction from "../../service/ApiWalletTransaction";
+import apiUser from "../../service/ApiUser";
 
 const TopUpSuccess = () => {
+  const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const code = searchParams.get("code");
+    const id = searchParams.get("id");
+    const cancel = searchParams.get("cancel");
+    const status = searchParams.get("status");
+    const orderCode = searchParams.get("orderCode");
+
+    if (cancel == "false") {
+      const paymentPriceString = Cookies.get("TopUpMoney"); // Lấy giá trị từ cookie
+      const paymentPrice = parseFloat(paymentPriceString); // Chuyển thành số thực
+      const userDataCookie = Cookies.get("userDataReal");
+      var parsedUserData;
+      if (userDataCookie) {
+        try {
+          parsedUserData = JSON.parse(userDataCookie);
+        } catch (error) {
+          console.error("Error parsing userDataCookie:", error);
+        }
+      } else {
+        console.warn("Cookie 'userDataReal' is missing or undefined.");
+      }
+
+      apiWallets
+        .get("/" + parsedUserData.walletId, {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response2) => {
+          const walletTmp = response2.data;
+          console.log(walletTmp.id);
+          apiWallets.put(
+            "/" + walletTmp.id,
+            {
+              balance: walletTmp.balance + paymentPrice,
+              withdrawMethod: walletTmp.withdrawMethod,
+              withdrawInfo: walletTmp.withdrawInfo,
+              status: walletTmp.status,
+              userId: walletTmp.userId,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+          apiWalletTransaction
+            .post(
+              "",
+              {
+                transactionType: "Nạp tiền",
+                amount: paymentPrice,
+                date: new Date().toISOString(),
+                walletId: walletTmp.id,
+                paymentTypeId: 5,
+                orderId: null,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
+            .then((response3) => {
+              navigate("/top-up-complete");
+            });
+        });
+    }
+    {
+      navigate("/");
+    }
+  }, []);
 
   const handleGoHome = () => {
     navigate("/");
