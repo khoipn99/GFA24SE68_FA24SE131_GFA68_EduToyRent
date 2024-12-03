@@ -51,6 +51,7 @@ const ToySupplierPage = () => {
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
   const itemsPerPage = 5; // Số mục trên mỗi trang
   const [searchKeyword, setSearchKeyword] = useState(""); // Lưu từ khóa tìm kiếm
+  const [mediaList, setMediaList] = useState([]); // Lưu danh sách media (ảnh + video)
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -143,9 +144,12 @@ const ToySupplierPage = () => {
       setSelectedMedia(selectedToy.media[0].mediaUrl); // Đặt ảnh/video đầu tiên làm mặc định
     }
   }, [selectedToy]);
-  // useEffect(() => {
-  //   LoadOrderShop(userId, ""); // Gọi LoadOrderShop lần đầu với trạng thái "all"
-  // }, [userId]);
+
+  useEffect(() => {
+    if (selectedToy) {
+      setMediaList(selectedToy.media || []); // Lưu danh sách media từ sản phẩm
+    }
+  }, [selectedToy]);
 
   // Hàm load đồ chơi theo userId
   const LoadToy = async (userId, pageIndex = 1, pageSize = 5) => {
@@ -509,9 +513,20 @@ const ToySupplierPage = () => {
       }
     }
   };
+
+  const [mediaFiles, setMediaFiles] = useState([]);
+  // Hàm xử lý khi người dùng chọn file
+  const handleFileChange1 = (e) => {
+    const files = e.target.files;
+    const selectedFiles = [];
+    for (let i = 0; i < files.length; i++) {
+      selectedFiles.push(files[i]);
+    }
+    setMediaFiles(selectedFiles); // Lưu file vào state
+  };
   // Hàm để gửi ảnh lên API
   const handleUpdateToy = async () => {
-    const toyId = selectedToy?.id; // Lấy toyId từ selectedToy
+    const toyId = selectedToy?.id;
 
     if (!toyId) {
       console.error("Không tìm thấy toyId.");
@@ -519,7 +534,6 @@ const ToySupplierPage = () => {
     }
 
     try {
-      // Chuẩn bị dữ liệu dưới dạng JSON thay vì formData
       const updatedToy = {
         name: selectedToy.name || "Default Toy Name",
         description: selectedToy.description || "Default Description",
@@ -532,22 +546,57 @@ const ToySupplierPage = () => {
         rentCount: selectedToy.rentCount || "0",
         rentTime: selectedToy.rentTime || "Default Rent Time",
       };
-      console.log("Dữ liệu gửi đi1:", updatedToy);
-      console.log("Dữ liệu gửi đi:", selectedToy);
-      // Gửi PUT request với Content-Type là application/json
+
+      console.log("Dữ liệu gửi đi:", updatedToy);
+
+      // Gửi PUT request để cập nhật thông tin sản phẩm
       const response = await apiToys.put(`/${toyId}`, updatedToy, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
-          "Content-Type": "application/json", // Sử dụng application/json thay vì multipart/form-data
+          "Content-Type": "application/json",
         },
       });
 
       console.log("Cập nhật toy thành công:", response.data);
-      setToyData(response.data); // Cập nhật lại dữ liệu của toy sau khi update
-      setIsEditing(null); // Dừng trạng thái chỉnh sửa
-      LoadToy(userId);
+      setToyData(response.data);
+
+      // Cập nhật hình ảnh/video nếu có
+      if (mediaFiles.length > 0) {
+        const mediaData = new FormData();
+        mediaFiles.forEach((file) => {
+          mediaData.append("mediaUrls", file); // Đảm bảo tên key đúng với yêu cầu API
+        });
+
+        try {
+          const uploadResponse = await apiMedia.put(
+            `/update-toy-media/${toyId}`,
+            mediaData,
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+          console.log(
+            "Hình ảnh và video đã được cập nhật:",
+            uploadResponse.data
+          );
+          alert("Sản phẩm và hình ảnh đã được cập nhật thành công!");
+        } catch (uploadError) {
+          console.error("Lỗi khi cập nhật hình ảnh:", uploadError);
+          alert("Sản phẩm đã được cập nhật nhưng không thể cập nhật hình ảnh!");
+        }
+      } else {
+        console.log("Không có ảnh hoặc video nào được chọn.");
+      }
+
+      setIsEditing(false);
+      setSelectedToy(null); // Đảm bảo khi cancel không mở lại chi tiết
+      LoadToy(userId); // Tải lại dữ liệu nếu cần
     } catch (error) {
       console.error("Lỗi khi cập nhật toy:", error);
+      alert("Đã xảy ra lỗi khi cập nhật sản phẩm!");
     }
   };
 
@@ -1946,9 +1995,9 @@ const ToySupplierPage = () => {
 
                   <div className="flex flex-wrap lg:flex-nowrap gap-10">
                     {/* Phần hình ảnh */}
-                    <div className="flex-1 flex justify-center items-center flex-col">
+                    <div className="flex-1 flex justify-center items-center flex-col max-w-md mx-auto mt-20">
                       {/* Hiển thị ảnh hoặc video */}
-                      <div className="w-80 h-80 mb-6">
+                      <div className="w-80 h-80">
                         {selectedMedia &&
                         selectedToy.media.some(
                           (media) => media.mediaUrl === selectedMedia
@@ -1970,7 +2019,7 @@ const ToySupplierPage = () => {
                       </div>
 
                       {/* Ảnh/video nhỏ */}
-                      <div className="flex gap-4 flex-wrap justify-center">
+                      <div className="flex gap-4 flex-wrap justify-center mt-4">
                         {" "}
                         {/* Giữ cho các ảnh nhỏ xếp dưới ảnh lớn */}
                         {selectedToy.media.map((media, index) => (
@@ -2054,7 +2103,6 @@ const ToySupplierPage = () => {
               <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
                 <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
                   <h2 className="text-4xl font-bold mb-4 text-center">
-                    {" "}
                     Chỉnh sửa đồ chơi
                   </h2>
                   <form className="space-y-6">
@@ -2116,8 +2164,11 @@ const ToySupplierPage = () => {
                       />
                     </div>
                     <div className="mb-4">
-                      <label htmlFor="price" className="block text-gray-700">
-                        Số lượng:
+                      <label
+                        htmlFor="buyQuantity"
+                        className="block text-gray-700"
+                      >
+                        Số lượng
                       </label>
                       <input
                         type="number"
@@ -2134,8 +2185,8 @@ const ToySupplierPage = () => {
                       />
                     </div>
                     <div className="mb-4">
-                      <label htmlFor="price" className="block text-gray-700">
-                        Nguồn gốc:
+                      <label htmlFor="origin" className="block text-gray-700">
+                        Nguồn gốc
                       </label>
                       <input
                         type="text"
@@ -2152,8 +2203,8 @@ const ToySupplierPage = () => {
                       />
                     </div>
                     <div className="mb-4">
-                      <label htmlFor="price" className="block text-gray-700">
-                        Tuổi:
+                      <label htmlFor="age" className="block text-gray-700">
+                        Tuổi
                       </label>
                       <input
                         type="number"
@@ -2170,8 +2221,8 @@ const ToySupplierPage = () => {
                       />
                     </div>
                     <div className="mb-4">
-                      <label htmlFor="price" className="block text-gray-700">
-                        Thương hiệu:
+                      <label htmlFor="brand" className="block text-gray-700">
+                        Thương hiệu
                       </label>
                       <input
                         type="text"
@@ -2206,11 +2257,43 @@ const ToySupplierPage = () => {
                         ))}
                       </select>
                     </div>
+
+                    {/* Thêm trường nhập ảnh */}
+                    {/* <div className="mb-4">
+                      <label
+                        htmlFor="mediaUpload"
+                        className="block text-gray-700"
+                      >
+                        Hình ảnh (Chọn một hoặc nhiều ảnh)
+                      </label>
+                      <input
+                        type="file"
+                        id="mediaUpload"
+                        name="mediaUpload"
+                        className="w-full p-2 border border-gray-300 rounded"
+                        accept="image/*"
+                        multiple
+                      />
+                    </div> */}
+                    <div>
+                      <label className="block font-medium">
+                        Chọn hình ảnh và video:
+                      </label>
+                      <input
+                        type="file"
+                        id="mediaUpload"
+                        accept="image/*, video/*"
+                        multiple
+                        className="w-full border rounded-lg px-4 py-2"
+                        onChange={handleFileChange1} // Lưu file vào state
+                      />
+                    </div>
                     <div className="flex justify-end">
                       <button
-                        type="submit" // Sử dụng type="submit" để kích hoạt hành động form
-                        onClick={() => {
-                          handleUpdateToy();
+                        type="submit"
+                        onClick={(e) => {
+                          e.preventDefault(); // Ngăn chặn form gửi mặc định
+                          handleUpdateToy(); // Gọi hàm cập nhật sản phẩm
                           setIsEditing(false);
                           setSelectedToy(null); // Đảm bảo khi cancel không mở lại chi tiết
                         }}
