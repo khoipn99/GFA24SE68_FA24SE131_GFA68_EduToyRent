@@ -1134,9 +1134,6 @@ const InformationLessor = () => {
                 <strong>Ngày đặt:</strong>{" "}
                 {new Date(selectedOrder.orderDate).toISOString().split("T")[0]}
               </p>
-              <p>
-                <strong>Tình trạng:</strong> {selectedOrder.status}
-              </p>
 
               <p>
                 <strong>Địa chỉ nhận hàng:</strong>{" "}
@@ -1194,19 +1191,19 @@ const InformationLessor = () => {
                             </p>
                             <p>
                               Ngày thuê:{" "}
-                              {
-                                new Date(item.startDate)
-                                  .toISOString()
-                                  .split("T")[0]
-                              }
+                              {item.startDate
+                                ? new Date(item.startDate)
+                                    .toISOString()
+                                    .split("T")[0]
+                                : "Đang chờ"}
                             </p>
                             <p>
                               Ngày trả hàng:{" "}
-                              {
-                                new Date(item.endDate)
-                                  .toISOString()
-                                  .split("T")[0]
-                              }
+                              {item.endDate
+                                ? new Date(item.endDate)
+                                    .toISOString()
+                                    .split("T")[0]
+                                : "Đang chờ"}
                             </p>
                           </div>
 

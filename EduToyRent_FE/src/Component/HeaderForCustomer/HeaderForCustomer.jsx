@@ -302,17 +302,17 @@ const HeaderForCustomer = () => {
       // Kiểm tra phản hồi từ API
       if (updateResponse.status === 204) {
         console.log(`Số lượng sản phẩm đã được cập nhật: ${newQuantity}`);
-        alert("Số lượng sản phẩm đã được cập nhật!");
+        //alert("Số lượng sản phẩm đã được cập nhật!");
         // Sau khi cập nhật thành công, gọi lại hàm để tải lại giỏ hàng
         loadCartFromDatabase();
       } else {
         console.error("Lỗi khi cập nhật số lượng sản phẩm", updateResponse);
-        alert("Có lỗi xảy ra khi cập nhật số lượng sản phẩm.");
+        alert("đã đạt giới hạn số lượng sản phẩm trong kho.");
       }
     } catch (error) {
       // Log lỗi khi gọi API lấy dữ liệu giỏ hàng
       console.error("Lỗi khi gọi API lấy giỏ hàng:", error);
-      alert("Có lỗi xảy ra khi tải giỏ hàng.");
+      alert("đã đạt giới hạn số lượng sản phẩm trong kho.");
     }
   };
 
@@ -562,7 +562,7 @@ const HeaderForCustomer = () => {
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 className="relative flex items-center space-x-2 "
-                style={{ zIndex: 9999 }}
+                style={{ zIndex: 10 }}
               >
                 {userData.avatarUrl ? (
                   <div className="text-[#0e161b]">
@@ -653,7 +653,9 @@ const HeaderForCustomer = () => {
                                   {/* Chọn thời gian thuê */}
                                   <div className="flex justify-between items-center mb-2">
                                     <p className="mr-4">
-                                      Giá gốc: {item.toyPrice} VNĐ
+                                      Giá gốc:{" "}
+                                      {(item.toyPrice || 0).toLocaleString()}{" "}
+                                      VNĐ
                                     </p>
                                   </div>
                                   <div className="flex space-x-4">
@@ -704,10 +706,12 @@ const HeaderForCustomer = () => {
                                   <div className="mt-2">
                                     <p className="font-bold">
                                       Giá thuê:{" "}
-                                      {calculateRentalPrice(
-                                        item.toyPrice,
-                                        item.rentalDuration
-                                      )}{" "}
+                                      {(
+                                        calculateRentalPrice(
+                                          item.toyPrice,
+                                          item.rentalDuration
+                                        ) || 0
+                                      ).toLocaleString()}{" "}
                                       VNĐ
                                     </p>
                                   </div>
@@ -749,7 +753,10 @@ const HeaderForCustomer = () => {
                               <div className="flex-grow">
                                 <h3 className="font-bold">{item.toyName}</h3>
                                 <div className="flex justify-between items-center">
-                                  <p className="mr-4">Giá: {item.price} VNĐ</p>
+                                  <p className="mr-4">
+                                    Giá: {}
+                                    {(item.price || 0).toLocaleString()} VNĐ
+                                  </p>
                                   <div className="flex items-center">
                                     {/* Nút giảm số lượng */}
                                     <button
@@ -805,17 +812,22 @@ const HeaderForCustomer = () => {
                     {/* Phần tổng tiền nằm ở đáy */}
                     <div className="border-t border-gray-200 bg-white py-4 flex flex-col items-center justify-center">
                       <p className="text-sm self-start ml-4">
-                        Tổng tiền thuê: {totalRentPrice} VNĐ
+                        Tổng tiền thuê: {(totalRentPrice || 0).toLocaleString()}{" "}
+                        VNĐ
                       </p>
                       <p className="text-sm self-start ml-4">
-                        Tổng tiền cọc: {totalDeposit} VNĐ
+                        Tổng tiền cọc: {(totalDeposit || 0).toLocaleString()}{" "}
+                        VNĐ
                       </p>
                       <p className="text-sm self-start ml-4">
-                        Tổng tiền mua: {totalBuyPrice} VNĐ
+                        Tổng tiền mua: {(totalBuyPrice || 0).toLocaleString()}{" "}
+                        VNĐ
                       </p>
 
                       <h1 className="text-md font-semibold text-red-700">
-                        Tổng tiền: {totalRentPrice + totalBuyPrice} VNĐ
+                        Tổng tiền:{" "}
+                        {(totalDeposit + totalBuyPrice || 0).toLocaleString()}{" "}
+                        VNĐ
                       </h1>
                       <button
                         onClick={() => {
