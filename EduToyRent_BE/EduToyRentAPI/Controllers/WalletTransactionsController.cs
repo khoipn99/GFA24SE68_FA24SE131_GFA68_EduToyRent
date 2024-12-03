@@ -184,6 +184,7 @@ namespace EduToyRentAPI.Controllers
                 filter: w => w.WalletId == walletId,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
+                .OrderByDescending(t => t.Id)                
                 .Select(tx => new WalletTransactionResponse
                 {
                     Id = tx.Id,

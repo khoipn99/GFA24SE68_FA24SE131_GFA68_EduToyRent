@@ -296,11 +296,11 @@ namespace EduToyRentAPI.Controllers
 
             int buyQuantity = 0;
 
-            if (userRole == 2)
+            if (userRole == 3)
             {
-                buyQuantity = 0; 
+                buyQuantity = -1; 
             }
-            else if (userRole == 3) 
+            else if (userRole == 2) 
             {
                 buyQuantity = (int)toyRequest.BuyQuantity;
             }
@@ -376,11 +376,11 @@ namespace EduToyRentAPI.Controllers
 
             int buyQuantity = 0;
 
-            if (userRole == 2)
+            if (userRole == 3)
             {
-                buyQuantity = 0;
+                buyQuantity = -1;
             }
-            else if (userRole == 3)
+            else if (userRole == 2)
             {
                 buyQuantity = (int)toyRequest.BuyQuantity;
                 toy.Status = "Inactive";
