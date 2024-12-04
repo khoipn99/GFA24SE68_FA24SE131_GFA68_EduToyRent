@@ -38,5 +38,13 @@ namespace EduToyRentRepositories.Interface
         void UpdateList(IEnumerable<TEntity> entitiesToUpdate);
 
         TEntity Get(Expression<Func<TEntity, bool>> predicate);
+        // chat 
+        Task InsertAsync(TEntity entity);
+        Task<IEnumerable<TEntity>> GetAsync(
+            Expression<Func<TEntity, bool>> filter = null,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
+            string includeProperties = "",
+            int? pageIndex = null,
+            int? pageSize = null);
     }
 }
