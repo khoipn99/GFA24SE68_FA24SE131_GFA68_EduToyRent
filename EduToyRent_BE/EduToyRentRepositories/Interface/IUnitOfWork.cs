@@ -35,5 +35,6 @@ namespace EduToyRentRepositories.Interface
         IGenericRepository<Wallet> WalletRepository { get; }
 
         void Save();
+        Task SaveAsync();
     }
 }

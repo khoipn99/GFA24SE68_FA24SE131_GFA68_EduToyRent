@@ -236,7 +236,12 @@ namespace EduToyRentRepositories.Implement
         {
             _context.SaveChanges();
         }
-
+        //chat 
+        public async Task SaveAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+        //
         private bool disposed = false;
 
         protected virtual void Dispose(bool disposing)
