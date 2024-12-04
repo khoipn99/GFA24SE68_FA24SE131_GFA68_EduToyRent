@@ -1100,7 +1100,6 @@ const InformationLessor = () => {
         return (
           <div>
             <h3 className="text-lg font-semibold">Doanh Thu</h3>
-            <p>Thông tin thống kê sẽ được hiển thị ở đây.</p>
           </div>
         );
       default:

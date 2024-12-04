@@ -26,27 +26,87 @@ const FilterToys = () => {
   const [rentItems, setRentItems] = useState([]);
   const [pageNumbers, setPageNumbers] = useState([]);
   const [category, setCategory] = useState([]);
-  const [selectCategory, setSelectCategory] = useState("");
+  const [selectCategory, setSelectCategory] = useState("All");
   const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 18;
 
   useEffect(() => {
-    apiToys.get("/active?pageIndex=1&pageSize=1000").then((response) => {
-      console.log(response.data);
-      setToys(response.data);
-      setFilteredToys(
-        response.data.slice(
-          currentPage * itemsPerPage - itemsPerPage,
-          currentPage * itemsPerPage
+    if (Cookies.get("ToyDetailFilter") == "All") {
+      apiToys.get("/active?pageIndex=1&pageSize=1000").then((response) => {
+        console.log(response.data);
+        setToys(response.data);
+        setFilteredToys(
+          response.data.slice(1 * itemsPerPage - itemsPerPage, 1 * itemsPerPage)
+        );
+        loadPageNumber(response.data);
+      });
+      apiCategory.get("?pageIndex=1&pageSize=100").then((response) => {
+        setCategory(response.data);
+      });
+    } else if (Cookies.get("ToyDetailFilter") == "Rent") {
+      apiToys.get("/active?$filter=buyQuantity le -1").then((response) => {
+        console.log(response.data);
+        setToys(response.data);
+        setFilteredToys(
+          response.data.slice(1 * itemsPerPage - itemsPerPage, 1 * itemsPerPage)
+        );
+        loadPageNumber(response.data);
+      });
+      apiCategory.get("?pageIndex=1&pageSize=100").then((response) => {
+        setCategory(response.data);
+      });
+      setToyType("-1");
+    } else if (Cookies.get("ToyDetailFilter") == "Sale") {
+      apiToys.get("/active?$filter=buyQuantity ge 0").then((response) => {
+        console.log(response.data);
+        setToys(response.data);
+        setFilteredToys(
+          response.data.slice(1 * itemsPerPage - itemsPerPage, 1 * itemsPerPage)
+        );
+        loadPageNumber(response.data);
+      });
+      apiCategory.get("?pageIndex=1&pageSize=100").then((response) => {
+        setCategory(response.data);
+      });
+      setToyType("1");
+    } else if (Cookies.get("ToyDetailFilter") == "Category") {
+      apiToys
+        .get(
+          `/active?$filter=category/name eq '${Cookies.get(
+            "ToyDetailCategory"
+          )}'`
         )
-      );
-      loadPageNumber(response.data);
-    });
-    apiCategory.get("?pageIndex=1&pageSize=100").then((response) => {
-      setCategory(response.data);
-    });
+        .then((response) => {
+          console.log(response.data);
+          setToys(response.data);
+          setFilteredToys(
+            response.data.slice(
+              1 * itemsPerPage - itemsPerPage,
+              1 * itemsPerPage
+            )
+          );
+          loadPageNumber(response.data);
+        });
+      apiCategory.get("?pageIndex=1&pageSize=100").then((response) => {
+        setCategory(response.data);
+      });
+      setToyType("");
+    } else {
+      apiToys.get("/active?pageIndex=1&pageSize=1000").then((response) => {
+        console.log(response.data);
+        setToys(response.data);
+        setFilteredToys(
+          response.data.slice(1 * itemsPerPage - itemsPerPage, 1 * itemsPerPage)
+        );
+        loadPageNumber(response.data);
+      });
+      apiCategory.get("?pageIndex=1&pageSize=100").then((response) => {
+        setCategory(response.data);
+      });
+    }
+    setSelectCategory(Cookies.get("ToyDetailCategory"));
   }, []);
   // Lọc đồ chơi theo tiêu chí
   const handleSearch = () => {
@@ -55,8 +115,11 @@ const FilterToys = () => {
 
     if (maxPrice) {
       switch (maxPrice) {
+        case "0":
+          filters.push(`price ge 0 and price le 500000`);
+          break;
         case "1":
-          filters.push(`price ge 0 and price le 1000000`);
+          filters.push(`price ge 500000 and price le 1000000`);
           break;
         case "2":
           filters.push(`price gt 1000000 and price le 2000000`);
@@ -79,11 +142,12 @@ const FilterToys = () => {
     }
 
     if (toyType == "1") {
-      filters.push(`buyQuantity gt -1`);
+      filters.push(`buyQuantity gt 0`);
     } else if (toyType == "-1") {
-      filters.push(`buyQuantity le 0`);
+      filters.push(`buyQuantity le -1`);
     }
-    if (selectCategory) filters.push(`category/name eq '${selectCategory}'`);
+    if (selectCategory != "All")
+      filters.push(`category/name eq '${selectCategory}'`);
     if (ageGroup) filters.push(`age eq '${ageGroup}'`);
     if (brand != "") filters.push(`contains(brand, '${brand}')`);
     if (searchTerm) filters.push(`contains(name, '${searchTerm}')`);
@@ -287,13 +351,13 @@ const FilterToys = () => {
                 className="border rounded p-2 w-full"
               >
                 <option value="">All</option>
-                <option value="1-3">Ages 1-3</option>
-                <option value="3-5">Ages 3-5</option>
-                <option value="5-7">Ages 5-7</option>
-                <option value="7-9">Ages 7-9</option>
-                <option value="9-11">Ages 9-11</option>
-                <option value="11-13">Ages 11-13</option>
-                <option value="13+">Ages 13+</option>
+                <option value="1-3">1-3 Tuổi</option>
+                <option value="3-5">3-5 Tuổi</option>
+                <option value="5-7">5-7 Tuổi</option>
+                <option value="7-9">7-9 Tuổi</option>
+                <option value="9-11">9-11 Tuổi</option>
+                <option value="11-13">11-13 Tuổi</option>
+                <option value="13+">13+ Tuổi</option>
               </select>
             </div>
 
@@ -305,7 +369,8 @@ const FilterToys = () => {
                 className="border rounded p-2 w-full"
               >
                 <option value="">All</option>
-                <option value="1">0 - 1 triệu VNĐ</option>
+                <option value="0">0 - 500.000 VNĐ</option>
+                <option value="1">500.000 - 1 triệu VNĐ</option>
                 <option value="2">1 triệu - 2 triệu VNĐ</option>
                 <option value="3">2 triệu - 3 triệu VNĐ</option>
                 <option value="4">3 triệu - 4 triệu VNĐ</option>
@@ -320,7 +385,7 @@ const FilterToys = () => {
                 onChange={(e) => setSelectCategory(e.target.value)}
                 className="border rounded p-2 w-full"
               >
-                <option value="">All</option>
+                <option value="All">All</option>
 
                 {category.length > 0 ? (
                   category.map((item, index) => (

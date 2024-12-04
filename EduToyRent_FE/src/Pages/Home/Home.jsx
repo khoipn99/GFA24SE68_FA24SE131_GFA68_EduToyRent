@@ -434,6 +434,31 @@ const Home = () => {
       navigate("/toys-rent-details");
     }
   };
+
+  const HandleToyDetailFilterRent = () => {
+    Cookies.set("ToyDetailFilter", "Rent", { expires: 3 });
+    navigate("/filter-toys");
+  };
+
+  const HandleToyDetailFilterSale = () => {
+    Cookies.set("ToyDetailFilter", "Sale", { expires: 3 });
+    navigate("/filter-toys");
+  };
+
+  const HandleToyDetailFilterCategory = (e) => {
+    console.log(e);
+
+    Cookies.set("ToyDetailFilter", "Category", { expires: 3 });
+    Cookies.set("ToyDetailCategory", e, { expires: 3 });
+    navigate("/filter-toys");
+  };
+
+  const HandleToyDetailFilter = () => {
+    Cookies.set("ToyDetailFilter", "All", { expires: 3 });
+
+    navigate("/filter-toys");
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
       <header>
@@ -501,7 +526,7 @@ const Home = () => {
                   <div
                     key={index}
                     className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
-                    onClick={() => FilterCategory(category.id)}
+                    onClick={() => HandleToyDetailFilterCategory(category.name)}
                   >
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
@@ -548,7 +573,7 @@ const Home = () => {
               </div>
             </div>
             <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
-              Khuyến mãi hôm nay
+              Sản phẩm mới nhất
             </h2>
             <div className="grid grid-cols-6 gap-3 p-4">
               {dealsOfTheDay.map((deal, index) => (
@@ -620,6 +645,14 @@ const Home = () => {
                 </div>
               ))}
             </div>
+            <button
+              className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e8eef3] text-[#0e161b] text-sm font-bold"
+              onClick={() => {
+                HandleToyDetailFilter();
+              }}
+            >
+              <span className="truncate">Xem tất cả </span>
+            </button>
 
             <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
               Sản phẩm cho thuê mới nhất
@@ -771,7 +804,12 @@ const Home = () => {
               </div>
             )}
 
-            <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e8eef3] text-[#0e161b] text-sm font-bold">
+            <button
+              className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e8eef3] text-[#0e161b] text-sm font-bold"
+              onClick={() => {
+                HandleToyDetailFilterRent();
+              }}
+            >
               <span className="truncate">Xem tất cả</span>
             </button>
 
@@ -837,7 +875,12 @@ const Home = () => {
                 </div>
               ))}
             </div>
-            <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e8eef3] text-[#0e161b] text-sm font-bold">
+            <button
+              className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e8eef3] text-[#0e161b] text-sm font-bold"
+              onClick={() => {
+                HandleToyDetailFilterSale();
+              }}
+            >
               <span className="truncate">Xem tất cả </span>
             </button>
           </div>
