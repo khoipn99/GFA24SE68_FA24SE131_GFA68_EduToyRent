@@ -195,39 +195,39 @@ namespace EduToyRentAPI.Controllers
             }
 
             var orders = _unitOfWork.OrderRepository.Get(
-            includeProperties: "OrderDetails.Toy.User,User",
-            filter: o => o.UserId == userId && (string.IsNullOrEmpty(status) || o.Status == status),
-            pageIndex: pageIndex,
-            pageSize: pageSize)
-            .OrderByDescending(o => o.Id)
-            .Select(o =>
-            {
-                var orderDetails = _unitOfWork.OrderDetailRepository.Get(
-                    filter: od => od.OrderId == o.Id,
-                    includeProperties: "Toy.User").ToList();
-
-                var firstOrderDetail = orderDetails.FirstOrDefault();
-                var toy = firstOrderDetail?.Toy;
-                var shopId = toy?.UserId ?? 0; 
-                var shopName = toy?.User?.FullName ?? string.Empty;
-                return new OrderResponse
+                includeProperties: "OrderDetails.Toy.User,User",
+                filter: o => o.UserId == userId && (string.IsNullOrEmpty(status) || o.Status == status),
+                pageIndex: pageIndex,
+                pageSize: pageSize)
+                .OrderByDescending(o => o.Id)
+                .Select(o =>
                 {
-                    Id = o.Id,
-                    OrderDate = o.OrderDate,
-                    ReceiveDate = o.ReceiveDate,
-                    TotalPrice = o.TotalPrice,
-                    RentPrice = o.RentPrice,
-                    DepositeBackMoney = o.DepositeBackMoney,
-                    ReceiveName = o.ReceiveName,
-                    ReceiveAddress = o.ReceiveAddress,
-                    ReceivePhone = o.ReceivePhone,
-                    Status = o.Status,
-                    UserId = o.UserId,
-                    UserName = o.User.FullName,
-                    ShopId = shopId,
-                    ShopName = shopName,
-                };
-            }).ToList();
+                    var orderDetails = _unitOfWork.OrderDetailRepository.Get(
+                        filter: od => od.OrderId == o.Id,
+                        includeProperties: "Toy.User").ToList();
+
+                    var firstOrderDetail = orderDetails.FirstOrDefault();
+                    var toy = firstOrderDetail?.Toy;
+                    var shopId = toy?.UserId ?? 0; 
+                    var shopName = toy?.User?.FullName ?? string.Empty;
+                    return new OrderResponse
+                    {
+                        Id = o.Id,
+                        OrderDate = o.OrderDate,
+                        ReceiveDate = o.ReceiveDate,
+                        TotalPrice = o.TotalPrice,
+                        RentPrice = o.RentPrice,
+                        DepositeBackMoney = o.DepositeBackMoney,
+                        ReceiveName = o.ReceiveName,
+                        ReceiveAddress = o.ReceiveAddress,
+                        ReceivePhone = o.ReceivePhone,
+                        Status = o.Status,
+                        UserId = o.UserId,
+                        UserName = o.User.FullName,
+                        ShopId = shopId,
+                        ShopName = shopName,
+                    };
+                }).ToList();
             return Ok(new
             {
                 UserRentingName = user.FullName,

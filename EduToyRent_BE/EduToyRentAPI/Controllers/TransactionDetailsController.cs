@@ -42,10 +42,12 @@ namespace EduToyRentAPI.Controllers
                     TransactionId = transactionDetail.TranSactionId,
                     Status = transactionDetail.Status,
                 }).ToList();
-            if(!transactionDetails.Any())
+
+            if (!transactionDetails.Any())
             {
                 return Ok("Empty List!");
             }
+
             return Ok(transactionDetails);
         }
 
@@ -70,6 +72,7 @@ namespace EduToyRentAPI.Controllers
                 TransactionId = transactionDetail.TranSactionId,
                 Status = transactionDetail.Status
             };
+
             return transactionDetailResponse;
         }
 
@@ -112,6 +115,10 @@ namespace EduToyRentAPI.Controllers
                 OrderDetailId = transactionDetail.OrderDetailId,
                 Status = transactionDetail.Status
             };
+
+            _unitOfWork.TransactionDetailRepository.Insert(transDetail);
+            _unitOfWork.Save();
+
             var transactionDetailResponse = new TransactionDetailResponse
             {
                 Id = transDetail.Id,
@@ -123,6 +130,7 @@ namespace EduToyRentAPI.Controllers
                 OrderDetailId = transactionDetail.OrderDetailId,
                 Status = transactionDetail.Status
             };
+
             return CreatedAtAction("GetTransactionDetail", new { id = transDetail.Id }, transactionDetail);
         }
 
@@ -131,6 +139,7 @@ namespace EduToyRentAPI.Controllers
         public async Task<IActionResult> DeleteTransactionDetail(int id)
         {
             var transactionDetail = _unitOfWork.TransactionDetailRepository.GetByID(id);
+
             if (transactionDetail == null)
             {
                 return NotFound();
@@ -160,10 +169,12 @@ namespace EduToyRentAPI.Controllers
                     TransactionId = transactionDetail.TranSactionId,
                     Status = transactionDetail.Status,
                 }).ToList();
+
             if (!transactionDetails.Any())
             {
                 return Ok("Empty List!");
             }
+
             return Ok(transactionDetails);
         }
     }
