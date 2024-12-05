@@ -43,6 +43,8 @@ const StaffPage = () => {
   const [loading, setLoading] = useState(true); // State để quản lý trạng thái tải dữ liệu
   const [orderDetails, setOrderDetails] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null); // Để lưu đơn hàng được chọn khi xem chi tiết
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [mediaFiles, setMediaFiles] = useState([]);
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -87,9 +89,8 @@ const StaffPage = () => {
       };
       loadCategories();
       fetchUserData();
-      LoadToy(1, 5);
+      LoadToy();
       LoadOrder("");
-      console.log("Danh sách toys:", toys);
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
@@ -368,191 +369,65 @@ const StaffPage = () => {
   const closeOrderDetail = () => {
     setSelectedOrder(null); // Đóng modal khi không chọn đơn hàng
   };
-  const handleCompleteOrder = async (orderId) => {
-    const userToken = Cookies.get("userToken");
-
-    if (!userToken) {
-      alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-      return;
+  const handleFileChange1 = (e) => {
+    const files = e.target.files;
+    const selectedFiles = [];
+    for (let i = 0; i < files.length; i++) {
+      selectedFiles.push(files[i]);
     }
+    setMediaFiles(selectedFiles); // Lưu file vào state
+  };
+  // Hàm để gửi ảnh lên API
+  const handleUpdateToy = async (toyId) => {
+    const isConfirmed = window.confirm(
+      "Are you sure you want to approve this toy?"
+    );
 
-    // Tìm đơn hàng cần cập nhật
-    const orderToUpdate = orders.find((order) => order.id === orderId);
-    console.log("Đơn hàng cần cập nhật:", orderToUpdate);
-    if (!orderToUpdate) {
-      alert("Không tìm thấy đơn hàng.");
+    // Nếu người dùng không xác nhận, dừng lại
+    if (!isConfirmed) {
       return;
     }
 
     try {
-      // 1. Lấy thông tin người dùng từ đơn hàng
-      const userResponse = await apiUser.get(`/${orderToUpdate.userId}`, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      });
-      const user = userResponse.data;
-      console.log("Nguoi dung mua hàng:", user);
+      // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
+      const requestBody = "Active"; // Thay đổi thành chuỗi trực tiếp
 
-      //cập nhập ví người bán
-      // const userWalletResponse = await apiWallets.get(`/${user.walletId}`, {
-      //   headers: {
-      //     Authorization: `Bearer ${userToken}`,
-      //   },
-      // });
-      // const userWallet = userWalletResponse.data;
-      // console.log("Wallet người dùng:", userWallet);
-      // //vì nó mua nên không có tiền back lại
-      // const updatedBalance = userWallet.balance + 0;
-      // console.log("Giá trị balance sẽ gửi lên API:", updatedBalance);
+      // Log request body trước khi gửi đi
+      console.log("Request body:", requestBody);
 
-      // await apiWallets.put(
-      //   `/${userWallet.id}`,
-      //   {
-      //     balance: updatedBalance,
-      //     withdrawMethod: userWallet.withdrawMethod || "defaultMethod",
-      //     withdrawInfo: userWallet.withdrawInfo || "defaultInfo",
-      //     status: userWallet.status || "Active",
-      //     userId: userWallet.userId,
-      //   },
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${userToken}`,
-      //     },
-      //   }
-      // );
-
-      // await apiWalletTransaction.post(
-      //   "",
-      //   {
-      //     transactionType: "Nhận lại tiền cọc",
-      //     // amount: orderToUpdate.depositeBackMoney - orderToUpdate.rentPrice,
-      //     amount: 0,
-      //     date: new Date().toISOString(),
-      //     walletId: userWallet.id,
-      //     paymentTypeId: 5,
-      //     orderId: orderToUpdate.id,
-      //   },
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${userToken}`,
-      //     },
-      //   }
-      // );
-
-      // 3. Lấy thông tin ví của chủ sở hữu đồ chơi
-      const ownerWalletResponse = await apiWallets.get(
-        `/${orderToUpdate.shopId}`,
+      // Gửi yêu cầu PATCH
+      const response = await apiToys.patch(
+        `/${toyId}/update-status`,
+        requestBody, // Gửi body như chuỗi
         {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
-      const ownerWallet = ownerWalletResponse.data;
-      console.log("Dữ liệu ví chủ sở hữu trước khi cập nhật:", ownerWallet);
+      // Log dữ liệu nhận được từ API khi thành công
+      console.log("Response on success:", response);
 
-      const toyDetails = orderToUpdate.toyDetails; // hoặc cách khác nếu toyDetails nằm ở nơi khác
-      console.log("toyDetails bắt từ toyid:", toyDetails);
-      if (!toyDetails || !toyDetails.price) {
-        console.error("Không có thông tin giá trị từ toyDetails.");
-        return;
+      if (response.status === 200) {
+        // Cập nhật lại state
+        setToysData((prevData) =>
+          prevData.map((toy) =>
+            toy.id === toyId ? { ...toy, status: "Inactive" } : toy
+          )
+        );
+        LoadToy(userId);
+      } else {
+        throw new Error(`Failed to update status for toy with ID ${toyId}`);
       }
-
-      // Tính toán số tiền chủ sở hữu nhận được (giả sử là 85% giá trị của toyDetails.price)
-      const amountToAdd = toyDetails.price * 0.85;
-
-      // Chỉ cập nhật trường balance
-      const updatedWallet = {
-        ...ownerWallet,
-        balance: ownerWallet.balance + amountToAdd,
-      };
-      console.log("Dữ liệu ví chủ sở hữu trước khi cập nhật:", amountToAdd);
-      console.log("Dữ liệu ví chủ sở hữu sau khi cập nhật:", updatedWallet);
-
-      // Gửi yêu cầu PUT để cập nhật ví
-      const ownerWalletUpDate = await apiWallets.put(
-        `/${ownerWallet.id}`,
-        updatedWallet,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
-
-      // Log toàn bộ phản hồi từ server
-      console.log("Phản hồi từ server sau khi gửi PUT:", ownerWalletUpDate);
-      console.log("Dữ liệu trả về từ server:", ownerWalletUpDate.data);
-      console.log("Mã trạng thái trả về từ server:", ownerWalletUpDate.status);
-
-      // 1. Log dữ liệu trước khi gửi yêu cầu tạo giao dịch ví
-      console.log("Gửi yêu cầu tạo giao dịch ví:", {
-        transactionType: "Nhận tiền từ đơn hàng",
-        amount: amountToAdd,
-        date: new Date().toISOString(),
-        walletId: ownerWallet.id,
-        paymentTypeId: 5,
-        orderId: orderToUpdate.id,
-      });
-
-      const walletTransactionResponse = await apiWalletTransaction.post(
-        "",
-        {
-          transactionType: "Nhận tiền từ đơn hàng",
-          amount: amountToAdd,
-          date: new Date().toISOString(),
-          walletId: ownerWallet.id,
-          paymentTypeId: 5,
-          orderId: orderToUpdate.id,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
-
-      // 2. Log dữ liệu sau khi hoàn thành yêu cầu tạo giao dịch ví
-      console.log(
-        "Phản hồi từ yêu cầu tạo giao dịch ví:",
-        walletTransactionResponse.data
-      );
-
-      // 3. Log dữ liệu trước khi gửi yêu cầu cập nhật trạng thái đơn hàng
-      console.log("Gửi yêu cầu cập nhật trạng thái đơn hàng:", {
-        ...orderToUpdate,
-        status: "Complete",
-      });
-
-      // Gửi yêu cầu PUT để cập nhật trạng thái đơn hàng
-      const orderUpdateResponse = await apiOrder.put(
-        `/${orderToUpdate.id}`,
-        { ...orderToUpdate, status: "Complete" },
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
-
-      // 4. Log dữ liệu sau khi hoàn thành yêu cầu cập nhật trạng thái đơn hàng
-      console.log(
-        "Phản hồi từ yêu cầu cập nhật trạng thái đơn hàng:",
-        orderUpdateResponse.data
-      );
-
-      // 5. Làm mới giao diện
-      setOrders((prevOrders) =>
-        prevOrders.map((o) =>
-          o.id === orderId ? { ...o, status: "Complete" } : o
-        )
-      );
-      alert("Đơn hàng đã được hoàn tất.");
     } catch (error) {
-      console.error("Lỗi khi hoàn tất đơn hàng:", error);
-      alert("Đã xảy ra lỗi khi xử lý đơn hàng.");
+      // Log lỗi chi tiết nhận được từ API khi có lỗi
+      if (error.response) {
+        console.error("Error response:", error.response);
+      } else {
+        console.error("Error message:", error.message);
+      }
     }
   };
   const renderContent = () => {
@@ -812,7 +687,7 @@ const StaffPage = () => {
                     <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
                       <thead className="bg-gray-100 dark:bg-gray-700">
                         <tr>
-                          <th scope="col" className="p-4">
+                          {/* <th scope="col" className="p-4">
                             <div className="flex items-center">
                               <input
                                 id="checkbox-all"
@@ -824,7 +699,7 @@ const StaffPage = () => {
                                 checkbox
                               </label>
                             </div>
-                          </th>
+                          </th> */}
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
@@ -893,7 +768,7 @@ const StaffPage = () => {
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={toy.id}
                             >
-                              <td className="w-4 p-4">
+                              {/* <td className="w-4 p-4">
                                 <div className="flex items-center">
                                   <input
                                     id={`checkbox-${toy.id}`}
@@ -908,7 +783,7 @@ const StaffPage = () => {
                                     checkbox
                                   </label>
                                 </div>
-                              </td>
+                              </td> */}
                               <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
                                 <div className="text-base font-semibold text-gray-900 dark:text-white">
                                   {toy.name}
@@ -954,12 +829,13 @@ const StaffPage = () => {
                                   type="button"
                                   onClick={(event) => {
                                     event.stopPropagation();
-                                    setIsEditing(true); // Bật form chỉnh sửa
-                                    setSelectedToy(toy); // Lưu thông tin toy vào selectedToy
+                                    // setIsEditing(true); // Bật form chỉnh sửa
+                                    // setSelectedToy(toy); // Lưu thông tin toy vào selectedToy
+                                    handleUpdateToy(toy.id);
                                   }}
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                                 >
-                                  Edit
+                                  Approve
                                 </button>
                                 <button
                                   type="button"
@@ -1150,11 +1026,378 @@ const StaffPage = () => {
           </div>
         );
 
-      case "dashboard":
+      case "product_arppove":
         return (
           <div>
-            <h3 className="text-lg font-semibold">Doanh Thu</h3>
-            <p>Thông tin thống kê sẽ được hiển thị ở đây.</p>
+            <div className="p-4 bg-white block sm:flex items-center justify-between border-b border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700">
+              <div className="w-full mb-1">
+                <div className="items-center justify-between block sm:flex md:divide-x md:divide-gray-100 dark:divide-gray-700">
+                  <div className="flex items-center mb-4 sm:mb-0">
+                    <form
+                      className="sm:pr-3"
+                      onSubmit={handleSearch} // Gọi hàm tìm kiếm khi submit
+                    >
+                      <label htmlFor="products-search" className="sr-only">
+                        Search
+                      </label>
+                      <div className="relative w-48 mt-1 sm:w-64 xl:w-96">
+                        <input
+                          type="text"
+                          id="products-search"
+                          value={searchKeyword} // Liên kết với state
+                          onChange={handleSearchChange} // Cập nhật từ khóa khi nhập
+                          className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          placeholder="Search for toys by name"
+                        />
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow">
+                    <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
+                      <thead className="bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          {/* <th scope="col" className="p-4">
+                            <div className="flex items-center">
+                              <input
+                                id="checkbox-all"
+                                aria-describedby="checkbox-1"
+                                type="checkbox"
+                                className="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:focus:ring-primary-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
+                              />
+                              <label htmlFor="checkbox-all" className="sr-only">
+                                checkbox
+                              </label>
+                            </div>
+                          </th> */}
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Toy Name
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Price
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Origin
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Age
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Brand
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            CreateDate
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            RentTime
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Status
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                        {toysData &&
+                        Array.isArray(toysData) &&
+                        toysData.length > 0 ? (
+                          toysData.map((toy) => (
+                            <tr
+                              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                              key={toy.id}
+                            >
+                              {/* <td className="w-4 p-4">
+                                <div className="flex items-center">
+                                  <input
+                                    id={`checkbox-${toy.id}`}
+                                    aria-describedby="checkbox-1"
+                                    type="checkbox"
+                                    className="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:focus:ring-primary-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
+                                  />
+                                  <label
+                                    htmlFor={`checkbox-${toy.id}`}
+                                    className="sr-only"
+                                  >
+                                    checkbox
+                                  </label>
+                                </div>
+                              </td> */}
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                  {toy.name}
+                                </div>
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.price}
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.origin}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.age}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.brand}
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {new Date(toy.createDate).toLocaleDateString()}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.rentTime}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.status}
+                              </td>
+
+                              <td className="p-4 space-x-2 whitespace-nowrap">
+                                {/* Nút "Detail" */}
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedToy(toy); // Lưu thông tin toy vào state
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
+                                >
+                                  Detail
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    // setIsEditing(true); // Bật form chỉnh sửa
+                                    // setSelectedToy(toy); // Lưu thông tin toy vào selectedToy
+                                    handleUpdateToy(toy.id);
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
+                                    handleDelete(toy.id); // Gọi hàm handleDelete
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="13" className="p-4 text-center">
+                              No toys found.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
+              <div className="flex items-center mb-4 sm:mb-0"></div>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handlePrevious}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                >
+                  <svg
+                    className="w-5 h-5 mr-1 -ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  Previous
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                >
+                  Next
+                  <svg
+                    className="w-5 h-5 ml-1 -mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {selectedToy && !isEditing && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[90%] overflow-auto relative">
+                  {/* Nút đóng ở góc phải */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedToy(null)} // Đóng chi tiết khi bấm nút
+                    className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-700"
+                  >
+                    &times;
+                  </button>
+
+                  <div className="flex flex-wrap lg:flex-nowrap gap-10">
+                    {/* Phần hình ảnh */}
+                    <div className="flex-1 flex justify-center items-center flex-col max-w-md mx-auto mt-20">
+                      {/* Hiển thị ảnh hoặc video */}
+                      <div className="w-80 h-80">
+                        {selectedMedia &&
+                        selectedToy.media.some(
+                          (media) => media.mediaUrl === selectedMedia
+                        ) ? (
+                          selectedMedia.endsWith(".mp4?alt=media") ? (
+                            <video
+                              src={selectedMedia}
+                              controls
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          ) : (
+                            <img
+                              src={selectedMedia}
+                              alt="Media"
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          )
+                        ) : null}
+                      </div>
+
+                      {/* Ảnh/video nhỏ */}
+                      <div className="flex gap-4 flex-wrap justify-center mt-4">
+                        {" "}
+                        {/* Giữ cho các ảnh nhỏ xếp dưới ảnh lớn */}
+                        {selectedToy.media.map((media, index) => (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center"
+                          >
+                            {/* Hiển thị video nếu media là video */}
+                            {media.mediaUrl.endsWith(".mp4?alt=media") ? (
+                              <video
+                                src={media.mediaUrl}
+                                alt={`Video ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+              ${
+                selectedMedia === media.mediaUrl
+                  ? "border-orange-500 scale-105"
+                  : "border-gray-300"
+              }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn video
+                              />
+                            ) : (
+                              // Hiển thị ảnh nếu media là ảnh
+                              <img
+                                src={media.mediaUrl}
+                                alt={`Hình ảnh ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+              ${
+                selectedMedia === media.mediaUrl
+                  ? "border-orange-500 scale-105"
+                  : "border-gray-300"
+              }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn ảnh
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Phần thông tin */}
+                    <div className="flex-1 text-xl space-y-6">
+                      <h2 className="text-4xl font-bold mb-10 text-center">
+                        Toy Details
+                      </h2>
+                      <p>
+                        <strong>Name:</strong> {selectedToy.name}
+                      </p>
+                      <p>
+                        <strong>Price:</strong> {selectedToy.price}
+                      </p>
+                      <p>
+                        <strong>Origin:</strong> {selectedToy.origin}
+                      </p>
+                      <p>
+                        <strong>Age:</strong> {selectedToy.age}
+                      </p>
+
+                      <p>
+                        <strong>Thương Hiệu:</strong> {selectedToy.brand}
+                      </p>
+                      <p>
+                        <strong>Danh mục:</strong> {selectedToy.category.name}
+                      </p>
+                      <p>
+                        <strong>Create Date:</strong>{" "}
+                        {new Date(selectedToy.createDate).toLocaleDateString()}
+                      </p>
+                      <p>
+                        <strong>Rent Time:</strong> {selectedToy.rentTime}
+                      </p>
+                      <p>
+                        <strong>Status:</strong> {selectedToy.status}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case "Status":
@@ -1320,9 +1563,9 @@ const StaffPage = () => {
             </button>
 
             <button
-              onClick={() => setSelectedTab("Edit")}
+              onClick={() => setSelectedTab("product_arppove")}
               className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
-                selectedTab === "Edit" ? "bg-gray-300" : ""
+                selectedTab === "product_arppove" ? "bg-gray-300" : ""
               }`}
             >
               <span className="icon-class mr-2">🏢</span> Danh sách sản phẩm đã
