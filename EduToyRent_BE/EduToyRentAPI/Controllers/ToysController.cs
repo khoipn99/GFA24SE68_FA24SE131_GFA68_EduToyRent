@@ -383,7 +383,6 @@ namespace EduToyRentAPI.Controllers
             else if (userRole == 2)
             {
                 buyQuantity = (int)toyRequest.BuyQuantity;
-                toy.Status = "Inactive";
             }
             toy.Name = toyRequest.Name;
             toy.Description = toyRequest.Description;
@@ -395,7 +394,7 @@ namespace EduToyRentAPI.Controllers
             toy.RentCount = toyRequest.RentCount;
             toy.RentTime = toyRequest.RentTime;
             toy.CategoryId = toyRequest.CategoryId;
-            toy.Status = "Active";
+            toy.Status = toyRequest.Status;
             toy.CreateDate = DateTime.Now;
 
             _unitOfWork.ToyRepository.Update(toy);
@@ -540,16 +539,22 @@ namespace EduToyRentAPI.Controllers
                 {
                     switch (ageRange.ToLower())
                     {
-                        case "0-3":
-                            return toy.Age == "0-3";
+                        case "1-3":
+                            return toy.Age == "1-3";
                         case "3-5":
                             return toy.Age == "3-5";
-                        case "6-11":
-                            return toy.Age == "6-11";
-                        case "12+":
-                            return toy.Age == "12+";
+                        case "5-7":
+                            return toy.Age == "5-7";
+                        case "7-9":
+                            return toy.Age == "7-9";
+                        case "9-11":
+                            return toy.Age == "9-11";
+                        case "11-13":
+                            return toy.Age == "11-13";
+                        case "13+":
+                            return toy.Age == "13+";
                         default:
-                            return false; 
+                            return false;
                     }
                 })
                 .OrderByDescending(toy => toy.Id)

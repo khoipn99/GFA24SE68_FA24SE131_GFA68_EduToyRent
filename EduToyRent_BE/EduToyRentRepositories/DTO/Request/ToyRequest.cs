@@ -32,6 +32,7 @@ namespace EduToyRentRepositories.DTO.Request
 
         public int RentCount { get; set; }
         public string RentTime { get; set; }
+        public string Status { get; set; }
     }
 
 }
