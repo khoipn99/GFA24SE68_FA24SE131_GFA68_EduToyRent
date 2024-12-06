@@ -7,6 +7,9 @@ import apiOrder from "../../service/ApiOrder";
 import { useNavigate } from "react-router-dom";
 import apiWallets from "../../service/ApiWallets";
 import apiWalletTransaction from "../../service/ApiWalletTransaction";
+import apiUser from "../../service/ApiUser";
+import apiTransaction from "../../service/ApiTransaction";
+import apiTransactionDetail from "../../service/ApiTransactionDetail";
 
 const InformationCustomer = () => {
   const [selectedTab, setSelectedTab] = useState("info");
@@ -15,11 +18,15 @@ const InformationCustomer = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [customerInfo, setCustomerInfo] = useState({});
 
-  const [orders, setOrders] = useState([]);
+  const [ordersRent, setOrdersRent] = useState([]);
+  const [ordersSale, setOrdersSale] = useState([]);
   const [orderDetails, setOrderDetails] = useState([]);
 
   const [walletInfo, setWalletInfo] = useState({});
   const [walletTransaction, setWalletTransaction] = useState({});
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const navigate = useNavigate();
 
@@ -39,14 +46,25 @@ const InformationCustomer = () => {
       setCustomerInfo(parsedUserData);
       console.log(parsedUserData);
 
-      apiWallets.get("/" + parsedUserData.walletId).then((response) => {
-        setWalletInfo(response.data);
-      });
+      apiWallets
+        .get("/" + parsedUserData.walletId, {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response) => {
+          setWalletInfo(response.data);
+        });
       apiWalletTransaction
         .get(
           "/ByWalletId?walletId=" +
             parsedUserData.walletId +
-            "&pageIndex=1&pageSize=100"
+            "&pageIndex=1&pageSize=100",
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
         )
         .then((response) => {
           setWalletTransaction(response.data);
@@ -61,15 +79,27 @@ const InformationCustomer = () => {
 
     apiOrder
       .get(
-        "/ByUserId?userId=" + parsedUserData.id + "&pageIndex=1&pageSize=1000"
+        "/ByUserId?userId=" + parsedUserData.id + "&pageIndex=1&pageSize=1000",
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
       )
       .then((response) => {
-        setOrders(response.data.orders);
+        setOrdersRent(
+          response.data.orders.filter((order) => order.rentPrice > 0)
+        );
+
+        setOrdersSale(
+          response.data.orders.filter((order) => order.rentPrice == 0)
+        );
         console.log(response.data.orders);
       });
   };
 
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStatus2, setFilterStatus2] = useState("all");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -84,8 +114,97 @@ const InformationCustomer = () => {
   };
 
   const handleSaveChanges = () => {
-    setIsEditing(false);
-    console.log("Thông tin đã lưu:", customerInfo);
+    if (newPassword != "" && confirmNewPassword != "" && oldPassword != "") {
+      if (oldPassword == customerInfo.password) {
+        if (newPassword == confirmNewPassword) {
+          apiUser
+            .get(
+              "/" +
+                customerInfo.id +
+                "?fullName=" +
+                customerInfo.fullName +
+                "&email=" +
+                customerInfo.email +
+                "&password=" +
+                newPassword +
+                "&createDate=" +
+                customerInfo.createDate +
+                "&phone=" +
+                customerInfo.phone +
+                "&dob=" +
+                customerInfo.dob +
+                "&address=" +
+                customerInfo.address +
+                "&roleId=" +
+                customerInfo.role.id +
+                "&status=" +
+                customerInfo.status,
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
+            .then((response) => {
+              setIsEditing(false);
+              alert("Mật khẩu và thông tin của bạn đã được cập nhật.");
+            });
+        } else {
+          alert("Mật khẩu xác nhận không mật khẩu mới.");
+          return;
+        }
+      } else {
+        alert("Bạn đã nhập sai mật khẩu cũ.");
+        return;
+      }
+    } else {
+      apiUser
+        .get(
+          "/" +
+            customerInfo.id +
+            "?fullName=" +
+            customerInfo.fullName +
+            "&email=" +
+            customerInfo.email +
+            "&password=" +
+            customerInfo.password +
+            "&createDate=" +
+            customerInfo.createDate +
+            "&phone=" +
+            customerInfo.phone +
+            "&dob=" +
+            customerInfo.dob +
+            "&address=" +
+            customerInfo.address +
+            "&roleId=" +
+            customerInfo.role.id +
+            "&status=" +
+            customerInfo.status,
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        )
+        .then((response) => {
+          setIsEditing(false);
+          alert("Thông tin của bạn đã được cập nhật.");
+          console.log(response.data);
+          console.log(customerInfo);
+        });
+    }
+  };
+
+  const handleInputChangeOldPassword = (e) => {
+    setOldPassword(e);
+  };
+
+  const handleInputChangeNewPassword = (e) => {
+    setNewPassword(e);
+  };
+
+  const handleInputChangeConfirmNewPassword = (e) => {
+    setConfirmNewPassword(e);
   };
 
   const handleCancel = () => {
@@ -97,20 +216,36 @@ const InformationCustomer = () => {
     setFilterStatus(status);
   };
 
+  const handleFilterChange2 = (status) => {
+    setFilterStatus2(status);
+  };
+
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
 
-    apiOrderDetail.get("/Order/" + order.id).then((response) => {
-      setOrderDetails(response.data);
-      console.log(response.data);
-    });
+    apiOrderDetail
+      .get("/Order/" + order.id, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        setOrderDetails(response.data);
+        console.log(response.data);
+      });
   };
 
   const ViewDetails = () => {
-    apiOrderDetail.get("/Order/" + selectedOrder.id).then((response) => {
-      setOrderDetails(response.data);
-      console.log(response.data);
-    });
+    apiOrderDetail
+      .get("/Order/" + selectedOrder.id, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        setOrderDetails(response.data);
+        console.log(response.data);
+      });
   };
 
   const closeDetails = () => {
@@ -119,8 +254,12 @@ const InformationCustomer = () => {
 
   const handleEditAvatar = () => {};
 
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrdersRent = ordersRent.filter((order) => {
     return filterStatus === "all" || order.status === filterStatus;
+  });
+
+  const filteredOrdersSale = ordersSale.filter((order) => {
+    return filterStatus2 === "all" || order.status === filterStatus2;
   });
 
   const handleExtendRental = (order) => {};
@@ -128,9 +267,15 @@ const InformationCustomer = () => {
     var tmp = order;
     tmp.status = "Delivering";
 
-    apiOrderDetail.put("/" + order.id, tmp).then((response) => {
-      ViewDetails();
-    });
+    apiOrderDetail
+      .put("/" + order.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        ViewDetails();
+      });
   };
   // const handleFinishOrderDetail = (order) => {
   //   var tmp = order;
@@ -145,11 +290,126 @@ const InformationCustomer = () => {
     var tmp = order;
     tmp.status = "Cancel";
 
-    apiOrderDetail.put("/" + order.id, tmp).then((response) => {
-      ViewDetails();
-    });
+    apiOrder
+      .put("/" + order.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        ViewDetails();
+      });
   };
   const handleReBuy = (order) => {};
+
+  const handleCompleteSaleOrder = async (orderToUpdate) => {
+    try {
+      const ownerWalletResponse = await apiWallets.get(
+        `/${orderToUpdate.shopId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      const ownerWallet = ownerWalletResponse.data;
+
+      const amountToAdd = orderToUpdate.totalPrice * 0.85;
+
+      const updatedWallet = {
+        ...ownerWallet,
+        balance: ownerWallet.balance + amountToAdd,
+      };
+
+      await apiWallets.put(`/${ownerWallet.id}`, updatedWallet, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      await apiWalletTransaction.post(
+        "",
+        {
+          transactionType: "Nhận tiền từ đơn hàng ",
+          amount: amountToAdd,
+          date: new Date().toISOString(),
+          walletId: ownerWallet.id,
+          paymentTypeId: 5,
+          orderId: orderToUpdate.id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      await apiOrder.put(
+        `/${orderToUpdate.id}`,
+        { ...orderToUpdate, status: "Complete" },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      await apiTransaction
+        .post(
+          "",
+          {
+            receiveMoney: orderToUpdate.totalPrice,
+            platformFee: orderToUpdate.totalPrice * 0.15,
+            ownerReceiveMoney: orderToUpdate.totalPrice * 0.85,
+            depositBackMoney: 0,
+            status: "Success",
+            orderId: orderToUpdate.id,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        )
+        .then((response) => {
+          apiOrderDetail
+            .get("/Order/" + orderToUpdate.id, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response2) => {
+              response2.data.map((item) => {
+                apiTransactionDetail.post(
+                  "",
+                  {
+                    receiveMoney: item.unitPrice * item.quantity,
+                    platformFee: item.unitPrice * item.quantity * 0.15,
+                    ownerReceiveMoney: item.unitPrice * item.quantity * 0.85,
+                    depositBackMoney: 0,
+                    status: "Success",
+                    orderDetailId: item.id,
+                    transactionId: response.data.id,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                );
+              });
+            });
+        });
+
+      getOrderInfo();
+
+      alert("Đơn hàng đã được hoàn tất.");
+    } catch (error) {
+      console.error("Lỗi khi hoàn tất đơn hàng:", error);
+      alert("Đã xảy ra lỗi khi xử lý đơn hàng.");
+    }
+  };
 
   const renderContent = () => {
     switch (selectedTab) {
@@ -208,22 +468,37 @@ const InformationCustomer = () => {
                   </label>
 
                   <label className="flex justify-between items-center space-x-12 block">
-                    <p className="font-semibold w-4/10">Email:</p>
+                    <p className="font-semibold w-4/10">Mật khẩu cũ:</p>
                     <input
-                      type="email"
-                      name="email"
-                      value={customerInfo.email}
-                      onChange={handleInputChange}
+                      type="password"
+                      name="password"
+                      onChange={(e) =>
+                        handleInputChangeOldPassword(e.target.value)
+                      }
                       className="w-6/10 border border-gray-300 rounded p-1"
                     />
                   </label>
                   <label className="flex justify-between items-center space-x-12 block">
-                    <p className="font-semibold w-4/10">Mật khẩu:</p>
+                    <p className="font-semibold w-4/10">Mật khẩu mới:</p>
                     <input
                       type="password"
                       name="password"
-                      value={customerInfo.password}
-                      onChange={handleInputChange}
+                      onChange={(e) =>
+                        handleInputChangeNewPassword(e.target.value)
+                      }
+                      className="w-6/10 border border-gray-300 rounded p-1"
+                    />
+                  </label>
+                  <label className="flex justify-between items-center space-x-12 block">
+                    <p className="font-semibold w-4/10">
+                      Xác nhận mật khẩu mới:
+                    </p>
+                    <input
+                      type="password"
+                      name="password"
+                      onChange={(e) =>
+                        handleInputChangeConfirmNewPassword(e.target.value)
+                      }
                       className="w-6/10 border border-gray-300 rounded p-1"
                     />
                   </label>
@@ -284,18 +559,6 @@ const InformationCustomer = () => {
                     </p>
                   </div>
 
-                  <div className="flex justify-between items-center space-x-12">
-                    <p className="font-semibold w-4/10">Email:</p>
-                    <p className="w-6/10">{customerInfo.email}</p>
-                  </div>
-
-                  <div className="flex justify-between items-center space-x-12">
-                    <p className="font-semibold w-4/10">Mật khẩu:</p>
-                    <p className="w-6/10" type="password">
-                      {"*".repeat(customerInfo.password)}
-                    </p>
-                  </div>
-
                   <button
                     onClick={handleEditToggle}
                     className="mt-4 p-2 bg-yellow-500 text-white rounded w-full"
@@ -324,10 +587,12 @@ const InformationCustomer = () => {
             )}
           </div>
         );
-      case "orders":
+      case "ordersRent":
         return (
           <div>
-            <h3 className="text-lg font-semibold">Danh sách đơn hàng</h3>
+            <h3 className="text-lg font-semibold">
+              Danh sách đơn hàng thuê đồ chơi
+            </h3>
             <div className="flex mb-4">
               <button
                 onClick={() => handleFilterChange("all")}
@@ -392,7 +657,7 @@ const InformationCustomer = () => {
               </button>
             </div>
             <ul className="space-y-4">
-              {filteredOrders.map((order) => (
+              {filteredOrdersRent.map((order) => (
                 <li
                   key={order.id}
                   className="p-4 border border-gray-300 rounded-lg"
@@ -452,6 +717,127 @@ const InformationCustomer = () => {
                           className="p-2 bg-red-500 text-white rounded"
                         >
                           Hủy đơn hàng
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+
+      case "ordersSale":
+        return (
+          <div>
+            <h3 className="text-lg font-semibold">
+              Danh sách đơn hàng mua đồ chơi
+            </h3>
+            <div className="flex mb-4">
+              <button
+                onClick={() => handleFilterChange2("all")}
+                className={`p-2 rounded ${
+                  filterStatus2 === "all"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Tất cả
+              </button>
+
+              <button
+                onClick={() => handleFilterChange2("Delivering")}
+                className={`p-2 rounded ${
+                  filterStatus2 === "Delivering"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Đang vận chuyển
+              </button>
+
+              <button
+                onClick={() => handleFilterChange2("Complete")}
+                className={`p-2 rounded ${
+                  filterStatus2 === "Complete"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Hoàn thành
+              </button>
+              <button
+                onClick={() => handleFilterChange2("Cancel")}
+                className={`p-2 rounded ${
+                  filterStatus2 === "Cancel"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Đã hủy
+              </button>
+            </div>
+            <ul className="space-y-4">
+              {filteredOrdersSale.map((order) => (
+                <li
+                  key={order.id}
+                  className="p-4 border border-gray-300 rounded-lg"
+                >
+                  <div className="flex justify-between mb-2">
+                    <h4 className="font-semibold">
+                      Đặt hàng từ: {order.shopName}
+                    </h4>
+                    <span className="font-medium">
+                      {order.status == "Pending"
+                        ? "Đợi người cho thuê chấp nhận đơn hàng"
+                        : order.status == "Delivering"
+                        ? "Đang giao hàng"
+                        : order.status == "Processing"
+                        ? "Đơn hàng đang thuê"
+                        : "Hoàn thành"}
+                    </span>
+                  </div>
+                  <hr className="border-gray-300 mb-2" />
+                  <div className="flex items-center mb-2">
+                    <div className="flex-grow">
+                      <p className="font-semibold">
+                        Ngày đặt hàng:{" "}
+                        {new Date(order.orderDate).toISOString().split("T")[0]}
+                      </p>
+                      <p>Địa chỉ nhận hàng: {order.receiveAddress}</p>
+                      <p>Tên người nhận: {order.receiveName}</p>
+                      <p>Số điện thoại: {order.receivePhone}</p>
+                    </div>
+                    <button
+                      onClick={() => handleViewDetails(order)}
+                      className="ml-4 p-2 bg-blue-500 text-white rounded"
+                    >
+                      Xem chi tiết đơn hàng
+                    </button>
+                  </div>
+                  <hr className="border-gray-300 mb-2" />
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold">
+                      Tổng tiền: {order.totalPrice.toLocaleString()} VNĐ
+                    </p>
+
+                    {order.status === "Cancel" && (
+                      <div className="flex space-x-2 mt-2">
+                        <button
+                          onClick={() => handleReBuy(order)}
+                          className="p-2 bg-green-500 text-white rounded"
+                        >
+                          Đặt hàng lại
+                        </button>
+                      </div>
+                    )}
+                    {order.status === "Delivering" && (
+                      <div className="flex space-x-2 mt-2">
+                        <button
+                          onClick={() => handleCompleteSaleOrder(order)}
+                          className="p-2 bg-green-500 text-white rounded"
+                        >
+                          Đã nhận được hàng
                         </button>
                       </div>
                     )}
@@ -749,12 +1135,20 @@ const InformationCustomer = () => {
               Thông tin cá nhân
             </button>
             <button
-              onClick={() => setSelectedTab("orders")}
+              onClick={() => setSelectedTab("ordersRent")}
               className={`block w-full text-left p-2 rounded hover:bg-gray-200 ${
-                selectedTab === "orders" ? "bg-gray-300" : ""
+                selectedTab === "ordersRent" ? "bg-gray-300" : ""
               }`}
             >
-              Đơn hàng đã đặt
+              Đơn hàng thuê của tôi
+            </button>
+            <button
+              onClick={() => setSelectedTab("ordersSale")}
+              className={`block w-full text-left p-2 rounded hover:bg-gray-200 ${
+                selectedTab === "ordersSale" ? "bg-gray-300" : ""
+              }`}
+            >
+              Đơn hàng mua của tôi
             </button>
             <button
               onClick={() => setSelectedTab("wallet")}

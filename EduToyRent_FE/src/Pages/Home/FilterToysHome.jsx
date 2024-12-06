@@ -112,7 +112,8 @@ const FilterToys = () => {
   const handleSearch = () => {
     // Dữ liệu bộ lọc từ người dùng
     const filters = [];
-
+    Cookies.remove("ToyDetailFilter");
+    Cookies.remove("ToyDetailCategory");
     if (maxPrice) {
       switch (maxPrice) {
         case "0":
