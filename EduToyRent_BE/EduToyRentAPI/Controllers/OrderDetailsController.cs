@@ -30,23 +30,40 @@ namespace EduToyRentAPI.Controllers
             var orderDetails = _unitOfWork.OrderDetailRepository.Get(
                 includeProperties: "Order,Toy,OrderType",
                 pageIndex: pageIndex,
-                pageSize: pageSize)
-                .Select(od => new OrderDetailResponse
-                {
-                    Id = od.Id,
-                    RentPrice = od.RentPrice,
-                    Deposit = od.Deposit,
-                    UnitPrice = od.UnitPrice,
-                    Quantity = od.Quantity,
-                    StartDate = od.StartDate,
-                    EndDate = od.EndDate,
-                    Status = od.Status,
-                    OrderId = od.OrderId,
-                    ToyId = od.ToyId,
-                    OrderTypeId = od.OrderTypeId
-                }).ToList();
+                pageSize: pageSize);
 
-            return Ok(orderDetails);
+            var orderDetailResponses = orderDetails.Select(orderDetail =>
+            {
+                var mediaList = _unitOfWork.MediaRepository
+                    .GetV2(m => m.ToyId == orderDetail.ToyId)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
+
+                return new OrderDetailResponse
+                {
+                    Id = orderDetail.Id,
+                    RentPrice = orderDetail.RentPrice,
+                    Deposit = orderDetail.Deposit,
+                    UnitPrice = orderDetail.UnitPrice,
+                    Quantity = orderDetail.Quantity,
+                    StartDate = orderDetail.StartDate,
+                    EndDate = orderDetail.EndDate,
+                    Status = orderDetail.Status,
+                    OrderId = orderDetail.OrderId,
+                    ToyId = orderDetail.ToyId,
+                    ToyName = orderDetail.Toy.Name,
+                    ToyPrice = orderDetail.Toy.Price,
+                    ToyImgUrls = mediaList,
+                    OrderTypeId = orderDetail.OrderTypeId
+                };
+            }).ToList();
+
+            if (!orderDetailResponses.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(orderDetailResponses);
         }
 
         // GET: api/OrderDetails/5
@@ -60,6 +77,11 @@ namespace EduToyRentAPI.Controllers
                 return NotFound();
             }
 
+            var mediaList = _unitOfWork.MediaRepository
+                .GetV2(m => m.ToyId == orderDetail.ToyId)
+                .Select(m => m.MediaUrl)
+                .ToList();
+
             var orderDetailResponse = new OrderDetailResponse
             {
                 Id = orderDetail.Id,
@@ -72,6 +94,9 @@ namespace EduToyRentAPI.Controllers
                 Status = orderDetail.Status,
                 OrderId = orderDetail.OrderId,
                 ToyId = orderDetail.ToyId,
+                ToyName = _unitOfWork.ToyRepository.GetByID(orderDetail.ToyId).Name,
+                ToyPrice = _unitOfWork.ToyRepository.GetByID(orderDetail.ToyId).Price,
+                ToyImgUrls = mediaList,
                 OrderTypeId = orderDetail.OrderTypeId
             };
 
@@ -212,28 +237,38 @@ namespace EduToyRentAPI.Controllers
                 filter: od => od.ToyId == toyId,
                 includeProperties: "Order,Toy,OrderType",
                 pageIndex: pageIndex,
-                pageSize: pageSize)
-                .Select(od => new OrderDetailResponse
+                pageSize: pageSize);
+            var orderDetailResponses = orderDetails.Select(orderDetail =>
+            {
+                var mediaList = _unitOfWork.MediaRepository
+                        .GetV2(m => m.ToyId == orderDetail.ToyId)
+                        .Select(m => m.MediaUrl)
+                        .ToList();
+                return new OrderDetailResponse
                 {
-                    Id = od.Id,
-                    RentPrice = od.RentPrice,
-                    Deposit = od.Deposit,
-                    UnitPrice = od.UnitPrice,
-                    Quantity = od.Quantity,
-                    StartDate = od.StartDate,
-                    EndDate = od.EndDate,
-                    Status = od.Status,
-                    OrderId = od.OrderId,
-                    ToyId = od.ToyId,
-                    OrderTypeId = od.OrderTypeId
-                }).ToList();
+                    Id = orderDetail.Id,
+                    RentPrice = orderDetail.RentPrice,
+                    Deposit = orderDetail.Deposit,
+                    UnitPrice = orderDetail.UnitPrice,
+                    Quantity = orderDetail.Quantity,
+                    StartDate = orderDetail.StartDate,
+                    EndDate = orderDetail.EndDate,
+                    Status = orderDetail.Status,
+                    OrderId = orderDetail.OrderId,
+                    ToyId = orderDetail.ToyId,
+                    ToyName = orderDetail.Toy.Name,
+                    ToyPrice = orderDetail.Toy.Price,
+                    ToyImgUrls = mediaList,
+                    OrderTypeId = orderDetail.OrderTypeId
+                };
+            }).ToList();
 
             if (!orderDetails.Any())
             {
                 return NotFound();
             }
 
-            return Ok(orderDetails);
+            return Ok(orderDetailResponses);
         }
         // GET: api/OrderDetails/Order/5
         [HttpGet("Order/{orderId}")]
@@ -276,26 +311,36 @@ namespace EduToyRentAPI.Controllers
         [HttpGet("User/{userId}")]
         public async Task<ActionResult<IEnumerable<OrderDetailResponse>>> GetOrderDetailsByUserId(int userId)
         {
-            var orderDetails = _unitOfWork.OrderDetailRepository.Get(filter: od => od.Toy.UserId == userId);
+            var orderDetails = _unitOfWork.OrderDetailRepository.Get(filter: od => od.Toy.UserId == userId, includeProperties: "Toy");
 
             if (orderDetails == null || !orderDetails.Any())
             {
                 return NotFound("No order details found own by this user.");
             }
 
-            var orderDetailResponses = orderDetails.Select(orderDetail => new OrderDetailResponse
+            var orderDetailResponses = orderDetails.Select(orderDetail =>
             {
-                Id = orderDetail.Id,
-                RentPrice = orderDetail.RentPrice,
-                Deposit = orderDetail.Deposit,
-                UnitPrice = orderDetail.UnitPrice,
-                Quantity = orderDetail.Quantity,
-                StartDate = orderDetail.StartDate,
-                EndDate = orderDetail.EndDate,
-                Status = orderDetail.Status,
-                OrderId = orderDetail.OrderId,
-                ToyId = orderDetail.ToyId,
-                OrderTypeId = orderDetail.OrderTypeId
+                var mediaList = _unitOfWork.MediaRepository
+                        .GetV2(m => m.ToyId == orderDetail.ToyId)
+                        .Select(m => m.MediaUrl)
+                        .ToList();
+                return new OrderDetailResponse
+                {
+                    Id = orderDetail.Id,
+                    RentPrice = orderDetail.RentPrice,
+                    Deposit = orderDetail.Deposit,
+                    UnitPrice = orderDetail.UnitPrice,
+                    Quantity = orderDetail.Quantity,
+                    StartDate = orderDetail.StartDate,
+                    EndDate = orderDetail.EndDate,
+                    Status = orderDetail.Status,
+                    OrderId = orderDetail.OrderId,
+                    ToyId = orderDetail.ToyId,
+                    ToyName = orderDetail.Toy.Name,
+                    ToyPrice = orderDetail.Toy.Price,
+                    ToyImgUrls = mediaList,
+                    OrderTypeId = orderDetail.OrderTypeId
+                };
             }).ToList();
 
             return Ok(orderDetailResponses);
