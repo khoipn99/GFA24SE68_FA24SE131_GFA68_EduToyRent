@@ -234,6 +234,7 @@ const InformationCustomer = () => {
       })
       .then((response) => {
         setOrderDetails(response.data);
+        console.log(response.data);
 
         setReviews(
           response.data.reduce((acc, product) => {
@@ -1381,8 +1382,8 @@ const InformationCustomer = () => {
                               </button>
                             </div>
                           )}
-                          {item.ratingId != "" &&
-                            item.status === "Complete" && (
+                          {item.ratingId == null &&
+                            item.status == "Complete" && (
                               <div>
                                 <form
                                   onSubmit={(e) =>
@@ -1426,7 +1427,7 @@ const InformationCustomer = () => {
                                         )
                                       }
                                       rows="2"
-                                      className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                      className="w-full px-4 py-8 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                       placeholder="Nhập nội dung đánh giá..."
                                       required
                                     ></textarea>
@@ -1519,7 +1520,7 @@ const InformationCustomer = () => {
                             VNĐ
                           </p>
                         </div>
-                        {item.ratingId != "" && item.status === "Complete" && (
+                        {item.ratingId == null && item.status == "Complete" && (
                           <div>
                             <form
                               onSubmit={(e) =>
@@ -1560,7 +1561,7 @@ const InformationCustomer = () => {
                                     handleReviewChange(item.id, e.target.value)
                                   }
                                   rows="2"
-                                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                  className="w-full px-4 py-8 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                   placeholder="Nhập nội dung đánh giá..."
                                   required
                                 ></textarea>
