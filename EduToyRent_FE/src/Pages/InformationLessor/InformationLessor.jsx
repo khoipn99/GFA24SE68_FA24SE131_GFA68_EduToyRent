@@ -11,6 +11,8 @@ import { useNavigate } from "react-router-dom";
 import apiWallets from "../../service/ApiWallets";
 import apiWalletTransaction from "../../service/ApiWalletTransaction";
 import apiUser from "../../service/ApiUser";
+import apiTransaction from "../../service/ApiTransaction";
+import apiTransactionDetail from "../../service/ApiTransactionDetail";
 
 const InformationLessor = () => {
   const [selectedTab, setSelectedTab] = useState("orders");
@@ -164,6 +166,23 @@ const InformationLessor = () => {
     var tmp = order;
     tmp.status = "Complete";
 
+    await apiOrderDetail.put("/" + order.id, tmp, {
+      headers: {
+        Authorization: `Bearer ${Cookies.get("userToken")}`,
+      },
+    });
+
+    await apiToys.patch(
+      `/${order.toyId}/update-status`,
+      JSON.stringify("Active"), // Adjust the key as per API requirements
+      {
+        headers: {
+          "Content-Type": "application/json", // Specify the correct Content-Type
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      }
+    );
+
     await apiUser
       .get("/" + selectedOrder.userId, {
         headers: {
@@ -181,7 +200,7 @@ const InformationLessor = () => {
           })
           .then(async (response2) => {
             const walletTmp = response2.data;
-            console.log(walletTmp.id);
+            console.log(walletTmp);
             await apiWallets.put(
               "/" + walletTmp.id,
               {
@@ -201,7 +220,7 @@ const InformationLessor = () => {
               "",
               {
                 transactionType: "Nhận lại tiền cọc",
-                amount: order.deposit - order.rentPrice,
+                amount: parseInt(order.deposit - order.rentPrice),
                 date: new Date().toISOString(),
                 walletId: walletTmp.id,
                 paymentTypeId: 5,
@@ -215,6 +234,7 @@ const InformationLessor = () => {
             );
           });
       });
+
     await apiWallets
       .get("/" + customerInfo.walletId, {
         headers: {
@@ -223,7 +243,7 @@ const InformationLessor = () => {
       })
       .then(async (response2) => {
         const walletTmp = response2.data;
-        console.log(walletTmp.id);
+        console.log(walletTmp);
         await apiWallets.put(
           "/" + walletTmp.id,
           {
@@ -239,28 +259,123 @@ const InformationLessor = () => {
             },
           }
         );
-        await apiWalletTransaction
-          .post(
-            "",
-            {
-              transactionType: "Nhận tiền từ đơn hàng",
-              amount: order.rentPrice * 0.85,
-              date: new Date().toISOString(),
-              walletId: walletTmp.id,
-              paymentTypeId: 5,
-              orderId: selectedOrder.id,
+
+        await apiWalletTransaction.post(
+          "",
+          {
+            transactionType: "Nhận tiền từ đơn hàng",
+            amount: parseInt(order.rentPrice * 0.85),
+            date: new Date().toISOString(),
+            walletId: customerInfo.walletId,
+            paymentTypeId: 5,
+            orderId: selectedOrder.id,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
             },
-            {
-              headers: {
-                Authorization: `Bearer ${Cookies.get("userToken")}`,
+          }
+        );
+      });
+
+    await apiTransaction
+      .get("?pageIndex=1&pageSize=1000", {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then(async (response1) => {
+        ViewDetails();
+        const transactionTmp = response1.data.filter(
+          (transaction) => transaction.order.id == selectedOrder.id
+        );
+        console.log(transactionTmp);
+
+        if (transactionTmp == "") {
+          await apiTransaction
+            .post(
+              "",
+              {
+                receiveMoney: order.unitPrice,
+                platformFee: order.rentPrice * 0.15,
+                ownerReceiveMoney: order.rentPrice * 0.85,
+                depositBackMoney: order.unitPrice - order.rentPrice,
+                status: "Success",
+                orderId: selectedOrder.id,
               },
-            }
-          )
-          .then(async (response3) => {
-            await apiOrderDetail.put("/" + order.id, tmp).then((response) => {
-              ViewDetails();
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
+            .then(async (response) => {
+              console.log(response.data);
+
+              console.log(order);
+              await apiTransactionDetail.post(
+                "",
+                {
+                  receiveMoney: order.unitPrice,
+                  platformFee: order.rentPrice * 0.15,
+                  ownerReceiveMoney: order.rentPrice * 0.85,
+                  depositBackMoney: order.unitPrice - order.rentPrice,
+                  status: "ToyGood",
+                  orderDetailId: order.id,
+                  transactionId: response.data.id,
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                }
+              );
             });
-          });
+        } else {
+          await apiTransaction
+            .put(
+              "/" + transactionTmp[0].id,
+              {
+                receiveMoney: transactionTmp[0].receiveMoney + order.unitPrice,
+                platformFee:
+                  transactionTmp[0].platformFee + order.rentPrice * 0.15,
+                ownerReceiveMoney:
+                  transactionTmp[0].ownerReceiveMoney + order.rentPrice * 0.85,
+                depositBackMoney:
+                  transactionTmp[0].depositBackMoney +
+                  (order.unitPrice - order.rentPrice),
+                status: "Success",
+                orderId: selectedOrder.id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
+            .then(async (response) => {
+              console.log(response.data);
+
+              console.log(order);
+              await apiTransactionDetail.post(
+                "",
+                {
+                  receiveMoney: order.unitPrice,
+                  platformFee: order.rentPrice * 0.15,
+                  ownerReceiveMoney: order.rentPrice * 0.85,
+                  depositBackMoney: order.unitPrice - order.rentPrice,
+                  status: "ToyGood",
+                  orderDetailId: order.id,
+                  transactionId: transactionTmp[0].id,
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                }
+              );
+            });
+        }
       });
   };
 
@@ -320,7 +435,7 @@ const InformationLessor = () => {
               "",
               {
                 transactionType: "Nhận lại tiền cọc",
-                amount: order.totalPrice,
+                amount: parseInt(order.totalPrice),
                 date: new Date().toISOString(),
                 walletId: walletTmp.id,
                 paymentTypeId: 5,
@@ -1272,7 +1387,14 @@ const InformationLessor = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
-      <header>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: "white",
+        }}
+      >
         <HeaderForCustomer />
       </header>
       <main className="flex flex-grow justify-center py-4">

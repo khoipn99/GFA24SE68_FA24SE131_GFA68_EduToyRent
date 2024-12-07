@@ -10,6 +10,9 @@ import { useNavigate } from "react-router-dom";
 import apiToys from "../../service/ApiToys";
 
 import apiCategory from "../../service/ApiCategory";
+import apiCartItem from "../../service/ApiCartItem";
+
+import apiCart from "../../service/ApiCart";
 
 const FilterToys = () => {
   const [ageGroup, setAgeGroup] = useState("");
@@ -28,9 +31,11 @@ const FilterToys = () => {
   const [category, setCategory] = useState([]);
   const [selectCategory, setSelectCategory] = useState("All");
   const navigate = useNavigate();
+  const [cartId, setCartId] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 18;
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     if (Cookies.get("ToyDetailFilter") == "All") {
@@ -108,6 +113,24 @@ const FilterToys = () => {
     }
     setSelectCategory(Cookies.get("ToyDetailCategory"));
   }, []);
+
+  useEffect(() => {
+    const userDataCookie = Cookies.get("userDataReal");
+    if (userDataCookie) {
+      var parsedUserData;
+      try {
+        parsedUserData = JSON.parse(userDataCookie);
+
+        console.log(parsedUserData);
+        fetchUserCart(parsedUserData.id);
+        setUserId(parsedUserData.id);
+      } catch (error) {
+        console.error("Error parsing userDataCookie:", error);
+      }
+    } else {
+      console.warn("Cookie 'userDataReal' is missing or undefined.");
+    }
+  }, []);
   // Lọc đồ chơi theo tiêu chí
   const handleSearch = () => {
     // Dữ liệu bộ lọc từ người dùng
@@ -182,6 +205,56 @@ const FilterToys = () => {
     }
   };
 
+  const fetchUserCart = async (userId) => {
+    try {
+      const response = await apiCart.get(`?pageIndex=1&pageSize=1000`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      console.log("Tất cả giỏ hàng:", response.data);
+
+      // Log userId để đảm bảo giá trị userId được truyền vào đúng
+      console.log("UserId cần lọc:", userId);
+
+      // Lọc giỏ hàng theo userId
+      const userCart = response.data.filter((cart) => cart.userId === userId);
+
+      // Log kết quả của userCart sau khi lọc
+      console.log("Giỏ hàng sau khi lọc theo userId:", userCart);
+
+      if (userCart.length > 0) {
+        const cart = userCart[0];
+        const cartId = cart.id;
+
+        console.log("CartId được chọn:", cartId);
+
+        setCartId(cartId); // Lưu cartId vào state
+        fetchCartItems(cartId); // Gọi API lấy CartItems
+      } else {
+        console.error("Không tìm thấy giỏ hàng cho người dùng.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy giỏ hàng của người dùng:", error);
+    }
+  };
+
+  const fetchCartItems = async (cartId) => {
+    try {
+      const response = await apiCartItem.get(`/ByCartId/${cartId}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      console.log("Các mục trong giỏ hàng:", response.data);
+      // Thực hiện thêm các bước xử lý với dữ liệu CartItems (ví dụ: setCartItems(response.data))
+    } catch (error) {
+      console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
+    }
+  };
+
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
       handleSearch();
@@ -234,20 +307,64 @@ const FilterToys = () => {
     return stars;
   };
 
-  const addToPurchase = (toy) => {
-    const purchases = JSON.parse(Cookies.get("purchases") || "[]");
+  const addToPurchase = async (toy) => {
+    if (!cartId) {
+      console.error("Không tìm thấy cartId");
+      alert("Bạn cần đăng nhập để sử dụng chức năng này.");
 
-    const existingToy = purchases.find((item) => item.id === toy.id);
+      return;
+    }
+    var existingItem;
 
-    if (existingToy) {
-      existingToy.quantity = (existingToy.quantity || 1) + 1;
-    } else {
-      purchases.push({ ...toy, quantity: 1 });
+    // Gọi API để kiểm tra giỏ hàng
+    try {
+      const response = await apiCartItem.get(`/ByCartId/${cartId}`);
+
+      const cartItems = response.data || [];
+      existingItem = cartItems.find((item) => item.toyId == toy.id);
+    } catch (error) {
+      console.error("Lỗi khi thêm sản phẩm vào danh sách mua:", error);
+      //alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
     }
 
-    Cookies.set("purchases", JSON.stringify(purchases), { expires: 7 });
-    alert("Sản phẩm đã được thêm vào danh sách mua!");
-    console.log(`Đã thêm ${toy.name} vào giỏ hàng`);
+    if (existingItem) {
+      // Nếu sản phẩm đã tồn tại, tăng quantity lên 1
+      try {
+        const updatedQuantity = existingItem.quantity + 1;
+
+        await apiCartItem.put(`/${existingItem.id}`, {
+          ...existingItem,
+          quantity: updatedQuantity,
+        });
+
+        console.log(`Đã cập nhật số lượng sản phẩm: ${updatedQuantity}`);
+        alert("Số lượng sản phẩm đã được cập nhật!");
+      } catch (error) {
+        alert("Sản phẩm đã có trong giỏ hàng");
+      }
+    } else {
+      // Nếu sản phẩm chưa tồn tại, thêm mới
+      const purchaseData = {
+        price: toy.price,
+        quantity: 1, // Bắt đầu với số lượng 1
+        cartId: cartId,
+        toyId: toy.id,
+        toyName: toy.name,
+        toyPrice: toy.toyPrice,
+        toyImgUrls: toy.imageUrls,
+        status: "success",
+        orderTypeId: 7, // Sử dụng orderTypeId thay cho startDate và endDate
+      };
+
+      try {
+        await apiCartItem.post("", purchaseData);
+
+        console.log("Sản phẩm đã được thêm vào danh sách mua mới.");
+        alert("Sản phẩm đã được thêm vào giỏ hàng!");
+      } catch (error) {
+        alert("Sản phẩm này đã hết hàng");
+      }
+    }
   };
 
   const handleDurationChange = (duration) => {
@@ -259,17 +376,26 @@ const FilterToys = () => {
     }
   };
   const confirmAddToCart = () => {
+    if (!Cookies.get("userToken")) {
+      console.error("Không tìm thấy cartId");
+      alert("Bạn cần đăng nhập để sử dụng chức năng này.");
+
+      return;
+    }
+
     if (selectedToy) {
-      // Kiểm tra xem selectedToy có tồn tại không
-      updateRentalDuration(selectedToy.id, rentalDuration);
+      addToCart({ ...selectedToy, rentalDuration })
+        .then(() => {
+          console.log(
+            `Đã thêm ${selectedToy.name} vào giỏ với thời gian thuê: ${rentalDuration} và giá thuê: ${calculatedPrice} VNĐ`
+          );
 
-      // Gọi hàm addToCart để thêm sản phẩm vào giỏ hàng
-      addToCart({ ...selectedToy, rentalDuration }); // Thêm rentalDuration vào sản phẩm
-      console.log(
-        `Đã thêm ${selectedToy.name} vào giỏ với thời gian thuê: ${rentalDuration} và giá thuê: ${calculatedPrice} VNĐ`
-      );
-
-      closeModal();
+          // Đóng modal sau khi thêm vào giỏ hàng
+          closeModal();
+        })
+        .catch((error) => {
+          console.error("Không thể thêm sản phẩm vào giỏ hàng:", error);
+        });
     }
   };
 
@@ -285,10 +411,28 @@ const FilterToys = () => {
       case "1 tháng":
         rentalPrice = price * 0.3;
         break;
+      case "Mua":
+        rentalPrice = price; // 100% giá
+        break;
       default:
-        rentalPrice = 0;
+        rentalPrice = 0; // Giá trị mặc định nếu duration không hợp lệ
     }
     return rentalPrice;
+  };
+
+  const calculateOrderTypeId = (rentalDuration) => {
+    switch (rentalDuration) {
+      case "1 tuần":
+        return 4; // orderTypeId cho 1 tuần
+      case "2 tuần":
+        return 5; // orderTypeId cho 2 tuần
+      case "1 tháng":
+        return 6; // orderTypeId cho 1 tháng
+      case "Mua":
+        return 7; // orderTypeId cho mua
+      default:
+        return 1; // Nếu không có rentalDuration, mặc định là mua
+    }
   };
 
   const updateRentalDuration = (itemId, duration) => {
@@ -299,27 +443,68 @@ const FilterToys = () => {
     );
   };
 
-  const addToCart = (toy) => {
-    const cart = JSON.parse(Cookies.get("cart") || "[]");
+  const addToCart = async (toy) => {
+    if (!cartId) {
+      console.error("Không tìm thấy cartId");
+      alert("Bạn cần đăng nhập để sử dụng chức năng này.");
 
-    // Tìm kiếm sản phẩm đã có trong giỏ hàng
-    const existingToyIndex = cart.findIndex((item) => item.id === toy.id);
-
-    if (existingToyIndex !== -1) {
-      // Nếu sản phẩm đã có, cập nhật số lượng và thời gian thuê
-      cart[existingToyIndex].quantity += 1;
-      // Cập nhật thời gian thuê nếu người dùng đã chọn
-      if (rentalDuration) {
-        cart[existingToyIndex].rentalDuration = rentalDuration;
-      }
-    } else {
-      // Nếu chưa có, thêm sản phẩm mới vào giỏ hàng cùng với thời gian thuê
-      cart.push({ ...toy, quantity: 1, rentalDuration }); // Lưu rentalDuration
+      return;
     }
 
-    // Lưu lại giỏ hàng vào cookie
-    Cookies.set("cart", JSON.stringify(cart), { expires: 7 });
-    alert("Sản phẩm đã được thêm vào giỏ hàng!");
+    if (toy.owner.id !== userId) {
+      // Kiểm tra giỏ hàng hiện tại
+      var existingItem;
+      try {
+        const response = await apiCartItem.get(`/ByCartId/${cartId}`);
+        const cartItems = response.data || [];
+
+        // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
+        existingItem = cartItems.find((item) => item.toyId == toy.id);
+      } catch (error) {
+        console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
+        //alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
+      }
+
+      if (existingItem) {
+        // Nếu sản phẩm đã có trong giỏ hàng, thông báo cho người dùng
+        alert("Sản phẩm đã có trong giỏ hàng!");
+        console.log("Sản phẩm đã có trong giỏ hàng.");
+      } else {
+        // Kiểm tra giá trị orderTypeId và tính giá thuê
+        const orderTypeId = rentalDuration
+          ? calculateOrderTypeId(rentalDuration)
+          : 1; // 7 là giá trị mặc định cho "Mua"
+
+        // Tính giá thuê dựa trên rentalDuration (orderTypeId)
+        let rentalPrice = 0;
+        if (rentalDuration) {
+          rentalPrice = calculateRentalPrice(toy.price, rentalDuration); // Tính giá thuê
+        }
+
+        const cartItemData = {
+          price: toy.price, // Sử dụng giá thuê
+          quantity: toy.buyQuantity,
+          status: "success",
+          cartId: cartId,
+          toyId: toy.id,
+          toyName: toy.name,
+          toyPrice: toy.price, // Lưu giá thuê vào database
+          toyImgUrls: toy.imageUrls,
+          orderTypeId: orderTypeId, // Sử dụng orderTypeId thay cho startDate và endDate
+        };
+        try {
+          console.log("Quantity before saving: " + cartItemData.quantity);
+          const addResponse = await apiCartItem.post("", cartItemData);
+
+          console.log("Sản phẩm đã được thêm vào giỏ hàng:", addResponse.data);
+          alert("Sản phẩm đã được thêm vào giỏ hàng!");
+        } catch (error) {
+          alert("Sản phẩm này đã hết hàng");
+        }
+      }
+    } else {
+      alert("Bạn không thể thuê đồ chơi của chính mình");
+    }
   };
 
   const HandleToyDetail = (toy) => {
@@ -335,7 +520,14 @@ const FilterToys = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
-      <header>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: "white",
+        }}
+      >
         <HeaderForCustomer />
       </header>
       <div className="flex flex-1 justify-center py-5 bg-white shadow-md">

@@ -11,7 +11,10 @@ import apiCartItem from "../../service/ApiCartItem";
 import apiUser from "../../service/ApiUser";
 import { useNavigate } from "react-router-dom";
 import apiWallets from "../../service/ApiWallets";
+
 import apiCart from "../../service/ApiCart";
+import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import các biểu tượng sao
+
 const ToysSaleDetails = () => {
   const starRating = 4.0; // Số sao (giả sử)
   const reviewCount = 25; // Số lượt đánh giá (giả sử)
@@ -55,6 +58,8 @@ const ToysSaleDetails = () => {
 
   const [currentPicture, setCurrentPicture] = useState([]);
   const [currentMedia, setCurrentMedia] = useState([]);
+  const [toysOfShop, setToysOfShop] = useState([]);
+
   const navigate = useNavigate();
   const handleMediaClick = (mediaUrl) => {
     setCurrentMedia(mediaUrl);
@@ -79,8 +84,18 @@ const ToysSaleDetails = () => {
       setCurrentMedia(response.data.media[0]);
       setCurrentPicture(response.data.media);
       console.log(response.data.media);
+      apiToys
+        .get(
+          "/user/" +
+            response.data.owner.id +
+            "?status=Active&pageIndex=1&pageSize=6"
+        )
+        .then((response) => {
+          setToysOfShop(response.data);
+        });
     });
   }, []);
+
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -198,29 +213,29 @@ const ToysSaleDetails = () => {
     }
   };
 
-  const recommendedToys = [
-    {
-      name: "Kids Play Kitchen",
-      ageGroup: "Ages 4-6",
-      price: "49.99",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-    {
-      name: "Outdoor Adventure Set",
-      ageGroup: "Ages 5-8",
-      price: "34.99",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-    {
-      name: "Musical Instruments",
-      ageGroup: "Ages 6-9",
-      price: "59.99",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-  ];
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        stars.push(<FaStar key={i} className="text-yellow-500" />); // Sao đầy
+      } else if (i - 0.5 === rating) {
+        stars.push(<FaStarHalfAlt key={i} className="text-yellow-500" />); // Sao nửa
+      } else {
+        stars.push(<FaRegStar key={i} className="text-gray-300" />); // Sao rỗng
+      }
+    }
+    return stars;
+  };
+  const HandleToyDetail = (toy) => {
+    console.log(toy);
+    if (toy.buyQuantity >= 0) {
+      Cookies.set("toySaleDetailId", toy.id, { expires: 30 });
+      navigate("/toys-sale-details");
+    } else if (toy.buyQuantity < 0) {
+      Cookies.set("toyRentDetailId", toy.id, { expires: 30 });
+      navigate("/toys-rent-details");
+    }
+  };
   const addToPurchase = async (toy) => {
     if (!cartId) {
       console.error("Không tìm thấy cartId");
@@ -286,9 +301,76 @@ const ToysSaleDetails = () => {
     }
   };
 
+  const addToPurchase2 = async (toy) => {
+    if (!cartId) {
+      console.error("Không tìm thấy cartId");
+      alert("Bạn cần đăng nhập để sử dụng chức năng này.");
+
+      return;
+    }
+    var existingItem;
+
+    // Gọi API để kiểm tra giỏ hàng
+    try {
+      const response = await apiCartItem.get(`/ByCartId/${cartId}`);
+
+      const cartItems = response.data || [];
+      existingItem = cartItems.find((item) => item.toyId == toy.id);
+    } catch (error) {
+      console.error("Lỗi khi thêm sản phẩm vào danh sách mua:", error);
+      //alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
+    }
+
+    if (existingItem) {
+      // Nếu sản phẩm đã tồn tại, tăng quantity lên 1
+      try {
+        const updatedQuantity = existingItem.quantity + 1;
+
+        await apiCartItem.put(`/${existingItem.id}`, {
+          ...existingItem,
+          quantity: updatedQuantity,
+        });
+
+        console.log(`Đã cập nhật số lượng sản phẩm: ${updatedQuantity}`);
+        alert("Số lượng sản phẩm đã được cập nhật!");
+      } catch (error) {
+        alert("Sản phẩm đã có trong giỏ hàng");
+      }
+    } else {
+      // Nếu sản phẩm chưa tồn tại, thêm mới
+      const purchaseData = {
+        price: toy.price,
+        quantity: 1, // Bắt đầu với số lượng 1
+        cartId: cartId,
+        toyId: toy.id,
+        toyName: toy.name,
+        toyPrice: toy.toyPrice,
+        toyImgUrls: toy.imageUrls,
+        status: "success",
+        orderTypeId: 7, // Sử dụng orderTypeId thay cho startDate và endDate
+      };
+
+      try {
+        await apiCartItem.post("", purchaseData);
+
+        console.log("Sản phẩm đã được thêm vào danh sách mua mới.");
+        alert("Sản phẩm đã được thêm vào giỏ hàng!");
+      } catch (error) {
+        alert("Sản phẩm này đã hết hàng");
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
-      <header>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: "white",
+        }}
+      >
         <HeaderForCustomer />
       </header>
       <div className="flex flex-1 justify-center py-5 bg-white shadow-md">
@@ -542,6 +624,9 @@ const ToysSaleDetails = () => {
                   : ""}
               </div>
               <div className="mb-2">
+                <span className="font-semibold">Độ tuổi:</span> {currentToy.age}
+              </div>
+              <div className="mb-2">
                 <span className="font-semibold">Kho:</span>{" "}
                 {currentToy.buyQuantity}
               </div>
@@ -709,25 +794,73 @@ const ToysSaleDetails = () => {
 
                 <div className="grid grid-cols-6 gap-3 p-4">
                   {" "}
-                  {recommendedToys.map((toy, index) => (
-                    <div key={index} className="flex flex-col gap-3 pb-3">
+                  {toysOfShop.length > 0 ? (
+                    toysOfShop.map((deal, index) => (
                       <div
-                        className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                        style={{ backgroundImage: `url(${toy.image})` }}
-                      ></div>
-                      <div>
-                        <p className="text-[#0e161b] text-base font-medium">
-                          {toy.name}
-                        </p>
-                        <p className="text-[#507a95] text-sm">
-                          Age group: {toy.ageGroup}
-                        </p>
-                        <p className="text-[#0e161b] text-lg font-bold">
-                          ${toy.price}
-                        </p>
+                        key={index}
+                        className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
+                      >
+                        <div
+                          onClick={() => {
+                            HandleToyDetail(deal);
+                          }}
+                        >
+                          <div
+                            className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
+                            style={{
+                              backgroundImage: `url(${
+                                deal.media[0] && deal.media[0].mediaUrl
+                                  ? deal.media[0].mediaUrl
+                                  : ""
+                              })`,
+                            }}
+                          ></div>
+
+                          <p
+                            className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                            style={{
+                              display: "-webkit-box",
+                              WebkitBoxOrient: "vertical",
+                              WebkitLineClamp: 2,
+                              lineClamp: 2,
+                              maxHeight: "3rem", // Ensures space for two lines
+                              lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                            }}
+                          >
+                            {deal.name}
+                          </p>
+
+                          <p className="text-[#507a95] text-sm">
+                            Nhóm tuổi: {deal.age}
+                          </p>
+                          <div className="flex items-center gap-1">
+                            {renderStars(deal.star)}
+                          </div>
+                          {deal.buyQuantity >= 0 ? (
+                            <p className="text-[#0e161b] text-lg font-bold">
+                              {(deal.price || 0).toLocaleString()} VNĐ
+                            </p>
+                          ) : (
+                            <p className="text-[#0e161b] text-lg font-bold">
+                              {(deal.price * 0.15 || 0).toLocaleString()} VNĐ
+                            </p>
+                          )}
+                        </div>
+                        {deal.buyQuantity >= 0 ? (
+                          <button
+                            onClick={() => addToPurchase2(deal)}
+                            className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                          >
+                            Mua
+                          </button>
+                        ) : (
+                          <button></button>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-[#0e161b] text-lg">No toys found</p>
+                  )}
                 </div>
               </div>
             </div>

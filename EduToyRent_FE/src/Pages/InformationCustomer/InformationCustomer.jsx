@@ -11,6 +11,7 @@ import apiUser from "../../service/ApiUser";
 import apiTransaction from "../../service/ApiTransaction";
 import apiTransactionDetail from "../../service/ApiTransactionDetail";
 import apiToys from "../../service/ApiToys";
+import apiRatings from "../../service/ApiRatings";
 
 const InformationCustomer = () => {
   const [selectedTab, setSelectedTab] = useState("info");
@@ -29,6 +30,7 @@ const InformationCustomer = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
+  const [reviews, setReviews] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -232,21 +234,43 @@ const InformationCustomer = () => {
       })
       .then((response) => {
         setOrderDetails(response.data);
-        console.log(response.data);
+
+        setReviews(
+          response.data.reduce((acc, product) => {
+            acc[product.id] = { rating: 1, review: "" };
+            return acc;
+          }, {})
+        );
       });
   };
 
   const ViewDetails = () => {
-    apiOrderDetail
-      .get("/Order/" + selectedOrder.id, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      })
-      .then((response) => {
-        setOrderDetails(response.data);
-        console.log(response.data);
+    apiOrderDetail.get("/Order/" + selectedOrder.id).then((response) => {
+      setOrderDetails(response.data);
+      setReviews(
+        response.data.reduce((acc, product) => {
+          acc[product.id] = { rating: 1, review: "" };
+          return acc;
+        }, {})
+      );
+      console.log(response.data);
+
+      var tmp = true;
+      response.data.map((item) => {
+        if (item.status != "Complete") {
+          tmp = false;
+        }
       });
+
+      if (tmp) {
+        var orderTmp = selectedOrder;
+        orderTmp.status = "Complete";
+
+        apiOrder.put("/" + selectedOrder.id, orderTmp).then((response) => {
+          getOrderInfo();
+        });
+      }
+    });
   };
 
   const closeDetails = () => {
@@ -274,16 +298,31 @@ const InformationCustomer = () => {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
       })
-      .then((response) => {
-        ViewDetails();
-      });
+      .then((response) => {});
   };
   const handleFinishOrderDetail = async (order) => {
     var tmp = order;
     tmp.status = "Complete";
 
+    await apiOrderDetail.put("/" + order.id, tmp, {
+      headers: {
+        Authorization: `Bearer ${Cookies.get("userToken")}`,
+      },
+    });
+
+    await apiToys.patch(
+      `/${order.toyId}/update-status`,
+      JSON.stringify("Sold"), // Adjust the key as per API requirements
+      {
+        headers: {
+          "Content-Type": "application/json", // Specify the correct Content-Type
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      }
+    );
+
     await apiToys
-      .get("/" + selectedOrder.toyId, {
+      .get("/" + order.toyId, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
@@ -326,7 +365,7 @@ const InformationCustomer = () => {
                   "",
                   {
                     transactionType: "Nhận tiền từ đơn hàng",
-                    amount: order.deposit * 0.85,
+                    amount: parseInt(order.deposit * 0.85),
                     date: new Date().toISOString(),
                     walletId: walletTmp.id,
                     paymentTypeId: 5,
@@ -341,6 +380,104 @@ const InformationCustomer = () => {
               });
           });
       });
+
+    await apiTransaction
+      .get("?pageIndex=1&pageSize=1000", {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then(async (response1) => {
+        const transactionTmp = response1.data.filter(
+          (transaction) => transaction.order.id == selectedOrder.id
+        );
+        console.log(transactionTmp);
+
+        if (transactionTmp == "") {
+          await apiTransaction
+            .post(
+              "",
+              {
+                receiveMoney: order.unitPrice,
+                platformFee: order.unitPrice * 0.15,
+                ownerReceiveMoney: order.unitPrice * 0.85,
+                depositBackMoney: 0,
+                status: "Success",
+                orderId: selectedOrder.id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
+            .then(async (response) => {
+              console.log(response.data);
+
+              console.log(order);
+              await apiTransactionDetail.post(
+                "",
+                {
+                  receiveMoney: order.unitPrice,
+                  platformFee: order.unitPrice * 0.15,
+                  ownerReceiveMoney: order.unitPrice * 0.85,
+                  depositBackMoney: 0,
+                  status: "ToyBroke",
+                  orderDetailId: order.id,
+                  transactionId: response.data.id,
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                }
+              );
+            });
+        } else {
+          await apiTransaction
+            .put(
+              "/" + transactionTmp[0].id,
+              {
+                receiveMoney: transactionTmp[0].receiveMoney + order.unitPrice,
+                platformFee:
+                  transactionTmp[0].platformFee + order.unitPrice * 0.15,
+                ownerReceiveMoney:
+                  transactionTmp[0].ownerReceiveMoney + order.unitPrice * 0.85,
+                depositBackMoney: transactionTmp[0].depositBackMoney,
+                status: "Success",
+                orderId: selectedOrder.id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
+            .then(async (response) => {
+              console.log(response.data);
+
+              console.log(order);
+              await apiTransactionDetail.post(
+                "",
+                {
+                  receiveMoney: order.unitPrice,
+                  platformFee: order.unitPrice * 0.15,
+                  ownerReceiveMoney: order.unitPrice * 0.85,
+                  depositBackMoney: 0,
+                  status: "ToyBroke",
+                  orderDetailId: order.id,
+                  transactionId: transactionTmp[0].id,
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                }
+              );
+            });
+        }
+      });
+    ViewDetails();
   };
 
   const handleCancelOrder = (order) => {
@@ -389,7 +526,7 @@ const InformationCustomer = () => {
         "",
         {
           transactionType: "Nhận tiền từ đơn hàng ",
-          amount: amountToAdd,
+          amount: parseInt(amountToAdd),
           date: new Date().toISOString(),
           walletId: ownerWallet.id,
           paymentTypeId: 5,
@@ -429,16 +566,30 @@ const InformationCustomer = () => {
             },
           }
         )
-        .then((response) => {
-          apiOrderDetail
+        .then(async (response) => {
+          console.log(response.data);
+
+          await apiOrderDetail
             .get("/Order/" + orderToUpdate.id, {
               headers: {
                 Authorization: `Bearer ${Cookies.get("userToken")}`,
               },
             })
             .then((response2) => {
-              response2.data.map((item) => {
-                apiTransactionDetail.post(
+              response2.data.map(async (item) => {
+                console.log(item);
+                var Tmp = item;
+                Tmp.status = "Complete";
+                await apiOrderDetail
+                  .put("/" + item.id, Tmp, {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  })
+                  .then((response) => {
+                    ViewDetails();
+                  });
+                await apiTransactionDetail.post(
                   "",
                   {
                     receiveMoney: item.unitPrice * item.quantity,
@@ -515,6 +666,70 @@ const InformationCustomer = () => {
             });
           });
       });
+  };
+  const handleRatingChange = (productId, rating) => {
+    setReviews((prev) => ({
+      ...prev,
+      [productId]: { ...prev[productId], rating },
+    }));
+  };
+
+  const handleReviewChange = (productId, review) => {
+    setReviews((prev) => ({
+      ...prev,
+      [productId]: { ...prev[productId], review },
+    }));
+  };
+
+  const handleSubmitReview = async (e, productId, item) => {
+    e.preventDefault();
+    const reviewData = reviews[productId];
+    console.log("Đánh giá cho sản phẩm:", productId, reviewData);
+
+    await apiRatings
+      .post(
+        "",
+        {
+          comment: reviewData.review,
+          star: reviewData.rating,
+          userId: customerInfo.id,
+          orderDetailId: productId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      )
+      .then(async (response) => {
+        await apiOrderDetail
+          .put(
+            "/" + item.id,
+            {
+              rentPrice: item.rentPrice,
+              deposit: item.deposit,
+              unitPrice: item.unitPrice,
+              quantity: item.quantity,
+              startDate: item.startDate,
+              endDate: item.endDate,
+              status: item.status,
+              orderId: item.orderId,
+              toyId: item.toyId,
+              orderTypeId: item.orderTypeId,
+              ratingId: response.data.id,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          )
+          .then((response) => {
+            ViewDetails();
+          });
+      });
+
+    alert(`Cảm ơn bạn đã đánh giá sản phẩm ${productId}`);
   };
 
   const renderContent = () => {
@@ -1166,6 +1381,67 @@ const InformationCustomer = () => {
                               </button>
                             </div>
                           )}
+                          {item.ratingId != "" &&
+                            item.status === "Complete" && (
+                              <div>
+                                <form
+                                  onSubmit={(e) =>
+                                    handleSubmitReview(e, item.id, item)
+                                  }
+                                  className="flex items-center space-x-6 mt-4"
+                                >
+                                  {/* Chọn số sao */}
+                                  <div className="flex items-center space-x-2">
+                                    <label className="text-sm font-medium text-gray-700">
+                                      Đánh giá:
+                                    </label>
+                                    <div className="flex">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                          key={star}
+                                          type="button"
+                                          className={`text-2xl ${
+                                            star <= reviews[item.id].rating
+                                              ? "text-yellow-400"
+                                              : "text-gray-300"
+                                          } transition-colors duration-200 ease-in-out`}
+                                          onClick={() =>
+                                            handleRatingChange(item.id, star)
+                                          }
+                                        >
+                                          ★
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {/* Nội dung đánh giá */}
+                                  <div className="flex-1">
+                                    <textarea
+                                      value={reviews[item.id].review}
+                                      onChange={(e) =>
+                                        handleReviewChange(
+                                          item.id,
+                                          e.target.value
+                                        )
+                                      }
+                                      rows="2"
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                      placeholder="Nhập nội dung đánh giá..."
+                                      required
+                                    ></textarea>
+                                  </div>
+
+                                  {/* Nút gửi đánh giá */}
+                                  <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
+                                  >
+                                    Gửi
+                                  </button>
+                                </form>
+                              </div>
+                            )}
                         </div>
 
                         <div className="relative">
@@ -1243,6 +1519,63 @@ const InformationCustomer = () => {
                             VNĐ
                           </p>
                         </div>
+                        {item.ratingId != "" && item.status === "Complete" && (
+                          <div>
+                            <form
+                              onSubmit={(e) =>
+                                handleSubmitReview(e, item.id, item)
+                              }
+                              className="flex items-center space-x-6 mt-4"
+                            >
+                              {/* Chọn số sao */}
+                              <div className="flex items-center space-x-2">
+                                <label className="text-sm font-medium text-gray-700">
+                                  Đánh giá:
+                                </label>
+                                <div className="flex">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                      key={star}
+                                      type="button"
+                                      className={`text-2xl ${
+                                        star <= reviews[item.id].rating
+                                          ? "text-yellow-400"
+                                          : "text-gray-300"
+                                      } transition-colors duration-200 ease-in-out`}
+                                      onClick={() =>
+                                        handleRatingChange(item.id, star)
+                                      }
+                                    >
+                                      ★
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Nội dung đánh giá */}
+                              <div className="flex-1">
+                                <textarea
+                                  value={reviews[item.id].review}
+                                  onChange={(e) =>
+                                    handleReviewChange(item.id, e.target.value)
+                                  }
+                                  rows="2"
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                  placeholder="Nhập nội dung đánh giá..."
+                                  required
+                                ></textarea>
+                              </div>
+
+                              {/* Nút gửi đánh giá */}
+                              <button
+                                type="submit"
+                                className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
+                              >
+                                Gửi
+                              </button>
+                            </form>
+                          </div>
+                        )}
                       </div>
                     )}
                   </li>
@@ -1257,7 +1590,14 @@ const InformationCustomer = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
-      <header>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: "white",
+        }}
+      >
         <HeaderForCustomer />
       </header>
       <main className="flex flex-grow justify-center py-4">

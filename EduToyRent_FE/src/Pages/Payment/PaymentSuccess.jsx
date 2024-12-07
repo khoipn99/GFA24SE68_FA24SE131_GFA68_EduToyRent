@@ -16,7 +16,14 @@ const PaymentSuccess = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
-      <header>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: "white",
+        }}
+      >
         <HeaderForCustomer />
       </header>
 

@@ -1517,7 +1517,15 @@ const StaffPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md p-4">
+      <header
+        className="bg-white shadow-md p-4"
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: "white",
+        }}
+      >
         <HeaderForStaff />
       </header>
 
