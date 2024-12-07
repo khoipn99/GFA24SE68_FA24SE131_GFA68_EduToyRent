@@ -341,7 +341,7 @@ const StaffPage = () => {
       console.log("Danh sách đơn hàng 1:", OrderResponse.data);
       // Lọc lại đơn hàng theo trạng thái
       const filteredOrders = OrderResponse.data.filter(
-        (order) => order.status === statusFilter
+        (order) => order.status == "Delivering" || order.status == "Checking"
       );
       console.log("Danh sách đơn hàng sau khi lọc:", filteredOrders);
 
@@ -355,20 +355,59 @@ const StaffPage = () => {
       );
     }
   };
-  const statusMapping = {
-    Delivering: "Đang giao",
-    Complete: "Hoàn thành",
-    // Các trạng thái khác nếu có
-  };
-  const openOrderDetail = (orderId) => {
-    // Tìm đơn hàng từ danh sách orders
-    const orderDetail = orders.find((order) => order.id === orderId);
-    setSelectedOrder(orderDetail); // Cập nhật state selectedOrder để hiển thị modal
+
+  const handleChecking = (order) => {
+    var tmp = order;
+    tmp.status = "Checking";
+
+    apiOrderDetail
+      .put("/" + order.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        LoadOrder();
+      });
   };
 
-  const closeOrderDetail = () => {
-    setSelectedOrder(null); // Đóng modal khi không chọn đơn hàng
+  const handleCheckingBroke = (order) => {
+    var tmp = order;
+    tmp.status = "DeliveringToUser";
+
+    apiOrderDetail
+      .put("/" + order.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        LoadOrder();
+      });
   };
+
+  const handleCheckingGood = (order) => {
+    var tmp = order;
+    tmp.status = "DeliveringToShop";
+
+    apiOrderDetail
+      .put("/" + order.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        LoadOrder();
+      });
+  };
+
+  const statusMapping = {
+    Delivering: "Đang giao",
+    Checking: "Đợi đánh giá đồ chơi",
+
+    // Các trạng thái khác nếu có
+  };
+
   const handleFileChange1 = (e) => {
     const files = e.target.files;
     const selectedFiles = [];
@@ -1421,11 +1460,12 @@ const StaffPage = () => {
                   />
                   <div className="ml-4 flex-1">
                     <h3 className="text-lg font-semibold">
+                      Đơn hàng mã số: {order.id}
+                    </h3>
+                    <h3 className="text-lg font-semibold">
                       Tên đồ chơi: {order.toyName}
                     </h3>
-                    <p className="text-sm text-gray-600">
-                      Ngày bắt đầu: {order.startDate}
-                    </p>
+
                     <p className="text-sm text-gray-600">
                       Tổng giá: {order.unitPrice}₫
                     </p>
@@ -1439,82 +1479,34 @@ const StaffPage = () => {
                 </div>
                 <div className="flex justify-between p-4">
                   <div className="ml-auto flex gap-4">
-                    <button
-                      className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                      onClick={() => openOrderDetail(order.id)} // Mở chi tiết đơn hàng
-                    >
-                      Xem chi tiết
-                    </button>
-                    {order.status !== "Complete" && (
-                      <button className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
-                        Hoàn Thành
+                    {order.status == "Delivering" && (
+                      <button
+                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                        onClick={() => handleChecking(order)}
+                      >
+                        Chờ đánh giá đồ chơi
+                      </button>
+                    )}
+                    {order.status == "Checking" && (
+                      <button
+                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                        onClick={() => handleCheckingBroke(order)}
+                      >
+                        Đồ chơi bị hỏng
+                      </button>
+                    )}
+                    {order.status == "Checking" && (
+                      <button
+                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                        onClick={() => handleCheckingGood(order)}
+                      >
+                        Đồ chơi bình thường
                       </button>
                     )}
                   </div>
                 </div>
               </div>
             ))}
-
-            {/* Modal hiển thị chi tiết đơn hàng */}
-            {selectedOrder && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg shadow-lg p-6 w-3/4 max-w-lg">
-                  <h3 className="text-xl font-semibold mb-4">
-                    Chi tiết đơn hàng
-                  </h3>
-                  <div className="mb-4">
-                    <img
-                      src={
-                        selectedOrder.toyImgUrls?.[0] ||
-                        "default_image_url_here"
-                      }
-                      alt="Ảnh đồ chơi"
-                      className="w-full h-48 object-cover rounded-md mb-4"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <p>
-                      <strong>Mã đơn hàng:</strong> {selectedOrder.id}
-                    </p>
-                    <p>
-                      <strong>Tên đồ chơi:</strong> {selectedOrder.toyName}
-                    </p>
-                    <p>
-                      <strong>Giá thuê:</strong> {selectedOrder.rentPrice}₫
-                    </p>
-                    <p>
-                      <strong>Tiền đặt cọc:</strong> {selectedOrder.deposit}₫
-                    </p>
-                    <p>
-                      <strong>Giá một đơn vị:</strong> {selectedOrder.unitPrice}
-                      ₫
-                    </p>
-                    <p>
-                      <strong>Số lượng:</strong> {selectedOrder.quantity}
-                    </p>
-                    <p>
-                      <strong>Ngày bắt đầu:</strong>{" "}
-                      {new Date(selectedOrder.startDate).toLocaleDateString()}
-                    </p>
-                    <p>
-                      <strong>Ngày kết thúc:</strong>{" "}
-                      {new Date(selectedOrder.endDate).toLocaleDateString()}
-                    </p>
-                    <p>
-                      <strong>Tình trạng:</strong> {selectedOrder.status}
-                    </p>
-                  </div>
-                  <div className="mt-4 flex justify-end">
-                    <button
-                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                      onClick={closeOrderDetail}
-                    >
-                      Đóng
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         );
 

@@ -160,29 +160,29 @@ const InformationLessor = () => {
     return filterStatus === "all" || order.status === filterStatus;
   });
 
-  const handleFinishOrderDetail = (order) => {
+  const handleFinishOrderDetail = async (order) => {
     var tmp = order;
     tmp.status = "Complete";
 
-    apiUser
+    await apiUser
       .get("/" + selectedOrder.userId, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
       })
-      .then((response) => {
+      .then(async (response) => {
         console.log(response.data);
         const userTmp = response.data;
-        apiWallets
+        await apiWallets
           .get("/" + userTmp.walletId, {
             headers: {
               Authorization: `Bearer ${Cookies.get("userToken")}`,
             },
           })
-          .then((response2) => {
+          .then(async (response2) => {
             const walletTmp = response2.data;
             console.log(walletTmp.id);
-            apiWallets.put(
+            await apiWallets.put(
               "/" + walletTmp.id,
               {
                 balance: walletTmp.balance + (order.deposit - order.rentPrice),
@@ -197,7 +197,7 @@ const InformationLessor = () => {
                 },
               }
             );
-            apiWalletTransaction.post(
+            await apiWalletTransaction.post(
               "",
               {
                 transactionType: "Nhận lại tiền cọc",
@@ -215,16 +215,16 @@ const InformationLessor = () => {
             );
           });
       });
-    apiWallets
+    await apiWallets
       .get("/" + customerInfo.walletId, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
       })
-      .then((response2) => {
+      .then(async (response2) => {
         const walletTmp = response2.data;
         console.log(walletTmp.id);
-        apiWallets.put(
+        await apiWallets.put(
           "/" + walletTmp.id,
           {
             balance: walletTmp.balance + order.rentPrice * 0.85,
@@ -239,7 +239,7 @@ const InformationLessor = () => {
             },
           }
         );
-        apiWalletTransaction
+        await apiWalletTransaction
           .post(
             "",
             {
@@ -256,8 +256,8 @@ const InformationLessor = () => {
               },
             }
           )
-          .then((response3) => {
-            apiOrderDetail.put("/" + order.id, tmp).then((response) => {
+          .then(async (response3) => {
+            await apiOrderDetail.put("/" + order.id, tmp).then((response) => {
               ViewDetails();
             });
           });
@@ -334,37 +334,6 @@ const InformationLessor = () => {
             );
           });
       });
-  };
-
-  const handleFinishDeliveryOrder = (order) => {
-    var tmp = order;
-    tmp.status = "Processing";
-
-    apiOrder.put("/" + order.id, tmp).then((response) => {
-      apiOrderDetail.get("/Order/" + order.id).then((response) => {
-        response.data.map((item) => {
-          var tmp = item;
-          tmp.status = "Processing";
-          tmp.startDate = new Date().toISOString();
-          if (tmp.orderTypeId == "4") {
-            const currentDate = new Date();
-            currentDate.setDate(currentDate.getDate() + 7);
-            tmp.endDate = currentDate.toISOString();
-          } else if (tmp.orderTypeId == "5") {
-            const currentDate = new Date();
-            currentDate.setDate(currentDate.getDate() + 14);
-            tmp.endDate = currentDate.toISOString();
-          } else if (tmp.orderTypeId == "6") {
-            const currentDate = new Date();
-            currentDate.setDate(currentDate.getDate() + 30);
-            tmp.endDate = currentDate.toISOString();
-          }
-          apiOrderDetail.put("/" + item.id, tmp).then((response) => {
-            getOrderInfo();
-          });
-        });
-      });
-    });
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -629,16 +598,6 @@ const InformationLessor = () => {
                       Tổng tiền: {order.totalPrice.toLocaleString()} VNĐ
                     </p>
 
-                    {order.status === "Delivering" && (
-                      <div className="flex space-x-2 mt-2">
-                        <button
-                          onClick={() => handleFinishDeliveryOrder(order)}
-                          className="p-2 bg-green-500 text-white rounded"
-                        >
-                          Đã giao hàng
-                        </button>
-                      </div>
-                    )}
                     {order.status === "Pending" && (
                       <div className="flex items-center justify-between">
                         <div className="flex space-x-2 mt-2">
@@ -1110,14 +1069,22 @@ const InformationLessor = () => {
   const renderOrderDetails = () => {
     if (!selectedOrder) return null;
 
-    const stages = ["Processing", "Expired", "Delivering", "Complete"];
+    const stages = [
+      "Processing",
+      "Expired",
+      "Delivering",
+      "Checking",
+      "DeliveringToShop",
+      "DeliveringToUser",
+      "Complete",
+    ];
     const getStatusIndex = (status) => stages.indexOf(status);
 
     return (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center">
-        <div className="bg-white p-6 rounded shadow-lg relative w-3/4 flex">
+        <div className="bg-white p-6 rounded shadow-lg relative w-5/6 flex">
           {/* Left side: Order information */}
-          <div className="w-1/2 p-4 border-r border-gray-300">
+          <div className="w-1/4 p-4 border-r border-gray-300">
             <button
               onClick={closeDetails}
               className="absolute top-2 right-2 text-red-500"
@@ -1154,7 +1121,7 @@ const InformationLessor = () => {
           </div>
 
           {/* Right side: OrderDetails */}
-          <div className="w-1/2 p-4">
+          <div className="w-3/4 p-4">
             <h3 className="text-lg font-semibold">Chi tiết đơn hàng</h3>
             <ul className="space-y-4 mt-4 overflow-y-auto max-h-[700px] w-full px-4 py-4 text-lg">
               {orderDetails.map((item) => {
@@ -1206,7 +1173,7 @@ const InformationLessor = () => {
                             </p>
                           </div>
 
-                          {item.status === "Delivering" && (
+                          {item.status === "DeliveringToShop" && (
                             <div>
                               <button
                                 className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
@@ -1242,7 +1209,20 @@ const InformationLessor = () => {
                                   <div className="text-sm">Chờ trả hàng</div>
                                 )}
                                 {stage === "Delivering" && (
-                                  <div className="text-sm">Đang trả hàng</div>
+                                  <div className="text-sm">
+                                    Giao hàng tới kho đánh giá
+                                  </div>
+                                )}
+
+                                {stage === "Checking" && (
+                                  <div className="text-sm">Đang đánh giá</div>
+                                )}
+
+                                {stage === "DeliveringToShop" && (
+                                  <div className="text-sm">Đồ chơi tốt</div>
+                                )}
+                                {stage === "DeliveringToUser" && (
+                                  <div className="text-sm">Đồ chơi bị hỏng</div>
                                 )}
                                 {stage === "Complete" && (
                                   <div className="text-sm">Hoàn thành</div>

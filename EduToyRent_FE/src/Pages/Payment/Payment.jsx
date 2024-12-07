@@ -439,7 +439,7 @@ const Payment = () => {
                     quantity: item.quantity,
                     startDate: null,
                     endDate: null,
-                    status: "Delivering",
+                    status: "DeliveringToBuyer",
                     orderId: response.data.id,
                     toyId: item.toyId,
                     orderTypeId: item.orderTypeId,
