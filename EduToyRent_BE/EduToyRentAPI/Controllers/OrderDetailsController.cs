@@ -192,7 +192,8 @@ namespace EduToyRentAPI.Controllers
                 Status = orderDetail.Status,
                 OrderId = orderDetail.OrderId,
                 ToyId = orderDetail.ToyId,
-                OrderTypeId = orderDetail.OrderTypeId
+                OrderTypeId = orderDetail.OrderTypeId,
+                RatingId = orderDetail.RatingId,
             };
 
             return CreatedAtAction("GetOrderDetail", new { id = orderDetail.Id }, orderDetailResponse);
@@ -259,7 +260,8 @@ namespace EduToyRentAPI.Controllers
                     ToyName = orderDetail.Toy.Name,
                     ToyPrice = orderDetail.Toy.Price,
                     ToyImgUrls = mediaList,
-                    OrderTypeId = orderDetail.OrderTypeId
+                    OrderTypeId = orderDetail.OrderTypeId,
+                    RatingId = orderDetail.RatingId
                 };
             }).ToList();
 
@@ -302,7 +304,8 @@ namespace EduToyRentAPI.Controllers
                     ToyName = orderDetail.Toy.Name,
                     ToyPrice = orderDetail.Toy.Price,
                     ToyImgUrls = mediaList,
-                    OrderTypeId = orderDetail.OrderTypeId
+                    OrderTypeId = orderDetail.OrderTypeId,
+                    RatingId = orderDetail.RatingId
                 };
             }).ToList();
             return Ok(orderDetailResponses);
@@ -339,7 +342,8 @@ namespace EduToyRentAPI.Controllers
                     ToyName = orderDetail.Toy.Name,
                     ToyPrice = orderDetail.Toy.Price,
                     ToyImgUrls = mediaList,
-                    OrderTypeId = orderDetail.OrderTypeId
+                    OrderTypeId = orderDetail.OrderTypeId,
+                    RatingId = orderDetail.RatingId
                 };
             }).ToList();
 
