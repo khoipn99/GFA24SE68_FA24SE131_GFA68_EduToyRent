@@ -54,7 +54,8 @@ namespace EduToyRentAPI.Controllers
                     ToyName = orderDetail.Toy.Name,
                     ToyPrice = orderDetail.Toy.Price,
                     ToyImgUrls = mediaList,
-                    OrderTypeId = orderDetail.OrderTypeId
+                    OrderTypeId = orderDetail.OrderTypeId,
+                    RatingId = orderDetail.RatingId,
                 };
             }).ToList();
 
@@ -97,7 +98,8 @@ namespace EduToyRentAPI.Controllers
                 ToyName = _unitOfWork.ToyRepository.GetByID(orderDetail.ToyId).Name,
                 ToyPrice = _unitOfWork.ToyRepository.GetByID(orderDetail.ToyId).Price,
                 ToyImgUrls = mediaList,
-                OrderTypeId = orderDetail.OrderTypeId
+                OrderTypeId = orderDetail.OrderTypeId,
+                RatingId = orderDetail.RatingId,
             };
 
             return Ok(orderDetailResponse);
