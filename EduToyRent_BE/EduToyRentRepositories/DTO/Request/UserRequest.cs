@@ -29,5 +29,6 @@ namespace EduToyRentRepositories.DTO.Request
         public int RoleId { get; set; }
         [Required]
         public string Status { get; set; }
+        public int? WalletId { get; set; } = null;
     }
 }

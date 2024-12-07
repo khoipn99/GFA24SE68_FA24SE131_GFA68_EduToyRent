@@ -116,8 +116,8 @@ namespace EduToyRentAPI.Controllers
             user.Phone = userRequest.Phone;
             user.Dob = userRequest.Dob;
             user.Address = userRequest.Address;
-            //user.AvatarUrl = userRequest.AvatarUrl;
             user.Status = userRequest.Status;
+            user.WalletId = userRequest.WalletId;
 
             _unitOfWork.UserRepository.Update(user);
 

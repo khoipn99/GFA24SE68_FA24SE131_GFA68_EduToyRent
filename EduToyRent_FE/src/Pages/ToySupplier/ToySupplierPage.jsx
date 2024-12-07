@@ -308,18 +308,15 @@ const ToySupplierPage = () => {
 
   const handleUpdate = async () => {
     // Kiểm tra các điều kiện
-    const emailRegex = /^[\w-\.]+@gmail\.com$/;
-    const phoneRegex = /^\d{10}$/;
 
-    if (!emailRegex.test(editedData.email || "")) {
-      console.error("Email không hợp lệ: Phải có đuôi @gmail.com");
-      alert("Email không hợp lệ: Phải có đuôi @gmail.com");
-      return;
-    }
-
+    const phoneRegex = /^0\d{9}$/; // Cập nhật regex cho số điện thoại
     if (!phoneRegex.test(editedData.phone || "")) {
-      console.error("Số điện thoại không hợp lệ: Phải có đúng 10 chữ số");
-      alert("Số điện thoại không hợp lệ: Phải có đúng 10 chữ số");
+      console.error(
+        "Số điện thoại không hợp lệ: Phải bắt đầu bằng số 0 và có đúng 10 chữ số"
+      );
+      alert(
+        "Số điện thoại không hợp lệ: Phải bắt đầu bằng số 0 và có đúng 10 chữ số"
+      );
       return;
     }
 
@@ -546,56 +543,59 @@ const ToySupplierPage = () => {
   };
 
   const handleDelete = async (toyId) => {
-    // Hiển thị hộp thoại xác nhận
-    const isConfirmed = window.confirm(
-      "Are you sure you want to delete this toy?"
-    );
+    console.log("toyId: ", toyId);
 
-    // Nếu người dùng không xác nhận, dừng lại
-    if (!isConfirmed) {
+    if (!toyId) {
+      console.error("Không có toyId");
       return;
     }
 
     try {
-      // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
-      const requestBody = "Inactive"; // Thay đổi thành chuỗi trực tiếp
+      const Toyresponse = await apiToys.get(`/${toyId}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
 
-      // Log request body trước khi gửi đi
-      console.log("Request body:", requestBody);
+      console.log("Dữ liệu trả về từ API: ", Toyresponse.data);
 
-      // Gửi yêu cầu PATCH
-      const response = await apiToys.patch(
-        `/${toyId}/update-status`,
-        requestBody, // Gửi body như chuỗi
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-            "Content-Type": "application/json",
-          },
-        }
+      const isConfirmed = window.confirm(
+        "Bạn có chắc chắn muốn xóa món đồ này không?"
       );
 
-      // Log dữ liệu nhận được từ API khi thành công
-      console.log("Response on success:", response);
+      if (!isConfirmed) {
+        console.log("Người dùng đã hủy bỏ.");
+        return;
+      }
 
-      if (response.status === 200) {
-        // Cập nhật lại state
-        setToysData((prevData) =>
-          prevData.map((toy) =>
-            toy.id === toyId ? { ...toy, status: "Inactive" } : toy
-          )
-        );
-        LoadToy(userId);
-      } else {
-        throw new Error(`Failed to update status for toy with ID ${toyId}`);
-      }
+      const updatedToy = {
+        name: Toyresponse.data.name || "Default Toy Name",
+        description: Toyresponse.data.description || "Default Description",
+        price: Toyresponse.data.price || "0",
+        buyQuantity: Toyresponse.data.buyQuantity || "0",
+        origin: Toyresponse.data.origin || "Default Origin",
+        age: Toyresponse.data.age || "All Ages",
+        brand: Toyresponse.data.brand || "Default Brand",
+        categoryId: Toyresponse.data.categoryId || "1",
+        rentCount: Toyresponse.data.rentCount || "0",
+        rentTime: Toyresponse.data.rentTime || "Default Rent Time",
+        status: "Inactive", // Gửi status "Inactive" khi role == 2
+      };
+
+      console.log("Dữ liệu gửi đi trước khi xóa:", updatedToy);
+
+      const response = await apiToys.put(`/${toyId}`, updatedToy, {
+        Authorization: `Bearer ${Cookies.get("userToken")}`,
+        "Content-Type": "application/json",
+      });
+
+      console.log("Dữ liệu trả về sau khi xóa:", response.data);
+      setToyData(response.data);
+
+      // Tải lại dữ liệu món đồ chơi nếu cần
+      LoadToy(userId);
     } catch (error) {
-      // Log lỗi chi tiết nhận được từ API khi có lỗi
-      if (error.response) {
-        console.error("Error response:", error.response);
-      } else {
-        console.error("Error message:", error.message);
-      }
+      console.error("Lỗi khi cập nhật toy:", error);
     }
   };
   // Hàm mở modal và thiết lập ID toy cần xóa
@@ -632,19 +632,20 @@ const ToySupplierPage = () => {
   };
   const handleSubmit = async () => {
     // Thu thập thông tin từ form
+
     const formData = {
       name: document.getElementById("name").value,
       description: document.getElementById("description").value,
       price: parseFloat(document.getElementById("price").value),
-      buyQuantity: 0, // Giá trị mặc định
+      buyQuantity: parseFloat(document.getElementById("buyQuantity").value), // Lấy số lượng từ input
       origin: document.getElementById("origin").value,
-      age: document.getElementById("age").value,
+      age: document.getElementById("age").value, // Lấy giá trị từ <select>
       brand: document.getElementById("brand").value,
       categoryId: selectedCategory, // Lấy categoryId đã chọn
       rentCount: 0, // Giá trị mặc định
       rentTime: "0 Week",
     };
-
+    console.log("Thống tin cơ bản:", formData);
     // Kiểm tra thông tin cơ bản
     if (!formData.name || !formData.price || !formData.origin) {
       alert("Vui lòng điền tên, giá và nguồn gốc!");
@@ -713,7 +714,7 @@ const ToySupplierPage = () => {
       // Gửi yêu cầu tải lên hình ảnh và video
       try {
         const uploadResponse = await apiMedia.post(
-          `/upload-toy-images/${toyId}`, // Đảm bảo đường dẫn đúng
+          `/upload-toy-media/${toyId}`, // Đảm bảo đường dẫn đúng
           mediaData,
           {
             headers: {
@@ -1007,20 +1008,7 @@ const ToySupplierPage = () => {
                         className="w-full p-2 border border-gray-300 rounded"
                       />
                     </div>
-                    <div className="mb-4">
-                      <label className="block text-gray-700">Email</label>
-                      <input
-                        type="email"
-                        value={editedData.email || ""}
-                        onChange={(e) =>
-                          setEditedData({
-                            ...editedData,
-                            email: e.target.value,
-                          })
-                        }
-                        className="w-full p-2 border border-gray-300 rounded"
-                      />
-                    </div>
+
                     <div className="mb-4">
                       <label className="block text-gray-700">
                         Số điện thoại
@@ -1580,16 +1568,7 @@ const ToySupplierPage = () => {
                                   className="w-full border rounded-lg px-4 py-2"
                                 />
                               </div>
-                              <div>
-                                <label className="block font-medium">
-                                  Độ tuổi:
-                                </label>
-                                <input
-                                  type="text"
-                                  id="age"
-                                  className="w-full border rounded-lg px-4 py-2"
-                                />
-                              </div>
+
                               <div>
                                 <label className="block font-medium">
                                   Thương hiệu:
@@ -1597,6 +1576,40 @@ const ToySupplierPage = () => {
                                 <input
                                   type="text"
                                   id="brand"
+                                  className="w-full border rounded-lg px-4 py-2"
+                                />
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor="age"
+                                  className="block font-medium"
+                                >
+                                  Độ tuổi:
+                                </label>
+                                <select
+                                  id="age"
+                                  className="w-full border rounded-lg px-4 py-2"
+                                >
+                                  <option value="">All</option>
+                                  <option value="1-3">1-3 Tuổi</option>
+                                  <option value="3-5">3-5 Tuổi</option>
+                                  <option value="5-7">5-7 Tuổi</option>
+                                  <option value="7-9">7-9 Tuổi</option>
+                                  <option value="9-11">9-11 Tuổi</option>
+                                  <option value="11-13">11-13 Tuổi</option>
+                                  <option value="13+">13+ Tuổi</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor="buyQuantity"
+                                  className="block font-medium"
+                                >
+                                  Số lượng:
+                                </label>
+                                <input
+                                  type="number"
+                                  id="buyQuantity"
                                   className="w-full border rounded-lg px-4 py-2"
                                 />
                               </div>
@@ -1660,8 +1673,12 @@ const ToySupplierPage = () => {
                 <div className="inline-block min-w-full align-middle">
                   <div className="overflow-hidden shadow">
                     <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
-                      <thead className="bg-gray-100 dark:bg-gray-700">
+                      <thead className=" bg-gray-100 dark:bg-gray-700">
                         <tr>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          ></th>
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
@@ -1727,6 +1744,23 @@ const ToySupplierPage = () => {
                             >
                               <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
                                 <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                  {toy.media && toy.media.length > 0 ? (
+                                    toy.media.map((mediaItem, index) => (
+                                      <img
+                                        key={index}
+                                        src={mediaItem.mediaUrl}
+                                        alt={`Toy Media ${index + 1}`}
+                                        className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      />
+                                    ))
+                                  ) : (
+                                    <span>No media available</span>
+                                  )}
+                                </div>
+                              </td>
+
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white">
                                   {toy.name}
                                 </div>
                               </td>
@@ -1754,12 +1788,11 @@ const ToySupplierPage = () => {
                               </td>
 
                               <td className="p-4 space-x-2 whitespace-nowrap">
-                                {/* Nút "Detail" */}
                                 <button
                                   type="button"
                                   onClick={(event) => {
                                     event.stopPropagation();
-                                    setSelectedToy(toy); // Lưu thông tin toy vào state
+                                    setSelectedToy(toy);
                                   }}
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
                                 >
@@ -1769,8 +1802,8 @@ const ToySupplierPage = () => {
                                   type="button"
                                   onClick={(event) => {
                                     event.stopPropagation();
-                                    setIsEditing(true); // Bật form chỉnh sửa
-                                    setSelectedToy(toy); // Lưu thông tin toy vào selectedToy
+                                    setIsEditing(true);
+                                    setSelectedToy(toy);
                                   }}
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                                 >
@@ -1779,8 +1812,9 @@ const ToySupplierPage = () => {
                                 <button
                                   type="button"
                                   onClick={(event) => {
-                                    event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
-                                    handleDelete(toy.id); // Gọi hàm handleDelete
+                                    event.stopPropagation();
+
+                                    handleDelete(toy.id); // Truyền toy.id vào hàm handleDelete
                                   }}
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
                                 >
@@ -1847,7 +1881,7 @@ const ToySupplierPage = () => {
             </div>
             {selectedToy && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[90%] overflow-auto relative">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
@@ -2077,38 +2111,29 @@ const ToySupplierPage = () => {
                         <label htmlFor="age" className="block text-gray-700">
                           Tuổi
                         </label>
-                        <input
-                          type="number"
+                        <select
                           id="age"
                           name="age"
                           className="w-full p-2 border border-gray-300 rounded"
-                          value={selectedToy.age}
+                          value={selectedToy.age || ""} // Gán giá trị mặc định nếu không có
                           onChange={(e) =>
                             setSelectedToy({
                               ...selectedToy,
                               age: e.target.value,
                             })
                           }
-                        />
+                        >
+                          <option value="">All</option>
+                          <option value="1-3">1-3 Tuổi</option>
+                          <option value="3-5">3-5 Tuổi</option>
+                          <option value="5-7">5-7 Tuổi</option>
+                          <option value="7-9">7-9 Tuổi</option>
+                          <option value="9-11">9-11 Tuổi</option>
+                          <option value="11-13">11-13 Tuổi</option>
+                          <option value="13+">13+ Tuổi</option>
+                        </select>
                       </div>
-                      {/* <div>
-                        <label htmlFor="brand" className="block text-gray-700">
-                          Thương hiệu
-                        </label>
-                        <input
-                          type="text"
-                          id="brand"
-                          name="brand"
-                          className="w-full p-2 border border-gray-300 rounded"
-                          value={selectedToy.brand}
-                          onChange={(e) =>
-                            setSelectedToy({
-                              ...selectedToy,
-                              brand: e.target.value,
-                            })
-                          }
-                        />
-                      </div> */}
+
                       <div>
                         <label
                           htmlFor="category"
