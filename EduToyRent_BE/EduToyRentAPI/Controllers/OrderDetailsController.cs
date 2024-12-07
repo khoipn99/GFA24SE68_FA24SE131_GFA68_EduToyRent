@@ -124,7 +124,7 @@ namespace EduToyRentAPI.Controllers
             orderDetail.OrderId = orderDetailRequest.OrderId;
             orderDetail.ToyId = orderDetailRequest.ToyId;
             orderDetail.OrderTypeId = orderDetailRequest.OrderTypeId;
-
+            orderDetail.RatingId = orderDetailRequest.RatingId;
             _unitOfWork.OrderDetailRepository.Update(orderDetail);
 
             try
