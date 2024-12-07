@@ -290,7 +290,7 @@ const Payment = () => {
                   "",
                   {
                     transactionType: "Thanh toán đơn hàng",
-                    amount: -totalDepositTmp,
+                    amount: -parseInt(totalDepositTmp),
                     date: new Date().toISOString(),
                     walletId: customerInfo.walletId,
                     paymentTypeId: 5,
@@ -415,7 +415,7 @@ const Payment = () => {
                     "",
                     {
                       transactionType: "Thanh toán đơn hàng",
-                      amount: -totalDepositTmp2,
+                      amount: -parseInt(totalDepositTmp2),
                       date: new Date().toISOString(),
                       walletId: customerInfo.walletId,
                       paymentTypeId: 5,
@@ -473,6 +473,7 @@ const Payment = () => {
                           categoryId: response.data.category.id,
                           rentCount: response.data.rentCount,
                           rentTime: response.data.rentTime,
+                          status: response.data.status,
                         },
                         {
                           headers: {
@@ -523,7 +524,14 @@ const Payment = () => {
 
   return (
     <div>
-      <header>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: "white",
+        }}
+      >
         <HeaderForCustomer />
       </header>
       <div className="flex flex-col py-5 bg-white shadow-md max-w-[1200px] mx-auto">
