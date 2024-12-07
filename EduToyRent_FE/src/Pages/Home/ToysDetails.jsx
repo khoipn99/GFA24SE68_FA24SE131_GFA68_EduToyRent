@@ -65,6 +65,8 @@ const ToysDetails = () => {
   };
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+
     apiToys.get("/" + Cookies.get("toyRentDetailId")).then((response) => {
       console.log(response.data);
       setOwner(response.data.owner);
@@ -214,13 +216,10 @@ const ToysDetails = () => {
 
   const HandleToyDetail = (toy) => {
     console.log(toy);
-    if (toy.buyQuantity >= 0) {
-      Cookies.set("toySaleDetailId", toy.id, { expires: 30 });
-      navigate("/toys-sale-details");
-    } else if (toy.buyQuantity < 0) {
-      Cookies.set("toyRentDetailId", toy.id, { expires: 30 });
-      navigate("/toys-rent-details");
-    }
+
+    Cookies.set("toyRentDetailId", toy.id, { expires: 30 });
+    //navigate("/toys-rent-details", { replace: true });
+    navigate(0);
   };
 
   const openModal = (toy) => {
@@ -807,54 +806,60 @@ const ToysDetails = () => {
               </div>
 
               <div className="w-full flex flex-wrap gap-x-8 gap-y-6 p-0">
-                {currentReviews.map((rating, index) => (
-                  <div
-                    key={index}
-                    className="w-full flex flex-col gap-3 bg-slate-50 border border-gray-300 rounded-lg p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-                        style={{
-                          backgroundImage:
-                            'url("https://cdn.usegalileo.ai/stability/8a587c11-2887-4ea5-a001-d4e843282f31.png")',
-                        }}
-                      ></div>
-                      <div className="flex-1">
-                        <p className="text-[#0e141b] text-base font-medium leading-normal">
-                          {rating.userName}
-                        </p>
-                        <p className="text-[#4e7397] text-sm font-normal leading-normal">
-                          {
-                            new Date(rating.ratingDate)
-                              .toISOString()
-                              .split("T")[0]
-                          }
-                        </p>
+                {currentReviews != "" &&
+                  currentReviews.map((rating, index) => (
+                    <div
+                      key={index}
+                      className="w-full flex flex-col gap-3 bg-slate-50 border border-gray-300 rounded-lg p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+                          style={{
+                            backgroundImage:
+                              'url("https://cdn.usegalileo.ai/stability/8a587c11-2887-4ea5-a001-d4e843282f31.png")',
+                          }}
+                        ></div>
+                        <div className="flex-1">
+                          <p className="text-[#0e141b] text-base font-medium leading-normal">
+                            {rating.userName}
+                          </p>
+                          <p className="text-[#4e7397] text-sm font-normal leading-normal">
+                            {
+                              new Date(rating.ratingDate)
+                                .toISOString()
+                                .split("T")[0]
+                            }
+                          </p>
+                        </div>
                       </div>
+                      <div className="flex gap-0.5">
+                        {Array(rating.star)
+                          .fill(0)
+                          .map((_, starIndex) => (
+                            <div key={starIndex} className="text-[#1980e6]">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20px"
+                                height="20px"
+                                fill="currentColor"
+                                viewBox="0 0 256 256"
+                              >
+                                <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z" />
+                              </svg>
+                            </div>
+                          ))}
+                      </div>
+                      <p className="text-[#0e141b] text-base font-normal leading-normal">
+                        {rating.comment}
+                      </p>
                     </div>
-                    <div className="flex gap-0.5">
-                      {Array(rating.star)
-                        .fill(0)
-                        .map((_, starIndex) => (
-                          <div key={starIndex} className="text-[#1980e6]">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20px"
-                              height="20px"
-                              fill="currentColor"
-                              viewBox="0 0 256 256"
-                            >
-                              <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z" />
-                            </svg>
-                          </div>
-                        ))}
-                    </div>
-                    <p className="text-[#0e141b] text-base font-normal leading-normal">
-                      {rating.comment}
-                    </p>
+                  ))}
+                {currentReviews == "" && (
+                  <div>
+                    <p>Chưa có đánh giá cho đồ chơi này</p>
                   </div>
-                ))}
+                )}
               </div>
 
               <div className="flex justify-between mt-4">
