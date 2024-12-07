@@ -173,7 +173,7 @@ const HeaderForToySupplier = () => {
           </label> */}
             <div className="flex gap-2">
               <div className="flex justify-center items-center">
-                <p>Số dư : {userWallet.balance} VND</p>
+                <p>Số dư : {(userWallet.balance || 0).toLocaleString()} VND</p>
               </div>
               <button
                 className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"

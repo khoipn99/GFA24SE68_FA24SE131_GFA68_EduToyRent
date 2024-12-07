@@ -11,7 +11,10 @@ import apiUser from "../../service/ApiUser";
 import apiMedia from "../../service/ApiMedia";
 import apiWallets from "../../service/ApiWallets";
 import apiCart from "../../service/ApiCart";
+
 import { useNavigate } from "react-router-dom";
+import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import các biểu tượng sao
+
 const ToysDetails = () => {
   const [userData, setUserData] = useState("");
   const [userId, setUserId] = useState(null);
@@ -40,6 +43,9 @@ const ToysDetails = () => {
   const [reviews, setReviews] = useState([]);
   const [currentPicture, setCurrentPicture] = useState([]);
   const [currentMedia, setCurrentMedia] = useState([]);
+  const [toysOfShop, setToysOfShop] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [rentItems, setRentItems] = useState([]);
 
   // Mặc định tính giá thuê 1 tuần khi mở trang
   useEffect(() => {
@@ -69,6 +75,15 @@ const ToysDetails = () => {
 
       setCurrentMedia(response.data.media[0]);
       setCurrentPicture(response.data.media);
+      apiToys
+        .get(
+          "/user/" +
+            response.data.owner.id +
+            "?status=Active&pageIndex=1&pageSize=6"
+        )
+        .then((response) => {
+          setToysOfShop(response.data);
+        });
     });
   }, []);
 
@@ -93,29 +108,6 @@ const ToysDetails = () => {
   const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
   const totalPages = Math.ceil(reviews.length / itemsPerPage);
 
-  const recommendedToys = [
-    {
-      name: "Kids Play Kitchen",
-      ageGroup: "Ages 4-6",
-      price: "49.99",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-    {
-      name: "Outdoor Adventure Set",
-      ageGroup: "Ages 5-8",
-      price: "34.99",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-    {
-      name: "Musical Instruments",
-      ageGroup: "Ages 6-9",
-      price: "59.99",
-      image:
-        "https://cdn.usegalileo.ai/sdxl10/7d365c36-d63a-4aff-9e34-b111fb44eddd.png",
-    },
-  ];
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -219,6 +211,139 @@ const ToysDetails = () => {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
   }, []);
+
+  const HandleToyDetail = (toy) => {
+    console.log(toy);
+    if (toy.buyQuantity >= 0) {
+      Cookies.set("toySaleDetailId", toy.id, { expires: 30 });
+      navigate("/toys-sale-details");
+    } else if (toy.buyQuantity < 0) {
+      Cookies.set("toyRentDetailId", toy.id, { expires: 30 });
+      navigate("/toys-rent-details");
+    }
+  };
+
+  const openModal = (toy) => {
+    setSelectedToy(toy);
+    setIsModalOpen(true);
+    setRentalDuration("1 tuần");
+    const price = calculateRentalPrice(toy.price, "1 tuần"); // Tính giá thuê với thời gian 1 tuần
+    setCalculatedPrice(price); // Lưu giá thuê vào state
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedToy(null);
+  };
+
+  const confirmAddToCart = () => {
+    if (!Cookies.get("userToken")) {
+      console.error("Không tìm thấy cartId");
+      alert("Bạn cần đăng nhập để sử dụng chức năng này.");
+
+      return;
+    }
+
+    if (selectedToy) {
+      // Kiểm tra xem selectedToy có tồn tại không
+      updateRentalDuration(selectedToy.id, rentalDuration);
+
+      // Gọi hàm addToCart để thêm sản phẩm vào giỏ hàng
+      addToCart2({ ...selectedToy, rentalDuration }); // Thêm rentalDuration vào sản phẩm
+      console.log(
+        `Đã thêm ${selectedToy.name} vào giỏ với thời gian thuê: ${rentalDuration} và giá thuê: ${calculatedPrice} VNĐ`
+      );
+
+      closeModal();
+    }
+  };
+
+  const updateRentalDuration = (itemId, duration) => {
+    setRentItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === itemId ? { ...item, rentalDuration: duration } : item
+      )
+    );
+  };
+
+  const addToCart2 = async (toy) => {
+    if (!cartId) {
+      console.error("Không tìm thấy cartId");
+      alert("Bạn cần đăng nhập để sử dụng chức năng này.");
+
+      return;
+    }
+
+    if (toy.owner.id !== userId) {
+      // Kiểm tra giỏ hàng hiện tại
+      var existingItem;
+      try {
+        const response = await apiCartItem.get(`/ByCartId/${cartId}`);
+        const cartItems = response.data || [];
+
+        // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
+        existingItem = cartItems.find((item) => item.toyId == toy.id);
+      } catch (error) {
+        console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
+        //alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
+      }
+
+      if (existingItem) {
+        // Nếu sản phẩm đã có trong giỏ hàng, thông báo cho người dùng
+        alert("Sản phẩm đã có trong giỏ hàng!");
+        console.log("Sản phẩm đã có trong giỏ hàng.");
+      } else {
+        // Kiểm tra giá trị orderTypeId và tính giá thuê
+        const orderTypeId = rentalDuration
+          ? calculateOrderTypeId(rentalDuration)
+          : 1; // 7 là giá trị mặc định cho "Mua"
+
+        // Tính giá thuê dựa trên rentalDuration (orderTypeId)
+        let rentalPrice = 0;
+        if (rentalDuration) {
+          rentalPrice = calculateRentalPrice(toy.price, rentalDuration); // Tính giá thuê
+        }
+
+        const cartItemData = {
+          price: toy.price, // Sử dụng giá thuê
+          quantity: toy.buyQuantity,
+          status: "success",
+          cartId: cartId,
+          toyId: toy.id,
+          toyName: toy.name,
+          toyPrice: toy.price, // Lưu giá thuê vào database
+          toyImgUrls: toy.imageUrls,
+          orderTypeId: orderTypeId, // Sử dụng orderTypeId thay cho startDate và endDate
+        };
+        try {
+          console.log("Quantity before saving: " + cartItemData.quantity);
+          const addResponse = await apiCartItem.post("", cartItemData);
+
+          console.log("Sản phẩm đã được thêm vào giỏ hàng:", addResponse.data);
+          alert("Sản phẩm đã được thêm vào giỏ hàng!");
+        } catch (error) {
+          alert("Sản phẩm này đã hết hàng");
+        }
+      }
+    } else {
+      alert("Bạn không thể thuê đồ chơi của chính mình");
+    }
+  };
+
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        stars.push(<FaStar key={i} className="text-yellow-500" />); // Sao đầy
+      } else if (i - 0.5 === rating) {
+        stars.push(<FaStarHalfAlt key={i} className="text-yellow-500" />); // Sao nửa
+      } else {
+        stars.push(<FaRegStar key={i} className="text-gray-300" />); // Sao rỗng
+      }
+    }
+    return stars;
+  };
+
   const addToCart = async () => {
     if (!cartId) {
       console.error("Không tìm thấy cartId");
@@ -320,7 +445,14 @@ const ToysDetails = () => {
   };
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
-      <header>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: "white",
+        }}
+      >
         <HeaderForCustomer />
       </header>
       <div className="flex flex-1 justify-center py-5 bg-white shadow-md">
@@ -589,13 +721,21 @@ const ToysDetails = () => {
                   : ""}
               </div>
               <div className="mb-2">
+                <span className="font-semibold">Độ tuổi:</span> {currentToy.age}
+              </div>
+              <div className="mb-2">
                 <span className="font-semibold">Kho:</span> 1
               </div>
               <div className="mb-2">
-                <span className="font-semibold">Thương hiệu:</span> Lego
+                <span className="font-semibold">Thương hiệu:</span>{" "}
+                {currentToy.brand}
               </div>
               <div className="mb-2">
-                <span className="font-semibold">Gửi từ:</span> Hà Nội
+                <span className="font-semibold">Nguồn gốc:</span>{" "}
+                {currentToy.origin}
+              </div>
+              <div className="mb-2">
+                <span className="font-semibold">Gửi từ:</span> {owner.address}
               </div>
             </div>
 
@@ -603,10 +743,7 @@ const ToysDetails = () => {
               MÔ TẢ SẢN PHẨM
             </h2>
             <p class="text-[#0e141b] text-base font-normal leading-normal pb-3 pt-1 px-4">
-              This classic wooden stacking toy is perfect for kids aged 1-3. It
-              helps develop fine motor skills, hand-eye coordination, and
-              cognitive thinking. The bright colors and fun shapes will keep
-              your little one entertained for hours.
+              {currentToy.description}
             </p>
 
             <h2 class="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
@@ -755,26 +892,164 @@ const ToysDetails = () => {
 
                 <div className="grid grid-cols-6 gap-3 p-4">
                   {" "}
-                  {recommendedToys.map((toy, index) => (
-                    <div key={index} className="flex flex-col gap-3 pb-3">
+                  {toysOfShop.length > 0 ? (
+                    toysOfShop.map((deal, index) => (
                       <div
-                        className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                        style={{ backgroundImage: `url(${toy.image})` }}
-                      ></div>
-                      <div>
-                        <p className="text-[#0e161b] text-base font-medium">
-                          {toy.name}
+                        key={index}
+                        className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
+                      >
+                        <div
+                          onClick={() => {
+                            HandleToyDetail(deal);
+                          }}
+                        >
+                          <div
+                            className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
+                            style={{
+                              backgroundImage: `url(${
+                                deal.media[0] && deal.media[0].mediaUrl
+                                  ? deal.media[0].mediaUrl
+                                  : ""
+                              })`,
+                            }}
+                          ></div>
+
+                          <p
+                            className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
+                            style={{
+                              display: "-webkit-box",
+                              WebkitBoxOrient: "vertical",
+                              WebkitLineClamp: 2,
+                              lineClamp: 2,
+                              maxHeight: "3rem", // Ensures space for two lines
+                              lineHeight: "1.5rem", // Each line takes up 1.5rem height
+                            }}
+                          >
+                            {deal.name}
+                          </p>
+
+                          <p className="text-[#507a95] text-sm">
+                            Nhóm tuổi: {deal.age}
+                          </p>
+                          <div className="flex items-center gap-1">
+                            {renderStars(deal.star)}
+                          </div>
+                          {deal.buyQuantity >= 0 ? (
+                            <p className="text-[#0e161b] text-lg font-bold">
+                              {(deal.price || 0).toLocaleString()} VNĐ
+                            </p>
+                          ) : (
+                            <p className="text-[#0e161b] text-lg font-bold">
+                              {(deal.price * 0.15 || 0).toLocaleString()} VNĐ
+                            </p>
+                          )}
+                        </div>
+                        {deal.buyQuantity >= 0 ? (
+                          <button></button>
+                        ) : (
+                          <button
+                            onClick={() => openModal(deal)}
+                            className="w-full bg-[#0e161b] text-white text-sm px-4 py-2 rounded-md hover:bg-[#507a95] transition-all"
+                          >
+                            Thuê
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-[#0e161b] text-lg">No toys found</p>
+                  )}
+                </div>
+                {isModalOpen && (
+                  <div
+                    className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+                    onClick={closeModal}
+                  >
+                    <div
+                      className="cart-modal bg-white p-4 shadow-md rounded-lg w-[700px] h-[500px] flex relative z-50" // Thêm "relative" để định vị nút "x"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        className="absolute top-0 right-2 text-gray-600 hover:text-gray-800 text-2xl" // Thêm "absolute" và điều chỉnh vị trí
+                        onClick={closeModal}
+                      >
+                        &times; {/* Dấu "X" để đóng modal */}
+                      </button>
+                      {selectedToy && (
+                        <img
+                          src={selectedToy.media[0].mediaUrl}
+                          alt={selectedToy.name}
+                          className="w-1/2 h-full object-cover rounded-l-lg"
+                        />
+                      )}
+                      <div className="pl-4 pt-0 flex-grow">
+                        <h2 className="text-2xl font-bold mb-2">
+                          {selectedToy.name}
+                        </h2>
+                        <p className="text-sm text-gray-600 mb-2">
+                          Nhóm tuổi: {selectedToy.ageGroup}
                         </p>
-                        <p className="text-[#507a95] text-sm">
-                          Age group: {toy.ageGroup}
+                        <div className="flex items-center gap-1 mb-2">
+                          {renderStars(selectedToy.star)}
+                        </div>
+                        <p className="text-lg font-bold text-[#0e161b] mb-2">
+                          Giá: {(selectedToy.price || 0).toLocaleString()} VNĐ
                         </p>
-                        <p className="text-[#0e161b] text-lg font-bold">
-                          {(toy.price || 0).toLocaleString()} VNĐ
+                        <p className="text-lg font-bold text-[#0e161b] mb-2">
+                          Giá thuê: {(calculatedPrice || 0).toLocaleString()}{" "}
+                          VNĐ
                         </p>
+
+                        <div className="mt-4">
+                          <p className="text-sm font-medium mb-2">
+                            Thời gian thuê:
+                          </p>
+                          <div className="flex gap-4">
+                            <button
+                              className={`border px-4 py-2 ${
+                                rentalDuration === "1 tuần"
+                                  ? "bg-blue-500 text-white"
+                                  : ""
+                              }`}
+                              onClick={() => handleDurationChange("1 tuần")}
+                            >
+                              1 tuần
+                            </button>
+                            <button
+                              className={`border px-4 py-2 ${
+                                rentalDuration === "2 tuần"
+                                  ? "bg-blue-500 text-white"
+                                  : ""
+                              }`}
+                              onClick={() => handleDurationChange("2 tuần")}
+                            >
+                              2 tuần
+                            </button>
+                            <button
+                              className={`border px-4 py-2 ${
+                                rentalDuration === "1 tháng"
+                                  ? "bg-blue-500 text-white"
+                                  : ""
+                              }`}
+                              onClick={() => handleDurationChange("1 tháng")}
+                            >
+                              1 tháng
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end mt-4 w-full">
+                          <button
+                            className="bg-[red] text-white px-4 py-2  w-full rounded-md transition duration-200 hover:bg-[#507a95]"
+                            onClick={confirmAddToCart}
+                          >
+                            Thêm vào giỏ
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

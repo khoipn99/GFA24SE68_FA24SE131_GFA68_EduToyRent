@@ -11,6 +11,7 @@ using EduToyRentRepositories.DTO.Response;
 using Microsoft.IdentityModel.Tokens;
 using Humanizer;
 using EduToyRentRepositories.DTO.Request;
+using Google.Apis.Storage.v1.Data;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -29,7 +30,11 @@ namespace EduToyRentAPI.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<TransactionResponse>> GetTransactions(int pageIndex = 1, int pageSize = 50)
         {
-           var transactions = _unitOfWork.TransactionRepository.Get(pageIndex: pageIndex, pageSize: pageSize)
+           var transactions = _unitOfWork.TransactionRepository.Get(
+               includeProperties: "Order,Order.User,Order.OrderDetails.Toy",
+               pageIndex: pageIndex, 
+               pageSize: pageSize)
+                .OrderByDescending(t => t.Id)
                 .Select(transaction => new TransactionResponse
                 {
                     Id = transaction.Id,
@@ -37,12 +42,31 @@ namespace EduToyRentAPI.Controllers
                     PlatformFee = transaction.PlatformFee,
                     OwnerReceiveMoney = transaction.OwnerReceiveMoney,
                     DepositBackMoney = transaction.DepositBackMoney,
-                    OrderId = transaction.OrderId,
+                    Status = transaction.Status,
+                    Order = new OrderResponse
+                    {
+                        Id = transaction.OrderId,
+                        OrderDate = transaction.Order.OrderDate,
+                        ReceiveDate = transaction.Order.ReceiveDate,
+                        TotalPrice = transaction.Order.TotalPrice,
+                        RentPrice = transaction.Order.RentPrice,
+                        DepositeBackMoney = transaction.Order.DepositeBackMoney,
+                        ReceiveName = transaction.Order.ReceiveName,
+                        ReceiveAddress = transaction.Order.ReceiveAddress,
+                        ReceivePhone = transaction.Order.ReceivePhone,
+                        Status = transaction.Order.Status,
+                        UserId = transaction.Order.UserId,
+                        UserName = transaction.Order.User.FullName,
+                        ShopId = transaction.Order.OrderDetails.FirstOrDefault().Toy.UserId,
+                        ShopName = _unitOfWork.UserRepository.GetByID(transaction.Order.OrderDetails.FirstOrDefault().Toy.UserId).FullName
+                    },
                 }).ToList();
-            if(!transactions.Any())
+
+            if (!transactions.Any())
             {
                 return Ok(("Empty List"));
             }
+
             return Ok(transactions);
         }
 
@@ -56,6 +80,13 @@ namespace EduToyRentAPI.Controllers
             {
                 return NotFound();
             }
+
+            var order = _unitOfWork.OrderRepository.GetByID(transaction.OrderId);
+            var user = _unitOfWork.UserRepository.GetByID(order.UserId);
+            var orderDetail = _unitOfWork.OrderDetailRepository.Get(
+                od => od.OrderId == order.Id,
+                includeProperties: "Toy").FirstOrDefault();
+
             var transactionRespone = new TransactionResponse
             {
                 Id = transaction.Id,
@@ -63,8 +94,26 @@ namespace EduToyRentAPI.Controllers
                 PlatformFee = transaction.PlatformFee,
                 OwnerReceiveMoney = transaction.OwnerReceiveMoney,
                 DepositBackMoney = transaction.DepositBackMoney,
-                OrderId = transaction.OrderId,
+                Status = transaction.Status,
+                Order = new OrderResponse
+                {
+                    Id = order.Id,
+                    OrderDate = order.OrderDate,
+                    ReceiveDate = order.ReceiveDate,
+                    TotalPrice = order.TotalPrice,
+                    RentPrice = order.RentPrice,
+                    DepositeBackMoney = order.DepositeBackMoney,
+                    ReceiveName = order.ReceiveName,
+                    ReceiveAddress = order.ReceiveAddress,
+                    ReceivePhone = order.ReceivePhone,
+                    Status = order.Status,
+                    UserId = order.UserId,
+                    UserName = user.FullName,
+                    ShopId = orderDetail.Toy.UserId,
+                    ShopName = _unitOfWork.UserRepository.GetByID(orderDetail.Toy.UserId).FullName
+                },
             };
+
             return transactionRespone;
         }
 
@@ -74,6 +123,7 @@ namespace EduToyRentAPI.Controllers
         public async Task<IActionResult> PutTransaction(int id, TransactionRequest transaction)
         {
             var trans = _unitOfWork.TransactionRepository.GetByID(id);
+
             if (trans == null)
             {
                 return NotFound(id);
@@ -83,6 +133,7 @@ namespace EduToyRentAPI.Controllers
             trans.PlatformFee = transaction.PlatformFee;
             trans.OwnerReceiveMoney = transaction.OwnerReceiveMoney;
             trans.DepositBackMoney = transaction.DepositBackMoney;
+            trans.Status = transaction.Status;
             trans.OrderId = transaction.OrderId;
 
             _unitOfWork.TransactionRepository.Update(trans);
@@ -105,17 +156,44 @@ namespace EduToyRentAPI.Controllers
                 OrderId = transaction.OrderId,
                 Status = transaction.Status
             };
-            var transactionResponse = new TransactionResponse
+
+            _unitOfWork.TransactionRepository.Insert(trans);
+            _unitOfWork.Save();
+
+            var order = _unitOfWork.OrderRepository.GetByID(trans.OrderId);
+            var user = _unitOfWork.UserRepository.GetByID(order.UserId);
+            var orderDetail = _unitOfWork.OrderDetailRepository.Get(
+                od => od.OrderId == order.Id,
+                includeProperties: "Toy").FirstOrDefault();
+
+            var transactionRespone = new TransactionResponse
             {
                 Id = trans.Id,
                 ReceiveMoney = trans.ReceiveMoney,
                 PlatformFee = trans.PlatformFee,
-                DepositBackMoney = trans.DepositBackMoney,
                 OwnerReceiveMoney = trans.OwnerReceiveMoney,
-                OrderId = transaction.OrderId,
-                Status = transaction.Status
+                DepositBackMoney = trans.DepositBackMoney,
+                Status = trans.Status,
+                Order = new OrderResponse
+                {
+                    Id = order.Id,
+                    OrderDate = order.OrderDate,
+                    ReceiveDate = order.ReceiveDate,
+                    TotalPrice = order.TotalPrice,
+                    RentPrice = order.RentPrice,
+                    DepositeBackMoney = order.DepositeBackMoney,
+                    ReceiveName = order.ReceiveName,
+                    ReceiveAddress = order.ReceiveAddress,
+                    ReceivePhone = order.ReceivePhone,
+                    Status = order.Status,
+                    UserId = order.UserId,
+                    UserName = user.FullName,
+                    ShopId = orderDetail.Toy.UserId,
+                    ShopName = _unitOfWork.UserRepository.GetByID(orderDetail.Toy.UserId).FullName
+                },
             };
-            return CreatedAtAction("GetTransaction", new { id = trans.Id }, transactionResponse);
+
+            return CreatedAtAction("GetTransaction", new { id = trans.Id }, transactionRespone);
         }
 
         // DELETE: api/Transactions/5
@@ -144,22 +222,45 @@ namespace EduToyRentAPI.Controllers
         {
             var transactions = _unitOfWork.TransactionRepository.Get(
                 trans => trans.OrderId == orderId,
-                pageIndex: pageIndex, 
+                includeProperties: "Order,Order.User,Order.OrderDetails.Toy",
+                pageIndex: pageIndex,
                 pageSize: pageSize)
+                .OrderByDescending(t => t.Id)
                 .Select(transaction => new TransactionResponse
-                 {
-                     Id = transaction.Id,
-                     ReceiveMoney = transaction.ReceiveMoney,
-                     PlatformFee = transaction.PlatformFee,
-                     OwnerReceiveMoney = transaction.OwnerReceiveMoney,
-                     DepositBackMoney = transaction.DepositBackMoney,
-                     OrderId = transaction.OrderId,
-                 }).ToList();
+                {
+                    Id = transaction.Id,
+                    ReceiveMoney = transaction.ReceiveMoney,
+                    PlatformFee = transaction.PlatformFee,
+                    OwnerReceiveMoney = transaction.OwnerReceiveMoney,
+                    DepositBackMoney = transaction.DepositBackMoney,
+                    Status = transaction.Status,
+                    Order = new OrderResponse
+                    {
+                        Id = transaction.OrderId,
+                        OrderDate = transaction.Order.OrderDate,
+                        ReceiveDate = transaction.Order.ReceiveDate,
+                        TotalPrice = transaction.Order.TotalPrice,
+                        RentPrice = transaction.Order.RentPrice,
+                        DepositeBackMoney = transaction.Order.DepositeBackMoney,
+                        ReceiveName = transaction.Order.ReceiveName,
+                        ReceiveAddress = transaction.Order.ReceiveAddress,
+                        ReceivePhone = transaction.Order.ReceivePhone,
+                        Status = transaction.Order.Status,
+                        UserId = transaction.Order.UserId,
+                        UserName = transaction.Order.User.FullName,
+                        ShopId = transaction.Order.OrderDetails.FirstOrDefault().Toy.UserId,
+                        ShopName = _unitOfWork.UserRepository.GetByID(transaction.Order.OrderDetails.FirstOrDefault().Toy.UserId).FullName
+                    },
+                }).ToList();
+
             if (!transactions.Any())
             {
                 return Ok(("Empty List"));
             }
+
             return Ok(transactions);
         }
+
+
     }
 }

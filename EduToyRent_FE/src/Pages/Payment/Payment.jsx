@@ -244,7 +244,7 @@ const Payment = () => {
             shippingInfo.detail + "," + war + "," + distric + "," + city
           );
 
-          apiOrder
+          await apiOrder
             .post(
               "",
               {
@@ -266,8 +266,8 @@ const Payment = () => {
                 },
               }
             )
-            .then((response) => {
-              apiWallets
+            .then(async (response) => {
+              await apiWallets
                 .put(
                   `/${customerInfo.walletId}`,
                   {
@@ -283,201 +283,14 @@ const Payment = () => {
                     },
                   }
                 )
-                .then((response) => {
-                  if (buyItems != "") {
-                    console.log(buyItems);
+                .then((response) => {});
 
-                    var totalDepositTmp2 = 0;
-                    buyItems.map((item, index) => {
-                      totalDepositTmp2 += item.price * item.quantity;
-                    });
-                    console.log(totalDepositTmp2);
-                    console.log(shippingInfo.fullName);
-                    console.log(
-                      shippingInfo.detail +
-                        "," +
-                        war +
-                        "," +
-                        distric +
-                        "," +
-                        city
-                    );
-
-                    apiOrder
-                      .post(
-                        "",
-                        {
-                          orderDate: new Date().toISOString(),
-                          receiveDate: null,
-                          totalPrice: totalDepositTmp2,
-                          rentPrice: 0,
-                          depositeBackMoney: 0,
-                          receiveName: shippingInfo.fullName,
-                          receiveAddress:
-                            shippingInfo.detail +
-                            "," +
-                            war +
-                            "," +
-                            distric +
-                            "," +
-                            city,
-                          receivePhone: shippingInfo.phoneNumber,
-                          status: "Delivering",
-                          userId: customerInfo.id,
-                        },
-                        {
-                          headers: {
-                            Authorization: `Bearer ${Cookies.get("userToken")}`,
-                          },
-                        }
-                      )
-                      .then((response) => {
-                        console.log(response.data);
-
-                        apiWallets
-                          .get("/" + customerInfo.walletId, {
-                            headers: {
-                              Authorization: `Bearer ${Cookies.get(
-                                "userToken"
-                              )}`,
-                            },
-                          })
-                          .then((response2) => {
-                            apiWallets.put(
-                              `/${customerInfo.walletId}`,
-                              {
-                                balance:
-                                  response2.data.balance - totalDepositTmp2,
-                                withdrawMethod: response2.data.withdrawMethod,
-                                withdrawInfo: response2.data.withdrawInfo,
-                                status: response2.data.status,
-                                userId: response2.data.userId,
-                              },
-                              {
-                                headers: {
-                                  Authorization: `Bearer ${Cookies.get(
-                                    "userToken"
-                                  )}`,
-                                },
-                              }
-                            );
-
-                            apiWalletTransaction.post(
-                              "",
-                              {
-                                transactionType: "Thanh toán đơn hàng",
-                                amount: totalDepositTmp2,
-                                date: new Date().toISOString(),
-                                walletId: customerInfo.walletId,
-                                paymentTypeId: 5,
-                                orderId: response.data.id,
-                              },
-                              {
-                                headers: {
-                                  Authorization: `Bearer ${Cookies.get(
-                                    "userToken"
-                                  )}`,
-                                },
-                              }
-                            );
-                          });
-
-                        buyItems.map((item, index) => {
-                          apiOrderDetail.post(
-                            "",
-                            {
-                              rentPrice: 0,
-                              deposit: 0,
-                              unitPrice: item.price,
-                              quantity: item.quantity,
-                              startDate: null,
-                              endDate: null,
-                              status: "Delivering",
-                              orderId: response.data.id,
-                              toyId: item.toyId,
-                              orderTypeId: item.orderTypeId,
-                              ratingId: null,
-                            },
-                            {
-                              headers: {
-                                Authorization: `Bearer ${Cookies.get(
-                                  "userToken"
-                                )}`,
-                              },
-                            }
-                          );
-                          apiToys
-                            .get("/" + item.toyId, {
-                              headers: {
-                                Authorization: `Bearer ${Cookies.get(
-                                  "userToken"
-                                )}`,
-                              },
-                            })
-                            .then((response) => {
-                              apiToys
-                                .put(
-                                  "/" + item.toyId,
-                                  {
-                                    name: response.data.name,
-                                    description: response.data.description,
-                                    price: response.data.price,
-                                    buyQuantity:
-                                      response.data.buyQuantity - item.quantity,
-                                    origin: response.data.origin,
-                                    age: response.data.age,
-                                    brand: response.data.brand,
-                                    categoryId: response.data.category.id,
-                                    rentCount: response.data.rentCount,
-                                    rentTime: response.data.rentTime,
-                                  },
-                                  {
-                                    headers: {
-                                      Authorization: `Bearer ${Cookies.get(
-                                        "userToken"
-                                      )}`,
-                                    },
-                                  }
-                                )
-                                .then((response) => {
-                                  cartItems.map((item) => {
-                                    apiCartItem.delete("/" + item.id, {
-                                      headers: {
-                                        Authorization: `Bearer ${Cookies.get(
-                                          "userToken"
-                                        )}`,
-                                      },
-                                    });
-                                  });
-
-                                  apiCart.put(
-                                    `/${cart.id}`,
-                                    {
-                                      totalPrice: 0,
-                                      status: "active",
-                                      userId: cart.userId,
-                                    },
-                                    {
-                                      headers: {
-                                        Authorization: `Bearer ${Cookies.get(
-                                          "userToken"
-                                        )}`,
-                                      },
-                                    }
-                                  );
-                                });
-                            });
-                        });
-                      });
-                  }
-                });
-
-              apiWalletTransaction
+              await apiWalletTransaction
                 .post(
                   "",
                   {
                     transactionType: "Thanh toán đơn hàng",
-                    amount: totalDepositTmp,
+                    amount: -parseInt(totalDepositTmp),
                     date: new Date().toISOString(),
                     walletId: customerInfo.walletId,
                     paymentTypeId: 5,
@@ -492,7 +305,7 @@ const Payment = () => {
                 .then((response) => {});
 
               console.log(response.data);
-              rentItems.map((item, index) => {
+              rentItems.map(async (item, index) => {
                 var rentPriceTmp = 0;
                 if (item.orderTypeId == 4) {
                   rentPriceTmp = item.price * 0.15;
@@ -501,7 +314,7 @@ const Payment = () => {
                 } else if (item.orderTypeId == 6) {
                   rentPriceTmp = item.price * 0.3;
                 }
-                apiOrderDetail.post(
+                await apiOrderDetail.post(
                   "",
                   {
                     rentPrice: rentPriceTmp,
@@ -523,7 +336,7 @@ const Payment = () => {
                   }
                 );
 
-                apiToys.patch(
+                await apiToys.patch(
                   `/${item.toyId}/update-status`,
                   JSON.stringify("Renting"), // Adjust the key as per API requirements
                   {
@@ -533,6 +346,169 @@ const Payment = () => {
                     },
                   }
                 );
+              });
+            });
+        }
+
+        if (buyItems != "") {
+          console.log(buyItems);
+
+          var totalDepositTmp2 = 0;
+          buyItems.map((item, index) => {
+            totalDepositTmp2 += item.price * item.quantity;
+          });
+          console.log(totalDepositTmp2);
+          console.log(shippingInfo.fullName);
+          console.log(
+            shippingInfo.detail + "," + war + "," + distric + "," + city
+          );
+
+          await apiOrder
+            .post(
+              "",
+              {
+                orderDate: new Date().toISOString(),
+                receiveDate: null,
+                totalPrice: totalDepositTmp2,
+                rentPrice: 0,
+                depositeBackMoney: 0,
+                receiveName: shippingInfo.fullName,
+                receiveAddress:
+                  shippingInfo.detail + "," + war + "," + distric + "," + city,
+                receivePhone: shippingInfo.phoneNumber,
+                status: "Delivering",
+                userId: customerInfo.id,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
+            .then(async (response) => {
+              console.log(response.data);
+
+              await apiWallets
+                .get("/" + customerInfo.walletId, {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                })
+                .then(async (response2) => {
+                  await apiWallets.put(
+                    `/${customerInfo.walletId}`,
+                    {
+                      balance: response2.data.balance - totalDepositTmp2,
+                      withdrawMethod: response2.data.withdrawMethod,
+                      withdrawInfo: response2.data.withdrawInfo,
+                      status: response2.data.status,
+                      userId: response2.data.userId,
+                    },
+                    {
+                      headers: {
+                        Authorization: `Bearer ${Cookies.get("userToken")}`,
+                      },
+                    }
+                  );
+
+                  await apiWalletTransaction.post(
+                    "",
+                    {
+                      transactionType: "Thanh toán đơn hàng",
+                      amount: -parseInt(totalDepositTmp2),
+                      date: new Date().toISOString(),
+                      walletId: customerInfo.walletId,
+                      paymentTypeId: 5,
+                      orderId: response.data.id,
+                    },
+                    {
+                      headers: {
+                        Authorization: `Bearer ${Cookies.get("userToken")}`,
+                      },
+                    }
+                  );
+                });
+
+              buyItems.map(async (item, index) => {
+                await apiOrderDetail.post(
+                  "",
+                  {
+                    rentPrice: 0,
+                    deposit: 0,
+                    unitPrice: item.price,
+                    quantity: item.quantity,
+                    startDate: null,
+                    endDate: null,
+                    status: "DeliveringToBuyer",
+                    orderId: response.data.id,
+                    toyId: item.toyId,
+                    orderTypeId: item.orderTypeId,
+                    ratingId: null,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                );
+                await apiToys
+                  .get("/" + item.toyId, {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  })
+                  .then(async (response) => {
+                    await apiToys
+                      .put(
+                        "/" + item.toyId,
+                        {
+                          name: response.data.name,
+                          description: response.data.description,
+                          price: response.data.price,
+                          buyQuantity:
+                            response.data.buyQuantity - item.quantity,
+                          origin: response.data.origin,
+                          age: response.data.age,
+                          brand: response.data.brand,
+                          categoryId: response.data.category.id,
+                          rentCount: response.data.rentCount,
+                          rentTime: response.data.rentTime,
+                          status: response.data.status,
+                        },
+                        {
+                          headers: {
+                            Authorization: `Bearer ${Cookies.get("userToken")}`,
+                          },
+                        }
+                      )
+                      .then(async (response) => {
+                        cartItems.map(async (item) => {
+                          await apiCartItem.delete("/" + item.id, {
+                            headers: {
+                              Authorization: `Bearer ${Cookies.get(
+                                "userToken"
+                              )}`,
+                            },
+                          });
+                        });
+
+                        await apiCart.put(
+                          `/${cart.id}`,
+                          {
+                            totalPrice: 0,
+                            status: "active",
+                            userId: cart.userId,
+                          },
+                          {
+                            headers: {
+                              Authorization: `Bearer ${Cookies.get(
+                                "userToken"
+                              )}`,
+                            },
+                          }
+                        );
+                      });
+                  });
               });
             });
         }
@@ -548,7 +524,14 @@ const Payment = () => {
 
   return (
     <div>
-      <header>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: "white",
+        }}
+      >
         <HeaderForCustomer />
       </header>
       <div className="flex flex-col py-5 bg-white shadow-md max-w-[1200px] mx-auto">
