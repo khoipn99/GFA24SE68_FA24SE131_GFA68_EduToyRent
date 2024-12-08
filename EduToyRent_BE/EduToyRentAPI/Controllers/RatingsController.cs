@@ -9,6 +9,7 @@ using EduToyRentRepositories.Models;
 using EduToyRentRepositories.DTO.Request;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
+using EduToyRentRepositories.Implement;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -28,7 +29,6 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<RatingResponse>> GetRatings(int pageIndex = 1, int pageSize = 20)
         {
             var ratings = _unitOfWork.RatingRepository.Get(
-                includeProperties: "User,Order",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .Select(rating => new RatingResponse
@@ -38,7 +38,8 @@ namespace EduToyRentAPI.Controllers
                     Star = rating.Star,
                     UserId = rating.UserId,
                     RatingDate = rating.RatingDate,
-                    UserName = rating.User.FullName,
+                    UserName = _unitOfWork.UserRepository.GetByID(rating.UserId).FullName,
+                    AvartarUrl = _unitOfWork.UserRepository.GetByID(rating.UserId).AvatarUrl,
                     OrderDetailId = rating.OrderDetailId
                 }).ToList();
 
@@ -63,7 +64,8 @@ namespace EduToyRentAPI.Controllers
                 Star = rating.Star,
                 UserId = rating.UserId,
                 RatingDate = rating.RatingDate,
-                UserName = rating.User.FullName,
+                UserName = _unitOfWork.UserRepository.GetByID(rating.UserId).FullName,
+                AvartarUrl = _unitOfWork.UserRepository.GetByID(rating.UserId).AvatarUrl,
                 OrderDetailId = rating.OrderDetailId
             };
 
@@ -146,6 +148,7 @@ namespace EduToyRentAPI.Controllers
                 UserId = rating.UserId,
                 RatingDate = rating.RatingDate,
                 UserName = _unitOfWork.UserRepository.GetByID(rating.UserId).FullName,
+                AvartarUrl = _unitOfWork.UserRepository.GetByID(rating.UserId).AvatarUrl,
                 OrderDetailId = rating.OrderDetailId
             };
 
@@ -168,11 +171,13 @@ namespace EduToyRentAPI.Controllers
             return NoContent();
         }
         [HttpGet("ByToyId/{toyId}")]
-        public ActionResult<IEnumerable<RatingResponse>> GetRatingsByToyId(int toyId)
+        public ActionResult<IEnumerable<RatingResponse>> GetRatingsByToyId(int toyId, int pageIndex = 1, int pageSize = 20)
         {
             var ratings = _unitOfWork.RatingRepository.Get(
                 filter: r => r.OrderDetail.ToyId == toyId,
-                includeProperties: "OrderDetail,User")
+                includeProperties: "OrderDetail,User", 
+                pageIndex: pageIndex,
+                pageSize: pageSize)
                 .Select(r => new RatingResponse
                 {
                     Id = r.Id,
@@ -181,6 +186,7 @@ namespace EduToyRentAPI.Controllers
                     UserId = r.UserId,
                     RatingDate = r.RatingDate,
                     UserName = r.User.FullName,
+                    AvartarUrl = _unitOfWork.UserRepository.GetByID(r.UserId).AvatarUrl,
                     OrderDetailId = r.OrderDetailId
                 }).ToList();
 

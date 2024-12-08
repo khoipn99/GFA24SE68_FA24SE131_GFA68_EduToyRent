@@ -14,6 +14,7 @@ namespace EduToyRentRepositories.DTO.Response
         public int UserId { get; set; }
         public DateTime RatingDate { get; set; }
         public string UserName { get; set; } 
+        public string AvartarUrl { get; set; }
         public int OrderDetailId { get; set; }
     }
 }
