@@ -26,6 +26,7 @@ const InformationCustomer = () => {
 
   const [walletInfo, setWalletInfo] = useState({});
   const [walletTransaction, setWalletTransaction] = useState({});
+  const [walletTransactionMinus, setWalletTransactionMinus] = useState({});
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -70,7 +71,12 @@ const InformationCustomer = () => {
           }
         )
         .then((response) => {
-          setWalletTransaction(response.data);
+          setWalletTransaction(
+            response.data.filter((transaction) => transaction.amount >= 0)
+          );
+          setWalletTransactionMinus(
+            response.data.filter((transaction) => transaction.amount < 0)
+          );
           console.log(parsedUserData.walletId);
         });
     }
@@ -299,8 +305,11 @@ const InformationCustomer = () => {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
       })
-      .then((response) => {});
+      .then((response) => {
+        ViewDetails();
+      });
   };
+
   const handleFinishOrderDetail = async (order) => {
     var tmp = order;
     tmp.status = "Complete";
@@ -542,7 +551,11 @@ const InformationCustomer = () => {
 
       await apiOrder.put(
         `/${orderToUpdate.id}`,
-        { ...orderToUpdate, status: "Complete" },
+        {
+          ...orderToUpdate,
+          status: "Complete",
+          receiveDate: new Date().toISOString(),
+        },
         {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -624,6 +637,7 @@ const InformationCustomer = () => {
     var tmp = order;
     tmp.status = "Processing";
 
+    tmp.receiveDate = new Date().toISOString();
     apiOrder
       .put("/" + order.id, tmp, {
         headers: {
@@ -1203,42 +1217,82 @@ const InformationCustomer = () => {
             <div className="bg-white p-4 rounded shadow">
               <h2 className="text-xl font-semibold mb-2">Lịch sử giao dịch</h2>
               {walletTransaction.length > 0 ? (
-                <ul className="space-y-4">
-                  {walletTransaction.map((transaction) => (
-                    <li
-                      key={transaction.id}
-                      className="p-4 border border-gray-300 rounded-lg"
-                    >
-                      <div className="flex justify-between mb-2">
-                        <h4 className="font-semibold">
-                          {transaction.senderId} {transaction.transactionType}
-                        </h4>
-                        <span className="font-medium">
-                          {transaction.amount >= 0
-                            ? "+" + (transaction.amount || 0).toLocaleString()
-                            : (transaction.amount || 0).toLocaleString()}{" "}
-                          VNĐ
-                        </span>
-                      </div>
+                <div className="flex items-start mb-10">
+                  {/* WalletTransaction - Danh sách giao dịch dương */}
+                  <ul className="space-y-4 w-1/2">
+                    {walletTransaction.map((transaction) => (
+                      <li
+                        key={transaction.id}
+                        className="p-4 border border-gray-300 rounded-lg"
+                      >
+                        <div className="flex justify-between mb-2">
+                          <h4 className="font-semibold">
+                            {transaction.transactionType}{" "}
+                            {transaction.orderId != null
+                              ? " " + transaction.orderId
+                              : ""}{" "}
+                          </h4>
+                          <span className="font-medium">
+                            {transaction.amount >= 0
+                              ? "+" + (transaction.amount || 0).toLocaleString()
+                              : (transaction.amount || 0).toLocaleString()}{" "}
+                            VNĐ
+                          </span>
+                        </div>
 
-                      <div className="flex items-center mb-2">
-                        <p className="font-semibold">
-                          Ngày Nạp :{" "}
-                          {
-                            new Date(transaction.date)
-                              .toISOString()
-                              .split("T")[0]
-                          }
-                          {/* {
-                            new Date(transaction.orderDate)
-                              .toISOString()
-                              .split("T")[0]
-                          } */}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                        <div className="flex items-center mb-2">
+                          <p className="font-semibold">
+                            Ngày Nạp :{" "}
+                            {
+                              new Date(transaction.date)
+                                .toISOString()
+                                .split("T")[0]
+                            }
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Đường kẻ phân chia */}
+                  <div className="border-l border-gray-400 h-auto mx-2"></div>
+
+                  {/* WalletTransaction - Danh sách giao dịch âm */}
+                  <ul className="space-y-4 w-1/2">
+                    {walletTransactionMinus.map((transaction) => (
+                      <li
+                        key={transaction.id}
+                        className="p-4 border border-gray-300 rounded-lg"
+                      >
+                        <div className="flex justify-between mb-2">
+                          <h4 className="font-semibold">
+                            {transaction.transactionType}{" "}
+                            {transaction.orderId != null
+                              ? " " + transaction.orderId
+                              : ""}{" "}
+                          </h4>
+                          <span className="font-medium">
+                            {transaction.amount >= 0
+                              ? "+" + (transaction.amount || 0).toLocaleString()
+                              : (transaction.amount || 0).toLocaleString()}{" "}
+                            VNĐ
+                          </span>
+                        </div>
+
+                        <div className="flex items-center mb-2">
+                          <p className="font-semibold">
+                            Ngày Nạp :{" "}
+                            {
+                              new Date(transaction.date)
+                                .toISOString()
+                                .split("T")[0]
+                            }
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ) : (
                 <p>Không có giao dịch nào.</p>
               )}
@@ -1479,10 +1533,10 @@ const InformationCustomer = () => {
                                   <div className="text-sm">Đang đánh giá</div>
                                 )}
 
-                                {stage === "DeliveringToShop" && (
+                                {stage == "DeliveringToShop" && (
                                   <div className="text-sm">Đồ chơi tốt</div>
                                 )}
-                                {stage === "DeliveringToUser" && (
+                                {stage == "DeliveringToUser" && (
                                   <div className="text-sm">Đồ chơi bị hỏng</div>
                                 )}
 
