@@ -25,11 +25,16 @@ import Payment from "./Pages/Payment/Payment";
 import PaymentSuccess from "./Pages/Payment/PaymentSuccess";
 import Chat from "./Pages/Chat/Chat";
 import TopUpComplete from "./Pages/TopUp/TopUpComplete";
+import AdminPage from "./Pages/Admin/AdminPage";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/admin",
+    element: <AdminPage />,
   },
   {
     path: "/top-up-complete",

@@ -481,38 +481,33 @@ const Payment = () => {
                           },
                         }
                       )
-                      .then(async (response) => {
-                        cartItems.map(async (item) => {
-                          await apiCartItem.delete("/" + item.id, {
-                            headers: {
-                              Authorization: `Bearer ${Cookies.get(
-                                "userToken"
-                              )}`,
-                            },
-                          });
-                        });
-
-                        await apiCart.put(
-                          `/${cart.id}`,
-                          {
-                            totalPrice: 0,
-                            status: "active",
-                            userId: cart.userId,
-                          },
-                          {
-                            headers: {
-                              Authorization: `Bearer ${Cookies.get(
-                                "userToken"
-                              )}`,
-                            },
-                          }
-                        );
-                      });
+                      .then(async (response) => {});
                   });
               });
             });
         }
 
+        cartItems.map(async (item) => {
+          await apiCartItem.delete("/" + item.id, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          });
+        });
+
+        await apiCart.put(
+          `/${cart.id}`,
+          {
+            totalPrice: 0,
+            status: "active",
+            userId: cart.userId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        );
         navigate("/payments-success");
       } else {
         alert("Bạn nhập thiếu thông tin giao hàng!");
