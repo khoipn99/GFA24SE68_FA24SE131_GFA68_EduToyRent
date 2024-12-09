@@ -14,6 +14,7 @@ namespace EduToyRentRepositories.DTO.Response
         public float PlatformFee { get; set; }
         public float OwnerReceiveMoney { get; set; }
         public float DepositBackMoney { get; set; }
+        public DateTime Date { get; set; }
         public string Status { get; set; }
         public OrderResponse Order { get; set; }
     }

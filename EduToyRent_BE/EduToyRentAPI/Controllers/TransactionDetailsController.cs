@@ -40,6 +40,7 @@ namespace EduToyRentAPI.Controllers
                     DepositBackMoney = (float)transactionDetail.DepositBackMoney,
                     OrderDetailId = transactionDetail.OrderDetailId,
                     TransactionId = transactionDetail.TranSactionId,
+                    Date = transactionDetail.Date ?? DateTime.MinValue,
                     Status = transactionDetail.Status,
                 }).ToList();
 
@@ -70,6 +71,7 @@ namespace EduToyRentAPI.Controllers
                 DepositBackMoney = (float)transactionDetail.DepositBackMoney,
                 OrderDetailId = transactionDetail.OrderDetailId,
                 TransactionId = transactionDetail.TranSactionId,
+                Date = transactionDetail.Date ?? DateTime.MinValue,
                 Status = transactionDetail.Status
             };
 
@@ -130,6 +132,7 @@ namespace EduToyRentAPI.Controllers
                 OwnerReceiveMoney = (float)transDetail.OwnerReceiveMoney,
                 TransactionId = transactionDetail.TransactionId,
                 OrderDetailId = transactionDetail.OrderDetailId,
+                Date = transactionDetail.Date,
                 Status = transactionDetail.Status
             };
 
@@ -169,6 +172,7 @@ namespace EduToyRentAPI.Controllers
                     DepositBackMoney = (float)transactionDetail.DepositBackMoney,
                     OrderDetailId = transactionDetail.OrderDetailId,
                     TransactionId = transactionDetail.TranSactionId,
+                    Date = transactionDetail.Date ?? DateTime.MinValue,
                     Status = transactionDetail.Status,
                 }).ToList();
 

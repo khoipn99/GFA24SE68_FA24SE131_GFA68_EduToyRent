@@ -42,6 +42,7 @@ namespace EduToyRentAPI.Controllers
                     PlatformFee = (float)transaction.PlatformFee,
                     OwnerReceiveMoney = (float)transaction.OwnerReceiveMoney,
                     DepositBackMoney = (float)transaction.DepositBackMoney,
+                    Date = transaction.Date ?? DateTime.MinValue,
                     Status = transaction.Status,
                     Order = new OrderResponse
                     {
@@ -94,6 +95,7 @@ namespace EduToyRentAPI.Controllers
                 PlatformFee = (float)transaction.PlatformFee,
                 OwnerReceiveMoney = (float)transaction.OwnerReceiveMoney,
                 DepositBackMoney = (float)transaction.DepositBackMoney,
+                Date = transaction.Date ?? DateTime.MinValue,
                 Status = transaction.Status,
                 Order = new OrderResponse
                 {
@@ -175,6 +177,7 @@ namespace EduToyRentAPI.Controllers
                 PlatformFee = (float)trans.PlatformFee,
                 OwnerReceiveMoney = (float)trans.OwnerReceiveMoney,
                 DepositBackMoney = (float)trans.DepositBackMoney,
+                Date = trans.Date ?? DateTime.MinValue,
                 Status = trans.Status,
                 Order = new OrderResponse
                 {
@@ -235,6 +238,7 @@ namespace EduToyRentAPI.Controllers
                     PlatformFee = (float)transaction.PlatformFee,
                     OwnerReceiveMoney = (float)transaction.OwnerReceiveMoney,
                     DepositBackMoney = (float)transaction.DepositBackMoney,
+                    Date = transaction.Date ?? DateTime.MinValue,
                     Status = transaction.Status,
                     Order = new OrderResponse
                     {
