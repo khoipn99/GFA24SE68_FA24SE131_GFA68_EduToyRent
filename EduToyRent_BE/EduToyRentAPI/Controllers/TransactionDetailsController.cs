@@ -132,7 +132,7 @@ namespace EduToyRentAPI.Controllers
                 OwnerReceiveMoney = (float)transDetail.OwnerReceiveMoney,
                 TransactionId = transactionDetail.TransactionId,
                 OrderDetailId = transactionDetail.OrderDetailId,
-                Date = transactionDetail.Date,
+                Date = transDetail.Date?? DateTime.MinValue,
                 Status = transactionDetail.Status
             };
 
