@@ -16,7 +16,6 @@ namespace EduToyRentRepositories.Implement
         private IGenericRepository<Category> categoryRepository;
         private IGenericRepository<Conversation> conversationRepository;
         private IGenericRepository<Media> mediaRepository;
-        private IGenericRepository<Member> memberRepository;
         private IGenericRepository<Message> messageRepository;
         private IGenericRepository<Order> orderRepository;
         private IGenericRepository<OrderDetail> orderDetailRepository;
@@ -28,7 +27,6 @@ namespace EduToyRentRepositories.Implement
         private IGenericRepository<RatingImage> ratingImageRepository;
         private IGenericRepository<Role> roleRepository;
         private IGenericRepository<Toy> toyRepository;
-        private IGenericRepository<ToySupplier> toySupplierRepository;
         private IGenericRepository<Transaction> transactionRepository;
         private IGenericRepository<TransactionDetail> transactionDetailRepository;
         private IGenericRepository<User> userRepository;
@@ -81,13 +79,6 @@ namespace EduToyRentRepositories.Implement
             }
         }
 
-        public IGenericRepository<Member> MemberRepository
-        {
-            get
-            {
-                return memberRepository ??= new GenericRepository<Member>(_context);
-            }
-        }
 
         public IGenericRepository<Message> MessageRepository
         {
@@ -177,13 +168,6 @@ namespace EduToyRentRepositories.Implement
             }
         }
 
-        public IGenericRepository<ToySupplier> ToySupplierRepository
-        {
-            get
-            {
-                return toySupplierRepository ??= new GenericRepository<ToySupplier>(_context);
-            }
-        }
 
         public IGenericRepository<Transaction> TransactionRepository
         {

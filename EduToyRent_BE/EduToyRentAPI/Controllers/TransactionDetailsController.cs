@@ -34,10 +34,10 @@ namespace EduToyRentAPI.Controllers
                 .Select(transactionDetail => new TransactionDetailResponse
                 {
                     Id = transactionDetail.Id,
-                    ReceiveMoney = transactionDetail.ReceiveMoney,
-                    PlatformFee = transactionDetail.PlatformFee,
-                    OwnerReceiveMoney = transactionDetail.OwnerReceiveMoney,
-                    DepositBackMoney = transactionDetail.DepositBackMoney,
+                    ReceiveMoney = (float)transactionDetail.ReceiveMoney,
+                    PlatformFee = (float)transactionDetail.PlatformFee,
+                    OwnerReceiveMoney = (float)transactionDetail.OwnerReceiveMoney,
+                    DepositBackMoney = (float)transactionDetail.DepositBackMoney,
                     OrderDetailId = transactionDetail.OrderDetailId,
                     TransactionId = transactionDetail.TranSactionId,
                     Status = transactionDetail.Status,
@@ -64,10 +64,10 @@ namespace EduToyRentAPI.Controllers
             var transactionDetailResponse = new TransactionDetailResponse
             {
                 Id = transactionDetail.Id,
-                ReceiveMoney = transactionDetail.ReceiveMoney,
-                PlatformFee = transactionDetail.PlatformFee,
-                OwnerReceiveMoney = transactionDetail.OwnerReceiveMoney,
-                DepositBackMoney = transactionDetail.DepositBackMoney,
+                ReceiveMoney = (float)transactionDetail.ReceiveMoney,
+                PlatformFee = (float)transactionDetail.PlatformFee,
+                OwnerReceiveMoney = (float)transactionDetail.OwnerReceiveMoney,
+                DepositBackMoney = (float)transactionDetail.DepositBackMoney,
                 OrderDetailId = transactionDetail.OrderDetailId,
                 TransactionId = transactionDetail.TranSactionId,
                 Status = transactionDetail.Status
@@ -92,6 +92,7 @@ namespace EduToyRentAPI.Controllers
             tranDetail.DepositBackMoney = transactionDetail.DepositBackMoney;
             tranDetail.OrderDetailId = transactionDetail.OrderDetailId;
             tranDetail.TranSactionId = transactionDetail.TransactionId;
+            tranDetail.Date = DateTime.Now;
             tranDetail.Status = transactionDetail.Status;
 
             _unitOfWork.TransactionDetailRepository.Update(tranDetail);
@@ -113,6 +114,7 @@ namespace EduToyRentAPI.Controllers
                 DepositBackMoney = transactionDetail.DepositBackMoney,
                 TranSactionId = transactionDetail.TransactionId,
                 OrderDetailId = transactionDetail.OrderDetailId,
+                Date = DateTime.Now,
                 Status = transactionDetail.Status
             };
 
@@ -122,10 +124,10 @@ namespace EduToyRentAPI.Controllers
             var transactionDetailResponse = new TransactionDetailResponse
             {
                 Id = transDetail.Id,
-                ReceiveMoney = transDetail.ReceiveMoney,
-                PlatformFee = transDetail.PlatformFee,
-                DepositBackMoney = transDetail.DepositBackMoney,
-                OwnerReceiveMoney = transDetail.OwnerReceiveMoney,
+                ReceiveMoney = (float)transDetail.ReceiveMoney,
+                PlatformFee = (float)transDetail.PlatformFee,
+                DepositBackMoney = (float)transDetail.DepositBackMoney,
+                OwnerReceiveMoney = (float)transDetail.OwnerReceiveMoney,
                 TransactionId = transactionDetail.TransactionId,
                 OrderDetailId = transactionDetail.OrderDetailId,
                 Status = transactionDetail.Status
@@ -161,10 +163,10 @@ namespace EduToyRentAPI.Controllers
                 .Select(transactionDetail => new TransactionDetailResponse
                 {
                     Id = transactionDetail.Id,
-                    ReceiveMoney = transactionDetail.ReceiveMoney,
-                    PlatformFee = transactionDetail.PlatformFee,
-                    OwnerReceiveMoney = transactionDetail.OwnerReceiveMoney,
-                    DepositBackMoney = transactionDetail.DepositBackMoney,
+                    ReceiveMoney = (float)transactionDetail.ReceiveMoney,
+                    PlatformFee = (float)transactionDetail.PlatformFee,
+                    OwnerReceiveMoney = (float)transactionDetail.OwnerReceiveMoney,
+                    DepositBackMoney = (float)transactionDetail.DepositBackMoney,
                     OrderDetailId = transactionDetail.OrderDetailId,
                     TransactionId = transactionDetail.TranSactionId,
                     Status = transactionDetail.Status,

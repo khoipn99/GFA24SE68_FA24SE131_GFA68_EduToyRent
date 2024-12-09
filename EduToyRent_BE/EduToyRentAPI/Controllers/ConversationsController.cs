@@ -38,7 +38,7 @@ namespace EduToyRentAPI.Controllers
             {
                 Id = uc.Conversation.Id,
                 LastMessage = uc.Conversation.LastMessage,
-                LastSentTime = uc.Conversation.LastSentTime,
+                LastSentTime = (DateTime)uc.Conversation.LastSentTime,
                 Status = uc.Conversation.Status
             }).ToList();
 
@@ -60,7 +60,7 @@ namespace EduToyRentAPI.Controllers
             {
                 Id = conversation.Id,
                 LastMessage = conversation.LastMessage,
-                LastSentTime = conversation.LastSentTime,
+                LastSentTime = (DateTime)conversation.LastSentTime,
                 Status = conversation.Status
             };
 
@@ -145,7 +145,7 @@ namespace EduToyRentAPI.Controllers
             {
                 Id = uc.Conversation.Id,
                 LastMessage = uc.Conversation.LastMessage,
-                LastSentTime = uc.Conversation.LastSentTime,
+                LastSentTime = (DateTime)uc.Conversation.LastSentTime,
                 Status = uc.Conversation.Status
             }).ToList();
 

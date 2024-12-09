@@ -42,8 +42,8 @@ namespace EduToyRentAPI.Controllers
                 return new OrderDetailResponse
                 {
                     Id = orderDetail.Id,
-                    RentPrice = orderDetail.RentPrice,
-                    Deposit = orderDetail.Deposit,
+                    RentPrice = (int)orderDetail.RentPrice,
+                    Deposit = (int)orderDetail.Deposit,
                     UnitPrice = orderDetail.UnitPrice,
                     Quantity = orderDetail.Quantity,
                     StartDate = orderDetail.StartDate,
@@ -86,8 +86,8 @@ namespace EduToyRentAPI.Controllers
             var orderDetailResponse = new OrderDetailResponse
             {
                 Id = orderDetail.Id,
-                RentPrice = orderDetail.RentPrice,
-                Deposit = orderDetail.Deposit,
+                RentPrice = (int)orderDetail.RentPrice,
+                Deposit = (int)orderDetail.Deposit,
                 UnitPrice = orderDetail.UnitPrice,
                 Quantity = orderDetail.Quantity,
                 StartDate = orderDetail.StartDate,
@@ -185,8 +185,8 @@ namespace EduToyRentAPI.Controllers
             var orderDetailResponse = new OrderDetailResponse
             {
                 Id = orderDetail.Id,
-                RentPrice = orderDetail.RentPrice,
-                Deposit = orderDetail.Deposit,
+                RentPrice = (int)orderDetail.RentPrice,
+                Deposit = (int)orderDetail.Deposit,
                 UnitPrice = orderDetail.UnitPrice,
                 Quantity = orderDetail.Quantity,
                 StartDate = orderDetail.StartDate,
@@ -250,8 +250,8 @@ namespace EduToyRentAPI.Controllers
                 return new OrderDetailResponse
                 {
                     Id = orderDetail.Id,
-                    RentPrice = orderDetail.RentPrice,
-                    Deposit = orderDetail.Deposit,
+                    RentPrice = (int)orderDetail.RentPrice,
+                    Deposit = (int)orderDetail.Deposit,
                     UnitPrice = orderDetail.UnitPrice,
                     Quantity = orderDetail.Quantity,
                     StartDate = orderDetail.StartDate,
@@ -294,8 +294,8 @@ namespace EduToyRentAPI.Controllers
                 return new OrderDetailResponse
                 {
                     Id = orderDetail.Id,
-                    RentPrice = orderDetail.RentPrice,
-                    Deposit = orderDetail.Deposit,
+                    RentPrice = (int)orderDetail.RentPrice,
+                    Deposit = (int)orderDetail.Deposit,
                     UnitPrice = orderDetail.UnitPrice,
                     Quantity = orderDetail.Quantity,
                     StartDate = orderDetail.StartDate,
@@ -332,8 +332,8 @@ namespace EduToyRentAPI.Controllers
                 return new OrderDetailResponse
                 {
                     Id = orderDetail.Id,
-                    RentPrice = orderDetail.RentPrice,
-                    Deposit = orderDetail.Deposit,
+                    RentPrice = (int)orderDetail.RentPrice,
+                    Deposit = (int)orderDetail.Deposit,
                     UnitPrice = orderDetail.UnitPrice,
                     Quantity = orderDetail.Quantity,
                     StartDate = orderDetail.StartDate,

@@ -23,10 +23,10 @@ namespace EduToyRentRepositories.Models
         public string Origin { get; set; }
         public string Age { get; set; }
         public string Brand { get; set; }
-        public int RentCount { get; set; }
-        public int BuyQuantity { get; set; }
+        public int? RentCount { get; set; } = 0;
+        public int? BuyQuantity { get; set; }
         public DateTime CreateDate { get; set; }
-        public string RentTime { get; set; }
+        public int? QuantitySold { get; set; } = 0;
         public string Status { get; set; }
         public int UserId { get; set; }
         [ForeignKey(nameof(UserId))]

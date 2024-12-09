@@ -31,7 +31,7 @@ namespace EduToyRentRepositories.DTO.Request
         public int CategoryId { get; set; }
 
         public int RentCount { get; set; }
-        public string RentTime { get; set; }
+        public int QuantitySold { get; set; }
         public string Status { get; set; }
     }
 

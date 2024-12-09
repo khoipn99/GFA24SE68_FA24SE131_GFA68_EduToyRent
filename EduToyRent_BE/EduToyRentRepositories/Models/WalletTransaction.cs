@@ -18,6 +18,7 @@ namespace EduToyRentRepositories.Models
         public string TransactionType { get; set; }
         public int Amount { get; set; }
         public DateTime? Date { get; set; }
+        public string Status { get; set; }
         public int WalletId { get; set; }
         [ForeignKey(nameof(WalletId))]
         public virtual Wallet Wallet { get; set; } = null!;

@@ -17,10 +17,10 @@ namespace EduToyRentRepositories.DTO.Response
         public string Age { get; set; }
         public float? Star { get; set; }
         public string Brand { get; set; }
-        public int RentCount { get; set; }
-        public int BuyQuantity { get; set; }
+        public int? RentCount { get; set; }
+        public int? BuyQuantity { get; set; }
         public DateTime CreateDate { get; set; }
-        public string RentTime { get; set; }
+        public int? QuantitySold { get; set; }
         public string Status { get; set; }
         public UserResponse Owner { get; set; }
         public UserResponse Approver { get; set; }

@@ -15,10 +15,11 @@ namespace EduToyRentRepositories.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public float ReceiveMoney { get; set; }
-        public float PlatformFee { get; set; }
-        public float OwnerReceiveMoney { get; set; }
-        public float DepositBackMoney { get; set; }
+        public float? ReceiveMoney { get; set; } = default(float?);
+        public float? PlatformFee { get; set; } = default(float?);
+        public float? OwnerReceiveMoney { get; set; } = default(float?);
+        public float? DepositBackMoney { get; set; } = default(float?);
+        public DateTime? Date {  get; set; } 
         public string Status { get; set; }
         public int OrderId { get; set; }
         [ForeignKey(nameof(OrderId))]

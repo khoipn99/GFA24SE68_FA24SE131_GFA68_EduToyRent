@@ -23,5 +23,6 @@ namespace EduToyRentRepositories.DTO.Request
         public int OrderDetailId { get; set; }
         [Required]
         public int TransactionId { get; set; }
+        public DateTime Date { get; set; }
     }
 }

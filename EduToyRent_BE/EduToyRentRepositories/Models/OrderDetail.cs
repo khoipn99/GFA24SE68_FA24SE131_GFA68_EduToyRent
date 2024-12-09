@@ -15,8 +15,8 @@ namespace EduToyRentRepositories.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int RentPrice { get; set; }
-        public int Deposit {  get; set; }
+        public int? RentPrice { get; set; } = 0;
+        public int? Deposit { get; set; } = 0;
         public int UnitPrice { get; set; }
         public int Quantity { get; set; }
         public DateTime? StartDate { get; set; }

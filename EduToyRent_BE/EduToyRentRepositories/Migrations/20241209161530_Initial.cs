@@ -32,8 +32,8 @@ namespace EduToyRentRepositories.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    LastMessage = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastSentTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LastMessage = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastSentTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -154,20 +154,6 @@ namespace EduToyRentRepositories.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Members",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RentStar = table.Column<float>(type: "real", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Members", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Messages",
                 columns: table => new
                 {
@@ -175,7 +161,7 @@ namespace EduToyRentRepositories.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     IsRead = table.Column<bool>(type: "bit", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MediaUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MediaUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     SentTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     SenderId = table.Column<int>(type: "int", nullable: false),
                     ConversationId = table.Column<int>(type: "int", nullable: false)
@@ -197,8 +183,8 @@ namespace EduToyRentRepositories.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RentPrice = table.Column<int>(type: "int", nullable: false),
-                    Deposit = table.Column<int>(type: "int", nullable: false),
+                    RentPrice = table.Column<int>(type: "int", nullable: true),
+                    Deposit = table.Column<int>(type: "int", nullable: true),
                     UnitPrice = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -252,8 +238,8 @@ namespace EduToyRentRepositories.Migrations
                     OrderDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ReceiveDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     TotalPrice = table.Column<int>(type: "int", nullable: false),
-                    RentPrice = table.Column<int>(type: "int", nullable: false),
-                    DepositeBackMoney = table.Column<int>(type: "int", nullable: false),
+                    RentPrice = table.Column<int>(type: "int", nullable: true),
+                    DepositeBackMoney = table.Column<int>(type: "int", nullable: true),
                     ReceiveName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ReceiveAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ReceivePhone = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -271,10 +257,11 @@ namespace EduToyRentRepositories.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ReceiveMoney = table.Column<float>(type: "real", nullable: false),
-                    PlatformFee = table.Column<float>(type: "real", nullable: false),
-                    OwnerReceiveMoney = table.Column<float>(type: "real", nullable: false),
-                    DepositBackMoney = table.Column<float>(type: "real", nullable: false),
+                    ReceiveMoney = table.Column<float>(type: "real", nullable: true),
+                    PlatformFee = table.Column<float>(type: "real", nullable: true),
+                    OwnerReceiveMoney = table.Column<float>(type: "real", nullable: true),
+                    DepositBackMoney = table.Column<float>(type: "real", nullable: true),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OrderId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -295,10 +282,11 @@ namespace EduToyRentRepositories.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ReceiveMoney = table.Column<float>(type: "real", nullable: false),
-                    PlatformFee = table.Column<float>(type: "real", nullable: false),
-                    OwnerReceiveMoney = table.Column<float>(type: "real", nullable: false),
-                    DepositBackMoney = table.Column<float>(type: "real", nullable: false),
+                    ReceiveMoney = table.Column<float>(type: "real", nullable: true),
+                    PlatformFee = table.Column<float>(type: "real", nullable: true),
+                    OwnerReceiveMoney = table.Column<float>(type: "real", nullable: true),
+                    DepositBackMoney = table.Column<float>(type: "real", nullable: true),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OrderDetailId = table.Column<int>(type: "int", nullable: false),
                     TranSactionId = table.Column<int>(type: "int", nullable: false)
@@ -341,7 +329,7 @@ namespace EduToyRentRepositories.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Star = table.Column<float>(type: "real", nullable: false),
                     RatingDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
@@ -371,10 +359,10 @@ namespace EduToyRentRepositories.Migrations
                     Origin = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Age = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Brand = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RentCount = table.Column<int>(type: "int", nullable: false),
-                    BuyQuantity = table.Column<int>(type: "int", nullable: false),
+                    RentCount = table.Column<int>(type: "int", nullable: true),
+                    BuyQuantity = table.Column<int>(type: "int", nullable: true),
                     CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    RentTime = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    QuantitySold = table.Column<int>(type: "int", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
@@ -387,32 +375,6 @@ namespace EduToyRentRepositories.Migrations
                         name: "FK_Toys_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ToySuppliers",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ToySupplierName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Star = table.Column<float>(type: "real", nullable: false),
-                    IsPremium = table.Column<bool>(type: "bit", nullable: false),
-                    StartPremiumDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndPremiumDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    PremiumId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ToySuppliers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ToySuppliers_Premiums_PremiumId",
-                        column: x => x.PremiumId,
-                        principalTable: "Premiums",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -448,16 +410,26 @@ namespace EduToyRentRepositories.Migrations
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Dob = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Dob = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     AvatarUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Star = table.Column<float>(type: "real", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PremiumId = table.Column<int>(type: "int", nullable: true),
+                    StartPremiumDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EndPremiumDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     RoleId = table.Column<int>(type: "int", nullable: false),
                     WalletId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_Premiums_PremiumId",
+                        column: x => x.PremiumId,
+                        principalTable: "Premiums",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Users_Roles_RoleId",
                         column: x => x.RoleId,
@@ -498,6 +470,7 @@ namespace EduToyRentRepositories.Migrations
                     TransactionType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Amount = table.Column<int>(type: "int", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     WalletId = table.Column<int>(type: "int", nullable: false),
                     PaymentTypeId = table.Column<int>(type: "int", nullable: false),
                     OrderId = table.Column<int>(type: "int", nullable: true),
@@ -556,11 +529,6 @@ namespace EduToyRentRepositories.Migrations
                 name: "IX_Media_ToyId",
                 table: "Media",
                 column: "ToyId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Members_UserId",
-                table: "Members",
-                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Messages_ConversationId",
@@ -638,16 +606,6 @@ namespace EduToyRentRepositories.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ToySuppliers_PremiumId",
-                table: "ToySuppliers",
-                column: "PremiumId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ToySuppliers_UserId",
-                table: "ToySuppliers",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_TransactionDetails_OrderDetailId",
                 table: "TransactionDetails",
                 column: "OrderDetailId");
@@ -671,6 +629,11 @@ namespace EduToyRentRepositories.Migrations
                 name: "IX_UserConversations_UserId",
                 table: "UserConversations",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_PremiumId",
+                table: "Users",
+                column: "PremiumId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_RoleId",
@@ -736,14 +699,6 @@ namespace EduToyRentRepositories.Migrations
                 table: "Media",
                 column: "ToyId",
                 principalTable: "Toys",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Members_Users_UserId",
-                table: "Members",
-                column: "UserId",
-                principalTable: "Users",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
 
@@ -828,14 +783,6 @@ namespace EduToyRentRepositories.Migrations
                 onDelete: ReferentialAction.Restrict);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ToySuppliers_Users_UserId",
-                table: "ToySuppliers",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_UserConversations_Users_UserId",
                 table: "UserConversations",
                 column: "UserId",
@@ -890,9 +837,6 @@ namespace EduToyRentRepositories.Migrations
                 name: "Media");
 
             migrationBuilder.DropTable(
-                name: "Members");
-
-            migrationBuilder.DropTable(
                 name: "Messages");
 
             migrationBuilder.DropTable(
@@ -900,9 +844,6 @@ namespace EduToyRentRepositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "RatingImages");
-
-            migrationBuilder.DropTable(
-                name: "ToySuppliers");
 
             migrationBuilder.DropTable(
                 name: "TransactionDetails");
@@ -915,9 +856,6 @@ namespace EduToyRentRepositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "Carts");
-
-            migrationBuilder.DropTable(
-                name: "Premiums");
 
             migrationBuilder.DropTable(
                 name: "Transactions");
@@ -939,6 +877,9 @@ namespace EduToyRentRepositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Premiums");
 
             migrationBuilder.DropTable(
                 name: "Roles");

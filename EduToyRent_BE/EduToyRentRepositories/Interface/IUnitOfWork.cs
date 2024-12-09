@@ -14,7 +14,6 @@ namespace EduToyRentRepositories.Interface
         IGenericRepository<Category> CategoryRepository { get; }
         IGenericRepository<Conversation> ConversationRepository { get; }
         IGenericRepository<Media> MediaRepository { get; }
-        IGenericRepository<Member> MemberRepository { get; }
         IGenericRepository<Message> MessageRepository { get; }
         IGenericRepository<Order> OrderRepository { get; }
         IGenericRepository<OrderDetail> OrderDetailRepository { get; }
@@ -26,7 +25,6 @@ namespace EduToyRentRepositories.Interface
         IGenericRepository<RatingImage> RatingImageRepository { get; }
         IGenericRepository<Role> RoleRepository { get; }
         IGenericRepository<Toy> ToyRepository { get; }
-        IGenericRepository<ToySupplier> ToySupplierRepository { get; }
         IGenericRepository<Transaction> TransactionRepository { get; }
         IGenericRepository<TransactionDetail> TransactionDetailRepository { get; }
         IGenericRepository<User> UserRepository { get; }

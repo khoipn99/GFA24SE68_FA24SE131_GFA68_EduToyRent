@@ -18,8 +18,8 @@ namespace EduToyRentRepositories.Models
         public DateTime OrderDate { get; set; }
         public DateTime? ReceiveDate { get; set; }
         public int TotalPrice { get; set; }
-        public int RentPrice { get; set; }
-        public int DepositeBackMoney { get; set; }
+        public int? RentPrice { get; set; } = 0;
+        public int? DepositeBackMoney { get; set; } = 0;
         public string ReceiveName { get; set; }
         public string ReceiveAddress { get; set; }
         public string ReceivePhone { get; set; }
