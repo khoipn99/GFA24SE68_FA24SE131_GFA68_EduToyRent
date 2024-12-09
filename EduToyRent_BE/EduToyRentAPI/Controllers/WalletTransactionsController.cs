@@ -44,7 +44,8 @@ namespace EduToyRentAPI.Controllers
                     WalletId = tx.WalletId,
                     PaymentTypeId = tx.PaymentTypeId,
                     OrderId = tx.OrderId,
-                    SenderId = tx.SenderId
+                    SenderId = tx.SenderId,
+                    Status = tx.Status,
                 }).ToList();
 
             return Ok(walletTransactions);
@@ -71,7 +72,8 @@ namespace EduToyRentAPI.Controllers
                 WalletId = walletTransaction.WalletId,
                 PaymentTypeId = walletTransaction.PaymentTypeId,
                 OrderId = walletTransaction.OrderId,
-                SenderId = walletTransaction.SenderId
+                SenderId = walletTransaction.SenderId,
+                Status = walletTransaction.Status,
             };
 
             return Ok(walletTransactionResponse);
@@ -94,6 +96,7 @@ namespace EduToyRentAPI.Controllers
             walletTransaction.Date = walletTransactionRequest.Date;
             walletTransaction.PaymentTypeId = walletTransactionRequest.PaymentTypeId;
             walletTransaction.OrderId = walletTransactionRequest.OrderId;
+            walletTransaction.Status = walletTransactionRequest.Status;
 
             _unitOfWork.WalletTransactionRepository.Update(walletTransaction);
 
@@ -135,7 +138,8 @@ namespace EduToyRentAPI.Controllers
                 WalletId = walletTransactionRequest.WalletId,
                 PaymentTypeId = walletTransactionRequest.PaymentTypeId,
                 OrderId = walletTransactionRequest.OrderId,
-                SenderId = senderId 
+                SenderId = senderId,
+                Status = walletTransactionRequest.Status,
             };
 
             _unitOfWork.WalletTransactionRepository.Insert(walletTransaction);
@@ -150,7 +154,8 @@ namespace EduToyRentAPI.Controllers
                 WalletId = walletTransaction.WalletId,
                 PaymentTypeId = walletTransaction.PaymentTypeId,
                 OrderId = walletTransaction.OrderId,
-                SenderId = walletTransaction.SenderId
+                SenderId = walletTransaction.SenderId,
+                Status = walletTransaction.Status,
             };
 
             return CreatedAtAction("GetWalletTransaction", new { id = walletTransaction.Id }, walletTransactionResponse);
@@ -194,7 +199,8 @@ namespace EduToyRentAPI.Controllers
                     WalletId = tx.WalletId,
                     PaymentTypeId = tx.PaymentTypeId,
                     OrderId = tx.OrderId,
-                    SenderId = tx.SenderId
+                    SenderId = tx.SenderId,
+                    Status = tx.Status,
                 }).ToList();
 
             return Ok(walletTransactions);

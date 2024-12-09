@@ -38,10 +38,10 @@ namespace EduToyRentAPI.Controllers
                 .Select(transaction => new TransactionResponse
                 {
                     Id = transaction.Id,
-                    ReceiveMoney = transaction.ReceiveMoney,
-                    PlatformFee = transaction.PlatformFee,
-                    OwnerReceiveMoney = transaction.OwnerReceiveMoney,
-                    DepositBackMoney = transaction.DepositBackMoney,
+                    ReceiveMoney = (float)transaction.ReceiveMoney,
+                    PlatformFee = (float)transaction.PlatformFee,
+                    OwnerReceiveMoney = (float)transaction.OwnerReceiveMoney,
+                    DepositBackMoney = (float)transaction.DepositBackMoney,
                     Status = transaction.Status,
                     Order = new OrderResponse
                     {
@@ -49,8 +49,8 @@ namespace EduToyRentAPI.Controllers
                         OrderDate = transaction.Order.OrderDate,
                         ReceiveDate = transaction.Order.ReceiveDate,
                         TotalPrice = transaction.Order.TotalPrice,
-                        RentPrice = transaction.Order.RentPrice,
-                        DepositeBackMoney = transaction.Order.DepositeBackMoney,
+                        RentPrice = (int)(float)transaction.Order.RentPrice,
+                        DepositeBackMoney = (int)transaction.Order.DepositeBackMoney,
                         ReceiveName = transaction.Order.ReceiveName,
                         ReceiveAddress = transaction.Order.ReceiveAddress,
                         ReceivePhone = transaction.Order.ReceivePhone,
@@ -90,10 +90,10 @@ namespace EduToyRentAPI.Controllers
             var transactionRespone = new TransactionResponse
             {
                 Id = transaction.Id,
-                ReceiveMoney = transaction.ReceiveMoney,
-                PlatformFee = transaction.PlatformFee,
-                OwnerReceiveMoney = transaction.OwnerReceiveMoney,
-                DepositBackMoney = transaction.DepositBackMoney,
+                ReceiveMoney = (float)transaction.ReceiveMoney,
+                PlatformFee = (float)transaction.PlatformFee,
+                OwnerReceiveMoney = (float)transaction.OwnerReceiveMoney,
+                DepositBackMoney = (float)transaction.DepositBackMoney,
                 Status = transaction.Status,
                 Order = new OrderResponse
                 {
@@ -101,8 +101,8 @@ namespace EduToyRentAPI.Controllers
                     OrderDate = order.OrderDate,
                     ReceiveDate = order.ReceiveDate,
                     TotalPrice = order.TotalPrice,
-                    RentPrice = order.RentPrice,
-                    DepositeBackMoney = order.DepositeBackMoney,
+                    RentPrice = (int)order.RentPrice,
+                    DepositeBackMoney = (int)order.DepositeBackMoney,
                     ReceiveName = order.ReceiveName,
                     ReceiveAddress = order.ReceiveAddress,
                     ReceivePhone = order.ReceivePhone,
@@ -135,6 +135,7 @@ namespace EduToyRentAPI.Controllers
             trans.DepositBackMoney = transaction.DepositBackMoney;
             trans.Status = transaction.Status;
             trans.OrderId = transaction.OrderId;
+            trans.Date = DateTime.Now;
 
             _unitOfWork.TransactionRepository.Update(trans);
             _unitOfWork.Save();
@@ -154,6 +155,7 @@ namespace EduToyRentAPI.Controllers
                 DepositBackMoney = transaction.DepositBackMoney,
                 OwnerReceiveMoney = transaction.OwnerReceiveMoney,
                 OrderId = transaction.OrderId,
+                Date = DateTime.Now,
                 Status = transaction.Status
             };
 
@@ -169,10 +171,10 @@ namespace EduToyRentAPI.Controllers
             var transactionRespone = new TransactionResponse
             {
                 Id = trans.Id,
-                ReceiveMoney = trans.ReceiveMoney,
-                PlatformFee = trans.PlatformFee,
-                OwnerReceiveMoney = trans.OwnerReceiveMoney,
-                DepositBackMoney = trans.DepositBackMoney,
+                ReceiveMoney = (float)trans.ReceiveMoney,
+                PlatformFee = (float)trans.PlatformFee,
+                OwnerReceiveMoney = (float)trans.OwnerReceiveMoney,
+                DepositBackMoney = (float)trans.DepositBackMoney,
                 Status = trans.Status,
                 Order = new OrderResponse
                 {
@@ -180,8 +182,8 @@ namespace EduToyRentAPI.Controllers
                     OrderDate = order.OrderDate,
                     ReceiveDate = order.ReceiveDate,
                     TotalPrice = order.TotalPrice,
-                    RentPrice = order.RentPrice,
-                    DepositeBackMoney = order.DepositeBackMoney,
+                    RentPrice = (int)order.RentPrice,
+                    DepositeBackMoney = (int)order.DepositeBackMoney,
                     ReceiveName = order.ReceiveName,
                     ReceiveAddress = order.ReceiveAddress,
                     ReceivePhone = order.ReceivePhone,
@@ -229,10 +231,10 @@ namespace EduToyRentAPI.Controllers
                 .Select(transaction => new TransactionResponse
                 {
                     Id = transaction.Id,
-                    ReceiveMoney = transaction.ReceiveMoney,
-                    PlatformFee = transaction.PlatformFee,
-                    OwnerReceiveMoney = transaction.OwnerReceiveMoney,
-                    DepositBackMoney = transaction.DepositBackMoney,
+                    ReceiveMoney = (float)transaction.ReceiveMoney,
+                    PlatformFee = (float)transaction.PlatformFee,
+                    OwnerReceiveMoney = (float)transaction.OwnerReceiveMoney,
+                    DepositBackMoney = (float)transaction.DepositBackMoney,
                     Status = transaction.Status,
                     Order = new OrderResponse
                     {
@@ -240,8 +242,8 @@ namespace EduToyRentAPI.Controllers
                         OrderDate = transaction.Order.OrderDate,
                         ReceiveDate = transaction.Order.ReceiveDate,
                         TotalPrice = transaction.Order.TotalPrice,
-                        RentPrice = transaction.Order.RentPrice,
-                        DepositeBackMoney = transaction.Order.DepositeBackMoney,
+                        RentPrice = (int)transaction.Order.RentPrice,
+                        DepositeBackMoney = (int)transaction.Order.DepositeBackMoney,
                         ReceiveName = transaction.Order.ReceiveName,
                         ReceiveAddress = transaction.Order.ReceiveAddress,
                         ReceivePhone = transaction.Order.ReceivePhone,

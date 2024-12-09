@@ -46,9 +46,10 @@ namespace EduToyRentAPI.Controllers
                     Password = user.Password,
                     CreateDate = user.CreateDate,
                     Phone = user.Phone,
-                    Dob = user.Dob,
+                    Dob = user.Dob ?? DateTime.MinValue,
                     Address = user.Address,
                     AvatarUrl = user.AvatarUrl,
+                    Star = user.Star,
                     WalletId = (int?)user.WalletId,
                     Status = user.Status,
                     Role = new RoleResponse
@@ -82,9 +83,10 @@ namespace EduToyRentAPI.Controllers
                 Password = user.Password,
                 CreateDate = user.CreateDate,
                 Phone = user.Phone,
-                Dob = user.Dob,
+                Dob = user.Dob ?? DateTime.MinValue,
                 Address = user.Address,
                 AvatarUrl = user.AvatarUrl,
+                Star = user.Star,
                 WalletId = (int?)user.WalletId,
                 Status = user.Status,
                 Role = new RoleResponse
@@ -176,9 +178,10 @@ namespace EduToyRentAPI.Controllers
                 Password = user.Password,
                 CreateDate = user.CreateDate,
                 Phone = user.Phone,
-                Dob = user.Dob,
+                Dob = user.Dob ?? DateTime.MinValue,
                 Address = user.Address,
                 AvatarUrl = user.AvatarUrl,
+                Star = user.Star,
                 Status = user.Status,
                 Role = new RoleResponse
                 {
@@ -227,9 +230,10 @@ namespace EduToyRentAPI.Controllers
                     Password = user.Password,
                     CreateDate = user.CreateDate,
                     Phone = user.Phone,
-                    Dob = user.Dob,
+                    Dob = user.Dob ?? DateTime.MinValue,
                     Address = user.Address,
                     AvatarUrl = user.AvatarUrl,
+                    Star = user.Star,
                     WalletId = (int?)user.WalletId,
                     Status = user.Status,
                     Role = new RoleResponse

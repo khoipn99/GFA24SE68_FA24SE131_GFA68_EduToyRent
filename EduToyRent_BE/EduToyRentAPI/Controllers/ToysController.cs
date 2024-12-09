@@ -35,65 +35,65 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<ToyResponse>> GetToys(int pageIndex = 1, int pageSize = 20) 
         {
             var toys = _unitOfWork.ToyRepository.Get(
-            includeProperties: "Category,User,User.Role,Approver,Approver.Role",
-            pageIndex: pageIndex,
-            pageSize: pageSize)
-            .OrderByDescending(toy => toy.Id)
-            .Select(toy => new ToyResponse
-            {
-                Id = toy.Id,
-                Name = toy.Name,
-                Description = toy.Description,
-                Price = toy.Price,
-                Origin = toy.Origin,
-                Age = toy.Age,
-                Brand = toy.Brand,
-                Star = (float?)toy.Star,
-                RentCount = toy.RentCount,
-                BuyQuantity = toy.BuyQuantity,
-                CreateDate = toy.CreateDate,
-                RentTime = toy.RentTime,
-                Status = toy.Status,
-                Owner = new UserResponse
+                includeProperties: "Category,User,User.Role,Approver,Approver.Role",
+                pageIndex: pageIndex,
+                pageSize: pageSize)
+                .OrderByDescending(toy => toy.Id)
+                .Select(toy => new ToyResponse
                 {
-                    Id = toy.UserId,
-                    FullName = toy.User.FullName,
-                    Email = toy.User.Email,
-                    CreateDate = toy.User.CreateDate,
-                    Phone = toy.User.Phone,
-                    Dob = toy.User.Dob,
-                    Address = toy.User.Address,
-                    AvatarUrl = toy.User.AvatarUrl,
-                    Status = toy.User.Status,
-                    Role = new RoleResponse
+                    Id = toy.Id,
+                    Name = toy.Name,
+                    Description = toy.Description,
+                    Price = toy.Price,
+                    Origin = toy.Origin,
+                    Age = toy.Age,
+                    Brand = toy.Brand,
+                    Star = toy.Star ?? 0, 
+                    RentCount = toy.RentCount ?? 0, 
+                    QuantitySold = toy.QuantitySold ?? 0, 
+                    CreateDate = toy.CreateDate,
+                    Status = toy.Status,
+                    Owner = new UserResponse
                     {
-                        Id = toy.User.Role.Id,
-                        Name = toy.User.Role.Name
-                    }
-                },
-                Category = new CategoryResponse
-                {
-                    Id = toy.Category.Id,
-                    Name = toy.Category.Name
-                },
-                Approver = toy.ApproverId != null ? new UserResponse
-                {
-                    Id = (int)toy.ApproverId,
-                    FullName = toy.Approver.FullName,
-                    Email = toy.Approver.Email,
-                    CreateDate = toy.Approver.CreateDate,
-                    Phone = toy.Approver.Phone,
-                    Dob = toy.Approver.Dob,
-                    Address = toy.Approver.Address,
-                    AvatarUrl = toy.Approver.AvatarUrl,
-                    Status = toy.Approver.Status,
-                    Role = new RoleResponse
+                        Id = toy.UserId,
+                        FullName = toy.User.FullName,
+                        Email = toy.User.Email,
+                        CreateDate = toy.User.CreateDate,
+                        Phone = toy.User.Phone,
+                        Dob = toy.User.Dob ?? DateTime.MinValue, 
+                        Address = toy.User.Address,
+                        AvatarUrl = toy.User.AvatarUrl,
+                        Star = toy.User.Star ?? 0, 
+                        Status = toy.User.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = toy.User.Role.Id,
+                            Name = toy.User.Role.Name
+                        }
+                    },
+                    Category = new CategoryResponse
                     {
-                        Id = toy.Approver.Role.Id,
-                        Name = toy.Approver.Role.Name
-                    }
-                } : null,
-                Media = _unitOfWork.MediaRepository.Get(
+                        Id = toy.Category.Id,
+                        Name = toy.Category.Name
+                    },
+                    Approver = toy.ApproverId != null ? new UserResponse
+                    {
+                        Id = toy.ApproverId.Value, 
+                        FullName = toy.Approver.FullName,
+                        Email = toy.Approver.Email,
+                        CreateDate = toy.Approver.CreateDate,
+                        Phone = toy.Approver.Phone,
+                        Dob = toy.Approver.Dob ?? DateTime.MinValue, 
+                        Address = toy.Approver.Address,
+                        AvatarUrl = toy.Approver.AvatarUrl,
+                        Status = toy.Approver.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = toy.Approver.Role.Id,
+                            Name = toy.Approver.Role.Name
+                        }
+                    } : null,
+                    Media = _unitOfWork.MediaRepository.Get(
                                                 m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
@@ -103,7 +103,7 @@ namespace EduToyRentAPI.Controllers
                                                    Status = media.Status,
                                                    ToyId = toy.Id,
                                                }).ToList()
-            }).ToList();
+                }).ToList();
 
             return Ok(toys);
         }
@@ -128,11 +128,10 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
-                    Star = (float?)toy.Star,
-                    RentCount = toy.RentCount,
-                    BuyQuantity = toy.BuyQuantity,
+                    Star = toy.Star ?? 0,
+                    RentCount = toy.RentCount ?? 0,
+                    QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
-                    RentTime = toy.RentTime,
                     Status = toy.Status,
                     Owner = new UserResponse
                     {
@@ -141,9 +140,10 @@ namespace EduToyRentAPI.Controllers
                         Email = toy.User.Email,
                         CreateDate = toy.User.CreateDate,
                         Phone = toy.User.Phone,
-                        Dob = toy.User.Dob,
+                        Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
                         {
@@ -158,12 +158,12 @@ namespace EduToyRentAPI.Controllers
                     },
                     Approver = toy.ApproverId != null ? new UserResponse
                     {
-                        Id = (int)toy.ApproverId,
+                        Id = toy.ApproverId.Value,
                         FullName = toy.Approver.FullName,
                         Email = toy.Approver.Email,
                         CreateDate = toy.Approver.CreateDate,
                         Phone = toy.Approver.Phone,
-                        Dob = toy.Approver.Dob,
+                        Dob = toy.Approver.Dob ?? DateTime.MinValue,
                         Address = toy.Approver.Address,
                         AvatarUrl = toy.Approver.AvatarUrl,
                         Status = toy.Approver.Status,
@@ -225,11 +225,11 @@ namespace EduToyRentAPI.Controllers
                 Origin = toy.Origin,
                 Age = toy.Age,
                 Brand = toy.Brand,
-                Star = (float?)toy.Star,
-                RentCount = toy.RentCount,
-                BuyQuantity = toy.BuyQuantity,
+                Star = toy.Star ?? 0,
+                RentCount = toy.RentCount ?? 0,
+                QuantitySold = toy.QuantitySold ?? 0,
+                BuyQuantity = toy.BuyQuantity ?? 0,
                 CreateDate = toy.CreateDate,
-                RentTime = toy.RentTime,
                 Status = toy.Status,
                 Owner = new UserResponse
                 {
@@ -238,9 +238,10 @@ namespace EduToyRentAPI.Controllers
                     Email = user.Email,
                     CreateDate = user.CreateDate,
                     Phone = user.Phone,
-                    Dob = user.Dob,
+                    Dob = (DateTime)user.Dob,
                     Address = user.Address,
                     AvatarUrl = user.AvatarUrl,
+                    Star = user.Star,
                     Status = user.Status,
                     Role = new RoleResponse
                     {
@@ -260,7 +261,7 @@ namespace EduToyRentAPI.Controllers
                     Email = approver.Email,
                     CreateDate = approver.CreateDate,
                     Phone = approver.Phone,
-                    Dob = approver.Dob,
+                    Dob = (DateTime)approver.Dob,
                     Address = approver.Address,
                     AvatarUrl = approver.AvatarUrl,
                     Status = approver.Status,
@@ -313,7 +314,7 @@ namespace EduToyRentAPI.Controllers
                 Age = toyRequest.Age,
                 RentCount = 0,
                 BuyQuantity = buyQuantity,
-                RentTime = "0 Week",
+                QuantitySold = toyRequest.QuantitySold,
                 Brand = toyRequest.Brand,
                 CategoryId = toyRequest.CategoryId,
                 Status = "Inactive",
@@ -334,10 +335,10 @@ namespace EduToyRentAPI.Controllers
                 Origin = toy.Origin,
                 Age = toy.Age,
                 Brand = toy.Brand,
-                RentCount = toy.RentCount,
-                BuyQuantity = toy.BuyQuantity,
+                RentCount = toy.RentCount ?? 0,
+                BuyQuantity = toy.BuyQuantity ?? 0,
                 CreateDate = toy.CreateDate,
-                RentTime = toy.RentTime,
+                QuantitySold = toy.QuantitySold ?? 0,
                 Status = toy.Status,
                 Owner = new UserResponse
                 {
@@ -392,7 +393,7 @@ namespace EduToyRentAPI.Controllers
             toy.Age = toyRequest.Age;
             toy.Brand = toyRequest.Brand;
             toy.RentCount = toyRequest.RentCount;
-            toy.RentTime = toyRequest.RentTime;
+            toy.QuantitySold = toyRequest.QuantitySold;
             toy.CategoryId = toyRequest.CategoryId;
             toy.Status = toyRequest.Status;
             toy.CreateDate = DateTime.Now;
@@ -466,11 +467,10 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
-                    Star = (float?)toy.Star,
-                    RentCount = toy.RentCount,
-                    BuyQuantity = toy.BuyQuantity,
+                    Star = toy.Star ?? 0,
+                    RentCount = toy.RentCount ?? 0,
+                    QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
-                    RentTime = toy.RentTime,
                     Status = toy.Status,
                     Owner = new UserResponse
                     {
@@ -479,9 +479,10 @@ namespace EduToyRentAPI.Controllers
                         Email = toy.User.Email,
                         CreateDate = toy.User.CreateDate,
                         Phone = toy.User.Phone,
-                        Dob = toy.User.Dob,
+                        Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
                         {
@@ -496,12 +497,12 @@ namespace EduToyRentAPI.Controllers
                     },
                     Approver = toy.ApproverId != null ? new UserResponse
                     {
-                        Id = (int)toy.ApproverId,
+                        Id = toy.ApproverId.Value,
                         FullName = toy.Approver.FullName,
                         Email = toy.Approver.Email,
                         CreateDate = toy.Approver.CreateDate,
                         Phone = toy.Approver.Phone,
-                        Dob = toy.Approver.Dob,
+                        Dob = toy.Approver.Dob ?? DateTime.MinValue,
                         Address = toy.Approver.Address,
                         AvatarUrl = toy.Approver.AvatarUrl,
                         Status = toy.Approver.Status,
@@ -567,11 +568,10 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
-                    Star = (float?)toy.Star,
-                    RentCount = toy.RentCount,
-                    BuyQuantity = toy.BuyQuantity,
+                    Star = toy.Star ?? 0,
+                    RentCount = toy.RentCount ?? 0,
+                    QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
-                    RentTime = toy.RentTime,
                     Status = toy.Status,
                     Owner = new UserResponse
                     {
@@ -580,9 +580,10 @@ namespace EduToyRentAPI.Controllers
                         Email = toy.User.Email,
                         CreateDate = toy.User.CreateDate,
                         Phone = toy.User.Phone,
-                        Dob = toy.User.Dob,
+                        Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
                         {
@@ -597,12 +598,12 @@ namespace EduToyRentAPI.Controllers
                     },
                     Approver = toy.ApproverId != null ? new UserResponse
                     {
-                        Id = (int)toy.ApproverId,
+                        Id = toy.ApproverId.Value,
                         FullName = toy.Approver.FullName,
                         Email = toy.Approver.Email,
                         CreateDate = toy.Approver.CreateDate,
                         Phone = toy.Approver.Phone,
-                        Dob = toy.Approver.Dob,
+                        Dob = toy.Approver.Dob ?? DateTime.MinValue,
                         Address = toy.Approver.Address,
                         AvatarUrl = toy.Approver.AvatarUrl,
                         Status = toy.Approver.Status,
@@ -650,11 +651,10 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
-                    Star = (float?)toy.Star,
-                    RentCount = toy.RentCount,
-                    BuyQuantity = toy.BuyQuantity,
+                    Star = toy.Star ?? 0,
+                    RentCount = toy.RentCount ?? 0,
+                    QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
-                    RentTime = toy.RentTime,
                     Status = toy.Status,
                     Owner = new UserResponse
                     {
@@ -663,9 +663,10 @@ namespace EduToyRentAPI.Controllers
                         Email = toy.User.Email,
                         CreateDate = toy.User.CreateDate,
                         Phone = toy.User.Phone,
-                        Dob = toy.User.Dob,
+                        Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
                         {
@@ -680,12 +681,12 @@ namespace EduToyRentAPI.Controllers
                     },
                     Approver = toy.ApproverId != null ? new UserResponse
                     {
-                        Id = (int)toy.ApproverId,
+                        Id = toy.ApproverId.Value,
                         FullName = toy.Approver.FullName,
                         Email = toy.Approver.Email,
                         CreateDate = toy.Approver.CreateDate,
                         Phone = toy.Approver.Phone,
-                        Dob = toy.Approver.Dob,
+                        Dob = toy.Approver.Dob ?? DateTime.MinValue,
                         Address = toy.Approver.Address,
                         AvatarUrl = toy.Approver.AvatarUrl,
                         Status = toy.Approver.Status,
@@ -733,11 +734,10 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
-                    Star = (float?)toy.Star,
-                    RentCount = toy.RentCount,
-                    BuyQuantity = toy.BuyQuantity,
+                    Star = toy.Star ?? 0,
+                    RentCount = toy.RentCount ?? 0,
+                    QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
-                    RentTime = toy.RentTime,
                     Status = toy.Status,
                     Owner = new UserResponse
                     {
@@ -746,9 +746,10 @@ namespace EduToyRentAPI.Controllers
                         Email = toy.User.Email,
                         CreateDate = toy.User.CreateDate,
                         Phone = toy.User.Phone,
-                        Dob = toy.User.Dob,
+                        Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
                         {
@@ -763,12 +764,12 @@ namespace EduToyRentAPI.Controllers
                     },
                     Approver = toy.ApproverId != null ? new UserResponse
                     {
-                        Id = (int)toy.ApproverId,
+                        Id = toy.ApproverId.Value,
                         FullName = toy.Approver.FullName,
                         Email = toy.Approver.Email,
                         CreateDate = toy.Approver.CreateDate,
                         Phone = toy.Approver.Phone,
-                        Dob = toy.Approver.Dob,
+                        Dob = toy.Approver.Dob ?? DateTime.MinValue,
                         Address = toy.Approver.Address,
                         AvatarUrl = toy.Approver.AvatarUrl,
                         Status = toy.Approver.Status,
@@ -779,7 +780,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -813,11 +814,10 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
-                    Star = (float?)toy.Star,
-                    RentCount = toy.RentCount,
-                    BuyQuantity = toy.BuyQuantity,
+                    Star = toy.Star ?? 0,
+                    RentCount = toy.RentCount ?? 0,
+                    QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
-                    RentTime = toy.RentTime,
                     Status = toy.Status,
                     Owner = new UserResponse
                     {
@@ -826,9 +826,10 @@ namespace EduToyRentAPI.Controllers
                         Email = toy.User.Email,
                         CreateDate = toy.User.CreateDate,
                         Phone = toy.User.Phone,
-                        Dob = toy.User.Dob,
+                        Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
                         {
@@ -843,12 +844,12 @@ namespace EduToyRentAPI.Controllers
                     },
                     Approver = toy.ApproverId != null ? new UserResponse
                     {
-                        Id = (int)toy.ApproverId,
+                        Id = toy.ApproverId.Value,
                         FullName = toy.Approver.FullName,
                         Email = toy.Approver.Email,
                         CreateDate = toy.Approver.CreateDate,
                         Phone = toy.Approver.Phone,
-                        Dob = toy.Approver.Dob,
+                        Dob = toy.Approver.Dob ?? DateTime.MinValue,
                         Address = toy.Approver.Address,
                         AvatarUrl = toy.Approver.AvatarUrl,
                         Status = toy.Approver.Status,
@@ -859,7 +860,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -868,8 +869,7 @@ namespace EduToyRentAPI.Controllers
                                                    Status = media.Status,
                                                    ToyId = toy.Id,
                                                }).ToList()
-                })
-                .ToList();
+                }).ToList();
 
             return Ok(toys);
         }
@@ -895,11 +895,10 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
-                    Star = (float?)toy.Star,
-                    RentCount = toy.RentCount,
-                    BuyQuantity = toy.BuyQuantity,
+                    Star = toy.Star ?? 0,
+                    RentCount = toy.RentCount ?? 0,
+                    QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
-                    RentTime = toy.RentTime,
                     Status = toy.Status,
                     Owner = new UserResponse
                     {
@@ -908,9 +907,10 @@ namespace EduToyRentAPI.Controllers
                         Email = toy.User.Email,
                         CreateDate = toy.User.CreateDate,
                         Phone = toy.User.Phone,
-                        Dob = toy.User.Dob,
+                        Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
                         {
@@ -925,12 +925,12 @@ namespace EduToyRentAPI.Controllers
                     },
                     Approver = toy.ApproverId != null ? new UserResponse
                     {
-                        Id = (int)toy.ApproverId,
+                        Id = toy.ApproverId.Value,
                         FullName = toy.Approver.FullName,
                         Email = toy.Approver.Email,
                         CreateDate = toy.Approver.CreateDate,
                         Phone = toy.Approver.Phone,
-                        Dob = toy.Approver.Dob,
+                        Dob = toy.Approver.Dob ?? DateTime.MinValue,
                         Address = toy.Approver.Address,
                         AvatarUrl = toy.Approver.AvatarUrl,
                         Status = toy.Approver.Status,
@@ -941,7 +941,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -950,8 +950,7 @@ namespace EduToyRentAPI.Controllers
                                                    Status = media.Status,
                                                    ToyId = toy.Id,
                                                }).ToList()
-                })
-                .ToList();
+                }).ToList();
 
             return Ok(toys);
         }
@@ -982,11 +981,10 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
-                    Star = (float?)toy.Star,
-                    RentCount = toy.RentCount,
-                    BuyQuantity = toy.BuyQuantity,
+                    Star = toy.Star ?? 0,
+                    RentCount = toy.RentCount ?? 0,
+                    QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
-                    RentTime = toy.RentTime,
                     Status = toy.Status,
                     Owner = new UserResponse
                     {
@@ -995,9 +993,10 @@ namespace EduToyRentAPI.Controllers
                         Email = toy.User.Email,
                         CreateDate = toy.User.CreateDate,
                         Phone = toy.User.Phone,
-                        Dob = toy.User.Dob,
+                        Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
                         {
@@ -1012,12 +1011,12 @@ namespace EduToyRentAPI.Controllers
                     },
                     Approver = toy.ApproverId != null ? new UserResponse
                     {
-                        Id = (int)toy.ApproverId,
+                        Id = toy.ApproverId.Value,
                         FullName = toy.Approver.FullName,
                         Email = toy.Approver.Email,
                         CreateDate = toy.Approver.CreateDate,
                         Phone = toy.Approver.Phone,
-                        Dob = toy.Approver.Dob,
+                        Dob = toy.Approver.Dob ?? DateTime.MinValue,
                         Address = toy.Approver.Address,
                         AvatarUrl = toy.Approver.AvatarUrl,
                         Status = toy.Approver.Status,
@@ -1028,7 +1027,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id,
+                                                m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {

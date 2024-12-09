@@ -16,5 +16,6 @@ namespace EduToyRentRepositories.DTO.Response
         public int PaymentTypeId { get; set; }
         public int? OrderId { get; set; }
         public int SenderId { get; set; }
+        public string Status { get; set; }
     }
 }

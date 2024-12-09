@@ -15,8 +15,8 @@ namespace EduToyRentRepositories.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public string LastMessage { get; set; }
-        public DateTime LastSentTime { get; set; }
+        public string? LastMessage { get; set; } = string.Empty;
+        public DateTime? LastSentTime { get; set; }
         public string Status { get; set; }
     }
 }

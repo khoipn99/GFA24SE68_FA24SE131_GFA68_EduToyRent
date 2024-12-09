@@ -20,10 +20,16 @@ namespace EduToyRentRepositories.Models
         public string Password { get; set; }
         public DateTime CreateDate { get; set; }
         public string Phone { get; set; }
-        public DateTime Dob { get; set; }
-        public string Address { get; set; }
+        public DateTime? Dob { get; set; }
+        public string? Address { get; set; }
         public string? AvatarUrl { get; set; }
+        public float? Star {  get; set; }
         public string Status { get; set; }
+        public int? PremiumId { get; set; }
+        [ForeignKey(nameof(PremiumId))]
+        public virtual Premium Premium { get; set; } = null!;
+        public DateTime? StartPremiumDate { get; set; }
+        public DateTime? EndPremiumDate { get; set; }
         public int RoleId { get; set; }
         [ForeignKey(nameof(RoleId))]
         public virtual Role Role { get; set; } = null!;
