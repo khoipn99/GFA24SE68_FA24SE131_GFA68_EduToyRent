@@ -481,17 +481,7 @@ const LoginPage = () => {
               </span>
             </p>
           </div>
-          <div className="flex justify-center items-center mt-4">
-            <p className="text-gray-600">
-              Đăng ký làm nhà cung cấp?{" "}
-              <span
-                className="text-blue-500 cursor-pointer"
-                onClick={() => navigate("/registerchef")}
-              >
-                Đăng ký tại đây
-              </span>
-            </p>
-          </div>
+
           <div className="flex justify-center items-end mt-6">
             <p className="text-center text-gray-600">
               Copyright&copy; 2024 EduToyRent Competition

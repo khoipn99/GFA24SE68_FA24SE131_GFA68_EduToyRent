@@ -255,7 +255,7 @@ namespace EduToyRentAPI.Controllers
 
             if (cartItems == null || !cartItems.Any())
             {
-                return NotFound(new { Message = $"No items found in cart with ID {cartId}" });
+                return Ok("Empty List!");
             }
 
             var cartItemResponses = cartItems.Select(ci =>
