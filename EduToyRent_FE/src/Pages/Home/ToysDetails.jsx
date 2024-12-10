@@ -442,6 +442,12 @@ const ToysDetails = () => {
     }
     return rentalPrice;
   };
+
+  const HandleShopPage = () => {
+    Cookies.set("PageShopRentId", owner.id, { expires: 7 });
+    navigate("/lessor-toys-details");
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
       <header
@@ -688,11 +694,15 @@ const ToysDetails = () => {
                     <button className="border border-blue-500 text-blue-500 font-semibold px-4 py-2 rounded">
                       Chat ngay
                     </button>
-                    <Link to="/lessor-toys-details">
-                      <button className="border border-green-500 text-green-500 font-semibold px-4 py-2 rounded">
-                        Xem shop
-                      </button>
-                    </Link>
+
+                    <button
+                      className="border border-green-500 text-green-500 font-semibold px-4 py-2 rounded"
+                      onClick={() => {
+                        HandleShopPage();
+                      }}
+                    >
+                      Xem shop
+                    </button>
                   </div>
                 </div>
                 <div className="flex items-center mb-2">

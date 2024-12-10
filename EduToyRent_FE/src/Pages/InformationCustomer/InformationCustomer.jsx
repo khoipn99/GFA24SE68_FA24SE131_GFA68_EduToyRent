@@ -1224,6 +1224,7 @@ const InformationCustomer = () => {
                       <li
                         key={transaction.id}
                         className="p-4 border border-gray-300 rounded-lg"
+                        style={{ backgroundColor: "#61eb34" }}
                       >
                         <div className="flex justify-between mb-2">
                           <h4 className="font-semibold">
@@ -1242,7 +1243,7 @@ const InformationCustomer = () => {
 
                         <div className="flex items-center mb-2">
                           <p className="font-semibold">
-                            Ngày Nạp :{" "}
+                            Ngày giao dịch :{" "}
                             {
                               new Date(transaction.date)
                                 .toISOString()
@@ -1263,6 +1264,7 @@ const InformationCustomer = () => {
                       <li
                         key={transaction.id}
                         className="p-4 border border-gray-300 rounded-lg"
+                        style={{ backgroundColor: "#f75e5e" }}
                       >
                         <div className="flex justify-between mb-2">
                           <h4 className="font-semibold">
@@ -1281,7 +1283,7 @@ const InformationCustomer = () => {
 
                         <div className="flex items-center mb-2">
                           <p className="font-semibold">
-                            Ngày Nạp :{" "}
+                            Ngày giao dịch :{" "}
                             {
                               new Date(transaction.date)
                                 .toISOString()
