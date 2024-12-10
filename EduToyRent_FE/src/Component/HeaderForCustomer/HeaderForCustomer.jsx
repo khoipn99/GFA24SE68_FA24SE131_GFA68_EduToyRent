@@ -838,11 +838,11 @@ const HeaderForCustomer = () => {
                         Thanh toán
                       </button>
                     </div>
-                    <Link to="/cart">
-                      <p className="text-blue-500 underline">
-                        Chuyển đến giỏ hàng của bạn
-                      </p>
-                    </Link>
+
+                    <p className="text-blue-500 underline">
+                      Phí vận chuyển sẽ được thêm khi chuyển tới trang thanh
+                      toán
+                    </p>
                   </div>
                 </div>
               )}{" "}
