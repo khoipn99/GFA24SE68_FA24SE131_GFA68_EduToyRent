@@ -86,9 +86,9 @@ const LoginPage = () => {
       }
     } catch (error) {
       if (error.response) {
-        setError("Lỗi từ server: " + error.response.data);
+        setError("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
       } else if (error.request) {
-        setError("Không có phản hồi từ server.");
+        setError("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
       } else {
         setError("Đã xảy ra lỗi trong quá trình đăng nhập.");
       }
