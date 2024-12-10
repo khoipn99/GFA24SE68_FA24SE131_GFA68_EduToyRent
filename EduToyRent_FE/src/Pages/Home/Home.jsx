@@ -13,47 +13,6 @@ import apiCategory from "../../service/ApiCategory";
 import apiCartItem from "../../service/ApiCartItem";
 
 import apiCart from "../../service/ApiCart";
-const PictureCategory = [
-  {
-    image:
-      "https://dathangsi.vn/upload/products/2024/09/0832-do-choi-xep-hinh-cho-be,-lap-ghep-nha-khoi-3d-210-chi-tiet.jpg",
-  },
-  {
-    image:
-      "https://product.hstatic.net/1000319165/product/dk81163_01_b9ab24c40753428b97cff3a2f894211d_1024x1024.jpg",
-  },
-  {
-    image:
-      "https://bizweb.dktcdn.net/100/004/338/files/my-thuat-thu-cong-1.jpg?v=1466155461550",
-  },
-  {
-    image:
-      "https://sudo.vn1.vdrive.vn/babycuatoi/2023/08/clb-4-do-choi-xep-hinh-nam-cham-64-chi-tiet-cho-be.jpg",
-  },
-  {
-    image:
-      "https://down-vn.img.susercontent.com/file/e0653c8ef2185cdf98abb34da05f7827",
-  },
-  {
-    image:
-      "https://bizweb.dktcdn.net/thumb/1024x1024/100/226/134/products/5-3f4c04bb-20fa-4d98-b8e2-7647b4cda531.jpg?v=1658474391327",
-  },
-  {
-    image:
-      "https://bizweb.dktcdn.net/100/462/711/products/pothehk-60ad384c-5e3c-4948-a00e-0ef294800393.png?v=1669113673947",
-  },
-  {
-    image:
-      "https://mebi.vn/wp-content/uploads/2023/04/bang-viet-xoa-tu-dong-thong-minh-3.jpg",
-  },
-];
-
-const images = [
-  "https://cafefcdn.com/2018/12/17/banner-hinh-do-choi-1545016993587208100840.jpg",
-  "https://dochoigohanoi.com/public/media/media/files/slide/slider-2.jpg",
-  "https://salt.tikicdn.com/ts/tmp/ea/08/af/baea61f75fdcb77f0d88bbec3ecc0ca8.jpg",
-  // Thay thế bằng URL hình ảnh thứ ba
-];
 
 const Home = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -71,6 +30,52 @@ const Home = () => {
   const [featuredToys, setFeaturedToys] = useState([]);
   const [dealsOfTheDay, setdealsOfTheDay] = useState([]);
   const [cartId, setCartId] = useState(null);
+
+  const PictureCategory = [
+    {
+      image:
+        "https://dathangsi.vn/upload/products/2024/09/0832-do-choi-xep-hinh-cho-be,-lap-ghep-nha-khoi-3d-210-chi-tiet.jpg",
+    },
+    {
+      image:
+        "https://product.hstatic.net/1000319165/product/dk81163_01_b9ab24c40753428b97cff3a2f894211d_1024x1024.jpg",
+    },
+    {
+      image:
+        "https://bizweb.dktcdn.net/100/004/338/files/my-thuat-thu-cong-1.jpg?v=1466155461550",
+    },
+    {
+      image:
+        "https://sudo.vn1.vdrive.vn/babycuatoi/2023/08/clb-4-do-choi-xep-hinh-nam-cham-64-chi-tiet-cho-be.jpg",
+    },
+    {
+      image:
+        "https://down-vn.img.susercontent.com/file/e0653c8ef2185cdf98abb34da05f7827",
+    },
+    {
+      image:
+        "https://bizweb.dktcdn.net/thumb/1024x1024/100/226/134/products/5-3f4c04bb-20fa-4d98-b8e2-7647b4cda531.jpg?v=1658474391327",
+    },
+    {
+      image:
+        "https://bizweb.dktcdn.net/100/462/711/products/pothehk-60ad384c-5e3c-4948-a00e-0ef294800393.png?v=1669113673947",
+    },
+    {
+      image:
+        "https://mebi.vn/wp-content/uploads/2023/04/bang-viet-xoa-tu-dong-thong-minh-3.jpg",
+    },
+    {
+      image:
+        "https://mebi.vn/wp-content/uploads/2023/04/bang-viet-xoa-tu-dong-thong-minh-3.jpg",
+    },
+  ];
+
+  const images = [
+    "https://cafefcdn.com/2018/12/17/banner-hinh-do-choi-1545016993587208100840.jpg",
+    "https://dochoigohanoi.com/public/media/media/files/slide/slider-2.jpg",
+    "https://salt.tikicdn.com/ts/tmp/ea/08/af/baea61f75fdcb77f0d88bbec3ecc0ca8.jpg",
+    // Thay thế bằng URL hình ảnh thứ ba
+  ];
 
   useEffect(() => {
     apiToys
@@ -529,26 +534,32 @@ const Home = () => {
 
             <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="flex items-stretch p-4 gap-3">
-                {featuredToys.map((category, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
-                    onClick={() => HandleToyDetailFilterCategory(category.name)}
-                  >
+                {featuredToys && featuredToys.length > 0 ? (
+                  featuredToys?.map((category, position) => (
                     <div
-                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
-                      style={{
-                        backgroundImage: `url(${PictureCategory[index].image})`,
-                      }}
-                    ></div>
+                      key={position}
+                      className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
+                      onClick={() =>
+                        HandleToyDetailFilterCategory(category.name)
+                      }
+                    >
+                      <div
+                        className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
+                        style={{
+                          backgroundImage: `url(${PictureCategory[position].image})`,
+                        }}
+                      ></div>
 
-                    <div>
-                      <p className="text-[#0e161b] text-base font-medium">
-                        {category.name}
-                      </p>
+                      <div>
+                        <p className="text-[#0e161b] text-base font-medium">
+                          {category.name}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p>No toys available</p>
+                )}
               </div>
             </div>
 

@@ -97,7 +97,7 @@ namespace EduToyRentAPI.Controllers
             var media = imageUrls.Select(mediaUrl => new Media
             {
                 MediaUrl = mediaUrl,
-                Status = "Inactive",
+                Status = "Active",
                 ToyId = toyId
             }).ToList();
 
@@ -173,7 +173,7 @@ namespace EduToyRentAPI.Controllers
             var newMedia = imageUrls.Select(mediaUrl => new Media
             {
                 MediaUrl = mediaUrl,
-                Status = "Inactive",
+                Status = "Active",
                 ToyId = toyId,
                 Toy = _unitOfWork.ToyRepository.GetByID(toyId),
             }).ToList();

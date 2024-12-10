@@ -49,7 +49,8 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
-                    Star = toy.Star ?? 0, 
+                    Star = toy.Star ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     RentCount = toy.RentCount ?? 0, 
                     QuantitySold = toy.QuantitySold ?? 0, 
                     CreateDate = toy.CreateDate,
@@ -96,7 +97,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -132,6 +133,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -177,7 +179,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -299,15 +301,19 @@ namespace EduToyRentAPI.Controllers
             var userId = int.Parse(userIdClaim.Value);
             var userRole = _unitOfWork.UserRepository.GetByID(userId).RoleId;
 
+            string status = null;
+
             int buyQuantity = 0;
 
             if (userRole == 3)
             {
-                buyQuantity = -1; 
+                buyQuantity = -1;
+                status = "Inactive";
             }
-            else if (userRole == 2) 
+            else if (userRole == 2)
             {
                 buyQuantity = (int)toyRequest.BuyQuantity;
+                status = "Active";
             }
             var toy = new Toy
             {
@@ -321,7 +327,7 @@ namespace EduToyRentAPI.Controllers
                 QuantitySold = toyRequest.QuantitySold,
                 Brand = toyRequest.Brand,
                 CategoryId = toyRequest.CategoryId,
-                Status = "Inactive",
+                Status = status,
                 UserId = userId,
                 ApproverId = null,
                 CreateDate = DateTime.Now
@@ -359,6 +365,7 @@ namespace EduToyRentAPI.Controllers
 
             return CreatedAtAction("GetToy", new { id = toy.Id }, toyResponse);
         }
+
         [HttpPut("{id}")]
         [EnableQuery]
        // [Authorize]
@@ -474,6 +481,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -519,7 +527,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -575,6 +583,7 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
@@ -622,7 +631,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -662,6 +671,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -707,7 +717,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -747,6 +757,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -792,7 +803,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -828,6 +839,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -873,7 +885,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -910,6 +922,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -955,7 +968,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -997,6 +1010,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -1042,7 +1056,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {

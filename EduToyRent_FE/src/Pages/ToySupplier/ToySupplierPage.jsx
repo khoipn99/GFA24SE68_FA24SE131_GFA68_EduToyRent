@@ -485,8 +485,10 @@ const ToySupplierPage = () => {
         age: selectedToy.age || "All Ages",
         brand: selectedToy.brand || "Default Brand",
         categoryId: selectedCategory || "1",
+
         rentCount: selectedToy.rentCount || "0",
-        rentTime: selectedToy.rentTime || "Default Rent Time",
+        quantitySold: selectedToy.quantitySold || "0",
+        status: selectedToy.status || "0",
       };
 
       console.log("Dữ liệu gửi đi:", updatedToy);
@@ -642,8 +644,9 @@ const ToySupplierPage = () => {
       age: document.getElementById("age").value, // Lấy giá trị từ <select>
       brand: document.getElementById("brand").value,
       categoryId: selectedCategory, // Lấy categoryId đã chọn
-      rentCount: 0, // Giá trị mặc định
-      rentTime: "0 Week",
+      rentCount: 0,
+      quantitySold: 0,
+      status: "Active",
     };
     console.log("Thống tin cơ bản:", formData);
     // Kiểm tra thông tin cơ bản
@@ -1745,14 +1748,14 @@ const ToySupplierPage = () => {
                               <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
                                 <div className="text-base font-semibold text-gray-900 dark:text-white">
                                   {toy.media && toy.media.length > 0 ? (
-                                    toy.media.map((mediaItem, index) => (
-                                      <img
-                                        key={index}
-                                        src={mediaItem.mediaUrl}
-                                        alt={`Toy Media ${index + 1}`}
-                                        className="w-full max-w-[50px] h-auto object-contain mr-2"
-                                      />
-                                    ))
+                                    <img
+                                      key={toy.id}
+                                      src={
+                                        toy.media ? toy.media[0].mediaUrl : ""
+                                      }
+                                      alt={`Toy Media ${toy.id + 1}`}
+                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                    />
                                   ) : (
                                     <span>No media available</span>
                                   )}

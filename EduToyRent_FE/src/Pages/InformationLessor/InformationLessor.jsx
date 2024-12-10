@@ -464,12 +464,16 @@ const InformationLessor = () => {
     brand: "",
     categoryId: 1,
     rentCount: 0,
-    rentTime: "o",
+    quantitySold: 0,
+    status: "Inactive",
   });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewProduct((prev) => ({ ...prev, [name]: value }));
+    setNewProduct((prev) => ({
+      ...prev,
+      [name]: name === "price" ? parseFloat(value) : value,
+    }));
   };
 
   const [newImage, setNewImage] = useState([]);
@@ -518,7 +522,6 @@ const InformationLessor = () => {
         },
       })
       .then((response) => {
-        getProductInfo();
         var formData = new FormData();
 
         formData.append(`mediaUrls`, newImage);
@@ -529,7 +532,11 @@ const InformationLessor = () => {
         formData.append(`mediaUrls`, newVideo);
 
         apiMedia
-          .post("/upload-toy-images/" + response.data.id, formData)
+          .post("/upload-toy-media/" + response.data.id, formData, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
           .then((response) => {
             getProductInfo();
           });
