@@ -10,14 +10,13 @@ import apiCategory from "../../service/ApiCategory";
 import apiCartItem from "../../service/ApiCartItem";
 import apiUser from "../../service/ApiUser";
 import { useNavigate } from "react-router-dom";
-import apiWallets from "../../service/ApiWallets";
 
 import apiCart from "../../service/ApiCart";
-import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import các biểu tượng sao
+import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 
 const ToysSaleDetails = () => {
-  const starRating = 4.0; // Số sao (giả sử)
-  const reviewCount = 25; // Số lượt đánh giá (giả sử)
+  const starRating = 4.0;
+  const reviewCount = 25;
   const ratings = [
     { score: 5, percentage: 60 },
     { score: 4, percentage: 20 },
@@ -273,7 +272,7 @@ const ToysSaleDetails = () => {
       // Nếu sản phẩm chưa tồn tại, thêm mới
       const purchaseData = {
         price: currentToy.price,
-        quantity: 1, // Bắt đầu với số lượng 1
+        quantity: quantity, // Bắt đầu với số lượng 1
         cartId: cartId,
         toyId: currentToy.id,
         toyName: currentToy.name,
@@ -354,6 +353,11 @@ const ToysSaleDetails = () => {
         alert("Sản phẩm này đã hết hàng");
       }
     }
+  };
+
+  const HandleShopPage = () => {
+    Cookies.set("PageShopSaleId", owner.id, { expires: 7 });
+    navigate("/toy-store-details");
   };
 
   const indexOfLastReview = currentPage * itemsPerPage;
@@ -592,11 +596,15 @@ const ToysSaleDetails = () => {
                     <button className="border border-blue-500 text-blue-500 font-semibold px-4 py-2 rounded">
                       Chat ngay
                     </button>
-                    <Link to="/toy-store-details">
-                      <button className="border border-green-500 text-green-500 font-semibold px-4 py-2 rounded">
-                        Xem shop
-                      </button>
-                    </Link>
+
+                    <button
+                      className="border border-green-500 text-green-500 font-semibold px-4 py-2 rounded"
+                      onClick={() => {
+                        HandleShopPage();
+                      }}
+                    >
+                      Xem shop
+                    </button>
                   </div>
                 </div>
                 <div className="flex items-center mb-2">

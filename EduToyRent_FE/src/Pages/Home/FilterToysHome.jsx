@@ -34,7 +34,7 @@ const FilterToys = () => {
   const [cartId, setCartId] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 18;
+  const itemsPerPage = 12;
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
@@ -534,7 +534,7 @@ const FilterToys = () => {
         <div className="layout-content-container flex max-w-[1500px] w-full px-4 sm:px-6 lg:px-8">
           {/* Thanh Filter bên trái */}
           <div className="w-1/4 p-4 bg-gray-100 rounded-lg shadow-sm">
-            <h2 className="text-[#0e161b] text-xl font-bold mb-4">Filters</h2>
+            <h2 className="text-[#0e161b] text-xl font-bold mb-4">Bộ lọc</h2>
 
             <div className="mb-4">
               <label className="mb-1">Nhóm tuổi:</label>
@@ -543,7 +543,7 @@ const FilterToys = () => {
                 onChange={(e) => setAgeGroup(e.target.value)}
                 className="border rounded p-2 w-full"
               >
-                <option value="">All</option>
+                <option value="">Tất cả</option>
                 <option value="1-3">1-3 Tuổi</option>
                 <option value="3-5">3-5 Tuổi</option>
                 <option value="5-7">5-7 Tuổi</option>
@@ -561,7 +561,7 @@ const FilterToys = () => {
                 onChange={(e) => setMaxPrice(e.target.value)}
                 className="border rounded p-2 w-full"
               >
-                <option value="">All</option>
+                <option value="">Tất cả</option>
                 <option value="0">0 - 500.000 VNĐ</option>
                 <option value="1">500.000 - 1 triệu VNĐ</option>
                 <option value="2">1 triệu - 2 triệu VNĐ</option>
@@ -578,7 +578,7 @@ const FilterToys = () => {
                 onChange={(e) => setSelectCategory(e.target.value)}
                 className="border rounded p-2 w-full"
               >
-                <option value="All">All</option>
+                <option value="All">Tất cả</option>
 
                 {category.length > 0 ? (
                   category.map((item, index) => (

@@ -40,10 +40,10 @@ const TopUpSuccess = () => {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
           },
         })
-        .then((response2) => {
+        .then(async (response2) => {
           const walletTmp = response2.data;
           console.log(walletTmp.id);
-          apiWallets.put(
+          await apiWallets.put(
             "/" + walletTmp.id,
             {
               balance: walletTmp.balance + paymentPrice,
@@ -58,7 +58,7 @@ const TopUpSuccess = () => {
               },
             }
           );
-          apiWalletTransaction
+          await apiWalletTransaction
             .post(
               "",
               {
