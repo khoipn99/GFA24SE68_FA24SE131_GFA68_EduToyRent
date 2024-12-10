@@ -49,6 +49,7 @@ namespace EduToyRentAPI.Controllers
                     Dob = user.Dob ?? DateTime.MinValue,
                     Address = user.Address,
                     AvatarUrl = user.AvatarUrl,
+                    Description = user.Description,
                     Star = user.Star,
                     WalletId = (int?)user.WalletId,
                     Status = user.Status,
@@ -86,6 +87,7 @@ namespace EduToyRentAPI.Controllers
                 Dob = user.Dob ?? DateTime.MinValue,
                 Address = user.Address,
                 AvatarUrl = user.AvatarUrl,
+                Description = user.Description,
                 Star = user.Star,
                 WalletId = (int?)user.WalletId,
                 Status = user.Status,
@@ -120,7 +122,7 @@ namespace EduToyRentAPI.Controllers
             user.Address = userRequest.Address;
             user.Status = userRequest.Status;
             user.WalletId = userRequest.WalletId;
-
+            user.Description = userRequest.Description;
             _unitOfWork.UserRepository.Update(user);
 
             try
@@ -157,6 +159,7 @@ namespace EduToyRentAPI.Controllers
                 Dob = userRequest.Dob,
                 Address = userRequest.Address,
                 //AvatarUrl = userRequest.AvatarUrl,
+                Description = userRequest.Description,
                 Status = userRequest.Status,
                 CreateDate = DateTime.Now,
                 RoleId = userRequest.RoleId
@@ -181,6 +184,7 @@ namespace EduToyRentAPI.Controllers
                 Dob = user.Dob ?? DateTime.MinValue,
                 Address = user.Address,
                 AvatarUrl = user.AvatarUrl,
+                Description = user.Description,
                 Star = user.Star,
                 Status = user.Status,
                 Role = new RoleResponse
@@ -233,6 +237,7 @@ namespace EduToyRentAPI.Controllers
                     Dob = user.Dob ?? DateTime.MinValue,
                     Address = user.Address,
                     AvatarUrl = user.AvatarUrl,
+                    Description = user.Description,
                     Star = user.Star,
                     WalletId = (int?)user.WalletId,
                     Status = user.Status,

@@ -27,7 +27,10 @@ namespace EduToyRentAPI.Controllers
             {
                 return Unauthorized("Invalid username or password.");
             }
-
+            if (!string.Equals(user.Status, "Active", StringComparison.OrdinalIgnoreCase))
+            {
+                return Unauthorized("Your account is not active. Please contact support.");
+            }
             var token = _jwtGeneratorTokenService.GenerateToken(user);
 
             var response = new LoginResponse
