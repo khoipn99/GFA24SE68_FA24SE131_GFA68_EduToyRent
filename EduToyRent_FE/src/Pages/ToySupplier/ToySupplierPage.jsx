@@ -224,7 +224,6 @@ const ToySupplierPage = () => {
       } else {
         console.log("Không có đơn hàng nào với trạng thái đã chọn.");
         // Nếu không có đơn hàng nào, bạn có thể thông báo cho người dùng
-        alert("Không có đơn hàng nào với trạng thái đã chọn.");
       }
     } catch (error) {
       console.error("Lỗi khi tải danh sách đơn hàng:", error);
@@ -320,7 +319,7 @@ const ToySupplierPage = () => {
         formData.append("status", editedData.status || "Active");
         formData.append("roleId", editedData.role.id || "");
         formData.append("avatarUrl", editedData.avatarUrl || "");
-
+        formData.append("quantitySold", editedData.quantitySold || "0");
         const response = await apiUser.put(`/${userId}`, formData, {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -441,11 +440,57 @@ const ToySupplierPage = () => {
   // Hàm xử lý khi người dùng chọn file
   const handleFileChange1 = (e) => {
     const files = e.target.files;
-    const selectedFiles = [];
+    const imageFiles = [];
+    let videoFile = null;
+    let imageCount = 0; // Biến đếm số lượng hình ảnh
+    let videoCount = 0; // Biến đếm số lượng video
+
     for (let i = 0; i < files.length; i++) {
-      selectedFiles.push(files[i]);
+      const file = files[i];
+
+      // Kiểm tra nếu là hình ảnh
+      if (file.type.startsWith("image/")) {
+        imageCount++; // Tăng số lượng hình ảnh lên mỗi lần gặp file hình ảnh
+        if (imageCount > 5) {
+          alert("Chỉ được tải lên tối đa 5 hình ảnh!"); // Cảnh báo nếu có hơn 5 hình ảnh
+          break; // Dừng vòng lặp ngay lập tức nếu đã chọn quá 5 hình ảnh
+        } else {
+          imageFiles.push(file); // Thêm vào mảng hình ảnh nếu chưa đủ 5 hình ảnh
+        }
+      }
+      // Kiểm tra nếu là video
+      else if (file.type.startsWith("video/")) {
+        videoCount++; // Tăng số lượng video lên mỗi lần gặp file video
+        if (videoCount > 1) {
+          alert("Chỉ được tải lên 1 video!"); // Cảnh báo nếu có hơn 1 video
+          break; // Dừng vòng lặp nếu chọn quá 1 video
+        } else {
+          videoFile = file; // Gán video nếu chưa có video nào
+        }
+      }
     }
-    setMediaFiles(selectedFiles); // Lưu file vào state
+
+    // Nếu có quá 5 hình ảnh, không lưu hình ảnh vào state
+    if (imageCount > 5) {
+      console.log("Không lưu hình ảnh vào state vì đã chọn quá 5 hình ảnh.");
+      imageFiles.length = 0; // Xóa tất cả hình ảnh khỏi mảng (đặt lại mảng rỗng)
+    }
+
+    // Nếu có hơn 1 video, không lưu video vào state
+    if (videoCount > 1) {
+      console.log("Không lưu video vào state vì đã chọn quá 1 video.");
+      videoFile = null; // Đặt videoFile thành null để không lưu vào state
+    }
+
+    // Kiểm tra và log thông tin hình ảnh và video
+    console.log("Các hình ảnh được chọn:", imageFiles);
+    console.log("Video được chọn:", videoFile);
+
+    // Lưu lại thông tin media vào state
+    setMediaFiles({
+      images: imageFiles.length > 0 ? imageFiles : null, // Nếu không có hình ảnh hợp lệ, sẽ là null
+      video: videoFile, // Nếu không có video hợp lệ, sẽ là null
+    });
   };
   // Hàm để gửi ảnh lên API
   const handleUpdateToy = async () => {
@@ -453,10 +498,12 @@ const ToySupplierPage = () => {
 
     if (!toyId) {
       console.error("Không tìm thấy toyId.");
+      alert("Không tìm thấy toyId!");
       return;
     }
 
     try {
+      // Tạo đối tượng cập nhật với giá trị mặc định
       const updatedToy = {
         name: selectedToy.name || "Default Toy Name",
         description: selectedToy.description || "Default Description",
@@ -465,7 +512,7 @@ const ToySupplierPage = () => {
         origin: selectedToy.origin || "Default Origin",
         age: selectedToy.age || "All Ages",
         brand: selectedToy.brand || "Default Brand",
-        categoryId: selectedCategory || "1",
+        categoryId: selectedCategory || "1", // Nếu không có selectedCategory thì dùng mặc định
 
         rentCount: selectedToy.rentCount || "0",
         quantitySold: selectedToy.quantitySold || "0",
@@ -474,7 +521,7 @@ const ToySupplierPage = () => {
 
       console.log("Dữ liệu gửi đi:", updatedToy);
 
-      // Gửi PUT request để cập nhật thông tin sản phẩm
+      // Gửi yêu cầu PUT để cập nhật thông tin sản phẩm
       const response = await apiToys.put(`/${toyId}`, updatedToy, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -485,12 +532,15 @@ const ToySupplierPage = () => {
       console.log("Cập nhật toy thành công:", response.data);
       setToyData(response.data);
 
-      // Cập nhật hình ảnh/video nếu có
-      if (mediaFiles.length > 0) {
+      // Xử lý hình ảnh/video nếu có
+      if (mediaFiles.images.length > 0 || mediaFiles.video) {
         const mediaData = new FormData();
-        mediaFiles.forEach((file) => {
+        mediaFiles.images.forEach((file) => {
           mediaData.append("mediaUrls", file); // Đảm bảo tên key đúng với yêu cầu API
         });
+        if (mediaFiles.video) {
+          mediaData.append("mediaUrls", mediaFiles.video); // Giả sử API yêu cầu tên key cho video là "videoUrl"
+        }
 
         try {
           const uploadResponse = await apiMedia.put(
@@ -726,180 +776,47 @@ const ToySupplierPage = () => {
   const handleFileUpload = (e) => {
     const files = e.target.files;
     const imageFiles = [];
-    let videoFile = null;
+    const videoFiles = [];
+    let isValid = true; // Cờ kiểm tra xem việc chọn tệp có hợp lệ không
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
 
       // Kiểm tra nếu là hình ảnh
       if (file.type.startsWith("image/")) {
-        if (imageFiles.length < 5) {
-          // Tối đa 5 hình ảnh
-          imageFiles.push(file);
-        } else {
-          alert("Chỉ được tải lên tối đa 5 hình ảnh!");
-          return;
-        }
+        imageFiles.push(file);
       }
       // Kiểm tra nếu là video
       else if (file.type.startsWith("video/")) {
-        if (!videoFile) {
-          // Chỉ được tải lên 1 video
-          videoFile = file;
-        } else {
-          alert("Chỉ được tải lên 1 video!");
-          return;
-        }
+        videoFiles.push(file);
       }
     }
 
-    // Sau khi đã kiểm tra và phân loại, bạn có thể lưu các tệp vào state hoặc gửi chúng lên server
-    console.log("Hình ảnh:", imageFiles);
-    console.log("Video:", videoFile);
-
-    // Tiếp theo, bạn có thể xử lý các tệp này như muốn, ví dụ như thêm vào FormData để gửi lên server
-  };
-
-  const handleCompleteOrder = async (orderId) => {
-    const userToken = Cookies.get("userToken");
-
-    if (!userToken) {
-      alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-      return;
+    // Kiểm tra giới hạn số lượng
+    if (imageFiles.length > 5) {
+      alert("Chỉ được tải lên tối đa 5 hình ảnh!");
+      isValid = false; // Không hợp lệ nếu số lượng hình ảnh vượt quá 5
     }
 
-    // Tìm đơn hàng cần cập nhật
-    const orderToUpdate = orders.find((order) => order.id === orderId);
-    console.log("Đơn hàng cần cập nhật:", orderToUpdate);
-    if (!orderToUpdate) {
-      alert("Không tìm thấy đơn hàng.");
-      return;
+    if (videoFiles.length > 1) {
+      alert("Chỉ được tải lên tối đa 1 video!");
+      isValid = false; // Không hợp lệ nếu số lượng video vượt quá 2
     }
 
-    try {
-      // 1. Lấy thông tin người dùng từ đơn hàng
-      const userResponse = await apiUser.get(`/${orderToUpdate.userId}`, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      });
-      const user = userResponse.data;
-      console.log("Nguoi dung mua hàng:", user);
-
-      // 3. Lấy thông tin ví của chủ sở hữu đồ chơi
-      const ownerWalletResponse = await apiWallets.get(
-        `/${orderToUpdate.shopId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
-
-      const ownerWallet = ownerWalletResponse.data;
-      console.log("Dữ liệu ví chủ sở hữu trước khi cập nhật:", ownerWallet);
-
-      const toyDetails = orderToUpdate.toyDetails; // hoặc cách khác nếu toyDetails nằm ở nơi khác
-      console.log("toyDetails bắt từ toyid:", toyDetails);
-      if (!toyDetails || !toyDetails.price) {
-        console.error("Không có thông tin giá trị từ toyDetails.");
-        return;
-      }
-
-      // Tính toán số tiền chủ sở hữu nhận được (giả sử là 85% giá trị của toyDetails.price)
-      const amountToAdd = toyDetails.price * 0.85;
-
-      // Chỉ cập nhật trường balance
-      const updatedWallet = {
-        ...ownerWallet,
-        balance: ownerWallet.balance + amountToAdd,
-      };
-      console.log("Dữ liệu ví chủ sở hữu trước khi cập nhật:", amountToAdd);
-      console.log("Dữ liệu ví chủ sở hữu sau khi cập nhật:", updatedWallet);
-
-      // Gửi yêu cầu PUT để cập nhật ví
-      const ownerWalletUpDate = await apiWallets.put(
-        `/${ownerWallet.id}`,
-        updatedWallet,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
-
-      // Log toàn bộ phản hồi từ server
-      console.log("Phản hồi từ server sau khi gửi PUT:", ownerWalletUpDate);
-      console.log("Dữ liệu trả về từ server:", ownerWalletUpDate.data);
-      console.log("Mã trạng thái trả về từ server:", ownerWalletUpDate.status);
-
-      // 1. Log dữ liệu trước khi gửi yêu cầu tạo giao dịch ví
-      console.log("Gửi yêu cầu tạo giao dịch ví:", {
-        transactionType: "Nhận tiền từ đơn hàng",
-        amount: amountToAdd,
-        date: new Date().toISOString(),
-        walletId: ownerWallet.id,
-        paymentTypeId: 5,
-        orderId: orderToUpdate.id,
-      });
-
-      const walletTransactionResponse = await apiWalletTransaction.post(
-        "",
-        {
-          transactionType: "Nhận tiền từ đơn hàng",
-          amount: amountToAdd,
-          date: new Date().toISOString(),
-          walletId: ownerWallet.id,
-          paymentTypeId: 5,
-          orderId: orderToUpdate.id,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
-
-      // 2. Log dữ liệu sau khi hoàn thành yêu cầu tạo giao dịch ví
-      console.log(
-        "Phản hồi từ yêu cầu tạo giao dịch ví:",
-        walletTransactionResponse.data
-      );
-
-      // 3. Log dữ liệu trước khi gửi yêu cầu cập nhật trạng thái đơn hàng
-      console.log("Gửi yêu cầu cập nhật trạng thái đơn hàng:", {
-        ...orderToUpdate,
-        status: "Complete",
-      });
-
-      // Gửi yêu cầu PUT để cập nhật trạng thái đơn hàng
-      const orderUpdateResponse = await apiOrder.put(
-        `/${orderToUpdate.id}`,
-        { ...orderToUpdate, status: "Complete" },
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
-
-      // 4. Log dữ liệu sau khi hoàn thành yêu cầu cập nhật trạng thái đơn hàng
-      console.log(
-        "Phản hồi từ yêu cầu cập nhật trạng thái đơn hàng:",
-        orderUpdateResponse.data
-      );
-
-      // 5. Làm mới giao diện
-      setOrders((prevOrders) =>
-        prevOrders.map((o) =>
-          o.id === orderId ? { ...o, status: "Complete" } : o
-        )
-      );
-      alert("Đơn hàng đã được hoàn tất.");
-    } catch (error) {
-      console.error("Lỗi khi hoàn tất đơn hàng:", error);
-      alert("Đã xảy ra lỗi khi xử lý đơn hàng.");
+    // Nếu không hợp lệ, set state là null
+    if (!isValid) {
+      setMediaFiles(null); // Đặt state là null
+      return; // Kết thúc hàm
     }
+
+    // Nếu hợp lệ, lưu tệp vào state
+    setMediaFiles({
+      images: imageFiles,
+      videos: videoFiles,
+    });
+
+    console.log("Hình ảnh hợp lệ:", imageFiles);
+    console.log("Video hợp lệ:", videoFiles);
   };
 
   const statusMapping = {
@@ -1702,14 +1619,12 @@ const ToySupplierPage = () => {
                                 <div className="text-base font-semibold text-gray-900 dark:text-white">
                                   {toy.media && toy.media.length > 0 ? (
                                     <img
-
                                       key={toy.id}
                                       src={
                                         toy.media ? toy.media[0].mediaUrl : ""
                                       }
                                       alt={`Toy Media ${toy.id + 1}`}
-
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="w-full max-w-[70px] h-auto object-contain mr-2"
                                     />
                                   ) : (
                                     <span>No media available</span>
@@ -1718,7 +1633,7 @@ const ToySupplierPage = () => {
                               </td>
 
                               <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
-                                <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white truncate w-[200px]">
                                   {toy.name}
                                 </div>
                               </td>

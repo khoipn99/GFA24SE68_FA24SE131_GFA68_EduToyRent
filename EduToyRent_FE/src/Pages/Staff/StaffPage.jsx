@@ -219,7 +219,13 @@ const StaffPage = () => {
             toy.id === toyId ? { ...toy, status: "Inactive" } : toy
           )
         );
+
+        setSelectedToy(null);
         LoadToy(userId);
+        LoadToyBuy(toysBuyData);
+
+        LoadToyRent(toysRentData);
+        LoadToyBan(toysBanData);
       } else {
         throw new Error(`Failed to update status for toy with ID ${toyId}`);
       }
@@ -268,6 +274,7 @@ const StaffPage = () => {
         setSelectedToyBuy(null);
         LoadToyBuy(toysBuyData);
         LoadToyRent(toysRentData);
+        LoadToyBan(toysBanData);
       } else {
         throw new Error(`Failed to update status for toy with ID ${toyId}`);
       }
@@ -665,7 +672,10 @@ const StaffPage = () => {
             toy.id === toyId ? { ...toy, status: "Inactive" } : toy
           )
         );
+        setSelectedToy(null);
         LoadToy(userId);
+        LoadToyBuy(toysBuyData);
+        LoadToyRent(toysRentData);
       } else {
         throw new Error(`Failed to update status for toy with ID ${toyId}`);
       }
@@ -710,7 +720,7 @@ const StaffPage = () => {
       formData.append("status", requestBody || "Banned");
       formData.append("roleId", selectedUserUp.role.id || "");
       formData.append("avatarUrl", selectedUserUp.avatarUrl || "");
-
+      // formData.append("description", selectedUserUp.description || "");
       console.log("dữ liệu sẽ gửi", formData.data);
 
       const response = await apiUser.put(`/${userId}`, formData, {
@@ -721,7 +731,7 @@ const StaffPage = () => {
       });
 
       // Log dữ liệu nhận được từ API khi thành công
-      console.log("Response on success:", response);
+      console.log("Response on success:", response.data);
 
       if (response.status === 204) {
         setSelectedUserUp(null);
@@ -780,7 +790,7 @@ const StaffPage = () => {
       formData.append("status", requestBody || "Active");
       formData.append("roleId", selectedUserUpBan.role.id || "");
       formData.append("avatarUrl", selectedUserUpBan.avatarUrl || "");
-
+      // formData.append("description", selectedUserUp.description || "");
       console.log("dữ liệu sẽ gửi", formData.data);
 
       const response = await apiUser.put(`/${userId}`, formData, {
