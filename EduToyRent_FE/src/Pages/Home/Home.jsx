@@ -532,52 +532,18 @@ const Home = () => {
               </p>
             </div>
 
-            <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="flex items-stretch p-4 gap-3">
-                {featuredToys && featuredToys.length > 0 ? (
-                  featuredToys?.map((category, position) => (
-                    <div
-                      key={position}
-                      className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
-                      onClick={() =>
-                        HandleToyDetailFilterCategory(category.name)
-                      }
-                    >
-                      <div
-                        className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
-                        style={{
-                          backgroundImage: `url(${PictureCategory[position].image})`,
-                        }}
-                      ></div>
-
-                      <div>
-                        <p className="text-[#0e161b] text-base font-medium">
-                          {category.name}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p>No toys available</p>
-                )}
-              </div>
-            </div>
-
-            <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
-              Các Nhãn Hàng Đối Tác
-            </h2>
-            <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="flex items-stretch p-4 gap-3">
-                {featuredToys.map((category, index) => (
+            <div className="grid grid-cols-7 gap-4">
+              {featuredToys && featuredToys.length > 0 ? (
+                featuredToys.map((category, position) => (
                   <div
-                    key={index}
+                    key={position}
                     className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
-                    onClick={() => FilterCategory(category.id)}
+                    onClick={() => HandleToyDetailFilterCategory(category.name)}
                   >
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
                       style={{
-                        backgroundImage: `url(${PictureCategory[index].image})`,
+                        backgroundImage: `url(${PictureCategory[position].image})`,
                       }}
                     ></div>
 
@@ -587,8 +553,40 @@ const Home = () => {
                       </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              ) : (
+                <p>No toys available</p>
+              )}
+            </div>
+
+            <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
+              Các Nhãn Hàng Đối Tác
+            </h2>
+            <div className="grid grid-cols-7 gap-4">
+              {featuredToys && featuredToys.length > 0 ? (
+                featuredToys.map((category, position) => (
+                  <div
+                    key={position}
+                    className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
+                    onClick={() => HandleToyDetailFilterCategory(category.name)}
+                  >
+                    <div
+                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
+                      style={{
+                        backgroundImage: `url(${PictureCategory[position].image})`,
+                      }}
+                    ></div>
+
+                    <div>
+                      <p className="text-[#0e161b] text-base font-medium">
+                        {category.name}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No toys available</p>
+              )}
             </div>
             <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
               Sản phẩm mới nhất
