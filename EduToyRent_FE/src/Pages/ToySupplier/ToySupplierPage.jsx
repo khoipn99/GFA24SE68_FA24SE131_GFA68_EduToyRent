@@ -188,25 +188,6 @@ const ToySupplierPage = () => {
     setCurrentPage((prevPage) => prevPage + 1);
     LoadToy(userId, currentPage + 1, itemsPerPage);
   };
-  const handleSearchChange = (e) => {
-    setSearchKeyword(e.target.value); // Cập nhật từ khóa khi nhập
-  };
-  const handleSearch = async (e) => {
-    e.preventDefault(); // Ngăn form reload
-    try {
-      const response = await apiToys.get(
-        `/user/${userId}?name=${searchKeyword}`,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
-      setToysData(response.data); // Cập nhật danh sách đồ chơi sau khi tìm kiếm
-    } catch (error) {
-      console.error("Lỗi khi tìm kiếm:", error);
-    }
-  };
 
   const LoadOrderShop = async (userId, statusFilter) => {
     if (!userId || userId <= 0) {
@@ -1362,14 +1343,6 @@ const ToySupplierPage = () => {
                     >
                       Xem chi tiết
                     </button>
-                    {order.status !== "Complete" && (
-                      <button
-                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                        onClick={() => handleCompleteOrder(order.id)}
-                      >
-                        Hoàn Thành
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
@@ -1464,26 +1437,6 @@ const ToySupplierPage = () => {
             <div className="p-4 bg-white block sm:flex items-center justify-between border-b border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700">
               <div className="w-full mb-1">
                 <div className="items-center justify-between block sm:flex md:divide-x md:divide-gray-100 dark:divide-gray-700">
-                  <div className="flex items-center mb-4 sm:mb-0">
-                    <form
-                      className="sm:pr-3"
-                      onSubmit={handleSearch} // Gọi hàm tìm kiếm khi submit
-                    >
-                      <label htmlFor="products-search" className="sr-only">
-                        Search
-                      </label>
-                      <div className="relative w-48 mt-1 sm:w-64 xl:w-96">
-                        <input
-                          type="text"
-                          id="products-search"
-                          value={searchKeyword} // Liên kết với state
-                          onChange={handleSearchChange} // Cập nhật từ khóa khi nhập
-                          className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          placeholder="Search for toys by name"
-                        />
-                      </div>
-                    </form>
-                  </div>
                   <div className="flex items-center mt-4 sm:mt-0 sm:ml-4">
                     <button
                       type="button"
@@ -1749,11 +1702,13 @@ const ToySupplierPage = () => {
                                 <div className="text-base font-semibold text-gray-900 dark:text-white">
                                   {toy.media && toy.media.length > 0 ? (
                                     <img
+
                                       key={toy.id}
                                       src={
                                         toy.media ? toy.media[0].mediaUrl : ""
                                       }
                                       alt={`Toy Media ${toy.id + 1}`}
+
                                       className="w-full max-w-[50px] h-auto object-contain mr-2"
                                     />
                                   ) : (
@@ -1883,8 +1838,8 @@ const ToySupplierPage = () => {
               </div>
             </div>
             {selectedToy && !isEditing && (
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative ">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
@@ -1961,7 +1916,7 @@ const ToySupplierPage = () => {
                     </div>
 
                     {/* Phần thông tin */}
-                    <div className="flex-1 text-xl space-y-6">
+                    <div className="flex-1 text-sm space-y-6">
                       <h2 className="text-4xl font-bold mb-10 text-center">
                         Thông tin đồ chơi
                       </h2>
@@ -2304,7 +2259,7 @@ const ToySupplierPage = () => {
         style={{
           position: "sticky",
           top: 0,
-          zIndex: 1000,
+          zIndex: 20,
           backgroundColor: "white",
         }}
       >
@@ -2338,7 +2293,6 @@ const ToySupplierPage = () => {
               }`}
             >
               <span className="icon-class mr-2">📦</span> Danh sách sản phẩm
-              đang bán
             </button>
 
             <button

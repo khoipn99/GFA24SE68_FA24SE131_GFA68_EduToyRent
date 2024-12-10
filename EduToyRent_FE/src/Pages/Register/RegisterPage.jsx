@@ -57,7 +57,8 @@ const RegisterPage = () => {
     const phone = document.getElementById("phone").value || "string";
     const passwordInput = password || "";
     const dobInput = document.getElementById("dob").value; // Lấy ngày sinh từ input
-
+    const withdrawalMethod = document.getElementById("withdrawalMethod").value;
+    const withdrawInfo = document.getElementById("withdrawInfo").value;
     console.log("Full Name:", fullName);
     console.log("Email:", email);
     console.log("Phone:", phone);
@@ -175,8 +176,8 @@ const RegisterPage = () => {
             console.log("UserId:", userId); // Kết quả: "32"
             const walletData = {
               balance: 0,
-              withdrawMethod: "string",
-              withdrawInfo: "string",
+              withdrawMethod: withdrawalMethod,
+              withdrawInfo: withdrawInfo,
               status: "Active",
               userId: userId, // Gắn userId vào đây
             };
@@ -368,7 +369,32 @@ const RegisterPage = () => {
             autoComplete="off"
           />
         </div>
-
+        <div className="mb-4 w-full">
+          <label htmlFor="withdrawalMethod" className="block text-gray-600">
+            Tên ngân hàng
+          </label>
+          <input
+            type="text"
+            id="withdrawalMethod"
+            name="withdrawalMethod"
+            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+            autoComplete="off"
+            placeholder="Nhập tên ngân hàng"
+          />
+        </div>
+        <div className="mb-4 w-full">
+          <label htmlFor="withdrawInfo" className="block text-gray-600">
+            Số tài khoản ngân hàng
+          </label>
+          <input
+            type="number"
+            id="withdrawInfo"
+            name="withdrawInfo"
+            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+            autoComplete="off"
+            placeholder="Nhập số tài khoản ngân hàng"
+          />
+        </div>
         {/* Password Input */}
         <div className="mb-4 w-full">
           <label htmlFor="password" className="block text-gray-600">
