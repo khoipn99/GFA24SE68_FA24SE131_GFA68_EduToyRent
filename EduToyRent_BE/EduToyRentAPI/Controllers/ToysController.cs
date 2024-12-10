@@ -20,6 +20,7 @@ namespace EduToyRentAPI.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
+    [EnableQuery]
     public class ToysController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -64,6 +65,7 @@ namespace EduToyRentAPI.Controllers
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
                         Star = toy.User.Star ?? 0, 
+                        Description = toy.User.Description,
                         Status = toy.User.Status,
                         Role = new RoleResponse
                         {
@@ -143,6 +145,7 @@ namespace EduToyRentAPI.Controllers
                         Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Description = toy.User.Description,
                         Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
@@ -241,6 +244,7 @@ namespace EduToyRentAPI.Controllers
                     Dob = (DateTime)user.Dob,
                     Address = user.Address,
                     AvatarUrl = user.AvatarUrl,
+                    Description = toy.User.Description,
                     Star = user.Star,
                     Status = user.Status,
                     Role = new RoleResponse
@@ -450,6 +454,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Toy/category/{categoryId}
         [HttpGet("category/{categoryId}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> GetToysByCategory(int categoryId, int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get(
@@ -482,6 +487,7 @@ namespace EduToyRentAPI.Controllers
                         Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Description = toy.User.Description,
                         Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
@@ -529,6 +535,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Toy/age/{ageRange}
         [HttpGet("age/{ageRange}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> GetToysByAge(string ageRange, int pageIndex = 1, int pageSize = 20)
         {
             var toys = _unitOfWork.ToyRepository.Get(
@@ -583,6 +590,7 @@ namespace EduToyRentAPI.Controllers
                         Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Description = toy.User.Description,
                         Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
@@ -629,6 +637,7 @@ namespace EduToyRentAPI.Controllers
         }
         //search
         [HttpGet("search")]
+        [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> SearchToysByName(string name, int pageIndex = 1, int pageSize = 20)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -666,6 +675,7 @@ namespace EduToyRentAPI.Controllers
                         Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Description = toy.User.Description,
                         Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
@@ -717,6 +727,7 @@ namespace EduToyRentAPI.Controllers
         }
        
         [HttpGet("user/{userId}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> GetToysByOwnerId(int userId, string? status = null, int pageIndex = 1, int pageSize = 20)
         {
             var toysQuery = _unitOfWork.ToyRepository.Get(
@@ -749,6 +760,7 @@ namespace EduToyRentAPI.Controllers
                         Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Description = toy.User.Description,
                         Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
@@ -829,6 +841,7 @@ namespace EduToyRentAPI.Controllers
                         Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Description = toy.User.Description,
                         Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
@@ -910,6 +923,7 @@ namespace EduToyRentAPI.Controllers
                         Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Description = toy.User.Description,
                         Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse
@@ -996,6 +1010,7 @@ namespace EduToyRentAPI.Controllers
                         Dob = toy.User.Dob ?? DateTime.MinValue,
                         Address = toy.User.Address,
                         AvatarUrl = toy.User.AvatarUrl,
+                        Description = toy.User.Description,
                         Star = toy.User.Star ?? 0,
                         Status = toy.User.Status,
                         Role = new RoleResponse

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EduToyRentRepositories.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Intial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -414,6 +414,7 @@ namespace EduToyRentRepositories.Migrations
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     AvatarUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Star = table.Column<float>(type: "real", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PremiumId = table.Column<int>(type: "int", nullable: true),
                     StartPremiumDate = table.Column<DateTime>(type: "datetime2", nullable: true),

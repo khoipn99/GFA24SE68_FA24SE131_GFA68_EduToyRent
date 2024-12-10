@@ -85,7 +85,6 @@ namespace EduToyRentAPI.Controllers
 
             rating.Comment = ratingRequest.Comment;
             rating.Star = ratingRequest.Star;
-
             _unitOfWork.RatingRepository.Update(rating);
 
             try
@@ -104,8 +103,45 @@ namespace EduToyRentAPI.Controllers
                 }
             }
 
+            var orderDetail = _unitOfWork.OrderDetailRepository.GetByID(rating.OrderDetailId);
+            if (orderDetail != null)
+            {
+                var ratingsForToy = _unitOfWork.RatingRepository
+                    .Get(filter: r => r.OrderDetail.ToyId == orderDetail.ToyId)
+                    .ToList();
+                float countRatingsForToy = ratingsForToy.Count;
+                float totalStarsForToy = ratingsForToy.Sum(r => r.Star);
+                float averageRating = countRatingsForToy > 0 ? totalStarsForToy / countRatingsForToy : 0f;
+                averageRating = (float)Math.Round(averageRating, 2);
+
+                var toy = _unitOfWork.ToyRepository.GetByID(orderDetail.ToyId);
+                if (toy != null)
+                {
+                    toy.Star = averageRating;
+                    _unitOfWork.ToyRepository.Update(toy);
+
+                    var toysOwnedByUser = _unitOfWork.ToyRepository.Get(filter: t => t.UserId == toy.UserId).ToList();
+                    float countRatingsForUser = toysOwnedByUser.Count(t => t.Star.HasValue);
+                    float totalStarsForUser = toysOwnedByUser.Sum(t => t.Star ?? 0f);
+
+                    float averageRatingForUser = countRatingsForUser > 0
+                        ? (float)Math.Round(totalStarsForUser / countRatingsForUser, 2)
+                        : 0f;
+
+                    var user = _unitOfWork.UserRepository.GetByID(toy.UserId);
+                    if (user != null)
+                    {
+                        user.Star = averageRatingForUser;
+                        _unitOfWork.UserRepository.Update(user);
+                    }
+                }
+
+                _unitOfWork.Save();
+            }
+
             return NoContent();
         }
+
 
         // POST: api/Ratings
         [HttpPost]
@@ -116,7 +152,11 @@ namespace EduToyRentAPI.Controllers
             {
                 return BadRequest("Order detail not found");
             }
-
+            var existingRating = _unitOfWork.RatingRepository.Get(filter: r => r.UserId == ratingRequest.UserId && r.OrderDetailId == ratingRequest.OrderDetailId).FirstOrDefault();
+            if (existingRating != null)
+            {
+                return BadRequest("You have already rated this order. Please update your existing rating instead of creating a new one.");
+            }
             var rating = new Rating
             {
                 Comment = ratingRequest.Comment,

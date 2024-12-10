@@ -647,6 +647,9 @@ namespace EduToyRentRepositories.Migrations
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("Dob")
                         .HasColumnType("datetime2");
 

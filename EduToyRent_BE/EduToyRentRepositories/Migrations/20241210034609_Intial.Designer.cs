@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduToyRentRepositories.Migrations
 {
     [DbContext(typeof(EduToyRentDBContext))]
-    [Migration("20241209161530_Initial")]
-    partial class Initial
+    [Migration("20241210034609_Intial")]
+    partial class Intial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -649,6 +649,9 @@ namespace EduToyRentRepositories.Migrations
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("Dob")
                         .HasColumnType("datetime2");
