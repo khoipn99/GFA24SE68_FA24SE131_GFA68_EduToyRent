@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using NuGet.Protocol.Plugins;
 using Humanizer;
+using System.Linq.Expressions;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -115,14 +116,48 @@ namespace EduToyRentAPI.Controllers
         [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> GetActiveToys(int pageIndex = 1, int pageSize = 20)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            int? Uid = null;
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int parsedUid))
+            {
+                Uid = parsedUid;
+            }
+
+            Expression<Func<Toy, bool>> filterExpression;
+            if (Uid.HasValue)
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.UserId != Uid;
+            }
+            else
+            {
+                filterExpression = toy => toy.Status == "Active";
+            }
+
             var toys = _unitOfWork.ToyRepository.Get(
                 includeProperties: "Category,User,User.Role,Approver,Approver.Role",
-                filter: toy => toy.Status == "Active",
+                filter: filterExpression,
                 pageIndex: pageIndex,
-                pageSize: pageSize)
-                .OrderByDescending(toy => toy.Id)
-                .Select(toy => new ToyResponse
+                pageSize: pageSize
+            )
+            .OrderByDescending(toy => toy.Id)
+            .Select(toy => new ToyResponse
+            {
+                Id = toy.Id,
+                Name = toy.Name,
+                Description = toy.Description,
+                Price = toy.Price,
+                Origin = toy.Origin,
+                Age = toy.Age,
+                Brand = toy.Brand,
+                Star = toy.Star ?? 0,
+                RentCount = toy.RentCount ?? 0,
+                BuyQuantity = toy.BuyQuantity ?? 0,
+                QuantitySold = toy.QuantitySold ?? 0,
+                CreateDate = toy.CreateDate,
+                Status = toy.Status,
+                Owner = new UserResponse
                 {
+<<<<<<< Updated upstream
                     Id = toy.Id,
                     Name = toy.Name,
                     Description = toy.Description,
@@ -136,26 +171,44 @@ namespace EduToyRentAPI.Controllers
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
                     Owner = new UserResponse
+=======
+                    Id = toy.UserId,
+                    FullName = toy.User.FullName,
+                    Email = toy.User.Email,
+                    CreateDate = toy.User.CreateDate,
+                    Phone = toy.User.Phone,
+                    Dob = toy.User.Dob ?? DateTime.MinValue,
+                    Address = toy.User.Address,
+                    AvatarUrl = toy.User.AvatarUrl,
+                    Description = toy.User.Description,
+                    Star = toy.User.Star ?? 0,
+                    Status = toy.User.Status,
+                    Role = new RoleResponse
+>>>>>>> Stashed changes
                     {
-                        Id = toy.UserId,
-                        FullName = toy.User.FullName,
-                        Email = toy.User.Email,
-                        CreateDate = toy.User.CreateDate,
-                        Phone = toy.User.Phone,
-                        Dob = toy.User.Dob ?? DateTime.MinValue,
-                        Address = toy.User.Address,
-                        AvatarUrl = toy.User.AvatarUrl,
-                        Description = toy.User.Description,
-                        Star = toy.User.Star ?? 0,
-                        Status = toy.User.Status,
-                        Role = new RoleResponse
-                        {
-                            Id = toy.User.Role.Id,
-                            Name = toy.User.Role.Name
-                        }
-                    },
-                    Category = new CategoryResponse
+                        Id = toy.User.Role.Id,
+                        Name = toy.User.Role.Name
+                    }
+                },
+                Category = new CategoryResponse
+                {
+                    Id = toy.Category.Id,
+                    Name = toy.Category.Name
+                },
+                Approver = toy.ApproverId != null ? new UserResponse
+                {
+                    Id = toy.ApproverId.Value,
+                    FullName = toy.Approver.FullName,
+                    Email = toy.Approver.Email,
+                    CreateDate = toy.Approver.CreateDate,
+                    Phone = toy.Approver.Phone,
+                    Dob = toy.Approver.Dob ?? DateTime.MinValue,
+                    Address = toy.Approver.Address,
+                    AvatarUrl = toy.Approver.AvatarUrl,
+                    Status = toy.Approver.Status,
+                    Role = new RoleResponse
                     {
+<<<<<<< Updated upstream
                         Id = toy.Category.Id,
                         Name = toy.Category.Name
                     },
@@ -187,6 +240,25 @@ namespace EduToyRentAPI.Controllers
                                                    ToyId = toy.Id,
                                                }).ToList()
                 }).ToList();
+=======
+                        Id = toy.Approver.Role.Id,
+                        Name = toy.Approver.Role.Name
+                    }
+                } : null,
+                Media = _unitOfWork.MediaRepository.Get(
+                    m => m.ToyId == toy.Id,
+                    includeProperties: "Toy"
+                )
+                .Select(media => new MediaResponse
+                {
+                    Id = media.Id,
+                    MediaUrl = media.MediaUrl,
+                    Status = media.Status,
+                    ToyId = toy.Id,
+                }).ToList()
+            })
+            .ToList();
+>>>>>>> Stashed changes
 
             return Ok(toys);
         }
@@ -457,9 +529,25 @@ namespace EduToyRentAPI.Controllers
         [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> GetToysByCategory(int categoryId, int pageIndex = 1, int pageSize = 20)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            int? Uid = null;
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int parsedUid))
+            {
+                Uid = parsedUid;
+            }
+
+            Expression<Func<Toy, bool>> filterExpression;
+            if (Uid.HasValue)
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.CategoryId == categoryId && toy.UserId != Uid;
+            }
+            else
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.CategoryId == categoryId;
+            }
             var toys = _unitOfWork.ToyRepository.Get(
                 includeProperties: "Category,User,User.Role,Approver,Approver.Role",
-                filter: toy => toy.Status == "Active" && toy.CategoryId == categoryId,
+                filter: filterExpression,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(toy => toy.Id)
@@ -538,33 +626,54 @@ namespace EduToyRentAPI.Controllers
         [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> GetToysByAge(string ageRange, int pageIndex = 1, int pageSize = 20)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            int? Uid = null;
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int parsedUid))
+            {
+                Uid = parsedUid;
+            }
+
+            string expectedAge = null;
+            switch ((ageRange ?? "").ToLower())
+            {
+                case "1-3":
+                    expectedAge = "1-3";
+                    break;
+                case "3-5":
+                    expectedAge = "3-5";
+                    break;
+                case "5-7":
+                    expectedAge = "5-7";
+                    break;
+                case "7-9":
+                    expectedAge = "7-9";
+                    break;
+                case "9-11":
+                    expectedAge = "9-11";
+                    break;
+                case "11-13":
+                    expectedAge = "11-13";
+                    break;
+                case "13+":
+                    expectedAge = "13+";
+                    break;
+            }
+
+            Expression<Func<Toy, bool>> filterExpression;
+            if (Uid.HasValue)
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.UserId != Uid && toy.Age == expectedAge;
+            }
+            else
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.Age == expectedAge;
+            }
+
             var toys = _unitOfWork.ToyRepository.Get(
-                includeProperties: "Category,User,User.Role,Approver,Approver.Role", 
-                filter: toy => toy.Status == "Active", 
-                pageIndex: pageIndex, 
+                includeProperties: "Category,User,User.Role,Approver,Approver.Role",
+                filter: filterExpression,
+                pageIndex: pageIndex,
                 pageSize: pageSize)
-                .Where(toy =>
-                {
-                    switch (ageRange.ToLower())
-                    {
-                        case "1-3":
-                            return toy.Age == "1-3";
-                        case "3-5":
-                            return toy.Age == "3-5";
-                        case "5-7":
-                            return toy.Age == "5-7";
-                        case "7-9":
-                            return toy.Age == "7-9";
-                        case "9-11":
-                            return toy.Age == "9-11";
-                        case "11-13":
-                            return toy.Age == "11-13";
-                        case "13+":
-                            return toy.Age == "13+";
-                        default:
-                            return false;
-                    }
-                })
                 .OrderByDescending(toy => toy.Id)
                 .Select(toy => new ToyResponse
                 {
@@ -622,6 +731,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
+<<<<<<< Updated upstream
                                                 m => m.ToyId == toy.Id && m.Status == "Active",
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
@@ -631,10 +741,22 @@ namespace EduToyRentAPI.Controllers
                                                    Status = media.Status,
                                                    ToyId = toy.Id,
                                                }).ToList()
+=======
+                        m => m.ToyId == toy.Id,
+                        includeProperties: "Toy")
+                    .Select(media => new MediaResponse
+                    {
+                        Id = media.Id,
+                        MediaUrl = media.MediaUrl,
+                        Status = media.Status,
+                        ToyId = toy.Id,
+                    }).ToList()
+>>>>>>> Stashed changes
                 }).ToList();
 
             return Ok(toys);
         }
+
         //search
         [HttpGet("search")]
         [EnableQuery]
@@ -644,10 +766,25 @@ namespace EduToyRentAPI.Controllers
             {
                 return BadRequest(new { Message = "Search term cannot be empty." });
             }
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            int? Uid = null;
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int parsedUid))
+            {
+                Uid = parsedUid;
+            }
 
+            Expression<Func<Toy, bool>> filterExpression;
+            if (Uid.HasValue)
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.Name.Contains(name, StringComparison.OrdinalIgnoreCase) && toy.UserId != Uid;
+            }
+            else
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.Name.Contains(name, StringComparison.OrdinalIgnoreCase);
+            }
             var toys = _unitOfWork.ToyRepository.Get(
                 includeProperties: "Category,User,User.Role,Approver,Approver.Role",
-                filter: toy => toy.Status == "Active" && toy.Name.Contains(name, StringComparison.OrdinalIgnoreCase),
+                filter: filterExpression,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(toy => toy.Id)
@@ -811,9 +948,25 @@ namespace EduToyRentAPI.Controllers
         [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> GetToysAvailableForPurchase(int pageIndex = 1, int pageSize = 20)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            int? Uid = null;
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int parsedUid))
+            {
+                Uid = parsedUid;
+            }
+
+            Expression<Func<Toy, bool>> filterExpression;
+            if (Uid.HasValue)
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.BuyQuantity > 0 && toy.UserId != Uid;
+            }
+            else
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.BuyQuantity > 0;
+            }
             var toys = _unitOfWork.ToyRepository.Get(
                 includeProperties: "Category,User,User.Role,Approver,Approver.Role",
-                filter: toy => toy.Status == "Active" && toy.BuyQuantity > 0,
+                filter: filterExpression,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(toy => toy.Id)
@@ -892,8 +1045,24 @@ namespace EduToyRentAPI.Controllers
         [EnableQuery]
         public ActionResult<IEnumerable<ToyResponse>> GetToysAvailableForRent(int pageIndex = 1, int pageSize = 20)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            int? Uid = null;
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int parsedUid))
+            {
+                Uid = parsedUid;
+            }
+
+            Expression<Func<Toy, bool>> filterExpression;
+            if (Uid.HasValue)
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.BuyQuantity < 0 && toy.UserId != Uid;
+            }
+            else
+            {
+                filterExpression = toy => toy.Status == "Active" && toy.BuyQuantity < 0;
+            }
             var toys = _unitOfWork.ToyRepository.Get( 
-                filter: toy => toy.RentCount > -1 && toy.Status == "Active" && toy.BuyQuantity < 0,
+                filter: filterExpression,
                 includeProperties: "Category,User,User.Role,Approver,Approver.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
