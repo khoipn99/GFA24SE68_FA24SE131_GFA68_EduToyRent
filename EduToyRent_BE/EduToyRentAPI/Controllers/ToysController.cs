@@ -50,7 +50,8 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
-                    Star = toy.Star ?? 0, 
+                    Star = toy.Star ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     RentCount = toy.RentCount ?? 0, 
                     QuantitySold = toy.QuantitySold ?? 0, 
                     CreateDate = toy.CreateDate,
@@ -97,7 +98,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -157,21 +158,6 @@ namespace EduToyRentAPI.Controllers
                 Status = toy.Status,
                 Owner = new UserResponse
                 {
-<<<<<<< Updated upstream
-                    Id = toy.Id,
-                    Name = toy.Name,
-                    Description = toy.Description,
-                    Price = toy.Price,
-                    Origin = toy.Origin,
-                    Age = toy.Age,
-                    Brand = toy.Brand,
-                    Star = toy.Star ?? 0,
-                    RentCount = toy.RentCount ?? 0,
-                    QuantitySold = toy.QuantitySold ?? 0,
-                    CreateDate = toy.CreateDate,
-                    Status = toy.Status,
-                    Owner = new UserResponse
-=======
                     Id = toy.UserId,
                     FullName = toy.User.FullName,
                     Email = toy.User.Email,
@@ -184,7 +170,6 @@ namespace EduToyRentAPI.Controllers
                     Star = toy.User.Star ?? 0,
                     Status = toy.User.Status,
                     Role = new RoleResponse
->>>>>>> Stashed changes
                     {
                         Id = toy.User.Role.Id,
                         Name = toy.User.Role.Name
@@ -208,29 +193,12 @@ namespace EduToyRentAPI.Controllers
                     Status = toy.Approver.Status,
                     Role = new RoleResponse
                     {
-<<<<<<< Updated upstream
                         Id = toy.Category.Id,
                         Name = toy.Category.Name
                     },
-                    Approver = toy.ApproverId != null ? new UserResponse
-                    {
-                        Id = toy.ApproverId.Value,
-                        FullName = toy.Approver.FullName,
-                        Email = toy.Approver.Email,
-                        CreateDate = toy.Approver.CreateDate,
-                        Phone = toy.Approver.Phone,
-                        Dob = toy.Approver.Dob ?? DateTime.MinValue,
-                        Address = toy.Approver.Address,
-                        AvatarUrl = toy.Approver.AvatarUrl,
-                        Status = toy.Approver.Status,
-                        Role = new RoleResponse
-                        {
-                            Id = toy.Approver.Role.Id,
-                            Name = toy.Approver.Role.Name
-                        }
-                    } : null,
+                    
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -240,26 +208,6 @@ namespace EduToyRentAPI.Controllers
                                                    ToyId = toy.Id,
                                                }).ToList()
                 }).ToList();
-=======
-                        Id = toy.Approver.Role.Id,
-                        Name = toy.Approver.Role.Name
-                    }
-                } : null,
-                Media = _unitOfWork.MediaRepository.Get(
-                    m => m.ToyId == toy.Id,
-                    includeProperties: "Toy"
-                )
-                .Select(media => new MediaResponse
-                {
-                    Id = media.Id,
-                    MediaUrl = media.MediaUrl,
-                    Status = media.Status,
-                    ToyId = toy.Id,
-                }).ToList()
-            })
-            .ToList();
->>>>>>> Stashed changes
-
             return Ok(toys);
         }
 
@@ -371,15 +319,19 @@ namespace EduToyRentAPI.Controllers
             var userId = int.Parse(userIdClaim.Value);
             var userRole = _unitOfWork.UserRepository.GetByID(userId).RoleId;
 
+            string status = null;
+
             int buyQuantity = 0;
 
             if (userRole == 3)
             {
-                buyQuantity = -1; 
+                buyQuantity = -1;
+                status = "Inactive";
             }
-            else if (userRole == 2) 
+            else if (userRole == 2)
             {
                 buyQuantity = (int)toyRequest.BuyQuantity;
+                status = "Active";
             }
             var toy = new Toy
             {
@@ -393,7 +345,7 @@ namespace EduToyRentAPI.Controllers
                 QuantitySold = toyRequest.QuantitySold,
                 Brand = toyRequest.Brand,
                 CategoryId = toyRequest.CategoryId,
-                Status = "Inactive",
+                Status = status,
                 UserId = userId,
                 ApproverId = null,
                 CreateDate = DateTime.Now
@@ -431,6 +383,7 @@ namespace EduToyRentAPI.Controllers
 
             return CreatedAtAction("GetToy", new { id = toy.Id }, toyResponse);
         }
+
         [HttpPut("{id}")]
         [EnableQuery]
        // [Authorize]
@@ -510,7 +463,7 @@ namespace EduToyRentAPI.Controllers
                 return NotFound(new { Message = "Toy not found." });
             }
 
-            var validStatuses = new List<string> { "Active", "Inactive", "Renting", "Sold", "Banned", "Awaiting" }; //Awaiting dang cho duyet lai
+            var validStatuses = new List<string> { "Active", "Inactive", "Renting", "Sold", "Banned", "Awaiting", "Not Qualified" }; //Awaiting dang cho duyet lai
             if (!validStatuses.Contains(newStatus))
             {
                 return BadRequest(new { Message = "Invalid status value." });
@@ -562,6 +515,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -607,7 +561,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -684,6 +638,7 @@ namespace EduToyRentAPI.Controllers
                     Origin = toy.Origin,
                     Age = toy.Age,
                     Brand = toy.Brand,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
@@ -730,29 +685,17 @@ namespace EduToyRentAPI.Controllers
                             Name = toy.Approver.Role.Name
                         }
                     } : null,
-                    Media = _unitOfWork.MediaRepository.Get(
-<<<<<<< Updated upstream
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
-                                                includeProperties: "Toy")
-                                               .Select(media => new MediaResponse
-                                               {
-                                                   Id = media.Id,
-                                                   MediaUrl = media.MediaUrl,
-                                                   Status = media.Status,
-                                                   ToyId = toy.Id,
-                                               }).ToList()
-=======
-                        m => m.ToyId == toy.Id,
-                        includeProperties: "Toy")
-                    .Select(media => new MediaResponse
-                    {
-                        Id = media.Id,
-                        MediaUrl = media.MediaUrl,
-                        Status = media.Status,
-                        ToyId = toy.Id,
-                    }).ToList()
->>>>>>> Stashed changes
-                }).ToList();
+                        Media = _unitOfWork.MediaRepository.Get(
+                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                includeProperties: "Toy")
+                               .Select(media => new MediaResponse
+                               {
+                                   Id = media.Id,
+                                   MediaUrl = media.MediaUrl,
+                                   Status = media.Status,
+                                   ToyId = toy.Id,
+                               }).ToList()
+            }).ToList();
 
             return Ok(toys);
         }
@@ -799,6 +742,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -844,7 +788,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -884,6 +828,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -929,7 +874,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -981,6 +926,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -1026,7 +972,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -1079,6 +1025,7 @@ namespace EduToyRentAPI.Controllers
                     Brand = toy.Brand,
                     Star = toy.Star ?? 0,
                     RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
                     QuantitySold = toy.QuantitySold ?? 0,
                     CreateDate = toy.CreateDate,
                     Status = toy.Status,
@@ -1124,7 +1071,7 @@ namespace EduToyRentAPI.Controllers
                         }
                     } : null,
                     Media = _unitOfWork.MediaRepository.Get(
-                                                m => m.ToyId == toy.Id && m.Status == "Active",
+                                                m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
                                                .Select(media => new MediaResponse
                                                {
@@ -1152,6 +1099,87 @@ namespace EduToyRentAPI.Controllers
             var toys = _unitOfWork.ToyRepository.Get(
                 includeProperties: "Category,User,User.Role,Approver,Approver.Role",
                 filter: toy => toy.Status == status,
+                pageIndex: pageIndex,
+                pageSize: pageSize)
+                .OrderByDescending(toy => toy.Id)
+                .Select(toy => new ToyResponse
+                {
+                    Id = toy.Id,
+                    Name = toy.Name,
+                    Description = toy.Description,
+                    Price = toy.Price,
+                    Origin = toy.Origin,
+                    Age = toy.Age,
+                    Brand = toy.Brand,
+                    Star = toy.Star ?? 0,
+                    RentCount = toy.RentCount ?? 0,
+                    BuyQuantity = toy.BuyQuantity ?? 0,
+                    QuantitySold = toy.QuantitySold ?? 0,
+                    CreateDate = toy.CreateDate,
+                    Status = toy.Status,
+                    Owner = new UserResponse
+                    {
+                        Id = toy.UserId,
+                        FullName = toy.User.FullName,
+                        Email = toy.User.Email,
+                        CreateDate = toy.User.CreateDate,
+                        Phone = toy.User.Phone,
+                        Dob = toy.User.Dob ?? DateTime.MinValue,
+                        Address = toy.User.Address,
+                        AvatarUrl = toy.User.AvatarUrl,
+                        Description = toy.User.Description,
+                        Star = toy.User.Star ?? 0,
+                        Status = toy.User.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = toy.User.Role.Id,
+                            Name = toy.User.Role.Name
+                        }
+                    },
+                    Category = new CategoryResponse
+                    {
+                        Id = toy.Category.Id,
+                        Name = toy.Category.Name
+                    },
+                    Approver = toy.ApproverId != null ? new UserResponse
+                    {
+                        Id = toy.ApproverId.Value,
+                        FullName = toy.Approver.FullName,
+                        Email = toy.Approver.Email,
+                        CreateDate = toy.Approver.CreateDate,
+                        Phone = toy.Approver.Phone,
+                        Dob = toy.Approver.Dob ?? DateTime.MinValue,
+                        Address = toy.Approver.Address,
+                        AvatarUrl = toy.Approver.AvatarUrl,
+                        Status = toy.Approver.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = toy.Approver.Role.Id,
+                            Name = toy.Approver.Role.Name
+                        }
+                    } : null,
+                    Media = _unitOfWork.MediaRepository.Get(
+                                                m => m.ToyId == toy.Id ,
+                                                includeProperties: "Toy")
+                                               .Select(media => new MediaResponse
+                                               {
+                                                   Id = media.Id,
+                                                   MediaUrl = media.MediaUrl,
+                                                   Status = media.Status,
+                                                   ToyId = toy.Id,
+                                               }).ToList()
+                }).ToList();
+
+            return Ok(toys);
+        }
+
+        [HttpGet("by-approver")]
+        [EnableQuery]
+        public ActionResult<IEnumerable<ToyResponse>> GetToysByApprover(int approverId, int pageIndex = 1, int pageSize = 20)
+        {
+            var toys = _unitOfWork.ToyRepository.Get(
+                filter: toy => toy.ApproverId == approverId,
+                includeProperties: "Category,User,User.Role,Approver,Approver.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
                 .OrderByDescending(toy => toy.Id)
@@ -1220,7 +1248,8 @@ namespace EduToyRentAPI.Controllers
                                                    Status = media.Status,
                                                    ToyId = toy.Id,
                                                }).ToList()
-                }).ToList();
+                })
+                .ToList();
 
             return Ok(toys);
         }

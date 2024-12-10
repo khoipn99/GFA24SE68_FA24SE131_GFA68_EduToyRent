@@ -7,6 +7,8 @@ import { jwtDecode } from "jwt-decode";
 import LoginBG from "../../assets/bg.png";
 import apiLogin from "../../service/ApiLogin";
 import apiUser from "../../service/ApiUser";
+import apiWallets from "../../service/ApiWallets";
+import apiCart from "../../service/ApiCart";
 const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -53,6 +55,7 @@ const LoginPage = () => {
           });
 
           console.log("Dữ liệu trả về:", response.data);
+
           Cookies.set("userDataReal", JSON.stringify(response.data), {
             expires: 7,
           });
@@ -83,19 +86,15 @@ const LoginPage = () => {
       }
     } catch (error) {
       if (error.response) {
-        setError("Lỗi từ server: " + error.response.data);
+        setError("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
       } else if (error.request) {
-        setError("Không có phản hồi từ server.");
+        setError("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
       } else {
         setError("Đã xảy ra lỗi trong quá trình đăng nhập.");
       }
     }
   };
-  const logFormData = (formData) => {
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ": " + pair[1]);
-    }
-  };
+
   // Hàm đăng nhập Google
   const handleGoogleSuccess = async (response) => {
     try {
@@ -113,53 +112,293 @@ const LoginPage = () => {
 
       // Kiểm tra nếu email đã tồn tại
       const checkUserResponse = await apiUser.get(
-        `/ByEmail?email=${userEmail}&pageIndex=1&pageSize=50`
+        `/ByEmail?email=${userEmail}&pageIndex=1&pageSize=5000`
       );
 
-      if (
-        checkUserResponse.status === 200 &&
-        checkUserResponse.data.totalCount > 0
-      ) {
-        // Nếu người dùng đã tồn tại
-        alert(
-          "Tài khoản với email này đã tồn tại. Vui lòng sử dụng email khác."
-        );
-        return; // Dừng lại không tạo tài khoản mới
-      }
+      if (checkUserResponse.data != "") {
+        // Người dùng đã tồn tại, tiến hành đăng nhập
+        console.log("dữ liệu đã trả về:", checkUserResponse.data);
+        const loginResponse = await apiLogin.post("", {
+          email: userEmail,
+          password: "1", // Mật khẩu mặc định là 1 khi đăng nhập qua Google
+        });
 
-      // Chuẩn bị dữ liệu người dùng mới dưới dạng FormData
-      const formData = new FormData();
-      formData.append("FullName", fullName);
-      formData.append("Email", userEmail);
-      formData.append("Password", "1"); // Nếu không cần password, có thể để trống
-      formData.append("Phone", "0");
-      formData.append("Dob", new Date().toISOString());
-      formData.append("Address", "string");
-      formData.append("AvatarUrl", avatarUrl);
-      formData.append("Status", "Active");
-      formData.append("WalletId", null);
-      formData.append("RoleId", 3);
-      formData.append("CreateDate", new Date().toISOString());
+        if (loginResponse.status === 200) {
+          // Lưu token và thông tin người dùng vào cookie
+          Cookies.set("userToken", loginResponse.data.token, { expires: 1 }); // Lưu token trong 1 ngày
+          Cookies.set("userData", JSON.stringify(loginResponse.data), {
+            expires: 1,
+          }); // Lưu dữ liệu người dùng trong 1 ngày
+          console.log("Login successful:", loginResponse.data);
 
-      // Kiểm tra các trường đã được thêm vào FormData
-      logFormData(formData);
+          const response = await apiUser.get(`/${loginResponse.data.userId}`, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          });
 
-      // Gửi dữ liệu tạo tài khoản mới dưới dạng form-data
-      const createUserResponse = await apiUser.post("", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+          console.log("Dữ liệu trả về:", response.data);
 
-      if (createUserResponse.status === 201) {
-        console.log("User created successfully.");
-        // Lưu JWT token và thông tin người dùng vào cookie
-        Cookies.set("userToken", response.credential, { expires: 1 }); // Lưu token trong 1 ngày
-        Cookies.set("userData", JSON.stringify(decoded), { expires: 1 }); // Lưu dữ liệu người dùng trong 1 ngày
-        navigate("/"); // Điều hướng sau khi tạo người dùng thành công
+          Cookies.set("userDataReal", JSON.stringify(response.data), {
+            expires: 7,
+          });
+
+          // Tạo ví cho người dùng nếu chưa có ví
+
+          const checkWalletResponse = await apiUser.get(
+            `${loginResponse.data.userId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+          console.log("Wallet check.", checkWalletResponse.data);
+
+          // Kiểm tra nếu `walletId` là null
+          if (!checkWalletResponse.data.walletId) {
+            console.log("WalletId is null. Tạo với id người dùng.");
+            const walletData = {
+              balance: 0,
+              withdrawMethod: "string",
+              withdrawInfo: "string",
+              status: "Active",
+              userId: loginResponse.data.userId, // Gắn userId vào đây
+            };
+
+            const walletResponse = await apiWallets.post("", walletData, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            });
+
+            if (walletResponse.status === 201) {
+              console.log("Wallet created successfully.", walletResponse.data);
+              const dataU = checkUserResponse.data[0];
+              console.log("data USer ví", dataU);
+              const dataWallet = {
+                fullName: loginResponse.data.fullName,
+                email: loginResponse.data.email,
+                password: dataU.password,
+                createDate: dataU.createDate,
+                phone: dataU.phone,
+                dob: dataU.dob,
+                address: dataU.address,
+                roleId: 3,
+                status: dataU.status,
+                walletId: walletResponse.data.id, // Thêm walletId vào request
+              };
+              console.log("dữ liệu tạo ví", dataWallet);
+              console.log("ID người dùng", loginResponse.data.userId);
+              // Cập nhật ID ví vào thông tin người dùng
+              const updateUserResponse = await apiUser.put(
+                `/${loginResponse.data.userId}`,
+                dataWallet,
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    "Content-Type": "multipart/form-data",
+                  },
+                }
+              );
+
+              if (updateUserResponse.status === 204) {
+                console.log("User's wallet updated successfully.");
+              } else {
+                console.error(
+                  "Error updating user's wallet:",
+                  updateUserResponse.data
+                );
+              }
+            } else {
+              console.error("Error creating wallet:", walletResponse.data);
+            }
+          } else {
+            // Ví đã tồn tại
+            console.log(
+              "Wallet already exists with ID:",
+              checkWalletResponse.data.walletId
+            );
+          }
+
+          const checkCartResponse = await apiCart.get(
+            `?pageIndex=1&pageSize=50000`,
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+          console.log("cehck cart:", checkCartResponse.data);
+
+          const currentUserId = loginResponse.data.userId; // userId hiện tại từ phản hồi đăng nhập
+          console.log("dữ liệu userid check", currentUserId);
+          const userHasCart = checkCartResponse.data.some(
+            (cart) => cart.userId === currentUserId
+          );
+          console.log("userid đã check:", userHasCart);
+          // Tạo giỏ hàng mới cho người dùng nếu chưa có
+          if (userHasCart) {
+            console.log(`UserId ${currentUserId} đã có giỏ hàng.`);
+          } else {
+            const cartData = {
+              userId: loginResponse.data.userId,
+              items: [], // Giỏ hàng ban đầu rỗng
+              status: "Active",
+              totalPrice: 0,
+            };
+
+            const cartResponse = await apiCart.post("", cartData, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            });
+
+            if (cartResponse.status === 201) {
+              console.log("Cart created successfully.");
+            } else {
+              console.error("Error creating cart:", cartResponse.data);
+            }
+          }
+
+          navigate("/"); // Điều hướng sau khi đăng nhập thành công
+        } else {
+          console.error("Error during login:", loginResponse.data);
+          alert("Đã có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.");
+        }
       } else {
-        console.error("Error creating user:", createUserResponse.data);
-        alert("Đã có lỗi xảy ra khi tạo tài khoản. Vui lòng thử lại.");
+        // Người dùng chưa có tài khoản, tạo tài khoản mới
+        const formData = new FormData();
+        formData.append("FullName", fullName);
+        formData.append("Email", userEmail);
+        formData.append("Password", "1"); // Mật khẩu mặc định là 1
+        formData.append("Phone", "0");
+        formData.append("Dob", new Date().toISOString());
+        formData.append("Address", "string");
+        formData.append("AvatarUrl", avatarUrl);
+        formData.append("Status", "Active");
+        formData.append("WalletId", "");
+        formData.append("RoleId", 3);
+        formData.append("CreateDate", new Date().toISOString());
+
+        // Gửi dữ liệu tạo tài khoản mới dưới dạng form-data
+        const createUserResponse = await apiUser.post("", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        if (createUserResponse.status === 201) {
+          console.log("User created successfully.", createUserResponse.data);
+
+          const loginResponse = await apiLogin.post("", {
+            email: userEmail,
+            password: "1", // Mật khẩu mặc định là 1 khi đăng nhập qua Google
+          });
+
+          if (loginResponse.status === 200) {
+            console.log("Login successful.");
+            // Lưu token và thông tin người dùng vào cookie
+            Cookies.set("userToken", loginResponse.data.token, { expires: 1 }); // Lưu token trong 1 ngày
+            Cookies.set("userData", JSON.stringify(loginResponse.data), {
+              expires: 1,
+            }); // Lưu dữ liệu người dùng trong 1 ngày
+
+            // Cookies.set("userDataReal", JSON.stringify(loginResponse.data), {
+            //   expires: 7,
+            // });
+            console.log("Login successful:", loginResponse.data);
+
+            const walletData = {
+              balance: 0,
+              withdrawMethod: "string",
+              withdrawInfo: "string",
+              status: "Active",
+              userId: loginResponse.data.userId, // Gắn userId vào đây
+            };
+            const walletResponse = await apiWallets.post("", walletData, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            });
+
+            if (walletResponse.status === 201) {
+              // Cập nhật ID ví vào thông tin người dùng
+              console.log("Wallet created successfully.", walletResponse.data);
+              const dataUT = createUserResponse.data;
+              console.log("data USer ví", dataUT);
+              const dataWallet = {
+                fullName: loginResponse.data.fullName,
+                email: loginResponse.data.email,
+                password: dataUT.password,
+                createDate: dataUT.createDate,
+                phone: dataUT.phone,
+                dob: dataUT.dob,
+                address: dataUT.address,
+                roleId: 3,
+                status: dataUT.status,
+                walletId: walletResponse.data.id, // Thêm walletId vào request
+              };
+
+              const updateUserResponse = await apiUser.put(
+                `/${loginResponse.data.userId}`,
+                dataWallet,
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    "Content-Type": "multipart/form-data",
+                  },
+                }
+              );
+
+              if (updateUserResponse.status === 204) {
+                console.log("User's wallet updated successfully.");
+              } else {
+                console.error(
+                  "Error updating user's wallet:",
+                  updateUserResponse.data
+                );
+              }
+            }
+            const response = await apiUser.get(
+              `/${loginResponse.data.userId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+
+            console.log("Dữ liệu trả về:", response.data);
+
+            Cookies.set("userDataReal", JSON.stringify(response.data), {
+              expires: 7,
+            });
+
+            const cartData = {
+              userId: loginResponse.data.userId,
+              items: [], // Giỏ hàng ban đầu rỗng
+              status: "Active",
+              totalPrice: 0,
+            };
+            const cartResponse = await apiCart.post("", cartData, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            });
+
+            if (cartResponse.status === 201) {
+              console.log("Cart created successfully.");
+            } else {
+              console.error("Error creating cart:", cartResponse.data);
+            }
+          } else {
+            console.error("Error creating user:", createUserResponse.data);
+            alert("Đã có lỗi xảy ra khi tạo tài khoản. Vui lòng thử lại.");
+          }
+
+          navigate("/"); // Điều hướng sau khi tạo người dùng và ví thành công
+        }
       }
     } catch (error) {
       console.error("Error during Google login:", error);
@@ -242,17 +481,7 @@ const LoginPage = () => {
               </span>
             </p>
           </div>
-          <div className="flex justify-center items-center mt-4">
-            <p className="text-gray-600">
-              Đăng ký làm nhà cung cấp?{" "}
-              <span
-                className="text-blue-500 cursor-pointer"
-                onClick={() => navigate("/registerchef")}
-              >
-                Đăng ký tại đây
-              </span>
-            </p>
-          </div>
+
           <div className="flex justify-center items-end mt-6">
             <p className="text-center text-gray-600">
               Copyright&copy; 2024 EduToyRent Competition

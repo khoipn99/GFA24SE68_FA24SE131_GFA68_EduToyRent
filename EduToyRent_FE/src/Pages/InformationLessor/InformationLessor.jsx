@@ -23,6 +23,7 @@ const InformationLessor = () => {
   const [orders, setOrders] = useState([]);
   const [orderDetails, setOrderDetails] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [selectedMedia, setSelectedMedia] = useState(null);
 
   const navigate = useNavigate();
 
@@ -463,12 +464,16 @@ const InformationLessor = () => {
     brand: "",
     categoryId: 1,
     rentCount: 0,
-    rentTime: "o",
+    quantitySold: 0,
+    status: "Inactive",
   });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewProduct((prev) => ({ ...prev, [name]: value }));
+    setNewProduct((prev) => ({
+      ...prev,
+      [name]: name === "price" ? parseFloat(value) : value,
+    }));
   };
 
   const [newImage, setNewImage] = useState([]);
@@ -506,7 +511,10 @@ const InformationLessor = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    if (newVideo == "") {
+      alert("Bạn chưa chọn video để xác thực đồ chơi");
+      return;
+    }
     apiToys
       .post("", newProduct, {
         headers: {
@@ -514,7 +522,6 @@ const InformationLessor = () => {
         },
       })
       .then((response) => {
-        getProductInfo();
         var formData = new FormData();
 
         formData.append(`mediaUrls`, newImage);
@@ -525,7 +532,11 @@ const InformationLessor = () => {
         formData.append(`mediaUrls`, newVideo);
 
         apiMedia
-          .post("/upload-toy-images/" + response.data.id, formData)
+          .post("/upload-toy-media/" + response.data.id, formData, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
           .then((response) => {
             getProductInfo();
           });
@@ -540,6 +551,15 @@ const InformationLessor = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editedProduct, setEditedProduct] = useState(null);
 
+  useEffect(() => {
+    if (
+      selectedProduct &&
+      selectedProduct.media &&
+      selectedProduct.media.length > 0
+    ) {
+      setSelectedMedia(selectedProduct.media[0].mediaUrl); // Đặt ảnh/video đầu tiên làm mặc định
+    }
+  }, [selectedProduct]);
   const openDetailModal = (product) => {
     setSelectedProduct(product);
     setEditedProduct(product);
@@ -810,14 +830,36 @@ const InformationLessor = () => {
                       </label>
                       <label className="block mb-2">
                         Tuổi:
-                        <input
+                        <select
                           type="text"
                           name="age"
                           value={newProduct.age}
                           onChange={handleInputChange}
                           className="border border-gray-300 rounded p-1 w-full"
                           required
-                        />
+                        >
+                          <option key="1" value="1-3">
+                            1-3
+                          </option>
+                          <option key="2" value="3-5">
+                            3-5
+                          </option>
+                          <option key="3" value="5-7">
+                            5-7
+                          </option>
+                          <option key="4" value="7-9">
+                            7-9
+                          </option>
+                          <option key="5" value="9-11">
+                            9-11
+                          </option>
+                          <option key="6" value="11-13">
+                            11-13
+                          </option>
+                          <option key="7" value="13+">
+                            13+
+                          </option>
+                        </select>
                       </label>
                       <label className="block mb-2">
                         Hãng:
@@ -1006,21 +1048,8 @@ const InformationLessor = () => {
             </ul>
 
             {isDetailModalOpen && selectedProduct && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="bg-white p-6 rounded shadow-lg w-96">
-                  <h3 className="text-lg font-semibold mb-4">
-                    {isEditMode ? "Sửa sản phẩm" : "Chi tiết sản phẩm"}
-                  </h3>
-                  <img
-                    src={
-                      editedProduct.media[0].mediaUrl &&
-                      editedProduct.media[0].mediaUrl
-                        ? editedProduct.media[0].mediaUrl
-                        : ""
-                    }
-                    alt={editedProduct.name}
-                    className="w-full h-48 object-cover mb-4"
-                  />
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative">
                   {isEditMode ? (
                     <>
                       <input
@@ -1049,15 +1078,37 @@ const InformationLessor = () => {
                         placeholder="Chi tiết"
                         required
                       />
-                      <input
+                      <select
                         name="age"
                         value={editedProduct.age}
                         onChange={handleChange}
                         className="mb-2 w-full p-2 border border-gray-300 rounded"
                         placeholder="Tuổi"
-                        type="number"
+                        type="text"
                         required
-                      />
+                      >
+                        <option key="1" value="1-3">
+                          1-3
+                        </option>
+                        <option key="2" value="3-5">
+                          3-5
+                        </option>
+                        <option key="3" value="5-7">
+                          5-7
+                        </option>
+                        <option key="4" value="7-9">
+                          7-9
+                        </option>
+                        <option key="5" value="9-11">
+                          9-11
+                        </option>
+                        <option key="6" value="11-13">
+                          11-13
+                        </option>
+                        <option key="7" value="13+">
+                          13+
+                        </option>
+                      </select>
                       <input
                         name="brand"
                         value={editedProduct.brand}
@@ -1093,52 +1144,140 @@ const InformationLessor = () => {
                       >
                         Lưu
                       </button>
+                      <button
+                        onClick={closeDetailModal}
+                        className="p-2 bg-red-500 text-white rounded"
+                      >
+                        Đóng
+                      </button>
                     </>
                   ) : (
                     <>
-                      <p>
-                        <strong>Tên đồ chơi:</strong> {selectedProduct.name}
-                      </p>
-                      <p>
-                        <strong>Giá:</strong>{" "}
-                        {selectedProduct.price.toLocaleString()} VNĐ
-                      </p>
-                      <p>
-                        <strong>Trạng thái:</strong> {selectedProduct.status}
-                      </p>
-                      <p>
-                        <strong>Chi tiết:</strong> {selectedProduct.description}
-                      </p>
-                      <p>
-                        <strong>Tuổi:</strong> {selectedProduct.age}
-                      </p>
-                      <p>
-                        <strong>Hãng:</strong> {selectedProduct.brand}
-                      </p>
-                      <p>
-                        <strong>Loại đồ chơi:</strong>{" "}
-                        {selectedProduct.category.name}
-                      </p>
-                      <p>
-                        <strong>Nguồn gốc:</strong> {selectedProduct.origin}
-                      </p>
-                      {(selectedProduct.status === "Inactive" ||
-                        selectedProduct.status === "Active") && (
-                        <button
-                          onClick={handleEditClick}
-                          className="mt-4 p-2 bg-yellow-500 text-white rounded"
-                        >
-                          Sửa sản phẩm
-                        </button>
-                      )}
+                      <div className="flex flex-wrap lg:flex-nowrap gap-10">
+                        {/* Phần hình ảnh */}
+                        <div className="flex-1 flex justify-center items-center flex-col max-w-md mx-auto mt-20">
+                          {/* Hiển thị ảnh hoặc video */}
+                          <div className="w-80 h-80">
+                            {selectedMedia &&
+                            selectedProduct.media.some(
+                              (media) => media.mediaUrl === selectedMedia
+                            ) ? (
+                              selectedMedia.endsWith(".mp4?alt=media") ? (
+                                <video
+                                  src={selectedMedia}
+                                  controls
+                                  className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                                />
+                              ) : (
+                                <img
+                                  src={selectedMedia}
+                                  alt="Media"
+                                  className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                                />
+                              )
+                            ) : null}
+                          </div>
+
+                          {/* Ảnh/video nhỏ */}
+                          <div className="flex gap-4 flex-wrap justify-center mt-4">
+                            {" "}
+                            {/* Giữ cho các ảnh nhỏ xếp dưới ảnh lớn */}
+                            {selectedProduct.media.map((media, index) => (
+                              <div
+                                key={index}
+                                className="flex flex-col items-center"
+                              >
+                                {/* Hiển thị video nếu media là video */}
+                                {media.mediaUrl.endsWith(".mp4?alt=media") ? (
+                                  <video
+                                    src={media.mediaUrl}
+                                    alt={`Video ${index + 1}`}
+                                    className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+              ${
+                selectedMedia === media.mediaUrl
+                  ? "border-orange-500 scale-105"
+                  : "border-gray-300"
+              }`}
+                                    onClick={() =>
+                                      setSelectedMedia(media.mediaUrl)
+                                    } // Cập nhật media khi chọn video
+                                  />
+                                ) : (
+                                  // Hiển thị ảnh nếu media là ảnh
+                                  <img
+                                    src={media.mediaUrl}
+                                    alt={`Hình ảnh ${index + 1}`}
+                                    className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+              ${
+                selectedMedia === media.mediaUrl
+                  ? "border-orange-500 scale-105"
+                  : "border-gray-300"
+              }`}
+                                    onClick={() =>
+                                      setSelectedMedia(media.mediaUrl)
+                                    } // Cập nhật media khi chọn ảnh
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Phần thông tin */}
+                        <div className="flex-1 text-xl space-y-6">
+                          <div className="flex justify-between items-center mb-10">
+                            <h2 className="text-4xl font-bold text-center">
+                              Thông tin đồ chơi
+                            </h2>
+                            <button
+                              onClick={closeDetailModal}
+                              className="p-2 bg-red-500 text-white rounded"
+                            >
+                              Đóng
+                            </button>
+                          </div>
+
+                          <p>
+                            <strong>Tên đồ chơi:</strong> {selectedProduct.name}
+                          </p>
+                          <p>
+                            <strong>Giá:</strong>{" "}
+                            {(selectedProduct.price || 0).toLocaleString()} VNĐ
+                          </p>
+                          <p>
+                            <strong>Xuất xứ:</strong> {selectedProduct.origin}
+                          </p>
+                          <p>
+                            <strong>Tuổi:</strong> {selectedProduct.age}
+                          </p>
+
+                          <p>
+                            <strong>Thương Hiệu:</strong>{" "}
+                            {selectedProduct.brand}
+                          </p>
+                          <p>
+                            <strong>Danh mục:</strong>{" "}
+                            {selectedProduct.category.name}
+                          </p>
+                          <p>
+                            <strong>Ngày tạo:</strong>{" "}
+                            {new Date(
+                              selectedProduct.createDate
+                            ).toLocaleDateString()}
+                          </p>
+                          {(selectedProduct.status === "Inactive" ||
+                            selectedProduct.status === "Active") && (
+                            <button
+                              onClick={handleEditClick}
+                              className="mt-4 p-2 bg-yellow-500 text-white rounded"
+                            >
+                              Sửa sản phẩm
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </>
                   )}
-                  <button
-                    onClick={closeDetailModal}
-                    className="mt-4 p-2 bg-red-500 text-white rounded"
-                  >
-                    Đóng
-                  </button>
                 </div>
               </div>
             )}
@@ -1425,7 +1564,7 @@ const InformationLessor = () => {
                 selectedTab === "dashboard" ? "bg-gray-300" : ""
               }`}
             >
-              Dashboard
+              Doanh thu
             </button>
           </div>
 
