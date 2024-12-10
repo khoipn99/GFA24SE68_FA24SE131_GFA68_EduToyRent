@@ -195,8 +195,8 @@ namespace EduToyRentAPI.Controllers
                     {
                         Id = toy.Category.Id,
                         Name = toy.Category.Name
-                    },
-                    
+                    }
+                } : null,
                     Media = _unitOfWork.MediaRepository.Get(
                                                 m => m.ToyId == toy.Id ,
                                                 includeProperties: "Toy")
