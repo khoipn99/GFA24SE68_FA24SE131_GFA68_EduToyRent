@@ -438,7 +438,7 @@ namespace EduToyRentAPI.Controllers
                 return NotFound(new { Message = "Toy not found." });
             }
 
-            var validStatuses = new List<string> { "Active", "Inactive", "Renting", "Sold", "Banned", "Awaiting" }; //Awaiting dang cho duyet lai
+            var validStatuses = new List<string> { "Active", "Inactive", "Renting", "Sold", "Banned", "Awaiting", "Not Qualified" }; //Awaiting dang cho duyet lai
             if (!validStatuses.Contains(newStatus))
             {
                 return BadRequest(new { Message = "Invalid status value." });
