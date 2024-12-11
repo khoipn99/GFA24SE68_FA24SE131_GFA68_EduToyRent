@@ -1156,9 +1156,7 @@ const StaffPage = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="13" className="p-4 text-center">
-                              No toys found.
-                            </td>
+                            <td colSpan="13" className="p-4 text-center"></td>
                           </tr>
                         )}
                       </tbody>
@@ -1188,13 +1186,13 @@ const StaffPage = () => {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  Previous
+                  Trước
                 </button>
                 <button
                   onClick={handleNext}
                   className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                 >
-                  Next
+                  Sau
                   <svg
                     className="w-5 h-5 ml-1 -mr-1"
                     fill="currentColor"
@@ -1479,9 +1477,7 @@ const StaffPage = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="13" className="p-4 text-center">
-                              No toys found.
-                            </td>
+                            <td colSpan="13" className="p-4 text-center"></td>
                           </tr>
                         )}
                       </tbody>
@@ -1511,13 +1507,13 @@ const StaffPage = () => {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  Previous
+                  Trước
                 </button>
                 <button
                   onClick={handleNext}
                   className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                 >
-                  Next
+                  Sau
                   <svg
                     className="w-5 h-5 ml-1 -mr-1"
                     fill="currentColor"
@@ -1813,9 +1809,7 @@ const StaffPage = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="13" className="p-4 text-center">
-                              No toys found.
-                            </td>
+                            <td colSpan="13" className="p-4 text-center"></td>
                           </tr>
                         )}
                       </tbody>
@@ -1845,13 +1839,13 @@ const StaffPage = () => {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  Previous
+                  Trước
                 </button>
                 <button
                   onClick={handleNext}
                   className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                 >
-                  Next
+                  Sau
                   <svg
                     className="w-5 h-5 ml-1 -mr-1"
                     fill="currentColor"
@@ -2206,9 +2200,7 @@ const StaffPage = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="13" className="p-4 text-center">
-                              No toys found.
-                            </td>
+                            <td colSpan="13" className="p-4 text-center"></td>
                           </tr>
                         )}
                       </tbody>
@@ -2238,13 +2230,13 @@ const StaffPage = () => {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  Previous
+                  Trước
                 </button>
                 <button
                   onClick={handleNext}
                   className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                 >
-                  Next
+                  Sau
                   <svg
                     className="w-5 h-5 ml-1 -mr-1"
                     fill="currentColor"
@@ -2512,9 +2504,7 @@ const StaffPage = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="13" className="p-4 text-center">
-                              No toys found.
-                            </td>
+                            <td colSpan="13" className="p-4 text-center"></td>
                           </tr>
                         )}
                       </tbody>
@@ -2544,13 +2534,13 @@ const StaffPage = () => {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  Previous
+                  Trước
                 </button>
                 <button
                   onClick={handleNext}
                   className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                 >
-                  Next
+                  Sau
                   <svg
                     className="w-5 h-5 ml-1 -mr-1"
                     fill="currentColor"
@@ -2771,9 +2761,7 @@ const StaffPage = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="13" className="p-4 text-center">
-                              No toys found.
-                            </td>
+                            <td colSpan="13" className="p-4 text-center"></td>
                           </tr>
                         )}
                       </tbody>
@@ -2803,13 +2791,13 @@ const StaffPage = () => {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  Previous
+                  Trước
                 </button>
                 <button
                   onClick={handleNext}
                   className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                 >
-                  Next
+                  Sau
                   <svg
                     className="w-5 h-5 ml-1 -mr-1"
                     fill="currentColor"
