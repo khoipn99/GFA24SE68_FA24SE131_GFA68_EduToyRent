@@ -55,6 +55,9 @@ const ToySupplierPage = () => {
   const itemsPerPage = 5; // Số mục trên mỗi trang
   const [searchKeyword, setSearchKeyword] = useState(""); // Lưu từ khóa tìm kiếm
   const [mediaList, setMediaList] = useState([]); // Lưu danh sách media (ảnh + video)
+  const [isEditing2, setIsEditing2] = useState(false);
+  const [formData, setFormData] = useState({});
+
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -110,6 +113,11 @@ const ToySupplierPage = () => {
             );
             console.log("Dữ liệu ví của người dùng:", walletResponse.data);
             setWalletInfo(walletResponse.data);
+            setFormData({
+              balance: walletResponse.data.balance || 0,
+              withdrawInfo: walletResponse.data.withdrawInfo || "",
+              withdrawMethod: walletResponse.data.withdrawMethod || "",
+            });
 
             const walletTransaction = await apiWalletTransaction.get(
               `/ByWalletId?walletId=${user.walletId}&pageIndex=1&pageSize=100`
@@ -238,6 +246,36 @@ const ToySupplierPage = () => {
   const handleNext = () => {
     setCurrentPage((prevPage) => prevPage + 1);
     LoadToy(userId, currentPage + 1, itemsPerPage);
+  };
+
+  const handleInputChange2 = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit2 = async (e) => {
+    e.preventDefault();
+
+    await apiWallets
+      .put("/" + walletInfo.id, {
+        balance: walletInfo.balance,
+        withdrawMethod: formData.withdrawMethod,
+        withdrawInfo: formData.withdrawInfo,
+        status: walletInfo.status,
+        userId: walletInfo.userId,
+      })
+      .then((response) => {
+        setIsEditing2(false);
+      });
+
+    const walletResponse = await apiWallets.get(`/${userData.walletId}`);
+    console.log("Dữ liệu ví của người dùng:", walletResponse.data);
+    setWalletInfo(walletResponse.data);
+    setFormData({
+      balance: walletResponse.data.balance || 0,
+      withdrawInfo: walletResponse.data.withdrawInfo || "",
+      withdrawMethod: walletResponse.data.withdrawMethod || "",
+    });
   };
 
   const LoadOrderShop = async (userId, statusFilter) => {
@@ -2208,14 +2246,68 @@ const ToySupplierPage = () => {
                     {(walletInfo.balance || 0).toLocaleString()} VNĐ
                   </span>
                 </p>
-                <p>
-                  <strong className="font-medium">Số tài khoản:</strong>{" "}
-                  {walletInfo.withdrawInfo}
-                </p>
-                <p>
-                  <strong className="font-medium">Ngân hàng:</strong>{" "}
-                  {walletInfo.withdrawMethod}
-                </p>
+
+                {!isEditing2 ? (
+                  <>
+                    <p>
+                      <strong className="font-medium">Số tài khoản:</strong>{" "}
+                      {walletInfo.withdrawInfo}
+                    </p>
+                    <p>
+                      <strong className="font-medium">Ngân hàng:</strong>{" "}
+                      {walletInfo.withdrawMethod}
+                    </p>
+                    <button
+                      className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      onClick={() => setIsEditing2(true)}
+                    >
+                      Chỉnh sửa
+                    </button>
+                  </>
+                ) : (
+                  <form onSubmit={handleSubmit2} className="mt-4">
+                    <div className="flex items-center mb-2">
+                      <label className="block font-semibold w-1/7">
+                        Số tài khoản:
+                      </label>
+                      <input
+                        type="text"
+                        name="withdrawInfo"
+                        value={formData.withdrawInfo}
+                        onChange={handleInputChange2}
+                        className="w-6/7 p-2 border rounded"
+                      />
+                    </div>
+
+                    <div className="flex items-center mb-2">
+                      <label className="block font-semibold w-1/7">
+                        Ngân hàng:
+                      </label>
+                      <input
+                        type="text"
+                        name="withdrawMethod"
+                        value={formData.withdrawMethod}
+                        onChange={handleInputChange2}
+                        className="w-6/7 p-2 border rounded"
+                      />
+                    </div>
+                    <div className="flex space-x-2 mt-4">
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                      >
+                        Lưu
+                      </button>
+                      <button
+                        type="button"
+                        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                        onClick={() => setIsEditing2(false)}
+                      >
+                        Hủy
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             </div>
 

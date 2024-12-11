@@ -173,16 +173,35 @@ const InformationLessor = () => {
       },
     });
 
-    await apiToys.patch(
-      `/${order.toyId}/update-status`,
-      JSON.stringify("Active"), // Adjust the key as per API requirements
-      {
+    await apiToys
+      .get("/" + order.toyId, {
         headers: {
-          "Content-Type": "application/json", // Specify the correct Content-Type
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
-      }
-    );
+      })
+      .then(async (response) => {
+        const updatedToy = {
+          name: response.data.name || "Default Toy Name",
+          description: response.data.description || "Default Description",
+          price: response.data.price || "0",
+          buyQuantity: response.data.buyQuantity || "0",
+          origin: response.data.origin || "Default Origin",
+          age: response.data.age || "All Ages",
+          brand: response.data.brand || "Default Brand",
+          categoryId: response.data.category.id || "1", // Nếu không có selectedCategory thì dùng mặc định
+
+          rentCount: response.data.rentCount || "0",
+          quantitySold: response.data.quantitySold || "0",
+          status: "Active",
+        };
+
+        await apiToys.put(`/${order.toyId}`, updatedToy, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        });
+      });
 
     await apiUser
       .get("/" + selectedOrder.userId, {
@@ -226,6 +245,7 @@ const InformationLessor = () => {
                 walletId: walletTmp.id,
                 paymentTypeId: 5,
                 orderId: selectedOrder.id,
+                status: "Success",
               },
               {
                 headers: {
@@ -248,7 +268,7 @@ const InformationLessor = () => {
         await apiWallets.put(
           "/" + walletTmp.id,
           {
-            balance: walletTmp.balance + order.rentPrice * 0.85,
+            balance: walletTmp.balance + (order.rentPrice * 0.85 - 30000),
             withdrawMethod: walletTmp.withdrawMethod,
             withdrawInfo: walletTmp.withdrawInfo,
             status: walletTmp.status,
@@ -270,6 +290,24 @@ const InformationLessor = () => {
             walletId: customerInfo.walletId,
             paymentTypeId: 5,
             orderId: selectedOrder.id,
+            status: "Success",
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        );
+        await apiWalletTransaction.post(
+          "",
+          {
+            transactionType: "Phí ship của đơn hàng",
+            amount: -30000,
+            date: new Date().toISOString(),
+            walletId: customerInfo.walletId,
+            paymentTypeId: 5,
+            orderId: selectedOrder.id,
+            status: "Success",
           },
           {
             headers: {
@@ -298,11 +336,12 @@ const InformationLessor = () => {
               "",
               {
                 receiveMoney: order.unitPrice,
-                platformFee: order.rentPrice * 0.15,
-                ownerReceiveMoney: order.rentPrice * 0.85,
+                platformFee: order.rentPrice * 0.15 + 60000,
+                ownerReceiveMoney: order.rentPrice * 0.85 - 30000,
                 depositBackMoney: order.unitPrice - order.rentPrice,
                 status: "Success",
                 orderId: selectedOrder.id,
+                date: new Date().toISOString(),
               },
               {
                 headers: {
@@ -318,12 +357,13 @@ const InformationLessor = () => {
                 "",
                 {
                   receiveMoney: order.unitPrice,
-                  platformFee: order.rentPrice * 0.15,
-                  ownerReceiveMoney: order.rentPrice * 0.85,
+                  platformFee: order.rentPrice * 0.15 + 60000,
+                  ownerReceiveMoney: order.rentPrice * 0.85 - 30000,
                   depositBackMoney: order.unitPrice - order.rentPrice,
                   status: "ToyGood",
                   orderDetailId: order.id,
                   transactionId: response.data.id,
+                  date: new Date().toISOString(),
                 },
                 {
                   headers: {
@@ -339,14 +379,19 @@ const InformationLessor = () => {
               {
                 receiveMoney: transactionTmp[0].receiveMoney + order.unitPrice,
                 platformFee:
-                  transactionTmp[0].platformFee + order.rentPrice * 0.15,
+                  transactionTmp[0].platformFee +
+                  order.rentPrice * 0.15 +
+                  60000,
                 ownerReceiveMoney:
-                  transactionTmp[0].ownerReceiveMoney + order.rentPrice * 0.85,
+                  transactionTmp[0].ownerReceiveMoney +
+                  order.rentPrice * 0.85 -
+                  30000,
                 depositBackMoney:
                   transactionTmp[0].depositBackMoney +
                   (order.unitPrice - order.rentPrice),
                 status: "Success",
                 orderId: selectedOrder.id,
+                date: new Date().toISOString(),
               },
               {
                 headers: {
@@ -362,12 +407,13 @@ const InformationLessor = () => {
                 "",
                 {
                   receiveMoney: order.unitPrice,
-                  platformFee: order.rentPrice * 0.15,
-                  ownerReceiveMoney: order.rentPrice * 0.85,
+                  platformFee: order.rentPrice * 0.15 + 60000,
+                  ownerReceiveMoney: order.rentPrice * 0.85 - 30000,
                   depositBackMoney: order.unitPrice - order.rentPrice,
                   status: "ToyGood",
                   orderDetailId: order.id,
                   transactionId: transactionTmp[0].id,
+                  date: new Date().toISOString(),
                 },
                 {
                   headers: {
