@@ -1374,7 +1374,7 @@ const ToySupplierPage = () => {
               >
                 <div className="flex items-center p-4 border-b">
                   <div className="ml-4 flex-1">
-                    <h3 className="text-lg font-semibold">
+                    <h3 className="text-lg font-medium">
                       <strong>Người đặt hàng:</strong> {order.userName}
                     </h3>
                     <p className="text-sm text-gray-600">
@@ -1394,7 +1394,7 @@ const ToySupplierPage = () => {
                       {statusMapping[order.status] ||
                         "Trạng thái không xác định"}
                     </h1>
-                    <p className="text-lg font-semibold">
+                    <p className="text-lg font-medium">
                       <strong>Tổng tiền:</strong>{" "}
                       {(order.totalPrice || 0).toLocaleString()} VNĐ
                     </p>
@@ -1525,7 +1525,7 @@ const ToySupplierPage = () => {
                     {/* Card popup */}
                     {isCardVisible && (
                       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white w-full max-w-3xl h-auto max-h-[90vh] overflow-y-auto rounded-xl shadow-lg p-8 relative">
+                        <div className="bg-white w-full max-w-xl h-auto max-h-full overflow-y-auto rounded-xl shadow-lg p-8 relative">
                           <button
                             onClick={() => setIsCardVisible(false)}
                             className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
@@ -1725,12 +1725,12 @@ const ToySupplierPage = () => {
                           >
                             Tuổi
                           </th>
-                          <th
+                          {/* <th
                             scope="col"
                             className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
                           >
                             Thương hiệu
-                          </th>
+                          </th> */}
 
                           <th
                             scope="col"
@@ -1775,7 +1775,7 @@ const ToySupplierPage = () => {
                                       className="w-full max-w-[70px] h-auto object-contain mr-2"
                                     />
                                   ) : (
-                                    <span>No media available</span>
+                                    <span></span>
                                   )}
                                 </div>
                               </td>
@@ -1795,9 +1795,9 @@ const ToySupplierPage = () => {
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {toy.age}
                               </td>
-                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                              {/* <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {toy.brand}
-                              </td>
+                              </td> */}
 
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {new Date(toy.createDate).toLocaleDateString()}
@@ -1846,9 +1846,7 @@ const ToySupplierPage = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="13" className="p-4 text-center">
-                              No toys found.
-                            </td>
+                            <td colSpan="13" className="p-4 text-center"></td>
                           </tr>
                         )}
                       </tbody>
@@ -2450,7 +2448,7 @@ const ToySupplierPage = () => {
                                       className="w-full max-w-[70px] h-auto object-contain mr-2"
                                     />
                                   ) : (
-                                    <span>No media available</span>
+                                    <span></span>
                                   )}
                                 </div>
                               </td>
@@ -2499,9 +2497,7 @@ const ToySupplierPage = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="13" className="p-4 text-center">
-                              No toys found.
-                            </td>
+                            <td colSpan="13" className="p-4 text-center"></td>
                           </tr>
                         )}
                       </tbody>
