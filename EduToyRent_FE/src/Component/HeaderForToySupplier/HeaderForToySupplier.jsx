@@ -175,24 +175,7 @@ const HeaderForToySupplier = () => {
               <div className="flex justify-center items-center">
                 <p>Số dư : {(userWallet.balance || 0).toLocaleString()} VND</p>
               </div>
-              <button
-                className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"
-                onClick={handleTopUp} // Hàm xử lý khi nhấn vào nút
-              >
-                <div className="text-[#0e161b]">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20px"
-                    height="20px"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                  >
-                    {/* SVG biểu tượng phù hợp cho "Nạp tiền" */}
-                    <path d="M128,8a120,120,0,1,0,120,120A120.14,120.14,0,0,0,128,8Zm56,120a8,8,0,0,1-8,8H136v40a8,8,0,0,1-16,0V136H88a8,8,0,0,1,0-16h32V80a8,8,0,0,1,16,0v40h40A8,8,0,0,1,184,128Z"></path>
-                  </svg>
-                </div>
-                <span>Nạp tiền</span>
-              </button>
+
               <div
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}

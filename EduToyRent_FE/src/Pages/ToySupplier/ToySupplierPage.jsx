@@ -24,6 +24,9 @@ const ToySupplierPage = () => {
   const [toyId, setToyId] = useState(null); // Lưu URL ảnh để hiển thị
   const [toyData, setToyData] = useState(null);
   const [toysData, setToysData] = useState([]);
+
+  const [toyDeleteData, setToyDeleteData] = useState(null);
+  const [selectedToyDelete, setSelectedToyDelete] = useState(null);
   const [passwordStrength, setPasswordStrength] = useState("");
   const [showPasswords, setShowPasswords] = useState({
     current: false,
@@ -100,7 +103,7 @@ const ToySupplierPage = () => {
             console.log("Dữ liệu đồ chơi của người dùng:", toyResponse.data);
 
             // Cập nhật dữ liệu đồ chơi (nếu cần thiết)
-            setToysData(toyResponse.data);
+            // setToysData(toyResponse.data);
             // Lấy thông tin ví của người dùng từ walletId
             const walletResponse = await apiWallets.get(
               `/${user.walletId}` // Sử dụng user.walletId thay vì userResponse.walletId
@@ -131,7 +134,7 @@ const ToySupplierPage = () => {
     if (userId) {
       console.log("Gọi LoadToy với userId:", userId);
       LoadToy(userId);
-
+      LoadToyDelete(userId);
       LoadOrderShop(userId, "");
     } else {
       console.warn("userId chưa được thiết lập.");
@@ -144,7 +147,15 @@ const ToySupplierPage = () => {
       setSelectedMedia(selectedToy.media[0].mediaUrl); // Đặt ảnh/video đầu tiên làm mặc định
     }
   }, [selectedToy]);
-
+  useEffect(() => {
+    if (
+      selectedToyDelete &&
+      selectedToyDelete.media &&
+      selectedToyDelete.media.length > 0
+    ) {
+      setSelectedMedia(selectedToyDelete.media[0].mediaUrl); // Đặt ảnh/video đầu tiên làm mặc định
+    }
+  }, [selectedToyDelete]);
   useEffect(() => {
     if (selectedToy) {
       setMediaList(selectedToy.media || []); // Lưu danh sách media từ sản phẩm
@@ -172,8 +183,48 @@ const ToySupplierPage = () => {
         toyResponse.data
       );
 
+      // Lọc đồ chơi có trạng thái Active
+      const activeToys = toyResponse.data.filter(
+        (toy) => toy.status === "Active"
+      );
+
+      console.log("Danh sách đồ chơi có trạng thái Active:", activeToys);
+
       // Cập nhật dữ liệu đồ chơi
-      setToysData(toyResponse.data);
+      setToysData(activeToys);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách đồ chơi:", error);
+    }
+  };
+  const LoadToyDelete = async (userId, pageIndex = 1, pageSize = 5) => {
+    if (!userId) {
+      console.error("Không tìm thấy userId để tải đồ chơi.");
+      return;
+    }
+    try {
+      const toyResponse = await apiToys.get(
+        `/user/${userId}?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      console.log(
+        `Dữ liệu đồ chơi của người dùng tại trang ${pageIndex}:`,
+        toyResponse.data
+      );
+
+      // Lọc đồ chơi có trạng thái Active
+      const inactiveToys = toyResponse.data.filter(
+        (toy) => toy.status === "Inactive"
+      );
+
+      console.log("Danh sách đồ chơi có trạng thái Inactive:", inactiveToys);
+
+      // Cập nhật dữ liệu đồ chơi
+      setToyDeleteData(inactiveToys);
     } catch (error) {
       console.error("Lỗi khi tải danh sách đồ chơi:", error);
     }
@@ -222,12 +273,10 @@ const ToySupplierPage = () => {
         setOrders(orders); // Cập nhật danh sách đơn hàng
         console.log("Danh sách đơn hàng:", orders);
       } else {
-        console.log("Không có đơn hàng nào với trạng thái đã chọn.");
         // Nếu không có đơn hàng nào, bạn có thể thông báo cho người dùng
       }
     } catch (error) {
       console.error("Lỗi khi tải danh sách đơn hàng:", error);
-      alert("Có lỗi xảy ra khi tải danh sách đơn hàng.");
     }
   };
 
@@ -318,8 +367,8 @@ const ToySupplierPage = () => {
         formData.append("address", editedData.address || "Default Address");
         formData.append("status", editedData.status || "Active");
         formData.append("roleId", editedData.role.id || "");
-        formData.append("avatarUrl", editedData.avatarUrl || "");
-        formData.append("quantitySold", editedData.quantitySold || "0");
+        formData.append("star", editedData.star || "");
+
         const response = await apiUser.put(`/${userId}`, formData, {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -610,9 +659,10 @@ const ToySupplierPage = () => {
         age: Toyresponse.data.age || "All Ages",
         brand: Toyresponse.data.brand || "Default Brand",
         categoryId: Toyresponse.data.categoryId || "1",
-        rentCount: Toyresponse.data.rentCount || "0",
-        rentTime: Toyresponse.data.rentTime || "Default Rent Time",
-        status: "Inactive", // Gửi status "Inactive" khi role == 2
+
+        rentCount: Toyresponse.rentCount || "0",
+        quantitySold: Toyresponse.quantitySold || "0",
+        status: "Inactive",
       };
 
       console.log("Dữ liệu gửi đi trước khi xóa:", updatedToy);
@@ -626,6 +676,66 @@ const ToySupplierPage = () => {
       setToyData(response.data);
 
       // Tải lại dữ liệu món đồ chơi nếu cần
+      LoadToy(userId);
+      LoadToyDelete(userId);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật toy:", error);
+    }
+  };
+
+  const handleUnBan = async (toyId) => {
+    console.log("toyId: ", toyId);
+
+    if (!toyId) {
+      console.error("Không có toyId");
+      return;
+    }
+
+    try {
+      const Toyresponse = await apiToys.get(`/${toyId}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      console.log("Dữ liệu trả về từ API: ", Toyresponse.data);
+
+      const isConfirmed = window.confirm(
+        "Bạn có chắc chắn muốn xóa món đồ này không?"
+      );
+
+      if (!isConfirmed) {
+        console.log("Người dùng đã hủy bỏ.");
+        return;
+      }
+
+      const updatedToy = {
+        name: Toyresponse.data.name || "Default Toy Name",
+        description: Toyresponse.data.description || "Default Description",
+        price: Toyresponse.data.price || "0",
+        buyQuantity: Toyresponse.data.buyQuantity || "0",
+        origin: Toyresponse.data.origin || "Default Origin",
+        age: Toyresponse.data.age || "All Ages",
+        brand: Toyresponse.data.brand || "Default Brand",
+        categoryId: Toyresponse.data.categoryId || "1",
+
+        rentCount: Toyresponse.rentCount || "0",
+        quantitySold: Toyresponse.quantitySold || "0",
+        status: "Active",
+      };
+
+      console.log("Dữ liệu gửi đi trước khi xóa:", updatedToy);
+
+      const response = await apiToys.put(`/${toyId}`, updatedToy, {
+        Authorization: `Bearer ${Cookies.get("userToken")}`,
+        "Content-Type": "application/json",
+      });
+
+      console.log("Dữ liệu trả về sau khi xóa:", response.data);
+      setToyDeleteData(response.data);
+      setSelectedToyDelete(null);
+      // Tải lại dữ liệu món đồ chơi nếu cần
+      LoadToyDelete(userId);
       LoadToy(userId);
     } catch (error) {
       console.error("Lỗi khi cập nhật toy:", error);
@@ -896,7 +1006,9 @@ const ToySupplierPage = () => {
 
                     {/* Form chỉnh sửa */}
                     <div className="mb-4">
-                      <label className="block text-gray-700">Họ và tên</label>
+                      <label className="block text-gray-700">
+                        Tên cửa hàng
+                      </label>
                       <input
                         type="text"
                         value={editedData.fullName || ""}
@@ -1546,61 +1658,61 @@ const ToySupplierPage = () => {
                 <div className="inline-block min-w-full align-middle">
                   <div className="overflow-hidden shadow">
                     <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
-                      <thead className=" bg-gray-100 dark:bg-gray-700">
+                      <thead className=" bg-gray-100 dark:bg-gray-700 items-center">
                         <tr>
                           <th
                             scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
                           ></th>
                           <th
                             scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
                           >
                             Tên đồ chơi
                           </th>
                           <th
                             scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
                           >
                             Giá
                           </th>
 
                           <th
                             scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
                           >
                             Xuất xứ
                           </th>
                           <th
                             scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
                           >
                             Tuổi
                           </th>
                           <th
                             scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
                           >
                             Thương hiệu
                           </th>
 
                           <th
                             scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
                           >
                             Ngày tạo
                           </th>
 
                           <th
                             scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
                           >
                             Trạng thái
                           </th>
 
                           <th
                             scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
                           >
                             Hành động
                           </th>
@@ -1632,7 +1744,7 @@ const ToySupplierPage = () => {
                                 </div>
                               </td>
 
-                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400 ">
                                 <div className="text-base font-semibold text-gray-900 dark:text-white truncate w-[200px]">
                                   {toy.name}
                                 </div>
@@ -1835,32 +1947,32 @@ const ToySupplierPage = () => {
                       <h2 className="text-4xl font-bold mb-10 text-center">
                         Thông tin đồ chơi
                       </h2>
-                      <p>
-                        <strong>Tên đồ chơi:</strong> {selectedToy.name}
+                      <p className="text-lg">
+                        <strong>Tên đồ chơi: </strong> {selectedToy.name}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Giá:</strong>{" "}
                         {(selectedToy.price || 0).toLocaleString()} VNĐ
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Xuất xứ:</strong> {selectedToy.origin}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Tuổi:</strong> {selectedToy.age}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Thương Hiệu:</strong> {selectedToy.brand}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Danh mục:</strong> {selectedToy.category.name}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Ngày tạo:</strong>{" "}
                         {new Date(selectedToy.createDate).toLocaleDateString()}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Trạng thái:</strong>{" "}
                         {statusMapping[selectedToy.status] ||
                           "Trạng thái không xác định"}
@@ -2159,8 +2271,333 @@ const ToySupplierPage = () => {
           </div>
         );
 
-      case "Edit":
-        return <div>hi</div>;
+      case "ProductDelete":
+        return (
+          <div>
+            <div className="flex flex-col">
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow">
+                    <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
+                      <thead className=" bg-gray-100 dark:bg-gray-700 items-center">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
+                          ></th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Tên đồ chơi
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Giá
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Xuất xứ
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Tuổi
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Thương hiệu
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Ngày tạo
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Trạng thái
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-bold text-center text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Hành động
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                        {toyDeleteData &&
+                        Array.isArray(toyDeleteData) &&
+                        toyDeleteData.length > 0 ? (
+                          toyDeleteData.map((toy) => (
+                            <tr
+                              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                              key={toy.id}
+                            >
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                  {toy.media && toy.media.length > 0 ? (
+                                    <img
+                                      key={toy.id}
+                                      src={
+                                        toy.media ? toy.media[0].mediaUrl : ""
+                                      }
+                                      alt={`Toy Media ${toy.id + 1}`}
+                                      className="w-full max-w-[70px] h-auto object-contain mr-2"
+                                    />
+                                  ) : (
+                                    <span>No media available</span>
+                                  )}
+                                </div>
+                              </td>
+
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white truncate w-[200px]">
+                                  {toy.name}
+                                </div>
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {(toy.price || 0).toLocaleString()} VNĐ
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.origin}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.age}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.brand}
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {new Date(toy.createDate).toLocaleDateString()}
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {statusMapping[toy.status] ||
+                                  "Trạng thái không xác định"}
+                              </td>
+
+                              <td className="p-4 space-x-2 whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedToyDelete(toy);
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
+                                >
+                                  Thông tin
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="13" className="p-4 text-center">
+                              No toys found.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
+              <div className="flex items-center mb-4 sm:mb-0"></div>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handlePrevious}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                >
+                  <svg
+                    className="w-5 h-5 mr-1 -ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  Trước
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                >
+                  Sau
+                  <svg
+                    className="w-5 h-5 ml-1 -mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {selectedToyDelete && !isEditing && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative ">
+                  {/* Nút đóng ở góc phải */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedToyDelete(null)} // Đóng chi tiết khi bấm nút
+                    className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-700"
+                  >
+                    &times;
+                  </button>
+
+                  <div className="flex flex-wrap lg:flex-nowrap gap-10">
+                    {/* Phần hình ảnh */}
+                    <div className="flex-1 flex justify-center items-center flex-col max-w-md mx-auto mt-20">
+                      {/* Hiển thị ảnh hoặc video */}
+                      <div className="w-80 h-80">
+                        {selectedMedia &&
+                        selectedToyDelete.media.some(
+                          (media) => media.mediaUrl === selectedMedia
+                        ) ? (
+                          selectedMedia.endsWith(".mp4?alt=media") ? (
+                            <video
+                              src={selectedMedia}
+                              controls
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          ) : (
+                            <img
+                              src={selectedMedia}
+                              alt="Media"
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          )
+                        ) : null}
+                      </div>
+
+                      {/* Ảnh/video nhỏ */}
+                      <div className="flex gap-4 flex-wrap justify-center mt-4">
+                        {" "}
+                        {/* Giữ cho các ảnh nhỏ xếp dưới ảnh lớn */}
+                        {selectedToyDelete.media.map((media, index) => (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center"
+                          >
+                            {/* Hiển thị video nếu media là video */}
+                            {media.mediaUrl.endsWith(".mp4?alt=media") ? (
+                              <video
+                                src={media.mediaUrl}
+                                alt={`Video ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+              ${
+                selectedMedia === media.mediaUrl
+                  ? "border-orange-500 scale-105"
+                  : "border-gray-300"
+              }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn video
+                              />
+                            ) : (
+                              // Hiển thị ảnh nếu media là ảnh
+                              <img
+                                src={media.mediaUrl}
+                                alt={`Hình ảnh ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+              ${
+                selectedMedia === media.mediaUrl
+                  ? "border-orange-500 scale-105"
+                  : "border-gray-300"
+              }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn ảnh
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Phần thông tin */}
+                    <div className="flex-1 text-sm space-y-6">
+                      <h2 className="text-4xl font-bold mb-10 text-center">
+                        Thông tin đồ chơi
+                      </h2>
+                      <p className="text-lg">
+                        <strong>Tên đồ chơi:</strong> {selectedToyDelete.name}
+                      </p>
+                      <p className="text-lg">
+                        <strong>Giá:</strong>{" "}
+                        {(selectedToyDelete.price || 0).toLocaleString()} VNĐ
+                      </p>
+                      <p className="text-lg">
+                        <strong>Xuất xứ:</strong> {selectedToyDelete.origin}
+                      </p>
+                      <p className="text-lg">
+                        <strong>Tuổi:</strong> {selectedToyDelete.age}
+                      </p>
+
+                      <p className="text-lg">
+                        <strong>Thương Hiệu:</strong> {selectedToyDelete.brand}
+                      </p>
+                      <p className="text-lg">
+                        <strong>Danh mục:</strong>{" "}
+                        {selectedToyDelete.category.name}
+                      </p>
+                      <p className="text-lg">
+                        <strong>Ngày tạo:</strong>{" "}
+                        {new Date(
+                          selectedToyDelete.createDate
+                        ).toLocaleDateString()}
+                      </p>
+
+                      <p className="text-lg">
+                        <strong>Trạng thái:</strong>{" "}
+                        {statusMapping[selectedToyDelete.status] ||
+                          "Trạng thái không xác định"}
+                      </p>
+                      <p className=" space-x-2 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
+                            handleUnBan(selectedToyDelete.id); // Truyền toy.id vào hàm handleDelete
+                          }}
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
+                        >
+                          Bỏ xoá đồ chơi
+                        </button>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
 
       default:
         return null;
@@ -2209,7 +2646,15 @@ const ToySupplierPage = () => {
             >
               <span className="icon-class mr-2">📦</span> Danh sách sản phẩm
             </button>
-
+            <button
+              onClick={() => setSelectedTab("ProductDelete")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "ProductDelete" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">📦</span> Danh sách sản phẩm đã
+              xoá
+            </button>
             <button
               onClick={() => setSelectedTab("orders")}
               className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
@@ -2226,14 +2671,6 @@ const ToySupplierPage = () => {
             >
               <span className="icon-class mr-2">💼</span> {/* Biểu tượng ví */}
               Lịch sử giao dịch
-            </button>
-            <button
-              onClick={() => setSelectedTab("Edit")}
-              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
-                selectedTab === "Edit" ? "bg-gray-300" : ""
-              }`}
-            >
-              <span className="icon-class mr-2">🏢</span> Chỉnh sửa cửa hàng
             </button>
           </nav>
         </aside>
