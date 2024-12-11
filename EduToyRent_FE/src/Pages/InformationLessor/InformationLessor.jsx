@@ -538,6 +538,25 @@ const InformationLessor = () => {
             },
           })
           .then((response) => {
+            setNewProduct({
+              name: "",
+              description: "",
+              price: 0,
+              buyQuantity: -1,
+              origin: "",
+              age: "",
+              brand: "",
+              categoryId: 1,
+              rentCount: 0,
+              quantitySold: 0,
+              status: "Inactive",
+            });
+            setNewVideo([]);
+            setNewImage([]);
+            setNewImage2([]);
+            setNewImage3([]);
+            setNewImage4([]);
+            setNewImage5([]);
             getProductInfo();
           });
       });

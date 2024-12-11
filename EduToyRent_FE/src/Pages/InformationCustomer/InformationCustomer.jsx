@@ -32,6 +32,8 @@ const InformationCustomer = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const [reviews, setReviews] = useState([]);
+  const [file, setFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -227,6 +229,49 @@ const InformationCustomer = () => {
 
   const handleFilterChange2 = (status) => {
     setFilterStatus2(status);
+  };
+
+  const handleFileChange = async (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setImageUrl(URL.createObjectURL(selectedFile)); // Hiển thị ảnh ngay lập tức
+
+      // Gửi ảnh lên API ngay khi người dùng chọn ảnh
+      if (customerInfo.id) {
+        const formData = new FormData();
+        formData.append("userImage", selectedFile);
+
+        try {
+          const response = await apiUser.put(
+            `/update-user-image/${customerInfo.id}`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+
+          await apiUser.get("/" + customerInfo.id).then((response) => {
+            console.log(response.data);
+
+            setCustomerInfo(response.data);
+            Cookies.set("userDataReal", JSON.stringify(response.data), {
+              expires: 7,
+            });
+          });
+
+          console.log("Cập nhật ảnh thành công:", response.data);
+          setImageUrl(response.data.avatarUrl); // Cập nhật lại URL ảnh mới từ API
+          window.location.reload();
+        } catch (error) {
+          console.error("Lỗi khi cập nhật ảnh:", error);
+        }
+      } else {
+        console.error("Không có userId.");
+      }
+    }
   };
 
   const handleViewDetails = (order) => {
@@ -904,19 +949,31 @@ const InformationCustomer = () => {
                 </div>
 
                 {/* Right Side: Larger User Avatar with Edit Button */}
+
                 <div className="relative group w-40 h-40 ml-auto">
                   {" "}
                   {/* Increased size */}
                   <img
-                    src={customerInfo.avatarUrl}
+                    src={
+                      customerInfo && customerInfo.avatarUrl
+                        ? customerInfo.avatarUrl
+                        : ""
+                    }
                     alt="User Avatar"
                     className="w-full h-full object-cover rounded-full"
                   />
+                  <input
+                    type="file"
+                    accept=".jpg, .png"
+                    onChange={handleFileChange} // Gọi hàm xử lý khi người dùng chọn file
+                    className="hidden"
+                    id="fileInput"
+                  />
                   <button
-                    onClick={handleEditAvatar}
-                    className="absolute inset-0 bg-black bg-opacity-50 text-white text-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
+                    className="mt-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none"
+                    onClick={() => document.getElementById("fileInput").click()} // Mở input file khi click nút này
                   >
-                    Chỉnh sửa hình ảnh
+                    Chọn Ảnh
                   </button>
                 </div>
               </div>

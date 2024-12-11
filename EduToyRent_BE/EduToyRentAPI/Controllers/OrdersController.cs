@@ -137,7 +137,7 @@ namespace EduToyRentAPI.Controllers
             {
                 OrderDate = DateTime.Now,
                 ReceiveDate = orderRequest.ReceiveDate,
-                TotalPrice = 0, // Xu ly cho nay khi hoan thanh OrderDetail
+                TotalPrice = orderRequest.TotalPrice, // Xu ly cho nay khi hoan thanh OrderDetail
                 RentPrice = orderRequest.RentPrice,
                 DepositeBackMoney = orderRequest.DepositeBackMoney,
                 ReceiveName = orderRequest.ReceiveName,
