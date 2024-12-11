@@ -624,12 +624,12 @@ const StaffPage = () => {
   };
 
   const statusMapping = {
-    Delivering: "Đang giao",
+    Delivering: "Đang giao tới kho kiểm duyệt",
     Complete: "Hoàn thành",
     Active: "Sẵn sàng",
     Inactive: "Không sẵn sàng",
     Banned: "Bị cấm",
-    // Các trạng thái khác nếu có
+    Checking: "Đang đánh giá đồ chơi",
   };
 
   // Hàm để gửi ảnh lên API
