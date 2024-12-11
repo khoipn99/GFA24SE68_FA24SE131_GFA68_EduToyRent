@@ -17,7 +17,7 @@ const RegisterPage = () => {
     specialChar: false,
   });
   const [passwordsMatch, setPasswordsMatch] = useState(true);
-
+  const [showTooltip, setShowTooltip] = useState(false);
   const navigate = useNavigate();
 
   // Function to check password rules
@@ -293,179 +293,198 @@ const RegisterPage = () => {
         className="absolute inset-0 object-cover w-full h-full"
       />
       {/* Form Container */}
-      <div className="relative z-10 bg-gray-100 bg-opacity-90 flex flex-col items-center justify-center h-full w-full max-w-md p-8 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-semibold mb-4 text-blue-600">
+      <div className="relative z-10 bg-gray-100 bg-opacity-90 flex flex-col items-center justify-center h-full w-full max-w-lg p-4 rounded-lg shadow-lg">
+        <h1 className="text-2xl font-semibold  text-blue-600">
           Đăng ký tài khoản
         </h1>
 
-        {/* Full Name Input */}
-        <div className="mb-4 w-full">
-          <label htmlFor="name" className="block text-gray-600">
-            Họ và tên
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            placeholder="Nhập họ và tên"
-          />
-        </div>
-        {/* Email Input */}
-        <div className="mb-4 w-full">
-          <label htmlFor="email" className="block text-gray-600">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            placeholder="Nhập email"
-          />
-        </div>
-        {/* Phone Input */}
-        <div className="mb-4 w-full">
-          <label htmlFor="phone" className="block text-gray-600">
-            Số điện thoại
-          </label>
-          <input
-            type="number"
-            id="phone"
-            name="phone"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            placeholder="Nhập số điện thoại"
-          />
-        </div>
+        {/* Form Grid */}
+        <div className="grid grid-cols-2 gap-2 w-full">
+          {/* Full Name Input */}
+          <div className=" col-span-2">
+            <label htmlFor="name" className="block text-gray-600">
+              Họ và tên
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              autoComplete="off"
+              placeholder="Nhập họ và tên"
+            />
+          </div>
+          {/* Email Input */}
+          <div className="col-span-2">
+            <label htmlFor="email" className="block text-gray-600">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              autoComplete="off"
+              placeholder="Nhập email"
+            />
+          </div>
+          {/* Address Input */}
+          <div className="col-span-2">
+            <label htmlFor="address" className="block text-gray-600">
+              Địa chỉ
+            </label>
+            <input
+              type="text"
+              id="address"
+              name="address"
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              autoComplete="off"
+              placeholder="Nhập địa chỉ"
+            />
+          </div>
+          {/* Phone Input */}
+          <div className="">
+            <label htmlFor="phone" className="block text-gray-600">
+              Số điện thoại
+            </label>
+            <input
+              type="number"
+              id="phone"
+              name="phone"
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              autoComplete="off"
+              placeholder="Nhập số điện thoại"
+            />
+          </div>
 
-        {/* Address Input */}
-        <div className="mb-4 w-full">
-          <label htmlFor="address" className="block text-gray-600">
-            Địa chỉ
-          </label>
-          <input
-            type="text"
-            id="address"
-            name="address"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            placeholder="Nhập địa chỉ"
-          />
-        </div>
-
-        {/* Date of Birth Input */}
-        <div className="mb-4 w-full">
-          <label htmlFor="dob" className="block text-gray-600">
-            Ngày sinh
-          </label>
-          <input
-            type="date"
-            id="dob"
-            name="dob"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-          />
-        </div>
-        <div className="mb-4 w-full">
-          <label htmlFor="withdrawalMethod" className="block text-gray-600">
-            Tên ngân hàng
-          </label>
-          <input
-            type="text"
-            id="withdrawalMethod"
-            name="withdrawalMethod"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            placeholder="Nhập tên ngân hàng"
-          />
-        </div>
-        <div className="mb-4 w-full">
-          <label htmlFor="withdrawInfo" className="block text-gray-600">
-            Số tài khoản ngân hàng
-          </label>
-          <input
-            type="number"
-            id="withdrawInfo"
-            name="withdrawInfo"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            placeholder="Nhập số tài khoản ngân hàng"
-          />
-        </div>
-        {/* Password Input */}
-        <div className="mb-4 w-full">
-          <label htmlFor="password" className="block text-gray-600">
-            Mật khẩu
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            value={password}
-            onChange={handlePasswordChange}
-          />
-          <ul className="text-sm">
-            <li
-              className={
-                passwordValidations.length ? "text-green-500" : "text-red-500"
-              }
-            >
-              {passwordValidations.length ? "✔" : "✖"} Có ít nhất 8 kí tự
-            </li>
-            <li
-              className={
-                passwordValidations.letter ? "text-green-500" : "text-red-500"
-              }
-            >
-              {passwordValidations.letter ? "✔" : "✖"} Có ít nhất 1 ký tự chữ
-            </li>
-            <li
-              className={
-                passwordValidations.number ? "text-green-500" : "text-red-500"
-              }
-            >
-              {passwordValidations.number ? "✔" : "✖"} Có ít nhất 1 chữ số
-            </li>
-            <li
-              className={
-                passwordValidations.specialChar
-                  ? "text-green-500"
-                  : "text-red-500"
-              }
-            >
-              {passwordValidations.specialChar ? "✔" : "✖"} Có ít nhất 1 kí tự
-              đặc biệt
-            </li>
-          </ul>
-        </div>
-
-        {/* Confirm Password Input */}
-        <div className="mb-4 w-full">
-          <label htmlFor="confirmPassword" className="block text-gray-600">
-            Xác nhận mật khẩu
-          </label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-            autoComplete="off"
-            value={confirmPassword}
-            onChange={handleConfirmPasswordChange}
-          />
-          {!passwordsMatch && (
-            <p className="text-red-500 text-sm mt-1">Mật khẩu không khớp!</p>
-          )}
+          {/* Date of Birth Input */}
+          <div className="">
+            <label htmlFor="dob" className="block text-gray-600">
+              Ngày sinh
+            </label>
+            <input
+              type="date"
+              id="dob"
+              name="dob"
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              autoComplete="off"
+            />
+          </div>
+          {/* Bank Name */}
+          <div className="">
+            <label htmlFor="withdrawalMethod" className="block text-gray-600">
+              Tên ngân hàng
+            </label>
+            <input
+              type="text"
+              id="withdrawalMethod"
+              name="withdrawalMethod"
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              autoComplete="off"
+              placeholder="Nhập tên ngân hàng"
+            />
+          </div>
+          {/* Bank Account */}
+          <div className="">
+            <label htmlFor="withdrawInfo" className="block text-gray-600">
+              Số tài khoản ngân hàng
+            </label>
+            <input
+              type="number"
+              id="withdrawInfo"
+              name="withdrawInfo"
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              autoComplete="off"
+              placeholder="Nhập số tài khoản ngân hàng"
+            />
+          </div>
+          {/* Password Input */}
+          <div className="col-span-2 relative">
+            <label htmlFor="password" className="block text-gray-600">
+              Mật khẩu
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              autoComplete="off"
+              value={password}
+              onChange={handlePasswordChange}
+              onFocus={() => setShowTooltip(true)} // Hiển thị tooltip khi người dùng nhấp vào
+              onBlur={() => setShowTooltip(false)} // Ẩn tooltip khi người dùng rời khỏi trường nhập
+            />
+            {showTooltip && (
+              <div className="absolute top-0 left-full ml-2 bg-white border border-gray-300 rounded-md shadow-lg p-4 w-64 z-10">
+                <p className="text-sm font-semibold text-gray-600 mb-2">
+                  Mật khẩu của bạn cần:
+                </p>
+                <ul className="text-sm">
+                  <li
+                    className={
+                      passwordValidations.length
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }
+                  >
+                    {passwordValidations.length ? "✔" : "✖"} Có ít nhất 8 kí tự
+                  </li>
+                  <li
+                    className={
+                      passwordValidations.letter
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }
+                  >
+                    {passwordValidations.letter ? "✔" : "✖"} Có ít nhất 1 ký tự
+                    chữ
+                  </li>
+                  <li
+                    className={
+                      passwordValidations.number
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }
+                  >
+                    {passwordValidations.number ? "✔" : "✖"} Có ít nhất 1 chữ số
+                  </li>
+                  <li
+                    className={
+                      passwordValidations.specialChar
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }
+                  >
+                    {passwordValidations.specialChar ? "✔" : "✖"} Có ít nhất 1
+                    kí tự đặc biệt
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+          {/* Confirm Password */}
+          <div className="col-span-2">
+            <label htmlFor="confirmPassword" className="block text-gray-600">
+              Xác nhận mật khẩu
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
+              autoComplete="off"
+              value={confirmPassword}
+              onChange={handleConfirmPasswordChange}
+            />
+            {!passwordsMatch && (
+              <p className="text-red-500 text-sm mt-1">Mật khẩu không khớp!</p>
+            )}
+          </div>
         </div>
 
         {/* Submit Button */}
         <button
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md py-2 px-4 w-full"
+          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md py-2 px-4 w-full mt-4"
           onClick={handleRegister}
         >
           Đăng ký
@@ -485,7 +504,7 @@ const RegisterPage = () => {
         </div>
 
         {/* Footer */}
-        <div className="flex flex-1 justify-center items-end h-100 mt-4">
+        <div className="flex justify-center items-end h-full mt-4">
           <p className="text-center text-gray-500">
             Bản quyền &copy; 2024 EduToyRent Competition
           </p>

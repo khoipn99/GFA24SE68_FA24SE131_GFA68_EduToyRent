@@ -635,7 +635,7 @@ const HeaderForCustomer = () => {
                       <h3 className="font-bold mb-2 mt-4">Đơn Thuê Sản Phẩm</h3>
                       <div className="flex-grow overflow-y-auto max-h-72">
                         {rentItems.length === 0 ? (
-                          <p>Giỏ hàng thuê trống.</p>
+                          <p>Không có sản phẩm nào.</p>
                         ) : (
                           rentItems.map((item) => (
                             <div
@@ -738,7 +738,7 @@ const HeaderForCustomer = () => {
                       <h3 className="font-bold mb-2 mt-4">Đơn Mua Sản Phẩm</h3>
                       <div className="flex-grow overflow-y-auto max-h-72">
                         {buyItems.length === 0 ? (
-                          <p>Giỏ hàng mua trống.</p>
+                          <p>Không có sản phẩm nào.</p>
                         ) : (
                           buyItems.map((item) => (
                             <div
@@ -839,10 +839,6 @@ const HeaderForCustomer = () => {
                       </button>
                     </div>
 
-                    <p className="text-blue-500 underline">
-                      Phí vận chuyển sẽ được thêm khi chuyển tới trang thanh
-                      toán
-                    </p>
                   </div>
                 </div>
               )}{" "}
