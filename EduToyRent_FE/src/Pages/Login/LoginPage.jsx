@@ -432,6 +432,7 @@ const LoginPage = () => {
                 className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
                 autoComplete="off"
                 value={email}
+                placeholder="Nhập email"
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
@@ -446,6 +447,7 @@ const LoginPage = () => {
                 className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
                 autoComplete="off"
                 value={password}
+                placeholder="Nhập mật khẩu"
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
