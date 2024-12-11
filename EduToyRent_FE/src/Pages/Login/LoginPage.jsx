@@ -453,7 +453,7 @@ const LoginPage = () => {
             <div className="mb-4 w-full">
               <button
                 type="submit"
-                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md py-2 px-4 w-full mt-2"
+                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-md py-2 px-4 w-full mt-2 h-[50px"
               >
                 Đăng Nhập
               </button>

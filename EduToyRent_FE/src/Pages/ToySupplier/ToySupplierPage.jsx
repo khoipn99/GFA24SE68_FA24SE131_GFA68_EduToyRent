@@ -562,7 +562,6 @@ const ToySupplierPage = () => {
         age: selectedToy.age || "All Ages",
         brand: selectedToy.brand || "Default Brand",
         categoryId: selectedCategory || "1", // Nếu không có selectedCategory thì dùng mặc định
-
         rentCount: selectedToy.rentCount || "0",
         quantitySold: selectedToy.quantitySold || "0",
         status: selectedToy.status || "0",
@@ -582,7 +581,7 @@ const ToySupplierPage = () => {
       setToyData(response.data);
 
       // Xử lý hình ảnh/video nếu có
-      if (mediaFiles.images.length > 0 || mediaFiles.video) {
+      if (mediaFiles?.images?.length > 0 || mediaFiles?.video) {
         const mediaData = new FormData();
         mediaFiles.images.forEach((file) => {
           mediaData.append("mediaUrls", file); // Đảm bảo tên key đúng với yêu cầu API
@@ -659,7 +658,6 @@ const ToySupplierPage = () => {
         age: Toyresponse.data.age || "All Ages",
         brand: Toyresponse.data.brand || "Default Brand",
         categoryId: Toyresponse.data.categoryId || "1",
-
         rentCount: Toyresponse.rentCount || "0",
         quantitySold: Toyresponse.quantitySold || "0",
         status: "Inactive",
