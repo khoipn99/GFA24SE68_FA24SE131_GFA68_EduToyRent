@@ -459,16 +459,24 @@ const LoginPage = () => {
               </button>
             </div>
           </form>
-          <GoogleOAuthProvider clientId="695962570544-hia41gl00ujfg9hkc703jse7t3q9kpco.apps.googleusercontent.com">
-            {/* Nút Google Login */}
-            <div className="mb-4 w-full">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleFailure}
-                text="signin_with"
-              />
-            </div>
-          </GoogleOAuthProvider>
+          <div className="mb-4 w-full m-w-[100%]">
+            <GoogleOAuthProvider clientId="695962570544-hia41gl00ujfg9hkc703jse7t3q9kpco.apps.googleusercontent.com">
+              {/* Nút Google Login */}
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleFailure}
+                  text="signin_with"
+                  theme="outline" // Tùy chỉnh giao diện
+                  style={{
+                    width: "100%", // Đặt nút dài bằng toàn bộ khung cha
+                    maxWidth: "500px", // Chiều dài tối đa
+                    height: "50px", // Đặt chiều cao nếu muốn nút lớn hơn
+                  }}
+                />
+              </div>
+            </GoogleOAuthProvider>
+          </div>
           {/* Đăng ký tài khoản */}
           <div className="flex justify-center items-center">
             <p className="text-gray-600">
