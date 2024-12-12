@@ -15,10 +15,11 @@ import CardDataStats from "../../Component/DashBoard/CardDataStats";
 import apiWalletTransaction from "../../service/ApiWalletTransaction";
 import ChartOne from "../../Component/DashBoard/ChartOne";
 import ChartTwo from "../../Component/DashBoard/ChartTwo";
+import { useNavigate } from "react-router-dom";
 
 const AdminPage = () => {
   const [userData, setUserData] = useState("");
-  const [selectedTab, setSelectedTab] = useState("orders");
+  const [selectedTab, setSelectedTab] = useState("dashboard");
   const [isEditing, setIsEditing] = useState(false);
   const [pageIndex, setPageIndex] = useState(1);
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
@@ -36,17 +37,31 @@ const AdminPage = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
 
   const [selectedToy, setSelectedToy] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
       const parsedUserData = JSON.parse(userDataCookie);
+
+      console.log(parsedUserData.roleId);
+      if (parsedUserData.roleId == 4) {
+        navigate("/staff");
+      } else if (parsedUserData.roleId == 3) {
+        navigate("/");
+      } else if (parsedUserData.roleId == 2) {
+        navigate("/toySupplier");
+      } else if (parsedUserData == "") {
+        navigate("/login");
+      }
+
       setUserData(parsedUserData);
       const email = parsedUserData.email;
 
       const fetchUserData = async () => {
         try {
           const token = Cookies.get("userToken");
+
           if (!token) {
             console.error("Token không hợp lệ hoặc hết hạn.");
             return;

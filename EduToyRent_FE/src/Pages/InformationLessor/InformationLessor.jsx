@@ -13,6 +13,7 @@ import apiWalletTransaction from "../../service/ApiWalletTransaction";
 import apiUser from "../../service/ApiUser";
 import apiTransaction from "../../service/ApiTransaction";
 import apiTransactionDetail from "../../service/ApiTransactionDetail";
+import CardDataStats from "../../Component/DashBoard/CardDataStats";
 
 const InformationLessor = () => {
   const [selectedTab, setSelectedTab] = useState("orders");
@@ -24,11 +25,28 @@ const InformationLessor = () => {
   const [orderDetails, setOrderDetails] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [walletTransaction, setWalletTransaction] = useState([]);
+  const [totalProfit, setTotalProfit] = useState(0);
 
   const navigate = useNavigate();
 
   // Sample data for orders
   useEffect(() => {
+    const userDataCookie1 = Cookies.get("userData");
+    if (userDataCookie1) {
+      const parsedUserData = JSON.parse(userDataCookie1);
+
+      if (parsedUserData.roleId == 4) {
+        navigate("/staff");
+      } else if (parsedUserData.roleId == 1) {
+        navigate("/admin");
+      } else if (parsedUserData.roleId == 2) {
+        navigate("/toySupplier");
+      } else if (parsedUserData == "") {
+        navigate("/login");
+      }
+    }
+
     if (Cookies.get("userToken")) {
       getUserInfo();
       getOrderInfo();
@@ -47,6 +65,28 @@ const InformationLessor = () => {
         parsedUserData = JSON.parse(userDataCookie);
         setCustomerInfo(parsedUserData); // Adjust based on your app's logic
         console.log("Parsed user data:", parsedUserData);
+
+        apiWalletTransaction
+          .get(
+            "?$filter=walletId eq " +
+              parsedUserData.walletId +
+              " and transactionType eq 'Nhận tiền từ đơn hàng'",
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          )
+          .then((response) => {
+            console.log(response.data);
+            setWalletTransaction(response.data);
+            setTotalProfit(
+              response.data.reduce(
+                (total, transaction) => total + transaction.amount,
+                0
+              )
+            );
+          });
       } catch (error) {
         console.error("Error parsing userDataCookie:", error);
       }
@@ -56,9 +96,15 @@ const InformationLessor = () => {
   };
 
   const getCategoryInfo = () => {
-    apiCategory.get("?pageIndex=1&pageSize=50").then((response) => {
-      setCategories(response.data);
-    });
+    apiCategory
+      .get("?pageIndex=1&pageSize=50", {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        setCategories(response.data);
+      });
   };
 
   const getOrderInfo = () => {
@@ -66,7 +112,14 @@ const InformationLessor = () => {
     const parsedUserData = JSON.parse(userDataCookie);
 
     apiOrder
-      .get("/ByShop?shopId=" + parsedUserData.id + "&pageIndex=1&pageSize=1000")
+      .get(
+        "/ByShop?shopId=" + parsedUserData.id + "&pageIndex=1&pageSize=1000",
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      )
       .then((response) => {
         setOrders(response.data);
         console.log(response.data);
@@ -85,7 +138,11 @@ const InformationLessor = () => {
     const parsedUserData = JSON.parse(userDataCookie);
 
     apiToys
-      .get("/user/" + parsedUserData.id + "?pageIndex=1&pageSize=1000")
+      .get("/user/" + parsedUserData.id + "?pageIndex=1&pageSize=1000", {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
       .then((response) => {
         setProducts(response.data);
         console.log(response.data);
@@ -126,33 +183,51 @@ const InformationLessor = () => {
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
 
-    apiOrderDetail.get("/Order/" + order.id).then((response) => {
-      setOrderDetails(response.data);
-      console.log(response.data);
-    });
+    apiOrderDetail
+      .get("/Order/" + order.id, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        setOrderDetails(response.data);
+        console.log(response.data);
+      });
   };
 
   const ViewDetails = () => {
-    apiOrderDetail.get("/Order/" + selectedOrder.id).then((response) => {
-      setOrderDetails(response.data);
-      console.log(response.data);
+    apiOrderDetail
+      .get("/Order/" + selectedOrder.id, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        setOrderDetails(response.data);
+        console.log(response.data);
 
-      var tmp = true;
-      response.data.map((item) => {
-        if (item.status != "Complete") {
-          tmp = false;
+        var tmp = true;
+        response.data.map((item) => {
+          if (item.status != "Complete") {
+            tmp = false;
+          }
+        });
+
+        if (tmp) {
+          var orderTmp = selectedOrder;
+          orderTmp.status = "Complete";
+
+          apiOrder
+            .put("/" + selectedOrder.id, orderTmp, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response) => {
+              getOrderInfo();
+            });
         }
       });
-
-      if (tmp) {
-        var orderTmp = selectedOrder;
-        orderTmp.status = "Complete";
-
-        apiOrder.put("/" + selectedOrder.id, orderTmp).then((response) => {
-          getOrderInfo();
-        });
-      }
-    });
   };
 
   const closeDetails = () => {
@@ -430,9 +505,15 @@ const InformationLessor = () => {
     var tmp = order;
     tmp.status = "Delivering";
 
-    apiOrder.put("/" + order.id, tmp).then((response) => {
-      getOrderInfo();
-    });
+    apiOrder
+      .put("/" + order.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        getOrderInfo();
+      });
   };
 
   const handleCancelOrder = (order) => {
@@ -441,9 +522,15 @@ const InformationLessor = () => {
 
     console.log(order.userId);
 
-    apiOrder.put("/" + order.id, tmp).then((response) => {
-      getOrderInfo();
-    });
+    apiOrder
+      .put("/" + order.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        getOrderInfo();
+      });
 
     apiUser
       .get("/" + order.userId, {
@@ -779,7 +866,17 @@ const InformationLessor = () => {
                     <div className="flex-grow">
                       <p className="font-semibold">
                         Ngày đặt hàng:{" "}
-                        {new Date(order.orderDate).toISOString().split("T")[0]}
+                        {new Date(order.orderDate)
+                          .toLocaleString()
+                          .substring(9)}
+                      </p>
+                      <p className="font-semibold">
+                        Ngày giao hàng:{" "}
+                        {order.receiveDate && order.receiveDate
+                          ? new Date(order.receiveDate)
+                              .toLocaleString()
+                              .substring(9)
+                          : "đang xử lý"}
                       </p>
                       <p>Địa chỉ giao hàng: {order.receiveAddress}</p>
                       <p>Tên người nhận: {order.receiveName}</p>
@@ -1377,7 +1474,83 @@ const InformationLessor = () => {
       case "dashboard":
         return (
           <div>
-            <h3 className="text-lg font-semibold">Doanh Thu</h3>
+            <div className="bg-gray-100 p-4 rounded shadow mb-4">
+              <h2 className="text-xl font-semibold mb-2">Doanh thu</h2>
+              <CardDataStats
+                title="Tổng doanh thu"
+                total={totalProfit.toLocaleString() + " " + "VNĐ"}
+                levelUp
+              >
+                <svg
+                  className="fill-primary dark:fill-white"
+                  width="20"
+                  height="22"
+                  viewBox="0 0 20 22"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11.7531 16.4312C10.3781 16.4312 9.27808 17.5312 9.27808 18.9062C9.27808 20.2812 10.3781 21.3812 11.7531 21.3812C13.1281 21.3812 14.2281 20.2812 14.2281 18.9062C14.2281 17.5656 13.0937 16.4312 11.7531 16.4312ZM11.7531 19.8687C11.2375 19.8687 10.825 19.4562 10.825 18.9406C10.825 18.425 11.2375 18.0125 11.7531 18.0125C12.2687 18.0125 12.6812 18.425 12.6812 18.9406C12.6812 19.4219 12.2343 19.8687 11.7531 19.8687Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M5.22183 16.4312C3.84683 16.4312 2.74683 17.5312 2.74683 18.9062C2.74683 20.2812 3.84683 21.3812 5.22183 21.3812C6.59683 21.3812 7.69683 20.2812 7.69683 18.9062C7.69683 17.5656 6.56245 16.4312 5.22183 16.4312ZM5.22183 19.8687C4.7062 19.8687 4.2937 19.4562 4.2937 18.9406C4.2937 18.425 4.7062 18.0125 5.22183 18.0125C5.73745 18.0125 6.14995 18.425 6.14995 18.9406C6.14995 19.4219 5.73745 19.8687 5.22183 19.8687Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M19.0062 0.618744H17.15C16.325 0.618744 15.6031 1.23749 15.5 2.06249L14.95 6.01562H1.37185C1.0281 6.01562 0.684353 6.18749 0.443728 6.46249C0.237478 6.73749 0.134353 7.11562 0.237478 7.45937C0.237478 7.49374 0.237478 7.49374 0.237478 7.52812L2.36873 13.9562C2.50623 14.4375 2.9531 14.7812 3.46873 14.7812H12.9562C14.2281 14.7812 15.3281 13.8187 15.5 12.5469L16.9437 2.26874C16.9437 2.19999 17.0125 2.16562 17.0812 2.16562H18.9375C19.35 2.16562 19.7281 1.82187 19.7281 1.37499C19.7281 0.928119 19.4187 0.618744 19.0062 0.618744ZM14.0219 12.3062C13.9531 12.8219 13.5062 13.2 12.9906 13.2H3.7781L1.92185 7.56249H14.7094L14.0219 12.3062Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </CardDataStats>
+            </div>
+            <div className="bg-white p-4 rounded shadow">
+              <h2 className="text-xl font-semibold mb-2">Lịch sử giao dịch</h2>
+              {walletTransaction.length > 0 ? (
+                <div className="flex items-start mb-10">
+                  {/* WalletTransaction - Danh sách giao dịch dương */}
+                  <ul className="space-y-4 w-1/2">
+                    {walletTransaction.map((transaction) => (
+                      <li
+                        key={transaction.id}
+                        className="p-4 border border-gray-300 rounded-lg"
+                        style={{ backgroundColor: "#61eb34" }}
+                      >
+                        <div className="flex justify-between mb-2">
+                          <h4 className="font-semibold">
+                            {transaction.transactionType}{" "}
+                            {transaction.orderId != null
+                              ? " " + transaction.orderId
+                              : ""}{" "}
+                          </h4>
+                          <span className="font-medium">
+                            {transaction.amount >= 0
+                              ? "+" + (transaction.amount || 0).toLocaleString()
+                              : (transaction.amount || 0).toLocaleString()}{" "}
+                            VNĐ
+                          </span>
+                        </div>
+
+                        <div className="flex items-center mb-2">
+                          <p className="font-semibold">
+                            Ngày giao dịch :{" "}
+                            {
+                              new Date(transaction.date).toLocaleString()
+                              //.substring(9)
+                            }
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Đường kẻ phân chia */}
+                  <div className="border-l border-gray-400 h-auto mx-2"></div>
+                </div>
+              ) : (
+                <p>Không có giao dịch nào.</p>
+              )}
+            </div>
           </div>
         );
       default:
@@ -1416,8 +1589,18 @@ const InformationLessor = () => {
                 <strong>Mã đơn hàng:</strong> {selectedOrder.id}
               </p>
               <p>
-                <strong>Ngày đặt:</strong>{" "}
-                {new Date(selectedOrder.orderDate).toISOString().split("T")[0]}
+                <strong>Ngày đặt hàng:</strong>{" "}
+                {new Date(selectedOrder.orderDate)
+                  .toLocaleString()
+                  .substring(9)}
+              </p>
+              <p>
+                <strong>Ngày nhận hàng:</strong>{" "}
+                {selectedOrder.receiveDate && selectedOrder.receiveDate
+                  ? new Date(selectedOrder.receiveDate)
+                      .toLocaleString()
+                      .substring(9)
+                  : "đang xử lý"}
               </p>
 
               <p>
@@ -1478,16 +1661,16 @@ const InformationLessor = () => {
                               Ngày thuê:{" "}
                               {item.startDate
                                 ? new Date(item.startDate)
-                                    .toISOString()
-                                    .split("T")[0]
+                                    .toLocaleString()
+                                    .substring(9)
                                 : "Đang chờ"}
                             </p>
                             <p>
                               Ngày trả hàng:{" "}
                               {item.endDate
                                 ? new Date(item.endDate)
-                                    .toISOString()
-                                    .split("T")[0]
+                                    .toLocaleString()
+                                    .substring(9)
                                 : "Đang chờ"}
                             </p>
                           </div>

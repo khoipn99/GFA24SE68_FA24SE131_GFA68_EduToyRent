@@ -41,9 +41,27 @@ const Payment = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const userDataCookie1 = Cookies.get("userData");
+    if (userDataCookie1) {
+      const parsedUserData = JSON.parse(userDataCookie1);
+
+      if (parsedUserData.roleId == 4) {
+        navigate("/staff");
+      } else if (parsedUserData.roleId == 1) {
+        navigate("/admin");
+      } else if (parsedUserData.roleId == 2) {
+        navigate("/toySupplier");
+      } else if (parsedUserData == "") {
+        navigate("/login");
+      }
+    }
+
     const userDataCookie = Cookies.get("userDataReal");
     if (userDataCookie) {
       const parsedUserData = JSON.parse(userDataCookie);
+
+      console.log(JSON.parse(userDataCookie));
+
       setCustomerInfo(parsedUserData);
       setShippingInfo({
         ...shippingInfo,
@@ -109,6 +127,10 @@ const Payment = () => {
         })
         .then((response) => {
           setCartItems(response.data);
+
+          if (response.data == "Empty List!") {
+            navigate("/");
+          }
 
           // Tạo các danh sách rentItems và buyItems dựa vào quantity
           const rentItems = response.data
@@ -195,6 +217,9 @@ const Payment = () => {
   const calculateTotalPrice = (items) =>
     items.reduce((total, item) => total + item.price * (item.quantity || 1), 0);
 
+  const calculateTotalFee = (items) =>
+    items.reduce((total, item) => total + 30000, 0);
+
   const calculateTotalPrice2 = (items) =>
     items.reduce((total, item) => total + item.price, 0);
 
@@ -213,6 +238,7 @@ const Payment = () => {
 
   const totalRentPrice = calculateTotalPrice2(rentItems);
   const totalBuyPrice = calculateTotalPrice(buyItems);
+  const totalFee = calculateTotalFee(rentItems);
   const totalPrice = totalRentPrice + totalBuyPrice;
 
   // Tính tổng thanh toán sau giảm giá
@@ -228,7 +254,7 @@ const Payment = () => {
   };
 
   const handlePayment = async () => {
-    if (wallet.balance >= totalAfterDiscount) {
+    if (wallet.balance >= totalAfterDiscount + totalFee) {
       if (
         shippingInfo.fullName != "" &&
         shippingInfo.phoneNumber != "" &&
@@ -569,7 +595,7 @@ const Payment = () => {
                                   brand: response.data.brand,
                                   categoryId: response.data.category.id,
                                   rentCount: response.data.rentCount,
-                                  rentTime: response.data.rentTime,
+                                  quantitySold: response.data.quantitySold,
                                   status: response.data.status,
                                 },
                                 {
@@ -1232,9 +1258,12 @@ const Payment = () => {
           <div className="w-full md:w-1/2 text-right">
             <h3 className="text-lg font-semibold mb-2">Thông tin thanh toán</h3>
             <p>Tổng tiền hàng: {totalPrice.toLocaleString()} ₫</p>
+
+            <p>Tổng phí trả hàng: {totalFee.toLocaleString()} ₫</p>
             <p>Voucher giảm giá: -{discount.toLocaleString()} ₫</p>
             <p className="font-semibold">
-              Tổng thanh toán: {totalAfterDiscount.toLocaleString()} ₫
+              Tổng thanh toán:{" "}
+              {(totalAfterDiscount + totalFee).toLocaleString()} ₫
             </p>
             <button
               className="mt-4 bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600"

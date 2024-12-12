@@ -117,6 +117,14 @@ const ToysDetails = () => {
       setUserData(parsedUserData);
       const email = parsedUserData.email;
 
+      if (parsedUserData.roleId == 4) {
+        navigate("/staff");
+      } else if (parsedUserData.roleId == 1) {
+        navigate("/admin");
+      } else if (parsedUserData.roleId == 2) {
+        navigate("/toySupplier");
+      }
+
       const fetchUserData = async () => {
         try {
           const token = Cookies.get("userToken");
@@ -827,7 +835,7 @@ const ToysDetails = () => {
                           className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
                           style={{
                             backgroundImage:
-                              'url("https://cdn.usegalileo.ai/stability/8a587c11-2887-4ea5-a001-d4e843282f31.png")',
+                              'url(" ' + rating.avartarUrl + '")',
                           }}
                         ></div>
                         <div className="flex-1">

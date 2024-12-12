@@ -38,8 +38,25 @@ const InformationCustomer = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({});
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
 
   useEffect(() => {
+    const userDataCookie1 = Cookies.get("userData");
+    if (userDataCookie1) {
+      const parsedUserData = JSON.parse(userDataCookie1);
+
+      if (parsedUserData.roleId == 4) {
+        navigate("/staff");
+      } else if (parsedUserData.roleId == 1) {
+        navigate("/admin");
+      } else if (parsedUserData.roleId == 2) {
+        navigate("/toySupplier");
+      } else if (parsedUserData == "") {
+        navigate("/login");
+      }
+    }
+
     if (Cookies.get("userToken")) {
       getUserInfo();
       getOrderInfo();
@@ -52,6 +69,7 @@ const InformationCustomer = () => {
     const userDataCookie = Cookies.get("userDataReal");
     if (userDataCookie) {
       const parsedUserData = JSON.parse(userDataCookie);
+
       setCustomerInfo(parsedUserData);
       console.log(parsedUserData);
 
@@ -130,6 +148,54 @@ const InformationCustomer = () => {
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
+  };
+
+  const handleWithdraw = async () => {
+    const numericAmount = parseInt(withdrawAmount.replace(/\./g, ""), 10);
+    if (walletInfo.balance >= numericAmount) {
+      // Logic xử lý số tiền rút
+      console.log("Số tiền rút:", numericAmount);
+      await apiWallets.put(
+        "/" + walletInfo.id,
+        {
+          balance: walletInfo.balance - numericAmount,
+          withdrawMethod: walletInfo.withdrawMethod,
+          withdrawInfo: walletInfo.withdrawInfo,
+          status: walletInfo.status,
+          userId: walletInfo.userId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+      await apiWalletTransaction.post(
+        "",
+        {
+          transactionType: "Rút tiền",
+          amount: -numericAmount,
+          date: new Date().toISOString(),
+          walletId: walletInfo.id,
+          paymentTypeId: 5,
+          orderId: null,
+          status: "Await",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      alert(
+        `Bạn đã gửi yêu cầu rút ${numericAmount.toLocaleString()} VNĐ thành công!`
+      );
+      window.location.reload();
+      setIsFormVisible(false); // Ẩn form sau khi rút
+    } else {
+      alert(`Tài khoản của bạn không đủ để thực hiện rút tiền!`);
+    }
   };
 
   const handleSaveChanges = () => {
@@ -267,14 +333,20 @@ const InformationCustomer = () => {
             }
           );
 
-          await apiUser.get("/" + customerInfo.id).then((response) => {
-            console.log(response.data);
+          await apiUser
+            .get("/" + customerInfo.id, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response) => {
+              console.log(response.data);
 
-            setCustomerInfo(response.data);
-            Cookies.set("userDataReal", JSON.stringify(response.data), {
-              expires: 7,
+              setCustomerInfo(response.data);
+              Cookies.set("userDataReal", JSON.stringify(response.data), {
+                expires: 7,
+              });
             });
-          });
 
           console.log("Cập nhật ảnh thành công:", response.data);
           setImageUrl(response.data.avatarUrl); // Cập nhật lại URL ảnh mới từ API
@@ -311,32 +383,44 @@ const InformationCustomer = () => {
   };
 
   const ViewDetails = () => {
-    apiOrderDetail.get("/Order/" + selectedOrder.id).then((response) => {
-      setOrderDetails(response.data);
-      setReviews(
-        response.data.reduce((acc, product) => {
-          acc[product.id] = { rating: 1, review: "" };
-          return acc;
-        }, {})
-      );
-      console.log(response.data);
+    apiOrderDetail
+      .get("/Order/" + selectedOrder.id, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        setOrderDetails(response.data);
+        setReviews(
+          response.data.reduce((acc, product) => {
+            acc[product.id] = { rating: 1, review: "" };
+            return acc;
+          }, {})
+        );
+        console.log(response.data);
 
-      var tmp = true;
-      response.data.map((item) => {
-        if (item.status != "Complete") {
-          tmp = false;
+        var tmp = true;
+        response.data.map((item) => {
+          if (item.status != "Complete") {
+            tmp = false;
+          }
+        });
+
+        if (tmp) {
+          var orderTmp = selectedOrder;
+          orderTmp.status = "Complete";
+
+          apiOrder
+            .put("/" + selectedOrder.id, orderTmp, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response) => {
+              getOrderInfo();
+            });
         }
       });
-
-      if (tmp) {
-        var orderTmp = selectedOrder;
-        orderTmp.status = "Complete";
-
-        apiOrder.put("/" + selectedOrder.id, orderTmp).then((response) => {
-          getOrderInfo();
-        });
-      }
-    });
   };
 
   const closeDetails = () => {
@@ -362,13 +446,21 @@ const InformationCustomer = () => {
     e.preventDefault();
 
     await apiWallets
-      .put("/" + walletInfo.id, {
-        balance: walletInfo.balance,
-        withdrawMethod: formData.withdrawMethod,
-        withdrawInfo: formData.withdrawInfo,
-        status: walletInfo.status,
-        userId: walletInfo.userId,
-      })
+      .put(
+        "/" + walletInfo.id,
+        {
+          balance: walletInfo.balance,
+          withdrawMethod: formData.withdrawMethod,
+          withdrawInfo: formData.withdrawInfo,
+          status: walletInfo.status,
+          userId: walletInfo.userId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      )
       .then((response) => {
         setIsEditing2(false);
       });
@@ -874,7 +966,7 @@ const InformationCustomer = () => {
         },
       })
       .then((response) => {
-        ViewDetails();
+        getOrderInfo();
       });
   };
 
@@ -882,8 +974,14 @@ const InformationCustomer = () => {
 
   const handleCompleteSaleOrder = async (orderToUpdate) => {
     try {
+      const ownerResponse = await apiUser.get(`/${orderToUpdate.shopId}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
       const ownerWalletResponse = await apiWallets.get(
-        `/${orderToUpdate.shopId}`,
+        `/${ownerResponse.data.walletId}`,
         {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -915,6 +1013,7 @@ const InformationCustomer = () => {
           walletId: ownerWallet.id,
           paymentTypeId: 5,
           orderId: orderToUpdate.id,
+          status: "Success",
         },
         {
           headers: {
@@ -947,6 +1046,7 @@ const InformationCustomer = () => {
             depositBackMoney: 0,
             status: "Success",
             orderId: orderToUpdate.id,
+            date: new Date().toISOString(),
           },
           {
             headers: {
@@ -974,9 +1074,7 @@ const InformationCustomer = () => {
                       Authorization: `Bearer ${Cookies.get("userToken")}`,
                     },
                   })
-                  .then((response) => {
-                    ViewDetails();
-                  });
+                  .then((response) => {});
                 await apiTransactionDetail.post(
                   "",
                   {
@@ -987,6 +1085,7 @@ const InformationCustomer = () => {
                     status: "Success",
                     orderDetailId: item.id,
                     transactionId: response.data.id,
+                    date: new Date().toISOString(),
                   },
                   {
                     headers: {
@@ -1010,7 +1109,6 @@ const InformationCustomer = () => {
   const handleFinishDeliveryOrder = (order) => {
     var tmp = order;
     tmp.status = "Processing";
-
     tmp.receiveDate = new Date().toISOString();
     apiOrder
       .put("/" + order.id, tmp, {
@@ -1403,7 +1501,17 @@ const InformationCustomer = () => {
                     <div className="flex-grow">
                       <p className="font-semibold">
                         Ngày đặt hàng:{" "}
-                        {new Date(order.orderDate).toISOString().split("T")[0]}
+                        {new Date(order.orderDate)
+                          .toLocaleString()
+                          .substring(9)}
+                      </p>
+                      <p className="font-semibold">
+                        Ngày nhận hàng:{" "}
+                        {order.receiveDate && order.receiveDate
+                          ? new Date(order.receiveDate)
+                              .toLocaleString()
+                              .substring(9)
+                          : "đang xử lý"}
                       </p>
                       <p>Địa chỉ nhận hàng: {order.receiveAddress}</p>
                       <p>Tên người nhận: {order.receiveName}</p>
@@ -1533,7 +1641,19 @@ const InformationCustomer = () => {
                     <div className="flex-grow">
                       <p className="font-semibold">
                         Ngày đặt hàng:{" "}
-                        {new Date(order.orderDate).toISOString().split("T")[0]}
+                        {/* {new Date(order.orderDate).toISOString().split("T")[0]} */}
+                        {new Date(order.orderDate)
+                          .toLocaleString()
+                          .substring(9)}
+                      </p>
+
+                      <p className="font-semibold">
+                        Ngày nhận hàng:{" "}
+                        {order.receiveDate && order.receiveDate
+                          ? new Date(order.receiveDate)
+                              .toLocaleString()
+                              .substring(9)
+                          : "đang xử lý"}
                       </p>
                       <p>Địa chỉ nhận hàng: {order.receiveAddress}</p>
                       <p>Tên người nhận: {order.receiveName}</p>
@@ -1584,9 +1704,8 @@ const InformationCustomer = () => {
           <div className="p-4">
             {/* Phần trên: Thông tin tài khoản */}
             <div className="bg-gray-100 p-4 rounded shadow mb-4">
-              <h2 className="text-xl font-semibold mb-2">
-                Thông tin tài khoản
-              </h2>
+              <h2 className="text-xl font-semibold">Thông tin tài khoản</h2>
+
               <p>
                 <strong>Số dư khả dụng:</strong>{" "}
                 {walletInfo.balance.toLocaleString()} VNĐ
@@ -1599,12 +1718,21 @@ const InformationCustomer = () => {
                   <p>
                     <strong>Ngân hàng:</strong> {walletInfo.withdrawMethod}
                   </p>
-                  <button
-                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    onClick={() => setIsEditing2(true)}
-                  >
-                    Chỉnh sửa
-                  </button>
+
+                  <div className="flex items-center space-x-4">
+                    <button
+                      className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      onClick={() => setIsEditing2(true)}
+                    >
+                      Chỉnh sửa
+                    </button>
+                    <button
+                      className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                      onClick={() => setIsFormVisible(true)}
+                    >
+                      Rút tiền
+                    </button>
+                  </div>
                 </>
               ) : (
                 <form onSubmit={handleSubmit2} className="mt-4">
@@ -1684,9 +1812,8 @@ const InformationCustomer = () => {
                           <p className="font-semibold">
                             Ngày giao dịch :{" "}
                             {
-                              new Date(transaction.date)
-                                .toISOString()
-                                .split("T")[0]
+                              new Date(transaction.date).toLocaleString()
+                              //.substring(9)
                             }
                           </p>
                         </div>
@@ -1708,6 +1835,12 @@ const InformationCustomer = () => {
                         <div className="flex justify-between mb-2">
                           <h4 className="font-semibold">
                             {transaction.transactionType}{" "}
+                            {transaction.status == "Await"
+                              ? "(Đang xử lý)"
+                              : ""}
+                            {transaction.status == "Complete"
+                              ? "(Hoàn thành)"
+                              : ""}
                             {transaction.orderId != null
                               ? " " + transaction.orderId
                               : ""}{" "}
@@ -1724,9 +1857,8 @@ const InformationCustomer = () => {
                           <p className="font-semibold">
                             Ngày giao dịch :{" "}
                             {
-                              new Date(transaction.date)
-                                .toISOString()
-                                .split("T")[0]
+                              new Date(transaction.date).toLocaleString()
+                              //  .substring(9)
                             }
                           </p>
                         </div>
@@ -1745,6 +1877,61 @@ const InformationCustomer = () => {
     }
   };
 
+  const renderMoney = () => {
+    if (!isFormVisible) return null;
+
+    return (
+      <div
+        className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center"
+        style={{
+          zIndex: 20,
+        }}
+      >
+        <div
+          className="mt-4 p-4 border border-gray-300 rounded shadow"
+          style={{
+            backgroundColor: "white",
+          }}
+        >
+          <h3 className="text-lg font-semibold mb-2">
+            Nhập số tiền bạn muốn rút (VNĐ)
+          </h3>
+          <input
+            type="text"
+            className="w-full px-3 py-2 border rounded mb-4"
+            placeholder="Nhập số tiền"
+            value={withdrawAmount}
+            onChange={(e) => {
+              const rawValue = e.target.value.replace(/\D/g, "");
+
+              if (rawValue) {
+                setWithdrawAmount(
+                  new Intl.NumberFormat("vi-VN").format(rawValue)
+                );
+              } else {
+                setWithdrawAmount("");
+              }
+            }}
+          />
+          <div className="flex space-x-4">
+            <button
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              onClick={handleWithdraw}
+            >
+              Xác nhận
+            </button>
+            <button
+              className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+              onClick={() => setIsFormVisible(false)}
+            >
+              Hủy
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderOrderDetails = () => {
     if (!selectedOrder) return null;
 
@@ -1760,7 +1947,12 @@ const InformationCustomer = () => {
     const getStatusIndex = (status) => stages.indexOf(status);
 
     return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center">
+      <div
+        className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center"
+        style={{
+          zIndex: 20,
+        }}
+      >
         <div className="bg-white p-6 rounded shadow-lg relative w-5/6 flex">
           {/* Left side: Order information */}
           <div className="w-1/4 p-4 border-r border-gray-300">
@@ -1771,13 +1963,24 @@ const InformationCustomer = () => {
               Đóng
             </button>
             <h3 className="text-lg font-semibold">Thông tin đơn hàng</h3>
+
             <div className="mt-4 space-y-2">
               <p>
                 <strong>Mã đơn hàng:</strong> {selectedOrder.id}
               </p>
               <p>
                 <strong>Ngày đặt:</strong>{" "}
-                {new Date(selectedOrder.orderDate).toISOString().split("T")[0]}
+                {new Date(selectedOrder.orderDate)
+                  .toLocaleString()
+                  .substring(9)}
+              </p>
+              <p>
+                <strong>Ngày nhận:</strong>{" "}
+                {selectedOrder.receiveDate && selectedOrder.receiveDate
+                  ? new Date(selectedOrder.receiveDate)
+                      .toLocaleString()
+                      .substring(9)
+                  : "đang xử lý"}
               </p>
 
               <p>
@@ -1838,16 +2041,16 @@ const InformationCustomer = () => {
                               Ngày thuê:{" "}
                               {item.startDate
                                 ? new Date(item.startDate)
-                                    .toISOString()
-                                    .split("T")[0]
+                                    .toLocaleString()
+                                    .substring(9)
                                 : "Đang chờ"}
                             </p>
                             <p>
                               Ngày trả hàng:{" "}
                               {item.endDate
                                 ? new Date(item.endDate)
-                                    .toISOString()
-                                    .split("T")[0]
+                                    .toLocaleString()
+                                    .substring(9)
                                 : "Đang chờ"}
                             </p>
                           </div>
@@ -2106,7 +2309,7 @@ const InformationCustomer = () => {
         style={{
           position: "sticky",
           top: 0,
-          zIndex: 1000,
+          zIndex: 10,
           backgroundColor: "white",
         }}
       >
@@ -2152,7 +2355,9 @@ const InformationCustomer = () => {
           <div className="w-3/4 p-4 border-l">{renderContent()}</div>
         </div>
       </main>
-      {renderOrderDetails()} {/* Render order details modal  a*/}
+      {renderOrderDetails()}
+
+      {renderMoney()}
       <footer>
         <FooterForCustomer />
       </footer>

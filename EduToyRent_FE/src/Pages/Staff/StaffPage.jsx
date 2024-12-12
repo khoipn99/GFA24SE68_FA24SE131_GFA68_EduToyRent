@@ -12,6 +12,8 @@ import apiOrderDetail from "../../service/ApiOrderDetail";
 import apiOrder from "../../service/ApiOrder";
 import apiWallets from "../../service/ApiWallets";
 import apiWalletTransaction from "../../service/ApiWalletTransaction";
+import { useNavigate } from "react-router-dom";
+
 const StaffPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("info");
@@ -40,11 +42,23 @@ const StaffPage = () => {
   const [categories, setCategories] = useState([]);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [selectedToy, setSelectedToy] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
       const parsedUserData = JSON.parse(userDataCookie);
+
+      if (parsedUserData.roleId == 3) {
+        navigate("/");
+      } else if (parsedUserData.roleId == 1) {
+        navigate("/admin");
+      } else if (parsedUserData.roleId == 2) {
+        navigate("/toySupplier");
+      } else if (parsedUserData == "") {
+        navigate("/login");
+      }
+
       setUserData(parsedUserData);
       const email = parsedUserData.email;
 
