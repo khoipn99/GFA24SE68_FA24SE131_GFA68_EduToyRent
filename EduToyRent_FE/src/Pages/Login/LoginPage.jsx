@@ -65,7 +65,7 @@ const LoginPage = () => {
         // Kiểm tra vai trò và chuyển hướng đến trang tương ứngg
         switch (userData.roleId) {
           case 1:
-            navigate("/AdminPolicy");
+            navigate("/admin");
             break;
           case 2:
             navigate("/toySupplier");

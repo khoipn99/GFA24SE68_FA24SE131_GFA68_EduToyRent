@@ -1113,8 +1113,8 @@ const InformationLessor = () => {
             </ul>
 
             {isDetailModalOpen && selectedProduct && (
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-[1000]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
                   {isEditMode ? (
                     <>
                       <input
@@ -1294,11 +1294,18 @@ const InformationLessor = () => {
                             <h2 className="text-4xl font-bold text-center">
                               Thông tin đồ chơi
                             </h2>
-                            <button
+                            {/* <button
                               onClick={closeDetailModal}
                               className="p-2 bg-red-500 text-white rounded"
                             >
                               Đóng
+                            </button> */}
+                            <button
+                              type="button"
+                              onClick={closeDetailModal} // Đóng chi tiết khi bấm nút
+                              className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-700"
+                            >
+                              &times;
                             </button>
                           </div>
 
@@ -1400,8 +1407,8 @@ const InformationLessor = () => {
     const getStatusIndex = (status) => stages.indexOf(status);
 
     return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center">
-        <div className="bg-white p-6 rounded shadow-lg relative w-5/6 flex">
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex justify-center items-center z-[1000]">
+        <div className="bg-white p-6 rounded shadow-lg relative w-5/6 flex z-[1010]">
           {/* Left side: Order information */}
           <div className="w-1/4 p-4 border-r border-gray-300">
             <button

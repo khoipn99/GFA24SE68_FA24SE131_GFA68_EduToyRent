@@ -78,6 +78,17 @@ const RegisterPage = () => {
       return;
     }
 
+    // Gửi yêu cầu kiểm tra email đã tồn tại
+    const checkUserResponse = await apiUser.get(
+      `/ByEmail?email=${encodeURIComponent(email)}&pageIndex=1&pageSize=5000`
+    );
+    console.log("dữ liệu email check", checkUserResponse.data);
+    // Nếu email đã tồn tại, hiển thị thông báo và dừng
+    if (checkUserResponse.data && checkUserResponse.data.length > 0) {
+      alert("Email đã tồn tại, vui lòng chọn email khác!");
+      return;
+    }
+
     // Kiểm tra số điện thoại phải là 10 số và bắt đầu bằng số 0
     const phoneRegex = /^0\d{9}$/;
     if (!phoneRegex.test(phone)) {
