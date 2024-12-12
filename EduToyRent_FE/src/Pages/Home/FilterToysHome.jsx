@@ -38,6 +38,35 @@ const FilterToys = () => {
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
+    const userDataCookie1 = Cookies.get("userData");
+    if (userDataCookie1) {
+      const parsedUserData = JSON.parse(userDataCookie1);
+
+      if (parsedUserData.roleId == 4) {
+        navigate("/staff");
+      } else if (parsedUserData.roleId == 1) {
+        navigate("/admin");
+      } else if (parsedUserData.roleId == 2) {
+        navigate("/toySupplier");
+      }
+    }
+
+    const userDataCookie = Cookies.get("userDataReal");
+    if (userDataCookie) {
+      try {
+        const parsedUserData = JSON.parse(userDataCookie);
+        console.log(parsedUserData.role.id);
+
+        console.log(parsedUserData);
+        fetchUserCart(parsedUserData.id);
+        setUserId(parsedUserData.id);
+      } catch (error) {
+        console.error("Error parsing userDataCookie:", error);
+      }
+    } else {
+      console.warn("Cookie 'userDataReal' is missing or undefined.");
+    }
+
     if (Cookies.get("ToyDetailFilter") == "All") {
       apiToys.get("/active?pageIndex=1&pageSize=1000").then((response) => {
         console.log(response.data);
@@ -114,23 +143,6 @@ const FilterToys = () => {
     setSelectCategory(Cookies.get("ToyDetailCategory"));
   }, []);
 
-  useEffect(() => {
-    const userDataCookie = Cookies.get("userDataReal");
-    if (userDataCookie) {
-      var parsedUserData;
-      try {
-        parsedUserData = JSON.parse(userDataCookie);
-
-        console.log(parsedUserData);
-        fetchUserCart(parsedUserData.id);
-        setUserId(parsedUserData.id);
-      } catch (error) {
-        console.error("Error parsing userDataCookie:", error);
-      }
-    } else {
-      console.warn("Cookie 'userDataReal' is missing or undefined.");
-    }
-  }, []);
   // Lọc đồ chơi theo tiêu chí
   const handleSearch = () => {
     // Dữ liệu bộ lọc từ người dùng
@@ -634,7 +646,7 @@ const FilterToys = () => {
               onClick={handleSearch}
               className="bg-blue-500 text-white px-4 py-2 rounded"
             >
-              Apply Filters
+              tìm đồ chơi
             </button>
           </div>
 

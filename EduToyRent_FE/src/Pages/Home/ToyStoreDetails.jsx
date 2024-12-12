@@ -52,6 +52,19 @@ const ToyStoreDetails = () => {
       console.log(response.data);
     });
 
+    const userDataCookie1 = Cookies.get("userData");
+    if (userDataCookie1) {
+      const parsedUserData = JSON.parse(userDataCookie1);
+
+      if (parsedUserData.roleId == 4) {
+        navigate("/staff");
+      } else if (parsedUserData.roleId == 1) {
+        navigate("/admin");
+      } else if (parsedUserData.roleId == 2) {
+        navigate("/toySupplier");
+      }
+    }
+
     const userDataCookie = Cookies.get("userDataReal");
     if (userDataCookie) {
       var parsedUserData;
@@ -400,14 +413,8 @@ const ToyStoreDetails = () => {
                   </div>
                 </div>
                 <div className="flex items-center mb-2">
-                  <span className="text-sm text-gray-500 mr-4">
-                    Sản phẩm: 608
-                  </span>
-                  <span className="text-sm text-gray-500 mr-4">
-                    Đánh giá: 252,8k
-                  </span>
                   <span className="text-sm text-gray-500">
-                    Điểm đánh giá trung bình: 5.0
+                    Điểm đánh giá trung bình: {owner.star}
                   </span>
                 </div>
               </div>

@@ -1,11 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import apiPayment from "../../service/ApiPayment";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
 const TopUp = () => {
   const [amount, setAmount] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const userDataCookie = Cookies.get("userData");
+    if (userDataCookie) {
+      const parsedUserData = JSON.parse(userDataCookie);
+
+      if (parsedUserData.roleId == 4) {
+        navigate("/staff");
+      } else if (parsedUserData.roleId == 1) {
+        navigate("/admin");
+      } else if (parsedUserData == "") {
+        navigate("/login");
+      }
+    }
+  }, []);
 
   const handleAmountChange = (e) => {
     const rawValue = e.target.value.replace(/\D/g, "");
