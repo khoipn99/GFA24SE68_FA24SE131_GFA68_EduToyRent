@@ -619,7 +619,7 @@ const HeaderForCustomer = () => {
                   onClick={toggleCart}
                 >
                   <div
-                    className="cart-modal bg-white p-4 shadow-md rounded-md w-[700px] h-full flex flex-col justify-between"
+                    className="cart-modal bg-white p-4 shadow-md rounded-md w-[700px] h-full flex flex-col justify-between z-[10000]"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex-grow overflow-y-auto">
@@ -838,7 +838,6 @@ const HeaderForCustomer = () => {
                         Thanh toán
                       </button>
                     </div>
-
                   </div>
                 </div>
               )}{" "}

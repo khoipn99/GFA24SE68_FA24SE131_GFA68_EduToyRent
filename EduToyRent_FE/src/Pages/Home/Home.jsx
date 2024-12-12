@@ -908,7 +908,7 @@ const Home = () => {
         to="/chat" // Đường dẫn tới trang chat
         className="fixed bottom-10 right-10 p-4 bg-[#00aaff] text-white rounded-full shadow-2xl hover:bg-[#0099cc] transition duration-300 flex items-center justify-center"
         style={{
-          zIndex: 1000, // Đảm bảo nút Chat nằm trên tất cả các phần tử khác
+          zIndex: 500, // Đảm bảo nút Chat nằm trên tất cả các phần tử khác
           width: "80px", // Kích thước nút
           height: "80px", // Kích thước nút
         }}
