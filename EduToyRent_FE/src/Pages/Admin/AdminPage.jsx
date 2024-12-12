@@ -22,7 +22,6 @@ import { jwtDecode } from "jwt-decode";
 
 import { useNavigate } from "react-router-dom";
 
-
 const AdminPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("dashboard");
@@ -64,7 +63,6 @@ const AdminPage = () => {
   const [isUserCardVisible, setIsUserCardVisible] = useState(false);
 
   const navigate = useNavigate();
-
 
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
