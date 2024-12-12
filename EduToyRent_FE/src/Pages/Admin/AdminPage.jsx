@@ -15,28 +15,53 @@ import CardDataStats from "../../Component/DashBoard/CardDataStats";
 import apiWalletTransaction from "../../service/ApiWalletTransaction";
 import ChartOne from "../../Component/DashBoard/ChartOne";
 import ChartTwo from "../../Component/DashBoard/ChartTwo";
+
+import apiLogin from "../../service/ApiLogin";
+import apiCart from "../../service/ApiCart";
+import { jwtDecode } from "jwt-decode";
+
 import { useNavigate } from "react-router-dom";
 
 const AdminPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("dashboard");
   const [isEditing, setIsEditing] = useState(false);
-  const [pageIndex, setPageIndex] = useState(1);
+
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
   const itemsPerPage = 5; // Số mục trên mỗi trang
-  const [searchKeyword, setSearchKeyword] = useState(""); // Lưu từ khóa tìm kiếm
+
   const [orders, setOrders] = useState([]); // State để lưu trữ danh sách đơn hàng
 
   const [editedData, setEditedData] = useState({});
   const [imageUrl, setImageUrl] = useState("");
   const [file, setFile] = useState(null);
   const [userId, setUserId] = useState(null);
-
-  const [toysData, setToysData] = useState([]);
+  const [userUpData, setUserUpData] = useState([]);
+  const [selectedUserUp, setSelectedUserUp] = useState(null);
 
   const [selectedMedia, setSelectedMedia] = useState(null);
-
+  const [isEmployeeCardVisible, setIsEmployeeCardVisible] = useState(false);
   const [selectedToy, setSelectedToy] = useState(null);
+
+  const [userUpBanData, setUserUpBanData] = useState([]);
+  const [selectedUserUpBan, setSelectedUserUpBan] = useState(null);
+  const [isCardVisible, setIsCardVisible] = useState(false);
+  const [newUser, setNewUser] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    role: "",
+    status: "",
+    createDate: "",
+    phone: "",
+    dob: "",
+    address: "",
+    avatarUrl: "",
+    description: "",
+    walletId: "",
+  });
+  const [isUserCardVisible, setIsUserCardVisible] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -96,7 +121,7 @@ const AdminPage = () => {
       };
       loadCategories();
       fetchUserData();
-      LoadToy();
+      LoadUser();
       LoadOrder("");
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
@@ -121,7 +146,46 @@ const AdminPage = () => {
       console.error("Lỗi khi tải danh sách đồ chơi:", error);
     }
   };
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordValidations, setPasswordValidations] = useState({
+    length: false,
+    letter: false,
+    number: false,
+    specialChar: false,
+  });
+  const [passwordsMatch, setPasswordsMatch] = useState(true);
+  const [showTooltip, setShowTooltip] = useState(false);
 
+  // Function to check password rules
+  const validatePassword = (password) => {
+    const lengthValid = password.length >= 8;
+    const letterValid = /[a-zA-Z]/.test(password);
+    const numberValid = /\d/.test(password);
+    const specialCharValid = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    setPasswordValidations({
+      length: lengthValid,
+      letter: letterValid,
+      number: numberValid,
+      specialChar: specialCharValid,
+    });
+  };
+
+  // Handle password input change
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    validatePassword(newPassword);
+    setPasswordsMatch(newPassword === confirmPassword);
+  };
+
+  // Handle confirm password input change
+  const handleConfirmPasswordChange = (e) => {
+    const newConfirmPassword = e.target.value;
+    setConfirmPassword(newConfirmPassword);
+    setPasswordsMatch(password === newConfirmPassword);
+  };
   const handleEditClick = () => {
     setEditedData(userData);
     setIsEditing(true);
@@ -159,81 +223,7 @@ const AdminPage = () => {
       }
     }
   };
-  const handleDelete = async (toyId) => {
-    // Hiển thị hộp thoại xác nhận
-    const isConfirmed = window.confirm(
-      "Are you sure you want to delete this toy?"
-    );
 
-    // Nếu người dùng không xác nhận, dừng lại
-    if (!isConfirmed) {
-      return;
-    }
-
-    try {
-      // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
-      const requestBody = "Inactive"; // Thay đổi thành chuỗi trực tiếp
-
-      // Log request body trước khi gửi đi
-      console.log("Request body:", requestBody);
-
-      // Gửi yêu cầu PATCH
-      const response = await apiToys.patch(
-        `/${toyId}/update-status`,
-        requestBody, // Gửi body như chuỗi
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      // Log dữ liệu nhận được từ API khi thành công
-      console.log("Response on success:", response);
-
-      if (response.status === 200) {
-        // Cập nhật lại state
-        setToysData((prevData) =>
-          prevData.map((toy) =>
-            toy.id === toyId ? { ...toy, status: "Inactive" } : toy
-          )
-        );
-        LoadToy(userId);
-      } else {
-        throw new Error(`Failed to update status for toy with ID ${toyId}`);
-      }
-    } catch (error) {
-      // Log lỗi chi tiết nhận được từ API khi có lỗi
-      if (error.response) {
-        console.error("Error response:", error.response);
-      } else {
-        console.error("Error message:", error.message);
-      }
-    }
-  };
-  const LoadToy = async (pageIndex = 1, pageSize = 5) => {
-    try {
-      const toyResponse = await apiToys.get(
-        `?pageIndex=${pageIndex}&pageSize=${pageSize}`,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
-
-      console.log(
-        `Dữ liệu đồ chơi của người dùng tại trang ${pageIndex}:`,
-        toyResponse.data
-      );
-
-      // Cập nhật dữ liệu đồ chơi
-      setToysData(toyResponse.data);
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách đồ chơi:", error);
-    }
-  };
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedData(userData); // Đặt lại dữ liệu về ban đầu
@@ -294,34 +284,14 @@ const AdminPage = () => {
       console.error("Không tìm thấy ID người dùng.");
     }
   };
-  const handleSearchChange = (e) => {
-    setSearchKeyword(e.target.value); // Cập nhật từ khóa khi nhập
-  };
-  const handleSearch = async (e) => {
-    e.preventDefault(); // Ngăn form reload
-    try {
-      const response = await apiToys.get(
-        `/user/${userId}?name=${searchKeyword}`,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        }
-      );
-      setToysData(response.data); // Cập nhật danh sách đồ chơi sau khi tìm kiếm
-    } catch (error) {
-      console.error("Lỗi khi tìm kiếm:", error);
-    }
-  };
+
   const handlePrevious = () => {
     if (currentPage > 1) {
       setCurrentPage((prevPage) => prevPage - 1);
-      LoadToy(userId, currentPage - 1, itemsPerPage);
     }
   };
   const handleNext = () => {
     setCurrentPage((prevPage) => prevPage + 1);
-    LoadToy(userId, currentPage + 1, itemsPerPage);
   };
 
   const LoadOrder = async (statusFilter) => {
@@ -406,49 +376,82 @@ const AdminPage = () => {
         LoadOrder();
       });
   };
+  const LoadUser = async () => {
+    try {
+      const UserResponse = await apiUser.get(`?pageIndex=1&pageSize=2000`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
 
-  const statusMapping = {
-    Delivering: "Đang giao",
-    Checking: "Đợi đánh giá đồ chơi",
+      console.log("Danh sách user mới log:", UserResponse.data);
+      // Lọc đồ chơi có trạng thái "Inactive"
+      // Lọc người dùng có role ID là 2 hoặc 3
+      const UserData = UserResponse.data.filter(
+        (user) =>
+          (user.role?.id === 2 || user.role?.id === 3 || user.role?.id === 4) &&
+          user.status === "Active"
+      );
+
+      console.log(`Danh sách người dùng load:`, UserData);
+
+      // Cập nhật dữ liệu đồ chơi
+      setUserUpData(UserData);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách người dùng", error);
+    }
   };
+  const handleUserBan = async (userId) => {
+    // Hiển thị hộp thoại xác nhận
+    const isConfirmed = window.confirm("Bạn có chắc muốn cấm người dùng này?");
 
-  const handleUpdateToy = async (toyId) => {
-    const isConfirmed = window.confirm(
-      "Are you sure you want to approve this toy?"
-    );
-
+    // Nếu người dùng không xác nhận, dừng lại
     if (!isConfirmed) {
       return;
     }
 
     try {
-      const requestBody = "Active";
+      // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
+      const requestBody = "Banned"; // Thay đổi thành chuỗi trực tiếp
 
+      // Log request body trước khi gửi đi
       console.log("Request body:", requestBody);
+      console.log("d:", selectedUserUp);
+      const formData = new FormData();
 
-      const response = await apiToys.patch(
-        `/${toyId}/update-status`,
-        requestBody,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-            "Content-Type": "application/json",
-          },
-        }
+      //Thêm các trường dữ liệu vào formData
+      formData.append("fullName", selectedUserUp.fullName || "Default Name");
+      formData.append("email", selectedUserUp.email || "default@example.com");
+      formData.append("password", selectedUserUp.password || "defaultPassword");
+      formData.append(
+        "createDate",
+        selectedUserUp.createDate || new Date().toISOString()
       );
+      formData.append("phone", selectedUserUp.phone || "0000000000");
+      formData.append("dob", selectedUserUp.dob || new Date().toISOString());
+      formData.append("address", selectedUserUp.address || "Default Address");
+      formData.append("status", requestBody || "Banned");
+      formData.append("roleId", selectedUserUp.role.id || "");
+      formData.append("avatarUrl", selectedUserUp.avatarUrl || "");
+      // formData.append("description", selectedUserUp.description || "");
+      console.log("dữ liệu sẽ gửi", formData.data);
 
-      console.log("Response on success:", response);
+      const response = await apiUser.put(`/${userId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-      if (response.status === 200) {
-        // Cập nhật lại state
-        setToysData((prevData) =>
-          prevData.map((toy) =>
-            toy.id === toyId ? { ...toy, status: "Inactive" } : toy
-          )
-        );
-        LoadToy(userId);
+      // Log dữ liệu nhận được từ API khi thành công
+      console.log("Response on success:", response.data);
+
+      if (response.status === 204) {
+        setSelectedUserUp(null);
+        LoadUser(userUpData);
+        LoadUserBan(userUpBanData);
       } else {
-        throw new Error(`Failed to update status for toy with ID ${toyId}`);
+        throw new Error(`Failed to update status for user with ID ${userId}`);
       }
     } catch (error) {
       // Log lỗi chi tiết nhận được từ API khi có lỗi
@@ -458,6 +461,558 @@ const AdminPage = () => {
         console.error("Error message:", error.message);
       }
     }
+  };
+  const LoadUserBan = async () => {
+    try {
+      const UserResponse = await apiUser.get(`?pageIndex=1&pageSize=2000`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      console.log("Danh sách user mới log:", UserResponse.data);
+      // Lọc đồ chơi có trạng thái "Inactive"
+      // Lọc người dùng có role ID là 2 hoặc 3
+      const UserData = UserResponse.data.filter(
+        (user) =>
+          (user.role?.id === 2 || user.role?.id === 3 || user.role?.id === 4) &&
+          user.status === "Banned"
+      );
+
+      console.log(`Danh sách người dùng ban load:`, UserData);
+
+      // Cập nhật dữ liệu đồ chơi
+      setUserUpBanData(UserData);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách người dùng", error);
+    }
+  };
+
+  const statusMapping = {
+    Delivering: "Đang giao",
+    Checking: "Đợi đánh giá đồ chơi",
+  };
+  const handleCreateUser = async () => {
+    const createDate = new Date().toISOString();
+    const dob = new Date().toISOString();
+    const { fullName, email, phone, withdrawalMethod, withdrawInfo } = newUser;
+
+    console.log("Full Name:", fullName);
+    console.log("Email:", email);
+    console.log("Phone:", phone);
+    console.log("Password:", newUser.password); // Access password from state
+
+    // Kiểm tra các trường nhập vào
+    if (!fullName || !email || !phone) {
+      alert("Vui lòng nhập đầy đủ tất cả các trường!");
+      return;
+    }
+
+    // Kiểm tra email phải có đuôi @gmail
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+    if (!emailRegex.test(email)) {
+      alert("Email phải có đuôi @gmail.com");
+      return;
+    }
+
+    // Gửi yêu cầu kiểm tra email đã tồn tại
+    const checkUserResponse = await apiUser.get(
+      `/ByEmail?email=${encodeURIComponent(email)}&pageIndex=1&pageSize=5000`
+    );
+    console.log("dữ liệu email check", checkUserResponse.data);
+
+    // Nếu email đã tồn tại, hiển thị thông báo và dừng
+    if (checkUserResponse.data && checkUserResponse.data.length > 0) {
+      alert("Email đã tồn tại, vui lòng chọn email khác!");
+      return;
+    }
+
+    // Kiểm tra số điện thoại phải là 10 số và bắt đầu bằng số 0
+    const phoneRegex = /^0\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+      alert("Số điện thoại phải là 10 số và bắt đầu bằng số 0");
+      return;
+    }
+
+    // Tiếp tục xử lý sau khi kiểm tra thành công
+    const formData = new FormData();
+    formData.append("fullName", fullName);
+    formData.append("email", email);
+    formData.append("password", newUser.password); // Access password from state
+    formData.append("phone", phone);
+    formData.append("dob", dob);
+    formData.append("address", "string");
+    formData.append("avatarUrl", null);
+    formData.append("status", "Active");
+    formData.append("walletId", "");
+    formData.append("roleId", 2);
+    formData.append("createDate", createDate);
+
+    console.log("Form Data trước khi gửi:", Object.fromEntries(formData));
+
+    // Kiểm tra dữ liệu đã chuẩn bị
+    const formDataObj = {};
+    formData.forEach((value, key) => {
+      formDataObj[key] = value;
+    });
+    console.log("Form Data trước khi gửi:", formDataObj);
+
+    try {
+      // Gửi yêu cầu đăng ký
+      const response = await apiUser.post("", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("Response status:", response.status);
+      console.log("Response data:", response.data);
+      const dataOld = response.data;
+      console.log("Wallet Id old:", dataOld);
+      // Kiểm tra trạng thái thành công
+      if (response.status === 201) {
+        alert("Đăng ký thành công!");
+
+        // Đăng nhập và lấy token
+        const loginResponse = await apiLogin.post("", {
+          email: email,
+          password: newUser.password, // Use password from state
+        });
+
+        // Kiểm tra nếu login thành công và nhận token
+        if (loginResponse.data && loginResponse.data.token) {
+          const token = loginResponse.data.token;
+          Cookies.set("userToken", token, { expires: 7, path: "/" });
+          console.log("Token đã lưu:", Cookies.get("userToken"));
+
+          // Tạo ví người dùng
+          const tokenFromCookie = Cookies.get("userToken");
+          if (tokenFromCookie) {
+            const decodedToken = jwtDecode(tokenFromCookie);
+            console.log("Decoded Token:", decodedToken);
+            const userId =
+              decodedToken[
+                "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+              ];
+            console.log("UserId:", userId); // Kết quả: "32"
+            const walletData = {
+              balance: 0,
+              withdrawMethod: "string",
+              withdrawInfo: "string",
+              status: "Active",
+              userId: userId, // Gắn userId vào đây
+            };
+
+            console.log("Wallet Data:", walletData);
+
+            try {
+              // Tạo ví cho người dùng
+              const walletResponse = await apiWallets.post("", walletData, {
+                headers: {
+                  Authorization: `Bearer ${tokenFromCookie}`,
+                },
+              });
+
+              if (walletResponse.status === 201) {
+                console.log("Tạo ví thành công:", walletResponse.data);
+                const walletId = walletResponse.data.id; // Giả sử id là walletId
+                console.log("Wallet Id:", walletId);
+                console.log("Wallet Id old2:", dataOld);
+                // Cập nhật walletId vào người dùng
+                const dateSend = {
+                  fullName: dataOld.fullName,
+                  email: dataOld.email,
+                  password: dataOld.password,
+                  createDate: dataOld.createDate,
+                  phone: dataOld.phone,
+                  dob: dataOld.dob,
+                  address: dataOld.address,
+                  roleId: 2,
+                  status: dataOld.status,
+                  walletId: walletId, // Thêm walletId vào request
+                };
+                console.log("Data send:", dateSend);
+                const formData = new FormData();
+                Object.entries(dateSend).forEach(([key, value]) => {
+                  formData.append(key, value);
+                });
+                const updateUserResponse = await apiUser.put(
+                  `/${userId}`,
+                  formData,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${tokenFromCookie}`,
+                      "Content-Type": "multipart/form-data",
+                    },
+                  }
+                );
+
+                if (updateUserResponse.status === 204) {
+                  console.log(
+                    "Cập nhật người dùng thành công:",
+                    updateUserResponse.data
+                  );
+                  Cookies.remove("userToken");
+                  const dataCart = {
+                    userId: userId,
+                    status: "Active",
+                    totalPrice: 0,
+                  };
+                  console.log("Data Cart trước khi gửi:", dataCart);
+
+                  const createCartResponse = await apiCart.post("", dataCart, {
+                    Authorization: `Bearer ${tokenFromCookie}`,
+                    "Content-Type": "application/json",
+                  });
+
+                  if (createCartResponse.status === 201) {
+                    console.log("Cart Response đã tạo :", createCartResponse);
+                    // Sau khi thành công, xóa token và chuyển hướng
+                  } else {
+                    console.error(
+                      "Lỗi khi tạo giỏ hàng:",
+                      createCartResponse.data
+                    );
+                  }
+                } else {
+                  console.error(
+                    "Lỗi khi cập nhật người dùng:",
+                    updateUserResponse.data
+                  );
+                }
+              } else {
+                console.error("Lỗi khi tạo ví:", walletResponse.data);
+              }
+            } catch (walletError) {
+              console.error("Lỗi khi gọi API tạo ví:", walletError);
+            }
+          }
+          Cookies.set("userToken", token, { expires: 7, path: "/" });
+          console.log("Token đã lưu:", Cookies.get("userToken"));
+          setIsCardVisible(false); // Đóng card sau khi tạo
+          LoadUser(userUpData);
+        } else {
+          console.error("Lỗi: Không nhận được token từ API login");
+          alert(
+            "Đăng ký thành công nhưng không thể đăng nhập. Vui lòng thử lại."
+          );
+        }
+      } else {
+        console.error("Lỗi khi đăng ký:", response.data);
+        alert(`Đăng ký thất bại: ${response.data.message || "Có lỗi xảy ra"}`);
+      }
+    } catch (error) {
+      console.error("Lỗi hệ thống:", error);
+      alert("Không thể kết nối đến server. Vui lòng thử lại sau!");
+    }
+  };
+  const handleCreateUsers = async () => {
+    const createDate = new Date().toISOString();
+    const dob = new Date().toISOString();
+    const { fullName, email, phone, withdrawalMethod, withdrawInfo } = newUser;
+
+    console.log("Full Name:", fullName);
+    console.log("Email:", email);
+    console.log("Phone:", phone);
+    console.log("Password:", newUser.password); // Access password from state
+
+    // Kiểm tra các trường nhập vào
+    if (!fullName || !email || !phone) {
+      alert("Vui lòng nhập đầy đủ tất cả các trường!");
+      return;
+    }
+
+    // Kiểm tra email phải có đuôi @gmail
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+    if (!emailRegex.test(email)) {
+      alert("Email phải có đuôi @gmail.com");
+      return;
+    }
+
+    // Gửi yêu cầu kiểm tra email đã tồn tại
+    const checkUserResponse = await apiUser.get(
+      `/ByEmail?email=${encodeURIComponent(email)}&pageIndex=1&pageSize=5000`
+    );
+    console.log("dữ liệu email check", checkUserResponse.data);
+
+    // Nếu email đã tồn tại, hiển thị thông báo và dừng
+    if (checkUserResponse.data && checkUserResponse.data.length > 0) {
+      alert("Email đã tồn tại, vui lòng chọn email khác!");
+      return;
+    }
+
+    // Kiểm tra số điện thoại phải là 10 số và bắt đầu bằng số 0
+    const phoneRegex = /^0\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+      alert("Số điện thoại phải là 10 số và bắt đầu bằng số 0");
+      return;
+    }
+
+    // Tiếp tục xử lý sau khi kiểm tra thành công
+    const formData = new FormData();
+    formData.append("fullName", fullName);
+    formData.append("email", email);
+    formData.append("password", newUser.password); // Access password from state
+    formData.append("phone", phone);
+    formData.append("dob", dob);
+    formData.append("address", "string");
+    formData.append("avatarUrl", null);
+    formData.append("status", "Active");
+    formData.append("walletId", "");
+    formData.append("roleId", 3);
+    formData.append("createDate", createDate);
+
+    console.log("Form Data trước khi gửi:", Object.fromEntries(formData));
+
+    // Kiểm tra dữ liệu đã chuẩn bị
+    const formDataObj = {};
+    formData.forEach((value, key) => {
+      formDataObj[key] = value;
+    });
+    console.log("Form Data trước khi gửi:", formDataObj);
+
+    try {
+      // Gửi yêu cầu đăng ký
+      const response = await apiUser.post("", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("Response status:", response.status);
+      console.log("Response data:", response.data);
+      const dataOld = response.data;
+      console.log("Wallet Id old:", dataOld);
+      // Kiểm tra trạng thái thành công
+      if (response.status === 201) {
+        alert("Đăng ký thành công!");
+
+        // Đăng nhập và lấy token
+        const loginResponse = await apiLogin.post("", {
+          email: email,
+          password: newUser.password, // Use password from state
+        });
+
+        // Kiểm tra nếu login thành công và nhận token
+        if (loginResponse.data && loginResponse.data.token) {
+          const token = loginResponse.data.token;
+          Cookies.set("userToken", token, { expires: 7, path: "/" });
+          console.log("Token đã lưu:", Cookies.get("userToken"));
+
+          // Tạo ví người dùng
+          const tokenFromCookie = Cookies.get("userToken");
+          if (tokenFromCookie) {
+            const decodedToken = jwtDecode(tokenFromCookie);
+            console.log("Decoded Token:", decodedToken);
+            const userId =
+              decodedToken[
+                "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+              ];
+            console.log("UserId:", userId); // Kết quả: "32"
+            const walletData = {
+              balance: 0,
+              withdrawMethod: "string",
+              withdrawInfo: "string",
+              status: "Active",
+              userId: userId, // Gắn userId vào đây
+            };
+
+            console.log("Wallet Data:", walletData);
+
+            try {
+              // Tạo ví cho người dùng
+              const walletResponse = await apiWallets.post("", walletData, {
+                headers: {
+                  Authorization: `Bearer ${tokenFromCookie}`,
+                },
+              });
+
+              if (walletResponse.status === 201) {
+                console.log("Tạo ví thành công:", walletResponse.data);
+                const walletId = walletResponse.data.id; // Giả sử id là walletId
+                console.log("Wallet Id:", walletId);
+                console.log("Wallet Id old2:", dataOld);
+                // Cập nhật walletId vào người dùng
+                const dateSend = {
+                  fullName: dataOld.fullName,
+                  email: dataOld.email,
+                  password: dataOld.password,
+                  createDate: dataOld.createDate,
+                  phone: dataOld.phone,
+                  dob: dataOld.dob,
+                  address: dataOld.address,
+                  roleId: 2,
+                  status: dataOld.status,
+                  walletId: walletId, // Thêm walletId vào request
+                };
+                console.log("Data send:", dateSend);
+                const formData = new FormData();
+                Object.entries(dateSend).forEach(([key, value]) => {
+                  formData.append(key, value);
+                });
+                const updateUserResponse = await apiUser.put(
+                  `/${userId}`,
+                  formData,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${tokenFromCookie}`,
+                      "Content-Type": "multipart/form-data",
+                    },
+                  }
+                );
+
+                if (updateUserResponse.status === 204) {
+                  console.log(
+                    "Cập nhật người dùng thành công:",
+                    updateUserResponse.data
+                  );
+                  Cookies.remove("userToken");
+                  const dataCart = {
+                    userId: userId,
+                    status: "Active",
+                    totalPrice: 0,
+                  };
+                  console.log("Data Cart trước khi gửi:", dataCart);
+
+                  const createCartResponse = await apiCart.post("", dataCart, {
+                    Authorization: `Bearer ${tokenFromCookie}`,
+                    "Content-Type": "application/json",
+                  });
+
+                  if (createCartResponse.status === 201) {
+                    console.log("Cart Response đã tạo :", createCartResponse);
+                    // Sau khi thành công, xóa token và chuyển hướng
+                  } else {
+                    console.error(
+                      "Lỗi khi tạo giỏ hàng:",
+                      createCartResponse.data
+                    );
+                  }
+                } else {
+                  console.error(
+                    "Lỗi khi cập nhật người dùng:",
+                    updateUserResponse.data
+                  );
+                }
+              } else {
+                console.error("Lỗi khi tạo ví:", walletResponse.data);
+              }
+            } catch (walletError) {
+              console.error("Lỗi khi gọi API tạo ví:", walletError);
+            }
+          }
+          Cookies.set("userToken", token, { expires: 7, path: "/" });
+          console.log("Token đã lưu:", Cookies.get("userToken"));
+          setIsUserCardVisible(false);
+          LoadUser(userUpData);
+        } else {
+          console.error("Lỗi: Không nhận được token từ API login");
+          alert(
+            "Đăng ký thành công nhưng không thể đăng nhập. Vui lòng thử lại."
+          );
+        }
+      } else {
+        console.error("Lỗi khi đăng ký:", response.data);
+        alert(`Đăng ký thất bại: ${response.data.message || "Có lỗi xảy ra"}`);
+      }
+    } catch (error) {
+      console.error("Lỗi hệ thống:", error);
+      alert("Không thể kết nối đến server. Vui lòng thử lại sau!");
+    }
+  };
+  const handleCreateStaff = async () => {
+    const createDate = new Date().toISOString();
+    const dob = new Date().toISOString();
+    const { fullName, email, phone, withdrawalMethod, withdrawInfo } = newUser;
+
+    console.log("Full Name:", fullName);
+    console.log("Email:", email);
+    console.log("Phone:", phone);
+    console.log("Password:", newUser.password); // Access password from state
+
+    // Kiểm tra các trường nhập vào
+    if (!fullName || !email || !phone) {
+      alert("Vui lòng nhập đầy đủ tất cả các trường!");
+      return;
+    }
+
+    // Kiểm tra email phải có đuôi @gmail
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+    if (!emailRegex.test(email)) {
+      alert("Email phải có đuôi @gmail.com");
+      return;
+    }
+
+    // Gửi yêu cầu kiểm tra email đã tồn tại
+    const checkUserResponse = await apiUser.get(
+      `/ByEmail?email=${encodeURIComponent(email)}&pageIndex=1&pageSize=5000`
+    );
+    console.log("dữ liệu email check", checkUserResponse.data);
+
+    // Nếu email đã tồn tại, hiển thị thông báo và dừng
+    if (checkUserResponse.data && checkUserResponse.data.length > 0) {
+      alert("Email đã tồn tại, vui lòng chọn email khác!");
+      return;
+    }
+
+    // Kiểm tra số điện thoại phải là 10 số và bắt đầu bằng số 0
+    const phoneRegex = /^0\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+      alert("Số điện thoại phải là 10 số và bắt đầu bằng số 0");
+      return;
+    }
+
+    // Tiếp tục xử lý sau khi kiểm tra thành công
+    const formData = new FormData();
+    formData.append("fullName", fullName);
+    formData.append("email", email);
+    formData.append("password", newUser.password); // Access password from state
+    formData.append("phone", phone);
+    formData.append("dob", dob);
+    formData.append("address", "string");
+    formData.append("avatarUrl", null);
+    formData.append("status", "Active");
+    formData.append("walletId", "");
+    formData.append("roleId", 4);
+    formData.append("createDate", createDate);
+
+    console.log("Form Data trước khi gửi:", Object.fromEntries(formData));
+
+    // Kiểm tra dữ liệu đã chuẩn bị
+    const formDataObj = {};
+    formData.forEach((value, key) => {
+      formDataObj[key] = value;
+    });
+    console.log("Form Data trước khi gửi:", formDataObj);
+
+    try {
+      // Gửi yêu cầu đăng ký
+      const response = await apiUser.post("", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("Response status:", response.status);
+      console.log("Response data:", response.data);
+      const dataOld = response.data;
+      if (response.status === 201) {
+        alert("Đăng ký thành công!");
+
+        setIsEmployeeCardVisible(false);
+        LoadUser(userUpData);
+      } else {
+        console.error("Lỗi khi đăng ký:", response.data);
+        alert(`Đăng ký thất bại: ${response.data.message || "Có lỗi xảy ra"}`);
+      }
+    } catch (error) {
+      console.error("Lỗi hệ thống:", error);
+      alert("Không thể kết nối đến server. Vui lòng thử lại sau!");
+    }
+  };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewUser((prev) => ({ ...prev, [name]: value }));
   };
   const renderContent = () => {
     switch (selectedTab) {
@@ -675,31 +1230,350 @@ const AdminPage = () => {
           </div>
         );
 
-      case "products":
+      case "User":
         return (
           <div>
             <div className="p-4 bg-white block sm:flex items-center justify-between border-b border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700">
               <div className="w-full mb-1">
                 <div className="items-center justify-between block sm:flex md:divide-x md:divide-gray-100 dark:divide-gray-700">
-                  <div className="flex items-center mb-4 sm:mb-0">
-                    <form
-                      className="sm:pr-3"
-                      onSubmit={handleSearch} // Gọi hàm tìm kiếm khi submit
+                  <div className="flex flex-wrap gap-4 justify-start mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsCardVisible(true)}
+                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-500"
                     >
-                      <label htmlFor="products-search" className="sr-only">
-                        Search
-                      </label>
-                      <div className="relative w-48 mt-1 sm:w-64 xl:w-96">
-                        <input
-                          type="text"
-                          id="products-search"
-                          value={searchKeyword} // Liên kết với state
-                          onChange={handleSearchChange} // Cập nhật từ khóa khi nhập
-                          className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          placeholder="Search for toys by name"
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                          clipRule="evenodd"
                         />
+                      </svg>
+                      Tạo nhà cung cấp đồ chơi
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEmployeeCardVisible(true)}
+                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-500"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Tạo nhân viên
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsUserCardVisible(true)}
+                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-blue-500"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Tạo người dùng
+                    </button>
+                    {/* Card tạo người dùng */}
+                    {isCardVisible && (
+                      <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+                          <h2 className="text-xl font-bold mb-4 text-center">
+                            Tạo nhà cung cấp đồ chơi
+                          </h2>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Tên nhà cung cấp
+                              </label>
+                              <input
+                                type="text"
+                                name="fullName"
+                                value={newUser.fullName}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Email
+                              </label>
+                              <input
+                                type="email"
+                                name="email"
+                                value={newUser.email}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Password
+                              </label>
+                              <input
+                                type="password"
+                                name="password"
+                                value={newUser.password}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Số điện thoại
+                              </label>
+                              <input
+                                type="text"
+                                name="phone"
+                                value={newUser.phone}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Trạng thái
+                              </label>
+                              <select
+                                name="status"
+                                value={newUser.status}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              >
+                                <option value="">Chọn trạng thái</option>
+                                <option value="Active">Hoạt động</option>
+                                <option value="Inactive">
+                                  Không hoạt động
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex justify-end mt-6 space-x-3">
+                            <button
+                              type="button"
+                              onClick={() => setIsCardVisible(false)}
+                              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                            >
+                              Hủy
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCreateUser}
+                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                            >
+                              Tạo mới
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </form>
+                    )}
+                    {isEmployeeCardVisible && (
+                      <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+                          <h2 className="text-xl font-bold mb-4 text-center">
+                            Tạo nhân viên mới
+                          </h2>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Tên nhân viên
+                              </label>
+                              <input
+                                type="text"
+                                name="fullName"
+                                value={newUser.fullName}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Email
+                              </label>
+                              <input
+                                type="email"
+                                name="email"
+                                value={newUser.email}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Password
+                              </label>
+                              <input
+                                type="password"
+                                name="password"
+                                value={newUser.password}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Số điện thoại
+                              </label>
+                              <input
+                                type="text"
+                                name="phone"
+                                value={newUser.phone}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Trạng thái
+                              </label>
+                              <select
+                                name="status"
+                                value={newUser.status}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              >
+                                <option value="">Chọn trạng thái</option>
+                                <option value="Active">Hoạt động</option>
+                                <option value="Inactive">
+                                  Không hoạt động
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex justify-end mt-6 space-x-3">
+                            <button
+                              type="button"
+                              onClick={() => setIsEmployeeCardVisible(false)}
+                              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                            >
+                              Hủy
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCreateStaff}
+                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                            >
+                              Tạo mới
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {isUserCardVisible && (
+                      <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+                          <h2 className="text-xl font-bold mb-4 text-center">
+                            Tạo người dùng mới
+                          </h2>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Tên người dùng
+                              </label>
+                              <input
+                                type="text"
+                                name="fullName"
+                                value={newUser.fullName}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Email
+                              </label>
+                              <input
+                                type="email"
+                                name="email"
+                                value={newUser.email}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Password
+                              </label>
+                              <input
+                                type="password"
+                                name="password"
+                                value={newUser.password}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Số điện thoại
+                              </label>
+                              <input
+                                type="text"
+                                name="phone"
+                                value={newUser.phone}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">
+                                Trạng thái
+                              </label>
+                              <select
+                                name="status"
+                                value={newUser.status}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                              >
+                                <option value="">Chọn trạng thái</option>
+                                <option value="Active">Hoạt động</option>
+                                <option value="Inactive">
+                                  Không hoạt động
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex justify-end mt-6 space-x-3">
+                            <button
+                              type="button"
+                              onClick={() => setIsUserCardVisible(false)}
+                              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                            >
+                              Hủy
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCreateUsers}
+                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                            >
+                              Tạo mới
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -709,132 +1583,96 @@ const AdminPage = () => {
                 <div className="inline-block min-w-full align-middle">
                   <div className="overflow-hidden shadow">
                     <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
-                      <thead className="bg-gray-100 dark:bg-gray-700">
+                      <thead className=" bg-gray-100 dark:bg-gray-700">
                         <tr>
-                          {/* <th scope="col" className="p-4">
-                            <div className="flex items-center">
-                              <input
-                                id="checkbox-all"
-                                aria-describedby="checkbox-1"
-                                type="checkbox"
-                                className="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:focus:ring-primary-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
-                              />
-                              <label htmlFor="checkbox-all" className="sr-only">
-                                checkbox
-                              </label>
-                            </div>
-                          </th> */}
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          ></th>
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
                           >
-                            Toy Name
+                            Tên người dùng
                           </th>
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
                           >
-                            Price
+                            Email
                           </th>
 
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
                           >
-                            Origin
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            Age
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            Brand
+                            Số điện thoại
                           </th>
 
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
                           >
-                            CreateDate
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            RentTime
-                          </th>
-                          <th
-                            scope="col"
-                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
-                          >
-                            Status
+                            Vai trò
                           </th>
 
                           <th
                             scope="col"
                             className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
                           >
-                            Actions
+                            Trạng thái
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Hành động
                           </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {toysData &&
-                        Array.isArray(toysData) &&
-                        toysData.length > 0 ? (
-                          toysData.map((toy) => (
+                        {userUpData &&
+                        Array.isArray(userUpData) &&
+                        userUpData.length > 0 ? (
+                          userUpData.map((user) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
-                              key={toy.id}
+                              key={user.id}
                             >
-                              {/* <td className="w-4 p-4">
-                                <div className="flex items-center">
-                                  <input
-                                    id={`checkbox-${toy.id}`}
-                                    aria-describedby="checkbox-1"
-                                    type="checkbox"
-                                    className="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:focus:ring-primary-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
-                                  />
-                                  <label
-                                    htmlFor={`checkbox-${toy.id}`}
-                                    className="sr-only"
-                                  >
-                                    checkbox
-                                  </label>
-                                </div>
-                              </td> */}
                               <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
                                 <div className="text-base font-semibold text-gray-900 dark:text-white">
-                                  {toy.name}
+                                  {user.avatarUrl &&
+                                  user.avatarUrl.length > 0 ? (
+                                    <img
+                                      src={user.avatarUrl}
+                                      alt="User-Avatar"
+                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                    />
+                                  ) : (
+                                    <span>No media available</span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                  {user.fullName}
                                 </div>
                               </td>
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.price}
+                                {user.email}
                               </td>
 
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.origin}
-                              </td>
-                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.age}
-                              </td>
-                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.brand}
+                                {user.phone}
                               </td>
 
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {new Date(toy.createDate).toLocaleDateString()}
+                                {user.role.name}
                               </td>
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.rentTime}
-                              </td>
-                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {toy.status}
+                                {statusMapping[user.status] ||
+                                  "Trạng thái không xác định"}
                               </td>
 
                               <td className="p-4 space-x-2 whitespace-nowrap">
@@ -843,42 +1681,18 @@ const AdminPage = () => {
                                   type="button"
                                   onClick={(event) => {
                                     event.stopPropagation();
-                                    setSelectedToy(toy); // Lưu thông tin toy vào state
+                                    setSelectedUserUp(user); // Lưu thông tin toy vào state
                                   }}
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
                                 >
-                                  Detail
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    // setIsEditing(true); // Bật form chỉnh sửa
-                                    // setSelectedToy(toy); // Lưu thông tin toy vào selectedToy
-                                    handleUpdateToy(toy.id);
-                                  }}
-                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-                                >
-                                  Approve
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
-                                    handleDelete(toy.id); // Gọi hàm handleDelete
-                                  }}
-                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
-                                >
-                                  Delete
+                                  Thông tin
                                 </button>
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="13" className="p-4 text-center">
-                              No toys found.
-                            </td>
+                            <td colSpan="13" className="p-4 text-center"></td>
                           </tr>
                         )}
                       </tbody>
@@ -908,13 +1722,13 @@ const AdminPage = () => {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  Previous
+                  Trước
                 </button>
                 <button
                   onClick={handleNext}
                   className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                 >
-                  Next
+                  Sau
                   <svg
                     className="w-5 h-5 ml-1 -mr-1"
                     fill="currentColor"
@@ -930,13 +1744,13 @@ const AdminPage = () => {
                 </button>
               </div>
             </div>
-            {selectedToy && !isEditing && (
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[90%] overflow-auto relative">
+            {selectedUserUp && !isEditing && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
-                    onClick={() => setSelectedToy(null)} // Đóng chi tiết khi bấm nút
+                    onClick={() => setSelectedUserUp(null)} // Đóng chi tiết khi bấm nút
                     className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-700"
                   >
                     &times;
@@ -946,101 +1760,70 @@ const AdminPage = () => {
                     {/* Phần hình ảnh */}
                     <div className="flex-1 flex justify-center items-center flex-col max-w-md mx-auto mt-20">
                       {/* Hiển thị ảnh hoặc video */}
-                      <div className="w-80 h-80">
-                        {selectedMedia &&
-                        selectedToy.media.some(
-                          (media) => media.mediaUrl === selectedMedia
-                        ) ? (
-                          selectedMedia.endsWith(".mp4?alt=media") ? (
-                            <video
-                              src={selectedMedia}
-                              controls
-                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
-                            />
-                          ) : (
-                            <img
-                              src={selectedMedia}
-                              alt="Media"
-                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
-                            />
-                          )
-                        ) : null}
-                      </div>
-
-                      {/* Ảnh/video nhỏ */}
-                      <div className="flex gap-4 flex-wrap justify-center mt-4">
-                        {" "}
-                        {/* Giữ cho các ảnh nhỏ xếp dưới ảnh lớn */}
-                        {selectedToy.media.map((media, index) => (
-                          <div
-                            key={index}
-                            className="flex flex-col items-center"
-                          >
-                            {/* Hiển thị video nếu media là video */}
-                            {media.mediaUrl.endsWith(".mp4?alt=media") ? (
-                              <video
-                                src={media.mediaUrl}
-                                alt={`Video ${index + 1}`}
-                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
-              ${
-                selectedMedia === media.mediaUrl
-                  ? "border-orange-500 scale-105"
-                  : "border-gray-300"
-              }`}
-                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn video
-                              />
-                            ) : (
-                              // Hiển thị ảnh nếu media là ảnh
-                              <img
-                                src={media.mediaUrl}
-                                alt={`Hình ảnh ${index + 1}`}
-                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
-              ${
-                selectedMedia === media.mediaUrl
-                  ? "border-orange-500 scale-105"
-                  : "border-gray-300"
-              }`}
-                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn ảnh
-                              />
-                            )}
-                          </div>
-                        ))}
+                      <div className="w-auto h-auto">
+                        {selectedUserUp.avatarUrl &&
+                        selectedUserUp.avatarUrl.length > 0 ? (
+                          <img
+                            src={selectedUserUp.avatarUrl}
+                            alt="User-Avatar"
+                            className=" w-full max-w-[70%] h-auto object-contain "
+                          />
+                        ) : (
+                          <span>No media available</span>
+                        )}
                       </div>
                     </div>
 
                     {/* Phần thông tin */}
-                    <div className="flex-1 text-xl space-y-6">
+                    <div className="flex-1 text-sm space-y-6">
                       <h2 className="text-4xl font-bold mb-10 text-center">
-                        Toy Details
+                        Thông tin người dùng
                       </h2>
                       <p>
-                        <strong>Name:</strong> {selectedToy.name}
+                        <strong>Tên người dùng:</strong>{" "}
+                        {selectedUserUp.fullName}
                       </p>
                       <p>
-                        <strong>Price:</strong> {selectedToy.price}
+                        <strong>Email:</strong> {selectedUserUp.email}
                       </p>
                       <p>
-                        <strong>Origin:</strong> {selectedToy.origin}
+                        <strong>Ngày tạo:</strong>{" "}
+                        {new Date(
+                          selectedUserUp.createDate
+                        ).toLocaleDateString()}
                       </p>
                       <p>
-                        <strong>Age:</strong> {selectedToy.age}
+                        <strong>Số điện thoại:</strong> {selectedUserUp.phone}
                       </p>
 
                       <p>
-                        <strong>Thương Hiệu:</strong> {selectedToy.brand}
+                        <strong>Ngày sinh:</strong>{" "}
+                        {new Date(selectedUserUp.dob).toLocaleDateString()}
                       </p>
                       <p>
-                        <strong>Danh mục:</strong> {selectedToy.category.name}
+                        <strong>Địa chỉ:</strong>
+                        {selectedUserUp.address}
                       </p>
                       <p>
-                        <strong>Create Date:</strong>{" "}
-                        {new Date(selectedToy.createDate).toLocaleDateString()}
+                        <strong>Vai trò:</strong> {selectedUserUp.role.name}
                       </p>
+
                       <p>
-                        <strong>Rent Time:</strong> {selectedToy.rentTime}
+                        <strong>Trạng thái:</strong>{" "}
+                        {statusMapping[selectedUserUp.status] ||
+                          "Trạng thái không xác định"}
                       </p>
-                      <p>
-                        <strong>Status:</strong> {selectedToy.status}
+                      <p className=" space-x-2 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
+                            handleUserBan(selectedUserUp.id); // Gọi hàm handleDelete
+                          }}
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
+                        >
+                          Cấm
+                        </button>
                       </p>
                     </div>
                   </div>
@@ -1167,7 +1950,7 @@ const AdminPage = () => {
             </div>
           </div>
         );
-      case "Status":
+
         return (
           <div className="container mx-auto py-4">
             <h2 className="text-2xl font-semibold">Danh sách đơn hàng</h2>
@@ -1279,33 +2062,12 @@ const AdminPage = () => {
             </button>
 
             <button
-              onClick={() => setSelectedTab("products")}
+              onClick={() => setSelectedTab("User")}
               className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
-                selectedTab === "products" ? "bg-gray-300" : ""
+                selectedTab === "User" ? "bg-gray-300" : ""
               }`}
             >
-              <span className="icon-class mr-2">📦</span> Danh sách sản phẩm đợi
-              duyệt
-            </button>
-
-            <button
-              onClick={() => setSelectedTab("order")}
-              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
-                selectedTab === "order" ? "bg-gray-300" : ""
-              }`}
-            >
-              <span className="icon-class mr-2">👥</span> Danh sách sản phẩm đợi
-              duyệt lại
-            </button>
-
-            <button
-              onClick={() => setSelectedTab("Status")}
-              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
-                selectedTab === "Status" ? "bg-gray-300" : ""
-              }`}
-            >
-              <span className="icon-class mr-2">🏢</span> Danh sách đơn hàng
-              đang chờ trả
+              <span className="icon-class mr-2">📦</span> Danh sách người dùng
             </button>
           </nav>
         </aside>
