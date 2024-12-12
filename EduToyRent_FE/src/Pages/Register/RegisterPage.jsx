@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginBG from "../../assets/bg.png";
 import apiUser from "../../service/ApiUser";
@@ -7,6 +7,7 @@ import apiLogin from "../../service/ApiLogin";
 import apiWallets from "../../service/ApiWallets";
 import apiCart from "../../service/ApiCart";
 import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 const RegisterPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,7 +20,15 @@ const RegisterPage = () => {
   const [passwordsMatch, setPasswordsMatch] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
   const navigate = useNavigate();
-
+  const [cities, setCities] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [shippingInfo, setShippingInfo] = useState({
+    city: "",
+    district: "",
+    ward: "",
+    detail: "",
+  });
   // Function to check password rules
   const validatePassword = (password) => {
     const lengthValid = password.length >= 8;
@@ -34,7 +43,77 @@ const RegisterPage = () => {
       specialChar: specialCharValid,
     });
   };
+  // Lấy danh sách Thành phố/Tỉnh
+  useEffect(() => {
+    axios.get("https://provinces.open-api.vn/api/").then((response) => {
+      setCities(response.data);
+    });
+  }, []);
+  // Xử lý khi thay đổi Thành phố/Tỉnh
+  // Xử lý khi thay đổi Thành phố/Tỉnh
+  const handleCityChange = (e) => {
+    const selectedCity = e.target.value;
 
+    console.log("City selected:", selectedCity); // Log thành phố được chọn
+
+    setShippingInfo({
+      ...shippingInfo,
+      city: selectedCity,
+      district: "",
+      ward: "",
+      name: "",
+    });
+
+    // Lấy danh sách Quận/Huyện theo Thành phố/Tỉnh
+    axios
+      .get(`https://provinces.open-api.vn/api/p/${selectedCity}?depth=2`)
+      .then((response) => {
+        console.log("Districts data:", response.data.districts); // Log dữ liệu Quận/Huyện
+
+        setDistricts(response.data.districts);
+        setWards([]); // Reset danh sách Phường/Xã
+      });
+  };
+
+  // Xử lý khi thay đổi Quận/Huyện
+  const handleDistrictChange = (e) => {
+    const selectedDistrict = e.target.value;
+
+    console.log("District selected:", selectedDistrict); // Log quận được chọn
+
+    setShippingInfo({ ...shippingInfo, district: selectedDistrict, ward: "" });
+
+    // Lấy danh sách Phường/Xã theo Quận/Huyện
+    axios
+      .get(`https://provinces.open-api.vn/api/d/${selectedDistrict}?depth=2`)
+      .then((response) => {
+        console.log("Wards data:", response.data.wards); // Log dữ liệu Phường/Xã
+
+        setWards(response.data.wards);
+      });
+  };
+
+  // Xử lý khi thay đổi Phường/Xã
+  const handleWardChange = (e) => {
+    const selectedWard = e.target.value;
+
+    console.log("Ward selected:", selectedWard); // Log phường được chọn
+
+    setShippingInfo({ ...shippingInfo, ward: selectedWard });
+  };
+
+  // Xử lý thay đổi địa chỉ chi tiết
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    console.log(`${name} changed to:`, value); // Log thay đổi trong chi tiết địa chỉ
+
+    setShippingInfo({
+      ...shippingInfo,
+      [name]: value,
+    });
+  };
+  console.log("Shipping Info:", shippingInfo);
   // Handle password input change
   const handlePasswordChange = (e) => {
     const newPassword = e.target.value;
@@ -122,6 +201,11 @@ const RegisterPage = () => {
       );
       return;
     }
+    const cityName = cities.find((city) => city.code == shippingInfo.city).name;
+    const districtName = districts.find(
+      (district) => district.code == shippingInfo.district
+    ).name;
+    const wardName = wards.find((ward) => ward.code == shippingInfo.ward).name;
 
     // Tiếp tục xử lý sau khi kiểm tra thành công
     const formData = new FormData();
@@ -130,7 +214,11 @@ const RegisterPage = () => {
     formData.append("password", passwordInput);
     formData.append("phone", phone);
     formData.append("dob", dobInput);
-    formData.append("address", "string");
+    // Địa chỉ lấy từ shippingInfo
+    formData.append(
+      "address",
+      `${shippingInfo.detail}, ${wardName}, ${districtName}, ${cityName}`
+    );
     formData.append("avatarUrl", null);
     formData.append("status", "Active");
     formData.append("walletId", "");
@@ -344,14 +432,79 @@ const RegisterPage = () => {
             <label htmlFor="address" className="block text-gray-600">
               Địa chỉ
             </label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-blue-500"
-              autoComplete="off"
-              placeholder="Nhập địa chỉ"
-            />
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Thành phố/Tỉnh */}
+              <div>
+                <label className="block mb-2 font-medium">
+                  Thành phố/Tỉnh:
+                </label>
+                <select
+                  name="city"
+                  value={shippingInfo.city}
+                  onChange={handleCityChange}
+                  className="w-full border border-gray-300 rounded-md p-2"
+                >
+                  <option value="">Chọn thành phố/tỉnh</option>
+                  {cities.map((city) => (
+                    <option key={city.code} value={city.code}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Quận/Huyện */}
+              <div>
+                <label className="block mb-2 font-medium">Quận/Huyện:</label>
+                <select
+                  name="district"
+                  value={shippingInfo.district}
+                  onChange={handleDistrictChange}
+                  className="w-full border border-gray-300 rounded-md p-2"
+                  disabled={!shippingInfo.city}
+                >
+                  <option value="">Chọn quận/huyện</option>
+                  {districts.map((district) => (
+                    <option key={district.code} value={district.code}>
+                      {district.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Phường/Xã */}
+              <div>
+                <label className="block mb-2 font-medium">Phường/Xã:</label>
+                <select
+                  name="ward"
+                  value={shippingInfo.ward}
+                  onChange={handleWardChange}
+                  className="w-full border border-gray-300 rounded-md p-2"
+                  disabled={!shippingInfo.district}
+                >
+                  <option value="">Chọn phường/xã</option>
+                  {wards.map((ward) => (
+                    <option key={ward.code} value={ward.code}>
+                      {ward.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Chi tiết địa chỉ */}
+              <div>
+                <label className="block mb-2 font-medium">
+                  Chi tiết địa chỉ:
+                </label>
+                <input
+                  type="text"
+                  name="detail"
+                  value={shippingInfo.detail}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
+            </div>
           </div>
           {/* Phone Input */}
           <div className="">
