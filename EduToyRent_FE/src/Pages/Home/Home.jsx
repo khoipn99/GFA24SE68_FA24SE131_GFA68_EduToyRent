@@ -13,6 +13,7 @@ import apiCategory from "../../service/ApiCategory";
 import apiCartItem from "../../service/ApiCartItem";
 
 import apiCart from "../../service/ApiCart";
+import apiUser from "../../service/ApiUser";
 
 const Home = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -28,6 +29,7 @@ const Home = () => {
   const [editedData, setEditedData] = useState({});
   const [userId, setUserId] = useState(null);
   const [featuredToys, setFeaturedToys] = useState([]);
+  const [toySuppliers, setToySuppliers] = useState([]);
   const [dealsOfTheDay, setdealsOfTheDay] = useState([]);
   const [cartId, setCartId] = useState(null);
 
@@ -60,14 +62,6 @@ const Home = () => {
       image:
         "https://bizweb.dktcdn.net/100/462/711/products/pothehk-60ad384c-5e3c-4948-a00e-0ef294800393.png?v=1669113673947",
     },
-    {
-      image:
-        "https://mebi.vn/wp-content/uploads/2023/04/bang-viet-xoa-tu-dong-thong-minh-3.jpg",
-    },
-    {
-      image:
-        "https://mebi.vn/wp-content/uploads/2023/04/bang-viet-xoa-tu-dong-thong-minh-3.jpg",
-    },
   ];
 
   const images = [
@@ -97,18 +91,43 @@ const Home = () => {
       setdealsOfTheDay(response.data);
     });
 
-    apiCategory.get("?pageIndex=1&pageSize=100").then((response) => {
+    apiCategory.get("?pageIndex=1&pageSize=7").then((response) => {
       console.log(response.data);
       setFeaturedToys(response.data);
     });
+
+    apiUser
+      .get("?$filter=role/id eq 2 and status eq 'Active'", {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        console.log(response.data);
+        setToySuppliers(response.data);
+      });
   }, []);
 
   useEffect(() => {
+    const userDataCookie1 = Cookies.get("userData");
+    if (userDataCookie1) {
+      const parsedUserData = JSON.parse(userDataCookie1);
+
+      if (parsedUserData.roleId == 4) {
+        navigate("/staff");
+      } else if (parsedUserData.roleId == 1) {
+        navigate("/admin");
+      } else if (parsedUserData.roleId == 2) {
+        navigate("/toySupplier");
+      }
+    }
+
     const userDataCookie = Cookies.get("userDataReal");
     if (userDataCookie) {
       var parsedUserData;
       try {
         parsedUserData = JSON.parse(userDataCookie);
+
         setUserData(parsedUserData); // Adjust based on expected structure
         console.log(parsedUserData);
         fetchUserCart(parsedUserData.id);
@@ -563,8 +582,8 @@ const Home = () => {
               Các Nhãn Hàng Đối Tác
             </h2>
             <div className="grid grid-cols-7 gap-4">
-              {featuredToys && featuredToys.length > 0 ? (
-                featuredToys.map((category, position) => (
+              {toySuppliers && toySuppliers.length > 0 ? (
+                toySuppliers.map((category, position) => (
                   <div
                     key={position}
                     className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
@@ -573,13 +592,13 @@ const Home = () => {
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"
                       style={{
-                        backgroundImage: `url(${PictureCategory[position].image})`,
+                        backgroundImage: `url(${category.avatarUrl})`,
                       }}
                     ></div>
 
                     <div>
                       <p className="text-[#0e161b] text-base font-medium">
-                        {category.name}
+                        {category.fullName}
                       </p>
                     </div>
                   </div>

@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using Humanizer;
 using EduToyRentRepositories.DTO.Request;
 using Google.Apis.Storage.v1.Data;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -28,6 +29,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Transactions
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<TransactionResponse>> GetTransactions(int pageIndex = 1, int pageSize = 50)
         {
            var transactions = _unitOfWork.TransactionRepository.Get(
@@ -73,6 +75,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Transactions/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<TransactionResponse>> GetTransaction(int id)
         {
             var transaction = _unitOfWork.TransactionRepository.GetByID(id);
@@ -223,6 +226,7 @@ namespace EduToyRentAPI.Controllers
         }
 
         [HttpGet("order/{orderId}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<TransactionResponse>> GetTransactionsByOrderId(int orderId, int pageIndex = 1, int pageSize = 50)
         {
             var transactions = _unitOfWork.TransactionRepository.Get(

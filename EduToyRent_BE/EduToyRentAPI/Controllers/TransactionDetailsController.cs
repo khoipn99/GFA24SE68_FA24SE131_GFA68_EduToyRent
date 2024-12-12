@@ -10,6 +10,7 @@ using EduToyRentRepositories.Interface;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.DTO.Request;
 using System.Diagnostics;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -26,6 +27,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/TransactionDetails
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<TransactionDetailResponse>> GetTransactionDetails(int pageIndex = 1, int pageSize = 50)
         {
             var transactionDetails = _unitOfWork.TransactionDetailRepository.Get(
@@ -54,6 +56,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/TransactionDetails/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<TransactionDetailResponse>> GetTransactionDetail(int id)
         {
             var transactionDetail = _unitOfWork.TransactionDetailRepository.GetByID(id);
@@ -157,6 +160,7 @@ namespace EduToyRentAPI.Controllers
         }
         //By TransactionId
         [HttpGet("transaction/{transactionId}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<TransactionDetailResponse>> GetTransactionDetailsByTransactionId(int transactionId,int pageIndex = 1, int pageSize = 50)
         {
             var transactionDetails = _unitOfWork.TransactionDetailRepository.Get(

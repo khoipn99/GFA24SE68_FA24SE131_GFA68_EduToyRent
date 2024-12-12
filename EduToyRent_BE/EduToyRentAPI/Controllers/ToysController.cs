@@ -404,21 +404,13 @@ namespace EduToyRentAPI.Controllers
             var userId = int.Parse(userIdClaim.Value);
             var userRole = _unitOfWork.UserRepository.GetByID(userId).RoleId;
 
-            int buyQuantity = 0;
 
-            if (userRole == 3)
-            {
-                buyQuantity = -1;
-            }
-            else if (userRole == 2)
-            {
-                buyQuantity = (int)toyRequest.BuyQuantity;
-            }
+           
             toy.Name = toyRequest.Name;
             toy.Description = toyRequest.Description;
             toy.Price = toyRequest.Price;
             toy.Origin = toyRequest.Origin;
-            toy.BuyQuantity = buyQuantity;
+            toy.BuyQuantity = toyRequest.BuyQuantity;
             toy.Age = toyRequest.Age;
             toy.Brand = toyRequest.Brand;
             toy.RentCount = toyRequest.RentCount;
