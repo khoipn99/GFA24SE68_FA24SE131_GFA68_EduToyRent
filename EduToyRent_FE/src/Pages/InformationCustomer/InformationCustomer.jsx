@@ -1279,9 +1279,8 @@ const InformationCustomer = () => {
 
                 {/* Right Side: Larger User Avatar with Edit Button */}
 
-                <div className="relative group w-40 h-40 ml-auto">
-                  {" "}
-                  {/* Increased size */}
+                <div className="relative w-40 h-40 flex flex-col items-center">
+                  {/* Avatar */}
                   <img
                     src={
                       customerInfo && customerInfo.avatarUrl
@@ -1289,18 +1288,22 @@ const InformationCustomer = () => {
                         : ""
                     }
                     alt="User Avatar"
-                    className="w-full h-full object-cover rounded-full"
+                    className="w-36 h-36 object-cover rounded-full border border-gray-300"
                   />
+
+                  {/* Input file ẩn */}
                   <input
                     type="file"
                     accept=".jpg, .png"
-                    onChange={handleFileChange} // Gọi hàm xử lý khi người dùng chọn file
+                    onChange={handleFileChange}
                     className="hidden"
                     id="fileInput"
                   />
+
+                  {/* Nút chọn ảnh */}
                   <button
-                    className="mt-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none"
-                    onClick={() => document.getElementById("fileInput").click()} // Mở input file khi click nút này
+                    className="mt-2 px-4 py-2 text-sm bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none"
+                    onClick={() => document.getElementById("fileInput").click()}
                   >
                     Chọn Ảnh
                   </button>

@@ -1900,7 +1900,7 @@ const ToySupplierPage = () => {
             </div>
             {selectedToy && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative ">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative ">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
@@ -2551,7 +2551,7 @@ const ToySupplierPage = () => {
             </div>
             {selectedToyDelete && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative ">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7x l w-full h-auto overflow-auto relative ">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"

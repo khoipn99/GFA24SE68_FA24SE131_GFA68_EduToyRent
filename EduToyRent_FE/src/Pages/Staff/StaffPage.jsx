@@ -1210,7 +1210,7 @@ const StaffPage = () => {
             </div>
             {selectedToyRent && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative z-[1010]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
@@ -1531,7 +1531,7 @@ const StaffPage = () => {
             </div>
             {selectedToy && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative z-[1010]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
@@ -1863,7 +1863,7 @@ const StaffPage = () => {
             </div>
             {selectedToyBuy && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative z-[1010]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
@@ -2254,7 +2254,7 @@ const StaffPage = () => {
             </div>
             {selectedToyBan && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative z-[1010]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative  z-[1010]">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
@@ -2558,7 +2558,7 @@ const StaffPage = () => {
             </div>
             {selectedUserUp && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative z-[1010]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
@@ -2815,7 +2815,7 @@ const StaffPage = () => {
             </div>
             {selectedUserUpBan && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-[70%] overflow-auto relative z-[1010]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
