@@ -1,6 +1,7 @@
 ﻿using EduToyRentRepositories.Interface;
 using EduToyRentRepositories.Models;
 using Microsoft.AspNetCore.SignalR;
+using NuGet.Protocol.Plugins;
 using System.Security.Claims;
 namespace EduToyRentAPI.Hubs
 {
@@ -40,7 +41,7 @@ namespace EduToyRentAPI.Hubs
 
             try
             {
-                var message = new Message
+                var message = new EduToyRentRepositories.Models.Message
                 {
                     Content = messageContent,
                     SentTime = DateTime.UtcNow,
@@ -48,17 +49,22 @@ namespace EduToyRentAPI.Hubs
                     ConversationId = conversationId,
                     IsRead = false
                 };
-
+                var conversation = _unitOfWork.ConversationRepository.GetByID(conversationId);
+                conversation.LastMessage = message.Content;
+                conversation.LastSentTime = message.SentTime;
+                _unitOfWork.ConversationRepository.Update(conversation);
                 await _unitOfWork.MessageRepository.InsertAsync(message);
                 await _unitOfWork.SaveAsync();
 
                 var messageResponse = new
                 {
-                    message.Id,
-                    message.Content,
-                    message.SentTime,
-                    message.SenderId,
-                    message.ConversationId
+                    Id = message.Id,
+                    IsRead = message.IsRead,
+                    Content = message.Content,
+                    SentTime = message.SentTime,
+                    SenderId = message.SenderId,
+                    SenderName = _unitOfWork.UserRepository.GetByID(message.SenderId).FullName,
+                    ConversationId = message.ConversationId
                 };
 
                 await Clients.Group($"Conversation-{conversationId}").SendAsync("ReceiveMessage", messageResponse);
@@ -88,6 +94,10 @@ namespace EduToyRentAPI.Hubs
 
             await base.OnConnectedAsync();
        }
+        public async Task JoinGroup(int conversationId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"Conversation-{conversationId}");
+        }
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             var userIdClaim = Context.User.FindFirst(ClaimTypes.NameIdentifier);

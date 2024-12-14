@@ -193,7 +193,25 @@ namespace EduToyRentAPI.Controllers
 
             return Ok(messages);
         }
+        [HttpPut("markread/{conversationId}")]
+        public async Task<IActionResult> MarkAllMessagesAsRead(int conversationId)
+        {
+            var mess = _unitOfWork.MessageRepository.GetV2(m => m.ConversationId == conversationId && !m.IsRead);
 
+            if (mess == null || !mess.Any())
+            {
+                return Ok("All messages already read or no messages found");
+            }
+
+            foreach (var msg in mess)
+            {
+                msg.IsRead = true;
+                _unitOfWork.MessageRepository.Update(msg);
+            }
+
+            await _unitOfWork.SaveAsync();
+            return Ok("All messages marked as read");
+        }
         private bool MessageExists(int id)
         {
             return _unitOfWork.MessageRepository.Get().Any(m => m.Id == id);
