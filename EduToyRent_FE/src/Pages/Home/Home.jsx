@@ -14,6 +14,7 @@ import apiCartItem from "../../service/ApiCartItem";
 
 import apiCart from "../../service/ApiCart";
 import apiUser from "../../service/ApiUser";
+import ChatForm from "../Chat/ChatForm";
 
 const Home = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -489,7 +490,7 @@ const Home = () => {
         style={{
           position: "sticky",
           top: 0,
-          zIndex: 1000,
+          zIndex: 1,
           backgroundColor: "white",
         }}
       >
@@ -752,6 +753,7 @@ const Home = () => {
             {isModalOpen && (
               <div
                 className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+                style={{ zIndex: 700 }}
                 onClick={closeModal}
               >
                 <div
@@ -922,18 +924,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Nút Chat */}
-      <Link
-        to="/chat" // Đường dẫn tới trang chat
-        className="fixed bottom-10 right-10 p-4 bg-[#00aaff] text-white rounded-full shadow-2xl hover:bg-[#0099cc] transition duration-300 flex items-center justify-center"
-        style={{
-          zIndex: 500, // Đảm bảo nút Chat nằm trên tất cả các phần tử khác
-          width: "80px", // Kích thước nút
-          height: "80px", // Kích thước nút
-        }}
-      >
-        <span className="icon-class text-3xl">💬</span> {/* Biểu tượng chat */}
-      </Link>
+      <ChatForm />
       <footer>
         <FooterForCustomer />
       </footer>

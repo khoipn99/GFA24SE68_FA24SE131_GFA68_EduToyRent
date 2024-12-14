@@ -9,6 +9,7 @@ import apiWallets from "../../service/ApiWallets";
 import apiCart from "../../service/ApiCart";
 import apiCartItem from "../../service/ApiCartItem";
 import exampleImage from "../../assets/UserUnknow.png";
+import Notifications from "../Notification/Notification";
 
 const HeaderForCustomer = () => {
   const [cartVisible, setCartVisible] = useState(false);
@@ -27,7 +28,8 @@ const HeaderForCustomer = () => {
   const [loading, setLoading] = useState(false);
   const handleMouseEnter = () => setIsDropdownOpen(true);
   const handleMouseLeave = () => setIsDropdownOpen(false);
-  const [totalDeposit, setTotalDeposit] = useState(0); // Thêm state để lưu tổng tiền cọc
+  const [totalDeposit, setTotalDeposit] = useState(0);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const navigateTo = (url) => {
     navigate(url);
   };
@@ -493,6 +495,10 @@ const HeaderForCustomer = () => {
       alert("Bạn chưa chọn sản phẩm nào.");
     }
   };
+
+  const toggleNotificationForm = () => {
+    setIsNotificationOpen(!isNotificationOpen);
+  };
   return (
     <>
       {Cookies.get("userData") ? (
@@ -542,6 +548,35 @@ const HeaderForCustomer = () => {
                 </div>
                 <span>Nạp tiền</span>
               </button>
+              <div className="relative">
+                {/* Nút Notification */}
+                <button
+                  className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"
+                  onClick={toggleNotificationForm}
+                >
+                  <div className="text-[#0e161b]">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20px"
+                      height="20px"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2C9.243 2 7 4.243 7 7v3.08C5.5 11.215 4 13.294 4 15.5V18l-2 2v1h20v-1l-2-2v-2.5c0-2.206-1.5-4.285-3-5.42V7c0-2.757-2.243-5-5-5zm-3 5c0-1.654 1.346-3 3-3s3 1.346 3 3v3h-6V7zm9 11H6v-2.5c0-1.38.966-2.733 2.578-3.345L9 12.806V13h6v-.194l.422.15C17.034 13.767 18 15.12 18 16.5V18zm-3.29 2a3.972 3.972 0 0 1-7.42 0h7.42z"></path>
+                    </svg>
+                  </div>
+                </button>
+
+                {/* Form Notification */}
+                {isNotificationOpen && (
+                  <div
+                    className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-lg w-96 h-auto p-4"
+                    style={{ zIndex: 1 }}
+                  >
+                    <Notifications />
+                  </div>
+                )}
+              </div>
               <button
                 className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#e8eef3] text-[#0e161b] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"
                 onClick={toggleCart}
