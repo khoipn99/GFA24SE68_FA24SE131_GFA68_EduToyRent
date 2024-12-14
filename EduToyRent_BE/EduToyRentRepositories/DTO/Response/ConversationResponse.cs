@@ -12,5 +12,7 @@ namespace EduToyRentRepositories.DTO.Response
         public string LastMessage { get; set; }
         public DateTime LastSentTime { get; set; }
         public string Status { get; set; }
+        public int? UnreadCount { get; set; }
+        public List<ParticipantResponse> ParticipantResponse { get; set; } = new List<ParticipantResponse>();
     }
 }

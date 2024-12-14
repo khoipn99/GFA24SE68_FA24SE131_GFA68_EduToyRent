@@ -42,8 +42,8 @@ namespace EduToyRentAPI.Controllers
                 return new OrderDetailResponse
                 {
                     Id = orderDetail.Id,
-                    RentPrice = (int)orderDetail.RentPrice,
-                    Deposit = (int)orderDetail.Deposit,
+                    RentPrice = orderDetail.RentPrice??0,
+                    Deposit = orderDetail.Deposit??0,
                     UnitPrice = orderDetail.UnitPrice,
                     Quantity = orderDetail.Quantity,
                     StartDate = orderDetail.StartDate,
