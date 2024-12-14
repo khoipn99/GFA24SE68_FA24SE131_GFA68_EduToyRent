@@ -5,12 +5,12 @@ import { HubConnectionBuilder } from "@microsoft/signalr";
 import "./ChatPage.css";
 
 const ChatPage = () => {
-  const [userId, setUserId] = useState(null); 
-  const [conversations, setConversations] = useState([]); 
-  const [selectedConversationId, setSelectedConversationId] = useState(null); 
-  const [messages, setMessages] = useState([]); 
-  const [newMessage, setNewMessage] = useState(""); 
-  const [connection, setConnection] = useState(null); 
+  const [userId, setUserId] = useState(null);
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversationId, setSelectedConversationId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [connection, setConnection] = useState(null);
   const [connectionStarted, setConnectionStarted] = useState(false);
 
   const lastMessageRef = useRef(null);
@@ -23,7 +23,7 @@ const ChatPage = () => {
         const extractedUserId =
           decoded[
             "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
-];
+          ];
         const extractedUserName =
           decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
         setUserId(extractedUserId);
@@ -73,16 +73,21 @@ const ChatPage = () => {
 
   const markAllMessagesAsRead = async (conversationId) => {
     try {
-      await fetch(`https://localhost:44350/api/v1/Messages/markread/${conversationId}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      });
-      setMessages(prev => prev.map(m => ({...m, isRead: true})));
-      setConversations(prev => prev.map(c =>
-        c.id === conversationId ? {...c, unreadCount: 0} : c
-      ));
+      await fetch(
+        `https://localhost:44350/api/v1/Messages/markread/${conversationId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+      setMessages((prev) => prev.map((m) => ({ ...m, isRead: true })));
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === conversationId ? { ...c, unreadCount: 0 } : c
+        )
+      );
     } catch (error) {}
   };
 
@@ -109,23 +114,30 @@ const ChatPage = () => {
           setConnectionStarted(true);
           connect.on("ReceiveMessage", (message) => {
             if (message.conversationId === selectedConversationId) {
-              setMessages((prev) => [...prev, message].map(m => ({...m, isRead: true})));
-              setConversations(prev =>
-                prev.map(c =>
-                  c.id === message.conversationId
-                    ? {...c, lastMessage: message.content, lastSentTime: message.sentTime, unreadCount: 0}
-                    : c
-                )
+              setMessages((prev) =>
+                [...prev, message].map((m) => ({ ...m, isRead: true }))
               );
-            } else {
-              setConversations(prev =>
-                prev.map(c =>
+              setConversations((prev) =>
+                prev.map((c) =>
                   c.id === message.conversationId
                     ? {
                         ...c,
                         lastMessage: message.content,
                         lastSentTime: message.sentTime,
-                        unreadCount: (c.unreadCount || 0) + 1
+                        unreadCount: 0,
+                      }
+                    : c
+                )
+              );
+            } else {
+              setConversations((prev) =>
+                prev.map((c) =>
+                  c.id === message.conversationId
+                    ? {
+                        ...c,
+                        lastMessage: message.content,
+                        lastSentTime: message.sentTime,
+                        unreadCount: (c.unreadCount || 0) + 1,
                       }
                     : c
                 )
@@ -145,7 +157,11 @@ const ChatPage = () => {
     if (!newMessage.trim()) return;
     if (!connectionStarted) return;
     try {
-      await connection.invoke("SendMessage", selectedConversationId, newMessage);
+      await connection.invoke(
+        "SendMessage",
+        selectedConversationId,
+        newMessage
+      );
       setNewMessage("");
     } catch (error) {}
   };
@@ -159,58 +175,62 @@ const ChatPage = () => {
   }, [messages]);
 
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">
-      <div className="w-1/4 bg-gray-800 text-white p-6 overflow-y-auto">
-        <h3 className="text-3xl font-bold mb-6 text-gray-200">Các cuộc trò chuyện</h3>
+    <div className="flex h-full bg-gray-100 font-sans">
+      {/* Sidebar: Danh sách các cuộc trò chuyện */}
+      <div className="w-2/6 bg-gray-800 text-white p-6 overflow-y-auto">
+        <h3 className="text-xl font-normal mb-4 text-gray-200">Danh sách</h3>
         <ul>
           {conversations.map((conversation) => {
             const participantNames = conversation.participantResponse
-              ? conversation.participantResponse.map(p => p.name).join(", ")
+              ? conversation.participantResponse.map((p) => p.name).join(", ")
               : "No participants";
 
             return (
               <li
                 key={conversation.id}
-                className={`relative p-4 mb-4 rounded-lg cursor-pointer transition-colors ${
+                className={`relative p-2 mb-2 rounded-lg cursor-pointer transition-colors ${
                   conversation.id === selectedConversationId
                     ? "bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white shadow-lg"
                     : "bg-gray-800 hover:bg-gray-700"
                 }`}
                 onClick={() => handleSelectConversation(conversation.id)}
               >
-                {conversation.participantResponse && conversation.participantResponse.length > 0 && (
-                  <div className="flex items-center mb-2 flex-wrap">
-                    {conversation.participantResponse.map((participant) => {
-                      const avatarSrc = participant.avatarUrl && participant.avatarUrl.trim() !== ""
-                        ? participant.avatarUrl
-                        : "https://t4.ftcdn.net/jpg/03/59/58/91/360_F_359589186_JDLl8dIWoBNf1iqEkHxhUeeOulx0wOC5.jpg";
-                      return (
-                        <img
-                          key={participant.userId}
-                          src={avatarSrc}
-                          alt={participant.name}
-                          className="w-10 h-10 rounded-full mr-2 object-cover"
-                        />
-                      );
-                    })}
-                  </div>
-                )}
+                {conversation.participantResponse &&
+                  conversation.participantResponse.length > 0 && (
+                    <div className="flex items-center mb-1 flex-wrap">
+                      {conversation.participantResponse.map((participant) => {
+                        const avatarSrc =
+                          participant.avatarUrl &&
+                          participant.avatarUrl.trim() !== ""
+                            ? participant.avatarUrl
+                            : "https://t4.ftcdn.net/jpg/03/59/58/91/360_F_359589186_JDLl8dIWoBNf1iqEkHxhUeeOulx0wOC5.jpg";
+                        return (
+                          <img
+                            key={participant.userId}
+                            src={avatarSrc}
+                            alt={participant.name}
+                            className="w-8 h-8 rounded-full mr-2 object-cover"
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
 
                 {conversation.unreadCount > 0 && (
-                  <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
                     {conversation.unreadCount}
                   </span>
                 )}
 
-                <p className="font-semibold text-lg truncate text-white mb-1">
+                <p className="font-semibold text-sm truncate text-white mb-1">
                   {participantNames}
                 </p>
-                
-                <p className="font-semibold truncate text-base">
+
+                <p className="font-semibold text-sm truncate text-base">
                   {conversation.lastMessage || "No messages yet"}
                 </p>
 
-                <span className="text-sm text-gray-300">
+                <span className="text-xs text-gray-300">
                   {conversation.lastSentTime
                     ? new Date(conversation.lastSentTime).toLocaleString()
                     : ""}
@@ -221,6 +241,7 @@ const ChatPage = () => {
         </ul>
       </div>
 
+      {/* Nội dung cuộc trò chuyện */}
       <div className="flex-1 flex flex-col bg-white p-6 shadow-lg">
         {selectedConversationId ? (
           <>
@@ -231,7 +252,11 @@ const ChatPage = () => {
                   <div
                     key={message.id}
                     ref={isLast ? lastMessageRef : null}
-                    className={`flex mb-3 ${message.senderId === userId ? "justify-end" : "justify-start"}`}
+                    className={`flex mb-3 ${
+                      message.senderId === userId
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
                   >
                     <div
                       className={`p-4 rounded-lg bg-gray-200 text-gray-900 break-words ${
@@ -239,7 +264,9 @@ const ChatPage = () => {
                       }`}
                     >
                       <p className="font-bold text-sm mb-1">
-                        {message.senderId === userId ? "You" : message.senderName || "Unknown"}
+                        {message.senderId === userId
+                          ? "You"
+                          : message.senderName || "Unknown"}
                       </p>
                       <p className="text-base whitespace-pre-wrap">
                         {message.content}
@@ -272,7 +299,7 @@ const ChatPage = () => {
         ) : (
           <div className="flex items-center justify-center flex-1">
             <p className="text-gray-500 text-lg">
-              Select a conversation to view messages
+              Bạn chưa chọn cuộc trò chuyện nào
             </p>
           </div>
         )}
