@@ -507,11 +507,9 @@ const HeaderForCustomer = () => {
       console.log("Toy Rent Detail ID:", Cookies.get("toyRentDetailId"));
       navigate("/toys-rent-details");
     }
-
-
+  };
   const toggleNotificationForm = () => {
     setIsNotificationOpen(!isNotificationOpen);
-
   };
   return (
     <>
