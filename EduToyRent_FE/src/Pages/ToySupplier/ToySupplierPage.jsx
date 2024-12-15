@@ -51,9 +51,6 @@ const ToySupplierPage = () => {
   const [walletInfo, setWalletInfo] = useState({});
   const [walletTransaction, setWalletTransaction] = useState({});
 
-  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
-  const itemsPerPage = 5; // Số mục trên mỗi trang
-
   const [mediaList, setMediaList] = useState([]); // Lưu danh sách media (ảnh + video)
   const [isEditing2, setIsEditing2] = useState(false);
   const [formData, setFormData] = useState({});
@@ -63,6 +60,9 @@ const ToySupplierPage = () => {
   const [totalProfit, setTotalProfit] = useState(0);
 
   const [totalProduct, setTotalProduct] = useState(0);
+  const [currentPageData, setCurrentPageData] = useState(1); // Trang hiện tại cho toysData
+  const [currentPageData1, setCurrentPageData1] = useState(1); // Trang hiện tại cho toysData
+  const itemsPerPage = 5; // Số mục trên mỗi trang
 
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
@@ -140,7 +140,7 @@ const ToySupplierPage = () => {
             setImageUrl(user.avatarUrl); // Đặt URL ảnh nếu có
             // Lấy danh sách đồ chơi của người dùng
             const toyResponse = await apiToys.get(
-              `/user/${user.id}?pageIndex=1&pageSize=5`,
+              `/user/${user.id}?pageIndex=1&pageSize=2000000000`,
               {
                 headers: {
                   Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -150,8 +150,8 @@ const ToySupplierPage = () => {
 
             console.log("Dữ liệu đồ chơi của người dùng:", toyResponse.data);
 
-            // Cập nhật dữ liệu đồ chơi (nếu cần thiết)
-            // setToysData(toyResponse.data);
+            //Cập nhật dữ liệu đồ chơi (nếu cần thiết)
+            setToysData(toyResponse.data);
             // Lấy thông tin ví của người dùng từ walletId
             const walletResponse = await apiWallets.get(
               `/${user.walletId}` // Sử dụng user.walletId thay vì userResponse.walletId
@@ -214,16 +214,80 @@ const ToySupplierPage = () => {
       setMediaList(selectedToy.media || []); // Lưu danh sách media từ sản phẩm
     }
   }, [selectedToy]);
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData(toysData);
+  }, [currentPageData, toysData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData1(toyDeleteData);
+  }, [currentPageData1, toyDeleteData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+  const [currentToys, setCurrentToys] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys1, setCurrentToys1] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const updateCurrentPageData = (activeToys) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData - 1) * itemsPerPage;
+    const endIndex = currentPageData * itemsPerPage;
 
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = activeToys.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys(currentItems);
+  };
+  const updateCurrentPageData1 = (inactiveToys) => {
+    if (inactiveToys && inactiveToys.length > 0) {
+      // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+      const startIndex = (currentPageData1 - 1) * itemsPerPage;
+      const endIndex = currentPageData1 * itemsPerPage;
+
+      // Lấy mảng các đồ chơi cho trang hiện tại
+      const currentItems = inactiveToys.slice(startIndex, endIndex);
+
+      // Cập nhật dữ liệu hiển thị
+      setCurrentToys1(currentItems);
+    } else {
+      // Gán mảng rỗng nếu dữ liệu không hợp lệ
+      setCurrentToys1([]);
+    }
+  };
+  const handleNext = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysRentData
+    if (currentPageData * itemsPerPage < toysData.length) {
+      setCurrentPageData(currentPageData + 1);
+      updateCurrentPageData(toysData); // Cập nhật dữ liệu cho toysRentData
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPageData > 1) {
+      setCurrentPageData(currentPageData - 1);
+      updateCurrentPageData(toysData); // Cập nhật dữ liệu cho toysRentData
+    }
+  };
+  const handleNext1 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysRentData
+    if (currentPageData1 * itemsPerPage < toyDeleteData.length) {
+      setCurrentPageData1(currentPageData1 + 1);
+      updateCurrentPageData1(toyDeleteData); // Cập nhật dữ liệu cho toysRentData
+    }
+  };
+
+  const handlePrevious1 = () => {
+    if (currentPageData1 > 1) {
+      setCurrentPageData1(currentPageData1 - 1);
+      updateCurrentPageData1(toyDeleteData); // Cập nhật dữ liệu cho toysRentData
+    }
+  };
   // Hàm load đồ chơi theo userId
-  const LoadToy = async (userId, pageIndex = 1, pageSize = 5) => {
+  const LoadToy = async (userId) => {
     if (!userId) {
       console.error("Không tìm thấy userId để tải đồ chơi.");
       return;
     }
     try {
       const toyResponse = await apiToys.get(
-        `/user/${userId}?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+        `/user/${userId}?pageIndex=1&pageSize=2000000000`,
         {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -231,10 +295,7 @@ const ToySupplierPage = () => {
         }
       );
 
-      console.log(
-        `Dữ liệu đồ chơi của người dùng tại trang ${pageIndex}:`,
-        toyResponse.data
-      );
+      console.log(`Dữ liệu đồ chơi của người dùng :`, toyResponse.data);
 
       // Lọc đồ chơi có trạng thái Active
       const activeToys = toyResponse.data.filter(
@@ -245,18 +306,19 @@ const ToySupplierPage = () => {
 
       // Cập nhật dữ liệu đồ chơi
       setToysData(activeToys);
+      updateCurrentPageData(activeToys);
     } catch (error) {
       console.error("Lỗi khi tải danh sách đồ chơi:", error);
     }
   };
-  const LoadToyDelete = async (userId, pageIndex = 1, pageSize = 5) => {
+  const LoadToyDelete = async (userId) => {
     if (!userId) {
       console.error("Không tìm thấy userId để tải đồ chơi.");
       return;
     }
     try {
       const toyResponse = await apiToys.get(
-        `/user/${userId}?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+        `/user/${userId}?pageIndex=1&pageSize=2000000000`,
         {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -264,10 +326,7 @@ const ToySupplierPage = () => {
         }
       );
 
-      console.log(
-        `Dữ liệu đồ chơi của người dùng tại trang ${pageIndex}:`,
-        toyResponse.data
-      );
+      console.log(`Dữ liệu đồ chơi của người dùng cấm:`, toyResponse.data);
 
       // Lọc đồ chơi có trạng thái Active
       const inactiveToys = toyResponse.data.filter(
@@ -278,19 +337,10 @@ const ToySupplierPage = () => {
 
       // Cập nhật dữ liệu đồ chơi
       setToyDeleteData(inactiveToys);
+      updateCurrentPageData1(inactiveToys);
     } catch (error) {
       console.error("Lỗi khi tải danh sách đồ chơi:", error);
     }
-  };
-  const handlePrevious = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prevPage) => prevPage - 1);
-      LoadToy(userId, currentPage - 1, itemsPerPage);
-    }
-  };
-  const handleNext = () => {
-    setCurrentPage((prevPage) => prevPage + 1);
-    LoadToy(userId, currentPage + 1, itemsPerPage);
   };
 
   const handleWithdraw = async () => {
@@ -1560,87 +1610,92 @@ const ToySupplierPage = () => {
               </div>
             ))}
             {/* Hiển thị chi tiết đơn hàng nếu có đơn hàng được chọn */}
-            {selectedOrderDetail && selectedOrderDetail.length > 0 && (
-              // Overlay mờ
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                {/* Card */}
-                <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 relative">
-                  <h2 className="text-2xl font-semibold mb-4 text-center">
-                    Chi tiết đơn hàng
-                  </h2>
-                  <div className="space-y-4">
-                    {selectedOrderDetail.map((orderDetail, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-50 p-4 rounded-md shadow-sm border flex gap-4 items-start"
-                      >
-                        {/* Hình ảnh bên trái */}
-                        <div className="flex items-center justify-center w-24 h-24 bg-gray-100 rounded-md mt-5">
-                          <img
-                            src={
-                              orderDetail.toyImgUrls?.[0] ||
-                              "default_image_url_here"
-                            }
-                            alt={`Ảnh đồ chơi cho đơn hàng ${orderDetail.id}`}
-                            className="object-cover w-full h-full rounded-md"
-                          />
+            {selectedOrderDetail &&
+              selectedOrderDetail.length > 0 &&
+              (console.log(selectedOrderDetail),
+              (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  {/* Card */}
+                  <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 relative">
+                    <h2 className="text-2xl font-semibold mb-4 text-center">
+                      Chi tiết đơn hàng
+                    </h2>
+                    <div className="space-y-4">
+                      {selectedOrderDetail.map((orderDetail, index) => (
+                        <div
+                          key={index}
+                          className="bg-gray-50 p-4 rounded-md shadow-sm border flex gap-4 items-start"
+                        >
+                          {/* Hình ảnh bên trái */}
+                          <div className="flex items-center justify-center w-24 h-24 bg-gray-100 rounded-md mt-5">
+                            <img
+                              src={
+                                orderDetail.toyImgUrls?.[0] ||
+                                "default_image_url_here"
+                              }
+                              alt={`Ảnh đồ chơi cho đơn hàng ${orderDetail.id}`}
+                              className="object-cover w-full h-full rounded-md"
+                            />
+                          </div>
+                          {/* Thông tin bên phải */}
+                          <div className="flex-1">
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                              Đơn hàng #{orderDetail.orderId}
+                            </h3>
+                            <p className="text-sm text-gray-700">
+                              <strong>Tên đồ chơi:</strong>{" "}
+                              {orderDetail.toyName}
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              <strong>Giá cọc:</strong>{" "}
+                              {(orderDetail.unitPrice || 0).toLocaleString()}{" "}
+                              VNĐ
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              <strong>Giá thuê:</strong>{" "}
+                              {(orderDetail.rentPrice || 0).toLocaleString()}{" "}
+                              VNĐ
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              <strong>Ngày mua:</strong>{" "}
+                              {orderDetail.startDate
+                                ? new Date(orderDetail.startDate)
+                                    .toISOString()
+                                    .split("T")[0]
+                                : "Đang chờ"}
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              <strong>Trạng thái:</strong>{" "}
+                              {statusMapping[orderDetail.status] ||
+                                "Trạng thái không xác định"}
+                            </p>
+                          </div>
                         </div>
-                        {/* Thông tin bên phải */}
-                        <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                            Đơn hàng #{orderDetail.id}
-                          </h3>
-                          <p className="text-sm text-gray-700">
-                            <strong>Tên đồ chơi:</strong> {orderDetail.toyName}
-                          </p>
-                          <p className="text-sm text-gray-700">
-                            <strong>Giá cọc:</strong>{" "}
-                            {(orderDetail.unitPrice || 0).toLocaleString()} VNĐ
-                          </p>
-                          <p className="text-sm text-gray-700">
-                            <strong>Giá thuê:</strong>{" "}
-                            {(orderDetail.rentPrice || 0).toLocaleString()} VNĐ
-                          </p>
-                          <p className="text-sm text-gray-700">
-                            <strong>Ngày mua:</strong>{" "}
-                            {orderDetail.startDate
-                              ? new Date(orderDetail.startDate)
-                                  .toISOString()
-                                  .split("T")[0]
-                              : "Đang chờ"}
-                          </p>
-                          <p className="text-sm text-gray-700">
-                            <strong>Trạng thái:</strong>{" "}
-                            {statusMapping[orderDetail.status] ||
-                              "Trạng thái không xác định"}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
 
-                  <button
-                    onClick={() => setSelectedOrderDetail(null)}
-                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-                  >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
+                    <button
+                      onClick={() => setSelectedOrderDetail(null)}
+                      className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              ))}
           </div>
         );
       case "products":
@@ -1902,10 +1957,10 @@ const ToySupplierPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {toysData &&
-                        Array.isArray(toysData) &&
-                        toysData.length > 0 ? (
-                          toysData.map((toy) => (
+                        {currentToys &&
+                        Array.isArray(currentToys) &&
+                        currentToys.length > 0 ? (
+                          currentToys.map((toy) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={toy.id}
@@ -2003,13 +2058,16 @@ const ToySupplierPage = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center mb-4 sm:mb-0"></div>
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 <button
                   onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  disabled={currentPageData === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   <svg
                     className="w-5 h-5 mr-1 -ml-1"
@@ -2025,9 +2083,22 @@ const ToySupplierPage = () => {
                   </svg>
                   Trước
                 </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData} /{" "}
+                  {Math.ceil(toysData.length / itemsPerPage)}
+                </span>
                 <button
                   onClick={handleNext}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  disabled={
+                    currentPageData ===
+                    Math.ceil(toysData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData ===
+                    Math.ceil(toysData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   Sau
                   <svg
@@ -2657,10 +2728,10 @@ const ToySupplierPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {toyDeleteData &&
-                        Array.isArray(toyDeleteData) &&
-                        toyDeleteData.length > 0 ? (
-                          toyDeleteData.map((toy) => (
+                        {currentToys1 &&
+                        Array.isArray(currentToys1) &&
+                        currentToys1.length > 0 ? (
+                          currentToys1.map((toy) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={toy.id}
@@ -2736,13 +2807,16 @@ const ToySupplierPage = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center mb-4 sm:mb-0"></div>
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handlePrevious1}
+                  disabled={currentPageData1 === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData1 === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   <svg
                     className="w-5 h-5 mr-1 -ml-1"
@@ -2758,9 +2832,22 @@ const ToySupplierPage = () => {
                   </svg>
                   Trước
                 </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData1} /{" "}
+                  {Math.ceil(toyDeleteData.length / itemsPerPage)}
+                </span>
                 <button
-                  onClick={handleNext}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handleNext1}
+                  disabled={
+                    currentPageData1 ===
+                    Math.ceil(toyDeleteData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData1 ===
+                    Math.ceil(toyDeleteData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   Sau
                   <svg

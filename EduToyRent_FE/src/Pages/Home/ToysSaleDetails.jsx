@@ -66,7 +66,34 @@ const ToysSaleDetails = () => {
       return /\.(mp4|mov|avi|mkv)$/i.test(fileExtension); // Kiểm tra phần mở rộng
     }
   };
+  // useEffect(() => {
+  //   const toySaleDetailId = Cookies.get("toySaleDetailId");
+  //   const toyRentDetailId = Cookies.get("toyRentDetailId");
 
+  //   if (toySaleDetailId) {
+  //     console.log("Toy Sale Detail ID:", toySaleDetailId);
+  //     apiToys
+  //       .get(`/toys-sale-details/${toySaleDetailId}`)
+  //       .then((response) => {
+  //         console.log("Dữ liệu chi tiết sản phẩm:", response.data);
+  //         // Xử lý dữ liệu API để hiển thị thông tin
+  //       })
+  //       .catch((error) => {
+  //         console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
+  //       });
+  //   } else if (toyRentDetailId) {
+  //     console.log("Toy Rent Detail ID:", toyRentDetailId);
+  //     apiToys
+  //       .get(`/toys-rent-details/${toyRentDetailId}`)
+  //       .then((response) => {
+  //         console.log("Dữ liệu chi tiết cho thuê đồ chơi:", response.data);
+  //         // Xử lý dữ liệu API cho thuê
+  //       })
+  //       .catch((error) => {
+  //         console.error("Lỗi khi lấy chi tiết cho thuê đồ chơi:", error);
+  //       });
+  //   }
+  // }, []);
   useEffect(() => {
     window.scrollTo(0, 0);
 
@@ -235,6 +262,14 @@ const ToysSaleDetails = () => {
     console.log(toy);
 
     Cookies.set("toySaleDetailId", toy.id, { expires: 30 });
+    // navigate("/toys-sale-details", { replace: true });
+    navigate(0);
+  };
+
+  const HandleToyDetail1 = async (item) => {
+    console.log(item);
+
+    Cookies.set("toySaleDetailId", item.id, { expires: 30 });
     // navigate("/toys-sale-details", { replace: true });
     navigate(0);
   };
