@@ -27,9 +27,6 @@ const AdminPage = () => {
   const [selectedTab, setSelectedTab] = useState("dashboard");
   const [isEditing, setIsEditing] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
-  const itemsPerPage = 5; // Số mục trên mỗi trang
-
   const [orders, setOrders] = useState([]); // State để lưu trữ danh sách đơn hàng
 
   const [editedData, setEditedData] = useState({});
@@ -66,7 +63,8 @@ const AdminPage = () => {
   const [totalUser, setTotalUser] = useState(0);
   const [totalProduct, setTotalProduct] = useState(0);
   const [topSale, setTopSale] = useState([]);
-
+  const [currentPageData, setCurrentPageData] = useState(1);
+  const itemsPerPage = 5; // Số mục trên mỗi trang
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -346,15 +344,6 @@ const AdminPage = () => {
     }
   };
 
-  const handlePrevious = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prevPage) => prevPage - 1);
-    }
-  };
-  const handleNext = () => {
-    setCurrentPage((prevPage) => prevPage + 1);
-  };
-
   const LoadOrder = async (statusFilter) => {
     const userToken = Cookies.get("userToken");
     if (!userToken) {
@@ -439,7 +428,7 @@ const AdminPage = () => {
   };
   const LoadUser = async () => {
     try {
-      const UserResponse = await apiUser.get(`?pageIndex=1&pageSize=2000`, {
+      const UserResponse = await apiUser.get(`?pageIndex=1&pageSize=2000000`, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
@@ -458,8 +447,40 @@ const AdminPage = () => {
 
       // Cập nhật dữ liệu đồ chơi
       setUserUpData(UserData);
+      updateCurrentPageData(UserData);
     } catch (error) {
       console.error("Lỗi khi tải danh sách người dùng", error);
+    }
+  };
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData(userUpData);
+  }, [currentPageData, userUpData]);
+  const [currentToys, setCurrentToys] = useState([]);
+  const updateCurrentPageData = (userUpData) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData - 1) * itemsPerPage;
+    const endIndex = currentPageData * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = userUpData.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys(currentItems);
+  };
+
+  const handleNext = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysRentData
+    if (currentPageData * itemsPerPage < userUpData.length) {
+      setCurrentPageData(currentPageData + 1);
+      updateCurrentPageData(userUpData); // Cập nhật dữ liệu cho toysRentData
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPageData > 1) {
+      setCurrentPageData(currentPageData - 1);
+      updateCurrentPageData(userUpData); // Cập nhật dữ liệu cho toysRentData
     }
   };
   const handleUserBan = async (userId) => {
@@ -552,6 +573,12 @@ const AdminPage = () => {
   const statusMapping = {
     Delivering: "Đang giao",
     Checking: "Đợi đánh giá đồ chơi",
+    Active: "Sẵn sàng",
+    Inactive: "Không sẵn sàng",
+    Banned: "Bị cấm",
+    Supplier: "Nhà cung cấp",
+    Member: "Thành viên",
+    Staff: "Nhân viên",
   };
   const handleCreateUser = async () => {
     const createDate = new Date().toISOString();
@@ -1693,10 +1720,10 @@ const AdminPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {userUpData &&
-                        Array.isArray(userUpData) &&
-                        userUpData.length > 0 ? (
-                          userUpData.map((user) => (
+                        {currentToys &&
+                        Array.isArray(currentToys) &&
+                        currentToys.length > 0 ? (
+                          currentToys.map((user) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={user.id}
@@ -1711,7 +1738,7 @@ const AdminPage = () => {
                                       className="w-full max-w-[50px] h-auto object-contain mr-2"
                                     />
                                   ) : (
-                                    <span>No media available</span>
+                                    <span></span>
                                   )}
                                 </div>
                               </td>
@@ -1729,7 +1756,8 @@ const AdminPage = () => {
                               </td>
 
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {user.role.name}
+                                {statusMapping[user.role.name] ||
+                                  "Trạng thái không xác định"}
                               </td>
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 {statusMapping[user.status] ||
@@ -1763,13 +1791,16 @@ const AdminPage = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center mb-4 sm:mb-0"></div>
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 <button
                   onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  disabled={currentPageData === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   <svg
                     className="w-5 h-5 mr-1 -ml-1"
@@ -1785,9 +1816,22 @@ const AdminPage = () => {
                   </svg>
                   Trước
                 </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData} /{" "}
+                  {Math.ceil(userUpData.length / itemsPerPage)}
+                </span>
                 <button
                   onClick={handleNext}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  disabled={
+                    setCurrentPageData ===
+                    Math.ceil(userUpData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData ===
+                    Math.ceil(userUpData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   Sau
                   <svg
