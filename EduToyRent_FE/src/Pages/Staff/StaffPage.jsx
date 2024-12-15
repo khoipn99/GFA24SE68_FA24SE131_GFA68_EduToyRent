@@ -13,6 +13,7 @@ import apiOrder from "../../service/ApiOrder";
 import apiWallets from "../../service/ApiWallets";
 import apiWalletTransaction from "../../service/ApiWalletTransaction";
 import { useNavigate } from "react-router-dom";
+import { use } from "react";
 
 const StaffPage = () => {
   const [userData, setUserData] = useState("");
@@ -20,6 +21,12 @@ const StaffPage = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
+  const [currentPageData, setCurrentPageData] = useState(1); // Trang hiện tại cho toysData
+  const [currentPageData1, setCurrentPageData1] = useState(1); // Trang hiện tại cho toysData
+  const [currentPageData2, setCurrentPageData2] = useState(1); // Trang hiện tại cho toysData
+  const [currentPageData3, setCurrentPageData3] = useState(1); // Trang hiện tại cho toysData
+  const [currentPageData4, setCurrentPageData4] = useState(1); // Trang hiện tại cho toysData
+  const [currentPageData5, setCurrentPageData5] = useState(1); // Trang hiện tại cho toysData
   const itemsPerPage = 5; // Số mục trên mỗi trang
 
   const [orders, setOrders] = useState([]); // State để lưu trữ danh sách đơn hàng
@@ -44,6 +51,7 @@ const StaffPage = () => {
   const [selectedToy, setSelectedToy] = useState(null);
   const navigate = useNavigate();
 
+  const [totalPages, setTotalPages] = useState(1);
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -365,6 +373,7 @@ const StaffPage = () => {
 
       // Cập nhật dữ liệu đồ chơi
       setToysData(inactiveToys);
+      updateCurrentPageData1(inactiveToys);
     } catch (error) {
       console.error("Lỗi khi tải danh sách đồ chơi:", error);
     }
@@ -387,11 +396,12 @@ const StaffPage = () => {
 
       // Cập nhật dữ liệu đồ chơi
       setToysRentData(inactiveToysRent);
+      // Cập nhật các đồ chơi của trang hiện tại
+      updateCurrentPageData(inactiveToysRent);
     } catch (error) {
       console.error("Lỗi khi tải danh sách đồ chơi: thuê", error);
     }
   };
-
   const LoadToyBuy = async () => {
     try {
       const toyResponse = await apiToys.get(`?pageIndex=1&pageSize=2000`, {
@@ -410,11 +420,34 @@ const StaffPage = () => {
 
       // Cập nhật dữ liệu đồ chơi
       setToysBuyData(inactiveToysBuy);
+      updateCurrentPageData2(inactiveToysBuy);
     } catch (error) {
       console.error("Lỗi khi tải danh sách đồ chơi: thuê", error);
     }
   };
+  const LoadToyBan = async () => {
+    try {
+      const toyResponse = await apiToys.get(`?pageIndex=1&pageSize=2000`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
 
+      console.log("Danh sách đồ chơi mới log:", toyResponse.data);
+      // Lọc đồ chơi có trạng thái "Inactive"
+      const inactiveToysBan = toyResponse.data.filter(
+        (toy) => toy.status === "Banned"
+      );
+
+      console.log(`Danh sách đồ chơi có trạng thái ban:`, inactiveToysBan);
+
+      // Cập nhật dữ liệu đồ chơi
+      setToysBanData(inactiveToysBan);
+      updateCurrentPageData3(inactiveToysBan);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách đồ chơi ban:", error);
+    }
+  };
   const LoadUser = async () => {
     try {
       const UserResponse = await apiUser.get(`?pageIndex=1&pageSize=2000`, {
@@ -436,11 +469,11 @@ const StaffPage = () => {
 
       // Cập nhật dữ liệu đồ chơi
       setUserUpData(UserData);
+      updateCurrentPageData4(UserData);
     } catch (error) {
       console.error("Lỗi khi tải danh sách người dùng", error);
     }
   };
-
   const LoadUserBan = async () => {
     try {
       const UserResponse = await apiUser.get(`?pageIndex=1&pageSize=2000`, {
@@ -462,30 +495,267 @@ const StaffPage = () => {
 
       // Cập nhật dữ liệu đồ chơi
       setUserUpBanData(UserData);
+      updateCurrentPageData5(UserData);
     } catch (error) {
       console.error("Lỗi khi tải danh sách người dùng", error);
     }
   };
-  const LoadToyBan = async () => {
+  const LoadOrder = async (statusFilter) => {
+    const userToken = Cookies.get("userToken");
+    if (!userToken) {
+      alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    // Nếu không có statusFilter thì mặc định là "Delivering"
+    statusFilter = statusFilter || "Delivering";
+
     try {
-      const toyResponse = await apiToys.get(`?pageIndex=1&pageSize=2000`, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      });
-
-      console.log("Danh sách đồ chơi mới log:", toyResponse.data);
-      // Lọc đồ chơi có trạng thái "Inactive"
-      const inactiveToysBan = toyResponse.data.filter(
-        (toy) => toy.status === "Banned"
+      // Lấy danh sách đơn hàng với trạng thái lọc
+      const OrderResponse = await apiOrderDetail.get(
+        `/?pageIndex=1&pageSize=20000&status=${statusFilter}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
       );
+      console.log("Danh sách đơn hàng 1:", OrderResponse.data);
+      // Lọc lại đơn hàng theo trạng thái
+      const filteredOrders = OrderResponse.data.filter(
+        (order) => order.status == "Delivering" || order.status == "Checking"
+      );
+      console.log("Danh sách đơn hàng sau khi lọc:", filteredOrders);
 
-      console.log(`Danh sách đồ chơi có trạng thái ban:`, inactiveToysBan);
-
-      // Cập nhật dữ liệu đồ chơi
-      setToysBanData(inactiveToysBan);
+      // Cập nhật state orders
+      setOrders(filteredOrders);
+      console.log("Danh sách đơn hàng:", filteredOrders);
+      updateCurrentPageData6(filteredOrders);
     } catch (error) {
-      console.error("Lỗi khi tải danh sách đồ chơi ban:", error);
+      console.error(
+        "Lỗi khi tải danh sách đơn hàng hoặc chi tiết đơn hàng:",
+        error
+      );
+    }
+  };
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData(toysRentData);
+  }, [currentPage, toysRentData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData1(toysData);
+  }, [currentPageData, toysData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData2(toysBuyData);
+  }, [currentPageData1, toysBuyData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData3(toysBanData);
+  }, [currentPageData2, toysBanData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData4(userUpData);
+  }, [currentPageData3, userUpData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData5(userUpBanData);
+  }, [currentPageData4, userUpBanData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData6(orders);
+  }, [currentPageData5, orders]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+  const [currentToys, setCurrentToys] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys1, setCurrentToys1] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys2, setCurrentToys2] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys3, setCurrentToys3] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys4, setCurrentToys4] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys5, setCurrentToys5] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys6, setCurrentToys6] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const updateCurrentPageData1 = (inactiveToys) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData - 1) * itemsPerPage;
+    const endIndex = currentPageData * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = inactiveToys.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys1(currentItems);
+  };
+  // Gọi API khi trang thay đổi
+  const updateCurrentPageData = (inactiveToysRent) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = currentPage * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = inactiveToysRent.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys(currentItems);
+  };
+
+  const updateCurrentPageData2 = (inactiveToysBuy) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData1 - 1) * itemsPerPage;
+    const endIndex = currentPageData1 * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = inactiveToysBuy.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys2(currentItems);
+  };
+  const updateCurrentPageData3 = (inactiveToysBan) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData2 - 1) * itemsPerPage;
+    const endIndex = currentPageData2 * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = inactiveToysBan.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys3(currentItems);
+  };
+  const updateCurrentPageData4 = (UserData) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData3 - 1) * itemsPerPage;
+    const endIndex = currentPageData3 * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = UserData.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys4(currentItems);
+  };
+  const updateCurrentPageData5 = (UserData) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData4 - 1) * itemsPerPage;
+    const endIndex = currentPageData4 * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = UserData.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys5(currentItems);
+  };
+
+  const updateCurrentPageData6 = (filteredOrders) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData5 - 1) * itemsPerPage;
+    const endIndex = currentPageData5 * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = filteredOrders.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys6(currentItems);
+  };
+  const handleNext = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysRentData
+    if (currentPage * itemsPerPage < toysRentData.length) {
+      setCurrentPage(currentPage + 1);
+      updateCurrentPageData(toysRentData); // Cập nhật dữ liệu cho toysRentData
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      updateCurrentPageData(toysRentData); // Cập nhật dữ liệu cho toysRentData
+    }
+  };
+  const handleNext1 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysData
+    if (currentPageData * itemsPerPage < toysData.length) {
+      setCurrentPageData(currentPageData + 1);
+      updateCurrentPageData1(toysData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handlePrevious1 = () => {
+    if (currentPageData > 1) {
+      setCurrentPageData(currentPageData - 1);
+      updateCurrentPageData1(toysData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handleNext2 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysData
+    if (currentPageData1 * itemsPerPage < toysBuyData.length) {
+      setCurrentPageData1(currentPageData1 + 1);
+      updateCurrentPageData2(toysBuyData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handlePrevious2 = () => {
+    if (currentPageData1 > 1) {
+      setCurrentPageData1(currentPageData1 - 1);
+      updateCurrentPageData2(toysBuyData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handleNext3 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysData
+    if (currentPageData2 * itemsPerPage < toysBanData.length) {
+      setCurrentPageData2(currentPageData2 + 1);
+      updateCurrentPageData3(toysBanData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handlePrevious3 = () => {
+    if (currentPageData2 > 1) {
+      setCurrentPageData2(currentPageData2 - 1);
+      updateCurrentPageData3(toysBanData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handleNext4 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysData
+    if (currentPageData3 * itemsPerPage < userUpData.length) {
+      setCurrentPageData3(currentPageData3 + 1);
+      updateCurrentPageData4(userUpData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handlePrevious4 = () => {
+    if (currentPageData3 > 1) {
+      setCurrentPageData3(currentPageData3 - 1);
+      updateCurrentPageData4(userUpData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handleNext5 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysData
+    if (currentPageData4 * itemsPerPage < userUpBanData.length) {
+      setCurrentPageData4(currentPageData4 + 1);
+      updateCurrentPageData5(userUpBanData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handlePrevious5 = () => {
+    if (currentPageData4 > 1) {
+      setCurrentPageData4(currentPageData4 - 1);
+      updateCurrentPageData5(userUpBanData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handleNext6 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysData
+    if (currentPageData5 * itemsPerPage < orders.length) {
+      setCurrentPageData5(currentPageData5 + 1);
+      updateCurrentPageData6(orders); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handlePrevious6 = () => {
+    if (currentPageData5 > 1) {
+      setCurrentPageData5(currentPageData5 - 1);
+      updateCurrentPageData6(orders); // Cập nhật dữ liệu cho toysData
     }
   };
 
@@ -540,55 +810,6 @@ const StaffPage = () => {
       }
     } else {
       console.error("Không tìm thấy ID người dùng.");
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prevPage) => prevPage - 1);
-      LoadToy(userId, currentPage - 1, itemsPerPage);
-    }
-  };
-  const handleNext = () => {
-    setCurrentPage((prevPage) => prevPage + 1);
-    LoadToy(userId, currentPage + 1, itemsPerPage);
-  };
-
-  const LoadOrder = async (statusFilter) => {
-    const userToken = Cookies.get("userToken");
-    if (!userToken) {
-      alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-      return;
-    }
-
-    // Nếu không có statusFilter thì mặc định là "Delivering"
-    statusFilter = statusFilter || "Delivering";
-
-    try {
-      // Lấy danh sách đơn hàng với trạng thái lọc
-      const OrderResponse = await apiOrderDetail.get(
-        `/?pageIndex=1&pageSize=20000&status=${statusFilter}`,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-          },
-        }
-      );
-      console.log("Danh sách đơn hàng 1:", OrderResponse.data);
-      // Lọc lại đơn hàng theo trạng thái
-      const filteredOrders = OrderResponse.data.filter(
-        (order) => order.status == "Delivering" || order.status == "Checking"
-      );
-      console.log("Danh sách đơn hàng sau khi lọc:", filteredOrders);
-
-      // Cập nhật state orders
-      setOrders(filteredOrders);
-      console.log("Danh sách đơn hàng:", filteredOrders);
-    } catch (error) {
-      console.error(
-        "Lỗi khi tải danh sách đơn hàng hoặc chi tiết đơn hàng:",
-        error
-      );
     }
   };
 
@@ -648,9 +869,7 @@ const StaffPage = () => {
 
   // Hàm để gửi ảnh lên API
   const handleUpdateToy = async (toyId) => {
-    const isConfirmed = window.confirm(
-      "Are you sure you want to approve this toy?"
-    );
+    const isConfirmed = window.confirm("Bạn muốn duyệt đồ chơi này ?");
 
     // Nếu người dùng không xác nhận, dừng lại
     if (!isConfirmed) {
@@ -1105,10 +1324,10 @@ const StaffPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {toysRentData &&
-                        Array.isArray(toysRentData) &&
-                        toysRentData.length > 0 ? (
-                          toysRentData.map((toy) => (
+                        {currentToys &&
+                        Array.isArray(currentToys) &&
+                        currentToys.length > 0 ? (
+                          currentToys.map((toy) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={toy.id}
@@ -1122,7 +1341,7 @@ const StaffPage = () => {
                                       className="w-full max-w-[50px] h-auto object-contain mr-2"
                                     />
                                   ) : (
-                                    <span>No media available</span>
+                                    <span></span>
                                   )}
                                 </div>
                               </td>
@@ -1180,13 +1399,16 @@ const StaffPage = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center mb-4 sm:mb-0"></div>
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 <button
                   onClick={handlePrevious}
                   disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPage === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   <svg
                     className="w-5 h-5 mr-1 -ml-1"
@@ -1202,9 +1424,22 @@ const StaffPage = () => {
                   </svg>
                   Trước
                 </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPage} /{" "}
+                  {Math.ceil(toysRentData.length / itemsPerPage)}
+                </span>
                 <button
                   onClick={handleNext}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  disabled={
+                    currentPage ===
+                    Math.ceil(toysRentData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPage ===
+                    Math.ceil(toysRentData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   Sau
                   <svg
@@ -1426,10 +1661,10 @@ const StaffPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {toysData &&
-                        Array.isArray(toysData) &&
-                        toysData.length > 0 ? (
-                          toysData.map((toy) => (
+                        {currentToys1 &&
+                        Array.isArray(currentToys1) &&
+                        currentToys1.length > 0 ? (
+                          currentToys1.map((toy) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={toy.id}
@@ -1443,7 +1678,7 @@ const StaffPage = () => {
                                       className="w-full max-w-[50px] h-auto object-contain mr-2"
                                     />
                                   ) : (
-                                    <span>No media available</span>
+                                    <span></span>
                                   )}
                                 </div>
                               </td>
@@ -1501,13 +1736,16 @@ const StaffPage = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center mb-4 sm:mb-0"></div>
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handlePrevious1}
+                  disabled={currentPageData === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   <svg
                     className="w-5 h-5 mr-1 -ml-1"
@@ -1523,9 +1761,22 @@ const StaffPage = () => {
                   </svg>
                   Trước
                 </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData} /{" "}
+                  {Math.ceil(toysData.length / itemsPerPage)}
+                </span>
                 <button
-                  onClick={handleNext}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handleNext1}
+                  disabled={
+                    currentPageData ===
+                    Math.ceil(toysData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData ===
+                    Math.ceil(toysData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   Sau
                   <svg
@@ -1758,10 +2009,10 @@ const StaffPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {toysBuyData &&
-                        Array.isArray(toysBuyData) &&
-                        toysBuyData.length > 0 ? (
-                          toysBuyData.map((toy) => (
+                        {currentToys2 &&
+                        Array.isArray(currentToys2) &&
+                        currentToys2.length > 0 ? (
+                          currentToys2.map((toy) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={toy.id}
@@ -1775,7 +2026,7 @@ const StaffPage = () => {
                                       className="w-full max-w-[50px] h-auto object-contain mr-2"
                                     />
                                   ) : (
-                                    <span>No media available</span>
+                                    <span></span>
                                   )}
                                 </div>
                               </td>
@@ -1833,13 +2084,16 @@ const StaffPage = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center mb-4 sm:mb-0"></div>
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handlePrevious2}
+                  disabled={currentPageData1 === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData1 === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   <svg
                     className="w-5 h-5 mr-1 -ml-1"
@@ -1855,9 +2109,22 @@ const StaffPage = () => {
                   </svg>
                   Trước
                 </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData1} /{" "}
+                  {Math.ceil(toysBuyData.length / itemsPerPage)}
+                </span>
                 <button
-                  onClick={handleNext}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handleNext2}
+                  disabled={
+                    currentPageData1 ===
+                    Math.ceil(toysBuyData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData1 ===
+                    Math.ceil(toysBuyData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   Sau
                   <svg
@@ -2014,7 +2281,7 @@ const StaffPage = () => {
         return (
           <div className="container mx-auto py-4">
             <h2 className="text-2xl font-semibold">Danh sách đơn hàng</h2>
-            {orders.map((order) => (
+            {currentToys6.map((order) => (
               <div
                 key={order.id}
                 className="bg-white shadow-lg rounded-lg overflow-hidden mt-4"
@@ -2078,6 +2345,62 @@ const StaffPage = () => {
                 </div>
               </div>
             ))}
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handlePrevious6}
+                  disabled={currentPageData5 === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData5 === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 mr-1 -ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  Trước
+                </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData5} /{" "}
+                  {Math.ceil(orders.length / itemsPerPage)}
+                </span>
+                <button
+                  onClick={handleNext6}
+                  disabled={
+                    currentPageData5 === Math.ceil(orders.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData5 === Math.ceil(orders.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
+                >
+                  Sau
+                  <svg
+                    className="w-5 h-5 ml-1 -mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         );
       case "ToyBan":
@@ -2149,10 +2472,10 @@ const StaffPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {toysBanData &&
-                        Array.isArray(toysBanData) &&
-                        toysBanData.length > 0 ? (
-                          toysBanData.map((toy) => (
+                        {currentToys3 &&
+                        Array.isArray(currentToys3) &&
+                        currentToys3.length > 0 ? (
+                          currentToys3.map((toy) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={toy.id}
@@ -2166,7 +2489,7 @@ const StaffPage = () => {
                                       className="w-full max-w-[50px] h-auto object-contain mr-2"
                                     />
                                   ) : (
-                                    <span>No media available</span>
+                                    <span></span>
                                   )}
                                 </div>
                               </td>
@@ -2224,13 +2547,16 @@ const StaffPage = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center mb-4 sm:mb-0"></div>
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handlePrevious3}
+                  disabled={currentPageData2 === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData2 === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   <svg
                     className="w-5 h-5 mr-1 -ml-1"
@@ -2246,9 +2572,22 @@ const StaffPage = () => {
                   </svg>
                   Trước
                 </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData2} /{" "}
+                  {Math.ceil(toysBanData.length / itemsPerPage)}
+                </span>
                 <button
-                  onClick={handleNext}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handleNext3}
+                  disabled={
+                    currentPageData2 ===
+                    Math.ceil(toysBanData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData2 ===
+                    Math.ceil(toysBanData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   Sau
                   <svg
@@ -2458,10 +2797,10 @@ const StaffPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {userUpData &&
-                        Array.isArray(userUpData) &&
-                        userUpData.length > 0 ? (
-                          userUpData.map((user) => (
+                        {currentToys4 &&
+                        Array.isArray(currentToys4) &&
+                        currentToys4.length > 0 ? (
+                          currentToys4.map((user) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={user.id}
@@ -2476,7 +2815,7 @@ const StaffPage = () => {
                                       className="w-full max-w-[50px] h-auto object-contain mr-2"
                                     />
                                   ) : (
-                                    <span>No media available</span>
+                                    <span></span>
                                   )}
                                 </div>
                               </td>
@@ -2528,13 +2867,16 @@ const StaffPage = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center mb-4 sm:mb-0"></div>
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handlePrevious4}
+                  disabled={currentPageData3 === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData3 === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   <svg
                     className="w-5 h-5 mr-1 -ml-1"
@@ -2550,9 +2892,22 @@ const StaffPage = () => {
                   </svg>
                   Trước
                 </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData3} /{" "}
+                  {Math.ceil(userUpData.length / itemsPerPage)}
+                </span>
                 <button
-                  onClick={handleNext}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handleNext4}
+                  disabled={
+                    currentPageData3 ===
+                    Math.ceil(userUpData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData3 ===
+                    Math.ceil(userUpData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   Sau
                   <svg
@@ -2595,7 +2950,7 @@ const StaffPage = () => {
                             className=" w-full max-w-[70%] h-auto object-contain "
                           />
                         ) : (
-                          <span>No media available</span>
+                          <span></span>
                         )}
                       </div>
                     </div>
@@ -2715,10 +3070,10 @@ const StaffPage = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {userUpBanData &&
-                        Array.isArray(userUpBanData) &&
-                        userUpBanData.length > 0 ? (
-                          userUpBanData.map((user) => (
+                        {currentToys5 &&
+                        Array.isArray(currentToys5) &&
+                        currentToys5.length > 0 ? (
+                          currentToys5.map((user) => (
                             <tr
                               className="hover:bg-gray-100 dark:hover:bg-gray-700"
                               key={user.id}
@@ -2733,7 +3088,7 @@ const StaffPage = () => {
                                       className="w-full max-w-[50px] h-auto object-contain mr-2"
                                     />
                                   ) : (
-                                    <span>No media available</span>
+                                    <span></span>
                                   )}
                                 </div>
                               </td>
@@ -2785,13 +3140,16 @@ const StaffPage = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center mb-4 sm:mb-0"></div>
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handlePrevious5}
+                  disabled={currentPageData4 === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData4 === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   <svg
                     className="w-5 h-5 mr-1 -ml-1"
@@ -2807,9 +3165,22 @@ const StaffPage = () => {
                   </svg>
                   Trước
                 </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData4} /{" "}
+                  {Math.ceil(userUpBanData.length / itemsPerPage)}
+                </span>
                 <button
-                  onClick={handleNext}
-                  className="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-blue-500 hover:bg-red-500 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  onClick={handleNext5}
+                  disabled={
+                    currentPageData4 ===
+                    Math.ceil(userUpBanData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData4 ===
+                    Math.ceil(userUpBanData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
                 >
                   Sau
                   <svg

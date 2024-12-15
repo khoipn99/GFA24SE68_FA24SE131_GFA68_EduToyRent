@@ -493,6 +493,18 @@ const HeaderForCustomer = () => {
       alert("Bạn chưa chọn sản phẩm nào.");
     }
   };
+  const HandleToyDetail = (item) => {
+    console.log(item);
+    if (item.quantity >= 0) {
+      Cookies.set("toySaleDetailId", item.toyId, { expires: 30 });
+      console.log("Toy Sale Detail ID:", Cookies.get("toySaleDetailId"));
+      navigate("/toys-sale-details");
+    } else if (item.quantity < 0) {
+      Cookies.set("toyRentDetailId", item.toyId, { expires: 30 });
+      console.log("Toy Rent Detail ID:", Cookies.get("toyRentDetailId"));
+      navigate("/toys-rent-details");
+    }
+  };
   return (
     <>
       {Cookies.get("userData") ? (
@@ -642,13 +654,21 @@ const HeaderForCustomer = () => {
                               key={item.id}
                               className="flex items-center mb-4 relative"
                             >
+                              {/* Thêm onClick cho ảnh */}
                               <img
                                 src={item.toyImgUrls[0]}
                                 alt={item.toyName}
-                                className="w-20 h-20 object-cover mr-4"
+                                className="w-20 h-20 object-cover mr-4 cursor-pointer"
+                                onClick={() => HandleToyDetail(item)}
                               />
                               <div className="flex-grow">
-                                <h3 className="font-bold">{item.toyName}</h3>
+                                {/* Thêm onClick cho tên sản phẩm */}
+                                <h3
+                                  className="font-bold cursor-pointer"
+                                  onClick={() => HandleToyDetail(item)}
+                                >
+                                  {item.toyName}
+                                </h3>
                                 <div className="flex flex-col">
                                   {/* Chọn thời gian thuê */}
                                   <div className="flex justify-between items-center mb-2">
@@ -666,8 +686,8 @@ const HeaderForCustomer = () => {
                                           : ""
                                       }`}
                                       onClick={() => {
-                                        updateRentalDuration(item.id, "1 tuần"); // Cập nhật state
-                                        updateOrderTypeId(item.id, 4); // Cập nhật orderTypeId = 4 cho "1 tuần"
+                                        updateRentalDuration(item.id, "1 tuần");
+                                        updateOrderTypeId(item.id, 4);
                                       }}
                                     >
                                       1 tuần
@@ -679,8 +699,8 @@ const HeaderForCustomer = () => {
                                           : ""
                                       }`}
                                       onClick={() => {
-                                        updateRentalDuration(item.id, "2 tuần"); // Cập nhật state
-                                        updateOrderTypeId(item.id, 5); // Cập nhật orderTypeId = 5 cho "2 tuần"
+                                        updateRentalDuration(item.id, "2 tuần");
+                                        updateOrderTypeId(item.id, 5);
                                       }}
                                     >
                                       2 tuần
@@ -695,8 +715,8 @@ const HeaderForCustomer = () => {
                                         updateRentalDuration(
                                           item.id,
                                           "1 tháng"
-                                        ); // Cập nhật state
-                                        updateOrderTypeId(item.id, 6); // Cập nhật orderTypeId = 6 cho "1 tháng"
+                                        );
+                                        updateOrderTypeId(item.id, 6);
                                       }}
                                     >
                                       1 tháng
@@ -717,6 +737,7 @@ const HeaderForCustomer = () => {
                                   </div>
                                 </div>
                               </div>
+
                               <button
                                 className="absolute top-0 right-0 text-red-500 hover:text-red-700 text-xl font-bold"
                                 onClick={() => {
@@ -725,7 +746,7 @@ const HeaderForCustomer = () => {
                                       "Bạn có chắc chắn muốn xóa sản phẩm này không?"
                                     )
                                   ) {
-                                    removeItem(item.id, "rent"); // Xóa item với id tương ứng
+                                    removeItem(item.id, "rent");
                                   }
                                 }}
                               >
@@ -735,6 +756,7 @@ const HeaderForCustomer = () => {
                           ))
                         )}
                       </div>
+
                       <h3 className="font-bold mb-2 mt-4">Đơn Mua Sản Phẩm</h3>
                       <div className="flex-grow overflow-y-auto max-h-72">
                         {buyItems.length === 0 ? (
@@ -748,14 +770,20 @@ const HeaderForCustomer = () => {
                               <img
                                 src={item.toyImgUrls[0]}
                                 alt={item.toyName}
-                                className="w-20 h-20 object-cover mr-4"
+                                className="w-20 h-20 object-cover mr-4 cursor-pointer"
+                                onClick={() => HandleToyDetail(item)} // Thêm sự kiện click vào hình ảnh
                               />
                               <div className="flex-grow">
-                                <h3 className="font-bold">{item.toyName}</h3>
+                                <h3
+                                  className="font-bold cursor-pointer"
+                                  onClick={() => HandleToyDetail(item)} // Thêm sự kiện click vào tên sản phẩm
+                                >
+                                  {item.toyName}
+                                </h3>
                                 <div className="flex justify-between items-center">
                                   <p className="mr-4">
-                                    Giá: {}
-                                    {(item.price || 0).toLocaleString()} VNĐ
+                                    Giá: {(item.price || 0).toLocaleString()}{" "}
+                                    VNĐ
                                   </p>
                                   <div className="flex items-center">
                                     {/* Nút giảm số lượng */}
@@ -765,7 +793,7 @@ const HeaderForCustomer = () => {
                                         updateCartQuantity(
                                           item.id, // ID sản phẩm
                                           item.quantity - 1, // Số lượng giảm đi 1
-                                          "buy" // Hành động "mua" (có thể sử dụng thêm để xác định hành động cụ thể)
+                                          "buy" // Hành động "mua"
                                         )
                                       }
                                       disabled={item.quantity <= 1} // Disable nếu quantity <= 1

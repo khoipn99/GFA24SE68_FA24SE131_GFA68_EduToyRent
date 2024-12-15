@@ -392,7 +392,7 @@ const RegisterPage = () => {
         className="absolute inset-0 object-cover w-full h-full"
       />
       {/* Form Container */}
-      <div className="relative z-10 bg-gray-100 bg-opacity-90 flex flex-col items-center justify-center h-full w-full max-w-lg p-4 rounded-lg shadow-lg">
+      <div className="relative z-10 bg-gray-100 bg-opacity-90 flex flex-col items-center justify-center h-full w-full max-w-xl p-4 rounded-lg shadow-lg">
         <h1 className="text-2xl font-semibold  text-blue-600">
           Đăng ký tài khoản
         </h1>
