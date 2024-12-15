@@ -26,52 +26,49 @@ using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-if (builder.Environment.IsProduction())
-{
-    var keyVaultUrl = builder.Configuration["KeyVault:KeyVaultURL"];
+var keyVaultUrl = builder.Configuration["KeyVault:KeyVaultURL"];
 
-    var client = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
-
-    builder.Services.AddDbContext<EduToyRentDBContext>(options =>
-    {
-        var connectionString = client.GetSecret("ProdConnection").Value.Value.ToString();
-        options.UseSqlServer(connectionString);
-    });
+var client = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
 
 
-    //var keyVaultURL = builder.Configuration.GetSection("KeyVault:KeyVaultURL");
 
-    //var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback));
+var connectionString = builder.Configuration.GetConnectionString("MyDB");
+builder.Services.AddDbContext<EduToyRentDBContext>(options =>
+    options.UseSqlServer(connectionString));
 
-    //builder.Configuration.AddAzureKeyVault(keyVaultURL.Value!.ToString(), new DefaultKeyVaultSecretManager());
+var jsonContent = client.GetSecret("firebase-adminsdk").Value.Value;
+File.WriteAllText("google-credentials.json", jsonContent);
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "google-credentials.json");
 
-    //var client = new SecretClient(new Uri(keyVaultURL!.Value!.ToString()), new DefaultAzureCredential());
+Console.WriteLine("Environment: " + builder.Environment.EnvironmentName);
 
-    //var connectionString = client.GetSecret("ProdConnection").Value.Value.ToString();
-    //Console.WriteLine("Connection String: " + connectionString);
+//if (builder.Environment.IsProduction())
+//{
+//    var builder = WebApplication.CreateBuilder(args);
 
-    //builder.Services.AddDbContext<EduToyRentDBContext>(option =>
-    //{        
-    //    option.UseSqlServer(connectionString);
-    //});
+//    var keyVaultUrl = builder.Configuration["KeyVault:KeyVaultURL"];
 
-    var connectionString = builder.Configuration.GetConnectionString("MyDB");
-    builder.Services.AddDbContext<EduToyRentDBContext>(options =>
-        options.UseSqlServer(connectionString));
+//    var client = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
 
-    var jsonContent = client.GetSecret("firebase-adminsdk").Value.Value;
-    File.WriteAllText("google-credentials.json", jsonContent);
-    Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "google-credentials.json");
-}
+//    var connectionString = builder.Configuration.GetConnectionString("ProdDB");
+//    builder.Services.AddDbContext<EduToyRentDBContext>(options =>
+//        options.UseSqlServer(connectionString));
 
-if (builder.Environment.IsDevelopment())
-{
-    var connectionString = builder.Configuration.GetConnectionString("MyDB");
-    builder.Services.AddDbContext<EduToyRentDBContext>(options =>
-        options.UseSqlServer(connectionString));
+//    var jsonContent = client.GetSecret("firebase-adminsdk").Value.Value;
+//    File.WriteAllText("google-credentials.json", jsonContent);
+//    Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "google-credentials.json");
 
-    Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", builder.Configuration["FirebaseCredentials:Path"]);
-}
+//    Console.WriteLine("Environment: " + builder.Environment.EnvironmentName);
+//}
+
+//if (builder.Environment.IsDevelopment())
+//{
+//    var connectionString = builder.Configuration.GetConnectionString("MyDB");
+//    builder.Services.AddDbContext<EduToyRentDBContext>(options =>
+//        options.UseSqlServer(connectionString));
+
+//    Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", builder.Configuration["FirebaseCredentials:Path"]);
+//}
 
 // Add services to the container.
 builder.Services.AddSingleton<IJwtGeneratorTokenService, JwtGeneratorTokenService>();
