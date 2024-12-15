@@ -18,5 +18,7 @@ namespace EduToyRentRepositories.Models
         public string? LastMessage { get; set; } = string.Empty;
         public DateTime? LastSentTime { get; set; }
         public string Status { get; set; }
+        public virtual ICollection<UserConversation> UserConversations { get; set; } = new List<UserConversation>();
+
     }
 }

@@ -11,7 +11,8 @@ import apiUser from "../../service/ApiUser";
 import apiMedia from "../../service/ApiMedia";
 import apiWallets from "../../service/ApiWallets";
 import apiCart from "../../service/ApiCart";
-
+import apiConversations from "../../service/ApiConversations";
+import ChatForm from "../Chat/ChatForm";
 import { useNavigate } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import các biểu tượng sao
 
@@ -456,6 +457,21 @@ const ToysDetails = () => {
     navigate("/lessor-toys-details");
   };
 
+  const HandleAddChat = async () => {
+    await apiConversations.post(
+      `/check-or-create-conversation`,
+      {
+        user1Id: userData.id,
+        user2Id: owner.id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      }
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-200 p-9">
       <header
@@ -699,7 +715,12 @@ const ToysDetails = () => {
                   </h3>
 
                   <div className="flex space-x-2 mt-2">
-                    <button className="border border-blue-500 text-blue-500 font-semibold px-4 py-2 rounded">
+                    <button
+                      className="border border-blue-500 text-blue-500 font-semibold px-4 py-2 rounded"
+                      onClick={() => {
+                        HandleAddChat();
+                      }}
+                    >
                       Chat ngay
                     </button>
 
@@ -1078,6 +1099,7 @@ const ToysDetails = () => {
           </div>
         </div>
       </div>
+      <ChatForm />
       <footer>
         <FooterForCustomer />
       </footer>

@@ -629,7 +629,7 @@ const ToysSaleDetails = () => {
                 />
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold">
-                    Cửa Hàng Đồ Chơi :{" "}
+                    Thương Hiệu Đồ Chơi :{" "}
                     {currentToy.owner && currentToy.owner.fullName
                       ? currentToy.owner.fullName
                       : ""}
