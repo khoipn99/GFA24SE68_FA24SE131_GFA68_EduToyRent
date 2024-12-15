@@ -15,7 +15,7 @@ import CardDataStats from "../../Component/DashBoard/CardDataStats";
 import apiWalletTransaction from "../../service/ApiWalletTransaction";
 import ChartOne from "../../Component/DashBoard/ChartOne";
 import ChartTwo from "../../Component/DashBoard/ChartTwo";
-
+import apiTransaction from "../../service/ApiTransaction";
 import apiLogin from "../../service/ApiLogin";
 import apiCart from "../../service/ApiCart";
 import { jwtDecode } from "jwt-decode";
@@ -61,6 +61,11 @@ const AdminPage = () => {
     walletId: "",
   });
   const [isUserCardVisible, setIsUserCardVisible] = useState(false);
+  const [totalProfit, setTotalProfit] = useState(0);
+  const [totalVenue, setTotalVenue] = useState(0);
+  const [totalUser, setTotalUser] = useState(0);
+  const [totalProduct, setTotalProduct] = useState(0);
+  const [topSale, setTopSale] = useState([]);
 
   const navigate = useNavigate();
 
@@ -82,6 +87,62 @@ const AdminPage = () => {
 
       setUserData(parsedUserData);
       const email = parsedUserData.email;
+
+      apiTransaction
+        .get("?pageIndex=1&pageSize=1000", {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response) => {
+          setTotalVenue(
+            response.data.reduce(
+              (total, transaction) => total + transaction.order.totalPrice,
+              0
+            )
+          );
+
+          setTotalProfit(
+            response.data.reduce(
+              (total, transaction) => total + transaction.platformFee,
+              0
+            )
+          );
+        });
+      apiUser
+        .get("?$filter=role/id eq 2 or role/id eq 3", {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response) => {
+          setTotalUser(
+            response.data.reduce((total, transaction) => total + 1, 0)
+          );
+        });
+
+      apiToys
+        .get("?pageIndex=1&pageSize=1000", {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response) => {
+          setTotalProduct(
+            response.data.reduce((total, transaction) => total + 1, 0)
+          );
+        });
+
+      apiToys
+        .get("?$orderby=quantitySold desc&$top=5", {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response) => {
+          setTopSale(response.data);
+          console.log(response.data);
+        });
 
       const fetchUserData = async () => {
         try {
@@ -1840,33 +1901,8 @@ const AdminPage = () => {
             <h3 className="text-lg font-semibold">Bảng thống kê</h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
               <CardDataStats
-                title="Total views"
-                total="$3.456K"
-                rate="0.43%"
-                levelUp
-              >
-                <svg
-                  className="fill-primary dark:fill-white"
-                  width="22"
-                  height="16"
-                  viewBox="0 0 22 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M11 15.1156C4.19376 15.1156 0.825012 8.61876 0.687512 8.34376C0.584387 8.13751 0.584387 7.86251 0.687512 7.65626C0.825012 7.38126 4.19376 0.918762 11 0.918762C17.8063 0.918762 21.175 7.38126 21.3125 7.65626C21.4156 7.86251 21.4156 8.13751 21.3125 8.34376C21.175 8.61876 17.8063 15.1156 11 15.1156ZM2.26876 8.00001C3.02501 9.27189 5.98126 13.5688 11 13.5688C16.0188 13.5688 18.975 9.27189 19.7313 8.00001C18.975 6.72814 16.0188 2.43126 11 2.43126C5.98126 2.43126 3.02501 6.72814 2.26876 8.00001Z"
-                    fill="currentColor"
-                  />
-                  <path
-                    d="M11 10.9219C9.38438 10.9219 8.07812 9.61562 8.07812 8C8.07812 6.38438 9.38438 5.07812 11 5.07812C12.6156 5.07812 13.9219 6.38438 13.9219 8C13.9219 9.61562 12.6156 10.9219 11 10.9219ZM11 6.625C10.2437 6.625 9.625 7.24375 9.625 8C9.625 8.75625 10.2437 9.375 11 9.375C11.7563 9.375 12.375 8.75625 12.375 8C12.375 7.24375 11.7563 6.625 11 6.625Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </CardDataStats>
-              <CardDataStats
-                title="Total Profit"
-                total="$45,2K"
-                rate="4.35%"
+                title="Tổng doanh thu"
+                total={totalVenue.toLocaleString() + " " + "VNĐ"}
                 levelUp
               >
                 <svg
@@ -1892,11 +1928,33 @@ const AdminPage = () => {
                 </svg>
               </CardDataStats>
               <CardDataStats
-                title="Total Product"
-                total="2.450"
-                rate="2.59%"
+                title="Tổng lợi nhuận"
+                total={totalProfit.toLocaleString() + " " + "VNĐ"}
                 levelUp
               >
+                <svg
+                  className="fill-primary dark:fill-white"
+                  width="20"
+                  height="22"
+                  viewBox="0 0 20 22"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11.7531 16.4312C10.3781 16.4312 9.27808 17.5312 9.27808 18.9062C9.27808 20.2812 10.3781 21.3812 11.7531 21.3812C13.1281 21.3812 14.2281 20.2812 14.2281 18.9062C14.2281 17.5656 13.0937 16.4312 11.7531 16.4312ZM11.7531 19.8687C11.2375 19.8687 10.825 19.4562 10.825 18.9406C10.825 18.425 11.2375 18.0125 11.7531 18.0125C12.2687 18.0125 12.6812 18.425 12.6812 18.9406C12.6812 19.4219 12.2343 19.8687 11.7531 19.8687Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M5.22183 16.4312C3.84683 16.4312 2.74683 17.5312 2.74683 18.9062C2.74683 20.2812 3.84683 21.3812 5.22183 21.3812C6.59683 21.3812 7.69683 20.2812 7.69683 18.9062C7.69683 17.5656 6.56245 16.4312 5.22183 16.4312ZM5.22183 19.8687C4.7062 19.8687 4.2937 19.4562 4.2937 18.9406C4.2937 18.425 4.7062 18.0125 5.22183 18.0125C5.73745 18.0125 6.14995 18.425 6.14995 18.9406C6.14995 19.4219 5.73745 19.8687 5.22183 19.8687Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M19.0062 0.618744H17.15C16.325 0.618744 15.6031 1.23749 15.5 2.06249L14.95 6.01562H1.37185C1.0281 6.01562 0.684353 6.18749 0.443728 6.46249C0.237478 6.73749 0.134353 7.11562 0.237478 7.45937C0.237478 7.49374 0.237478 7.49374 0.237478 7.52812L2.36873 13.9562C2.50623 14.4375 2.9531 14.7812 3.46873 14.7812H12.9562C14.2281 14.7812 15.3281 13.8187 15.5 12.5469L16.9437 2.26874C16.9437 2.19999 17.0125 2.16562 17.0812 2.16562H18.9375C19.35 2.16562 19.7281 1.82187 19.7281 1.37499C19.7281 0.928119 19.4187 0.618744 19.0062 0.618744ZM14.0219 12.3062C13.9531 12.8219 13.5062 13.2 12.9906 13.2H3.7781L1.92185 7.56249H14.7094L14.0219 12.3062Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </CardDataStats>
+              <CardDataStats title="Tổng sản phẩm" total={totalProduct} levelUp>
                 <svg
                   className="fill-primary dark:fill-white"
                   width="22"
@@ -1916,9 +1974,8 @@ const AdminPage = () => {
                 </svg>
               </CardDataStats>
               <CardDataStats
-                title="Total Users"
-                total="3.456"
-                rate="0.95%"
+                title="Tổng người dùng"
+                total={totalUser}
                 levelDown
               >
                 <svg
@@ -1948,76 +2005,66 @@ const AdminPage = () => {
               <ChartOne />
               <ChartTwo />
             </div>
-          </div>
-        );
+            <br />
+            <h3 className="text-lg font-semibold">Top sản phẩm bán chạy</h3>
+            <ul className="space-y-4">
+              {topSale.map((product, index) => (
+                <li
+                  key={product.id}
+                  className="p-4 border border-gray-300 rounded-lg flex items-center justify-between h-32"
+                >
+                  {/* Bên trái */}
+                  <div className="flex items-center w-2/3 border-r-2 border-gray-300 pr-4">
+                    <div className="text-lg font-semibold mr-4">
+                      Top {index + 1} :
+                    </div>
+                    <img
+                      src={
+                        product.media && product.media[0].mediaUrl
+                          ? product.media[0].mediaUrl
+                          : ""
+                      }
+                      alt={product.name}
+                      className="w-24 h-24 object-cover mr-4"
+                    />
+                    <div>
+                      <h4 className="font-semibold">{product.name}</h4>
+                      <p className="text-lg font-semibold">
+                        Số lượng bán: {product.quantitySold}
+                      </p>
+                      <p>Giá: {product.price.toLocaleString()} VNĐ</p>
+                    </div>
+                  </div>
 
-        return (
-          <div className="container mx-auto py-4">
-            <h2 className="text-2xl font-semibold">Danh sách đơn hàng</h2>
-            {orders.map((order) => (
-              <div
-                key={order.id}
-                className="bg-white shadow-lg rounded-lg overflow-hidden mt-4"
-              >
-                <div className="flex items-center p-4 border-b">
-                  <img
-                    src={
-                      order.toyImgUrls?.length > 0
-                        ? order.toyImgUrls[0]
-                        : "default_image_url_here"
-                    }
-                    alt={`Ảnh đồ chơi cho đơn hàng ${order.id}`}
-                    style={{ width: "100px", height: "100px", margin: "5px" }}
-                  />
-                  <div className="ml-4 flex-1">
-                    <h3 className="text-lg font-semibold">
-                      Đơn hàng mã số: {order.id}
-                    </h3>
-                    <h3 className="text-lg font-semibold">
-                      Tên đồ chơi: {order.toyName}
-                    </h3>
-
-                    <p className="text-sm text-gray-600">
-                      Tổng giá: {order.unitPrice}₫
-                    </p>
+                  {/* Bên phải */}
+                  <div className="flex items-center w-1/3 pl-4">
+                    <img
+                      src={
+                        product.owner && product.owner.avatarUrl
+                          ? product.owner.avatarUrl
+                          : ""
+                      }
+                      alt={product.name}
+                      className="w-24 h-24 object-cover mr-4"
+                    />
+                    <div>
+                      <h4 className="text-lg font-semibold">
+                        Nhà cung cấp đồ chơi:{" "}
+                        {product.owner && product.owner.fullName
+                          ? product.owner.fullName
+                          : ""}
+                      </h4>
+                      <p className="text-lg font-semibold">
+                        Điểm đánh giá trung bình:{" "}
+                        {product.owner && product.owner.star
+                          ? product.owner.star
+                          : ""}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end ml-4">
-                    <h1 className="text-lg font-bold text-gray-600">
-                      {statusMapping[order.status] ||
-                        "Trạng thái không xác định"}
-                    </h1>
-                  </div>
-                </div>
-                <div className="flex justify-between p-4">
-                  <div className="ml-auto flex gap-4">
-                    {order.status == "Delivering" && (
-                      <button
-                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                        onClick={() => handleChecking(order)}
-                      >
-                        Chờ đánh giá đồ chơi
-                      </button>
-                    )}
-                    {order.status == "Checking" && (
-                      <button
-                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                        onClick={() => handleCheckingBroke(order)}
-                      >
-                        Đồ chơi bị hỏng
-                      </button>
-                    )}
-                    {order.status == "Checking" && (
-                      <button
-                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-                        onClick={() => handleCheckingGood(order)}
-                      >
-                        Đồ chơi bình thường
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+                </li>
+              ))}
+            </ul>
           </div>
         );
 

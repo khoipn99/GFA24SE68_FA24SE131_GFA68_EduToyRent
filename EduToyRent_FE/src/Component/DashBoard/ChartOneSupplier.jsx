@@ -292,12 +292,12 @@ const ChartOneSupplier = () => {
             </span>
 
             <div className="w-100px" style={{ whiteSpace: "nowrap" }}>
-              <p className="font-semibold text-primary">Total Revenue</p>
-              <p className="text-sm font-medium">12.04.2022 - 12.05.2022</p>
+              <p className="font-semibold text-primary">Tổng doanh thu</p>
+              <p className="text-sm font-medium">1/2024 - 12/2024</p>
             </div>
           </div>
 
-          <div className="flex min-w-47.5">
+          {/* <div className="flex min-w-47.5">
             <span className="mt-1 mr-2 flex h-6 w-6 items-center justify-center rounded-full border border-primary">
               <span
                 className="block h-4 w-4 rounded-full"
@@ -309,7 +309,7 @@ const ChartOneSupplier = () => {
               <p className="font-semibold text-secondary">Total Sales</p>
               <p className="text-sm font-medium">12.04.2022 - 12.05.2022</p>
             </div>
-          </div>
+          </div> */}
         </div>
         <div className="flex w-full max-w-45 justify-end">
           <div className="inline-flex items-center rounded-md bg-whiter p-1.5 dark:bg-meta-4">
@@ -317,7 +317,7 @@ const ChartOneSupplier = () => {
               className="rounded py-1 px-3 text-xs font-medium text-black hover:bg-white dark:text-white dark:hover:bg-boxdark"
               onClick={() => handleTimeFrameChange("Month")}
             >
-              Month
+              Tháng
             </button>
           </div>
         </div>
