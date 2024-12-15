@@ -595,7 +595,8 @@ const Payment = () => {
                                   brand: response.data.brand,
                                   categoryId: response.data.category.id,
                                   rentCount: response.data.rentCount,
-                                  quantitySold: response.data.quantitySold,
+                                  quantitySold:
+                                    response.data.quantitySold + item.quantity,
                                   status: response.data.status,
                                 },
                                 {
@@ -930,7 +931,8 @@ const Payment = () => {
                                 brand: response.data.brand,
                                 categoryId: response.data.category.id,
                                 rentCount: response.data.rentCount,
-                                rentTime: response.data.rentTime,
+                                quantitySold:
+                                  response.data.quantitySold + item.quantity,
                                 status: response.data.status,
                               },
                               {

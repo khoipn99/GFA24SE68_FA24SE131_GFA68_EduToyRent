@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
 import ReactApexChart from "react-apexcharts";
+import { ApexOptions } from "apexcharts";
+import apiUser from "../../service/ApiUser";
+import apiTransaction from "../../service/ApiTransaction";
+
+import Cookies from "js-cookie";
 
 const options = {
   colors: ["#3C50E0", "#80CAEE"],
@@ -41,7 +46,15 @@ const options = {
     enabled: false,
   },
   xaxis: {
-    categories: ["M", "T", "W", "T", "F", "S", "S"],
+    categories: [
+      "Thứ hai",
+      "Thứ ba",
+      "Thứ tư",
+      "Thứ năm",
+      "Thứ sáu",
+      "Thứ bẩy",
+      "Chủ nhật",
+    ],
   },
   legend: {
     position: "top",
@@ -59,14 +72,18 @@ const options = {
 };
 
 const ChartTwo = () => {
+  const [listTotalProfit, setListTotalProfit] = useState([]);
+  const [listTransactions, setListTransactions] = useState([]);
+  const [customerInfo, setCustomerInfo] = useState([]);
+
   const [state, setState] = useState({
     series: [
       {
-        name: "Sales",
+        name: "Doanh thu",
         data: [44, 55, 41, 67, 22, 43, 65],
       },
       {
-        name: "Revenue",
+        name: "Lợi nhuận",
         data: [13, 23, 20, 8, 13, 27, 15],
       },
     ],
@@ -78,17 +95,137 @@ const ChartTwo = () => {
     }));
   };
 
-  // Gọi reset khi component được mount hoặc khi có điều kiện cụ thể
   useEffect(() => {
-    handleReset();
-  }, []); // Trống mảng phụ thuộc để chỉ gọi một lần sau khi component mount
+    const userDataCookie = Cookies.get("userDataReal");
+    if (userDataCookie) {
+      var parsedUserData;
+      try {
+        parsedUserData = JSON.parse(userDataCookie);
+        setCustomerInfo(parsedUserData);
+        console.log("Parsed user data:", parsedUserData);
+
+        apiTransaction
+          .get("?pageIndex=1&pageSize=1000", {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then((response) => {
+            setListTransactions(response.data);
+            console.log(response.data);
+            // Gọi hàm và in kết quả
+            const revenueData = getDailyProfitForCurrentWeek(response.data);
+            console.log(revenueData[6].totalRevenue);
+            setListTotalProfit(revenueData);
+            setState({
+              series: [
+                {
+                  name: "Doanh thu",
+                  data: [
+                    revenueData[0].totalRevenue,
+                    revenueData[1].totalRevenue,
+                    revenueData[2].totalRevenue,
+                    revenueData[3].totalRevenue,
+                    revenueData[4].totalRevenue,
+                    revenueData[5].totalRevenue,
+                    revenueData[6].totalRevenue,
+                  ],
+                },
+                {
+                  name: "Lợi nhuận",
+                  data: [
+                    revenueData[0].totalProfit,
+                    revenueData[1].totalProfit,
+                    revenueData[2].totalProfit,
+                    revenueData[3].totalProfit,
+                    revenueData[4].totalProfit,
+                    revenueData[5].totalProfit,
+                    revenueData[6].totalProfit,
+                  ],
+                },
+              ],
+            });
+          });
+      } catch (error) {
+        console.error("Error parsing userDataCookie:", error);
+      }
+
+      handleReset();
+    } else {
+      console.warn("Cookie 'userDataReal' is missing or undefined.");
+    }
+  }, []);
+
+  const getDailyProfitForCurrentWeek = (transactions) => {
+    const currentDate = new Date();
+
+    // Lấy ngày bắt đầu tuần (Thứ Hai) và ngày kết thúc tuần (Chủ Nhật)
+    const getStartOfWeek = (date) => {
+      const dayOfWeek = date.getDay(); // 0 (Chủ nhật) -> 6 (Thứ bảy)
+      const diff = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek; // Chuyển Chủ nhật thành cuối tuần
+      const startOfWeek = new Date(date);
+      startOfWeek.setDate(date.getDate() + diff);
+      startOfWeek.setHours(0, 0, 0, 0);
+      return startOfWeek;
+    };
+
+    const startOfWeek = getStartOfWeek(currentDate);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // Tạo danh sách các ngày trong tuần hiện tại
+    const daysOfWeek = Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(startOfWeek);
+      day.setDate(startOfWeek.getDate() + i);
+      return day;
+    });
+
+    // Tính lợi nhuận từng ngày
+    const dailyProfit = daysOfWeek.map((day) => {
+      const dayStart = new Date(day);
+      dayStart.setHours(0, 0, 0, 0);
+
+      const dayEnd = new Date(day);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      // Lọc các giao dịch trong ngày đó
+      const filteredTransactions = transactions.filter((transaction) => {
+        const transactionDate = new Date(transaction.date);
+        return transactionDate >= dayStart && transactionDate <= dayEnd;
+      });
+
+      // Tính tổng lợi nhuận trong ngày đó
+      const totalRevenue = filteredTransactions.reduce(
+        (total, transaction) => total + transaction.order.totalPrice,
+        0
+      );
+      const totalProfit = filteredTransactions.reduce(
+        (total, transaction) => total + transaction.platformFee,
+        0
+      );
+
+      return {
+        day: day.toLocaleDateString("default", {
+          weekday: "long",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+        totalRevenue: totalRevenue,
+        totalProfit: totalProfit,
+      };
+    });
+
+    return dailyProfit;
+  };
 
   return (
     <div className="col-span-12 rounded-sm border border-stroke bg-white p-7.5 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-4">
       <div className="mb-4 justify-between gap-4 sm:flex">
         <div>
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Profit this week
+            Doanh thu tuần này
           </h4>
         </div>
         <div>
@@ -99,10 +236,7 @@ const ChartTwo = () => {
               className="relative z-20 inline-flex appearance-none bg-transparent py-1 pl-3 pr-8 text-sm font-medium outline-none"
             >
               <option value="" className="dark:bg-boxdark">
-                This Week
-              </option>
-              <option value="" className="dark:bg-boxdark">
-                Last Week
+                Tuần này
               </option>
             </select>
             <span className="absolute top-1/2 right-3 z-10 -translate-y-1/2">
