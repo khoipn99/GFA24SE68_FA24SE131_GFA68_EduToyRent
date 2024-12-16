@@ -36,6 +36,7 @@ var connectionString = builder.Configuration.GetConnectionString("MyDB");
 builder.Services.AddDbContext<EduToyRentDBContext>(options =>
     options.UseSqlServer(connectionString));
 
+
 //var jsonContent = client.GetSecret("firebase-adminsdk").Value.Value;
 //File.WriteAllText("google-credentials.json", jsonContent);
 //Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "google-credentials.json");

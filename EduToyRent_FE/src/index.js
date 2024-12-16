@@ -26,11 +26,16 @@ import PaymentSuccess from "./Pages/Payment/PaymentSuccess";
 import Chat from "./Pages/Chat/Chat";
 import TopUpComplete from "./Pages/TopUp/TopUpComplete";
 import AdminPage from "./Pages/Admin/AdminPage";
+import ForgotPasswordPage from "./Pages/Login/ForgotPasswordPage";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
   },
   {
     path: "/admin",
