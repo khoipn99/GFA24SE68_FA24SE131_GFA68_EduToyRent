@@ -11,12 +11,14 @@ namespace EduToyRentRepositories.Implement
     public class UnitOfWork : IUnitOfWork
     {
         private readonly EduToyRentDBContext _context;
+        private IGenericRepository<OrderCheckImage> orderCheckImageRepository;
         private IGenericRepository<Cart> cartRepository;
         private IGenericRepository<CartItem> cartItemRepository;
         private IGenericRepository<Category> categoryRepository;
         private IGenericRepository<Conversation> conversationRepository;
         private IGenericRepository<Media> mediaRepository;
         private IGenericRepository<Message> messageRepository;
+        private IGenericRepository<Notification> notificationRepository;
         private IGenericRepository<Order> orderRepository;
         private IGenericRepository<OrderDetail> orderDetailRepository;
         private IGenericRepository<OrderHistory> orderHistoryRepository;
@@ -38,7 +40,20 @@ namespace EduToyRentRepositories.Implement
         {
             _context = context;
         }
-
+        public IGenericRepository<Notification> NotificationRepository
+        {
+            get
+            {
+                return notificationRepository ??= new GenericRepository<Notification>(_context);
+            }
+        }
+        public IGenericRepository<OrderCheckImage> OrderCheckImageRepository
+        {
+            get
+            {
+                return orderCheckImageRepository ??= new GenericRepository<OrderCheckImage>(_context);
+            }
+        }
         public IGenericRepository<Cart> CartRepository
         {
             get
