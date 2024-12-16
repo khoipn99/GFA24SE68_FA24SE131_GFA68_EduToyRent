@@ -103,8 +103,6 @@ const options = {
         fontSize: "0px",
       },
     },
-    min: 0,
-    max: 10000000,
   },
 };
 

@@ -67,6 +67,7 @@ const ChatPage = () => {
       );
       if (!response.ok) throw new Error();
       const data = await response.json();
+
       setMessages(data);
     } catch (error) {}
   };
@@ -248,30 +249,33 @@ const ChatPage = () => {
             <div className="flex-1 overflow-y-auto mb-4">
               {messages.map((message, index) => {
                 const isLast = index === messages.length - 1;
+
                 return (
                   <div
                     key={message.id}
                     ref={isLast ? lastMessageRef : null}
                     className={`flex mb-3 ${
-                      message.senderId === userId
+                      message.senderId == userId
                         ? "justify-end"
                         : "justify-start"
-                    }`}
+                    }`} // Tin nhắn nằm bên phải nếu là của userId, bên trái nếu không
                   >
                     <div
-                      className={`p-4 rounded-lg bg-gray-200 text-gray-900 break-words ${
-                        message.senderId === userId && "bg-blue-500 text-white"
-                      }`}
+                      className={`p-4 rounded-lg ${
+                        message.senderId == userId
+                          ? "bg-teal-500" // Màu nền xanh và chữ trắng cho tin nhắn của bạn
+                          : "bg-gray-200 text-gray-900" // Màu nền xám và chữ đen cho tin nhắn của người khác
+                      } break-words max-w-xs`} // Giới hạn chiều rộng của tin nhắn
                     >
                       <p className="font-bold text-sm mb-1">
-                        {message.senderId === userId
-                          ? "You"
+                        {message.senderId == userId
+                          ? ""
                           : message.senderName || "Unknown"}
                       </p>
                       <p className="text-base whitespace-pre-wrap">
                         {message.content}
                       </p>
-                      <span className="text-xs text-gray-400 block mt-1">
+                      <span className="text-xs block mt-1 ">
                         {new Date(message.sentTime).toLocaleString()}
                       </span>
                     </div>
@@ -284,7 +288,7 @@ const ChatPage = () => {
               <textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
+                placeholder="Nhập tin nhắn..."
                 className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 text-base resize-none"
                 rows={3}
               />
@@ -292,7 +296,7 @@ const ChatPage = () => {
                 onClick={handleSendMessage}
                 className="px-6 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition duration-200 text-base font-semibold"
               >
-                Send
+                Gửi
               </button>
             </div>
           </>

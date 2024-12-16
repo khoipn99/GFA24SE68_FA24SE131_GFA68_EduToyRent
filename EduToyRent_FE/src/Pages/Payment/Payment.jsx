@@ -14,6 +14,7 @@ import apiCartItem from "../../service/ApiCartItem";
 import apiTransaction from "../../service/ApiTransaction";
 import apiTransactionDetail from "../../service/ApiTransactionDetail";
 import apiToys from "../../service/ApiToys";
+import apiNotifications from "../../service/ApiNotifications";
 
 const Payment = () => {
   const [cartItems, setCartItems] = useState([]); // Danh sách sản phẩm
@@ -344,6 +345,20 @@ const Payment = () => {
                     }
                   )
                   .then(async (response) => {
+                    await apiNotifications.post(
+                      "",
+                      {
+                        notify: `Bạn có đơn hàng mới mã số ${response.data.id} `,
+                        isRead: false,
+                        userId: shopId,
+                      },
+                      {
+                        headers: {
+                          Authorization: `Bearer ${Cookies.get("userToken")}`,
+                        },
+                      }
+                    );
+
                     await apiWalletTransaction
                       .post(
                         "",
@@ -502,6 +517,19 @@ const Payment = () => {
                   )
                   .then(async (response) => {
                     console.log(response.data);
+                    await apiNotifications.post(
+                      "",
+                      {
+                        notify: `Bạn có đơn hàng mới mã số ${response.data.id} `,
+                        isRead: false,
+                        userId: shopId,
+                      },
+                      {
+                        headers: {
+                          Authorization: `Bearer ${Cookies.get("userToken")}`,
+                        },
+                      }
+                    );
 
                     await apiWalletTransaction.post(
                       "",
@@ -698,6 +726,20 @@ const Payment = () => {
                   }
                 )
                 .then(async (response) => {
+                  await apiNotifications.post(
+                    "",
+                    {
+                      notify: `Bạn có đơn hàng mới mã số ${response.data.id} `,
+                      isRead: false,
+                      userId: shopId,
+                    },
+                    {
+                      headers: {
+                        Authorization: `Bearer ${Cookies.get("userToken")}`,
+                      },
+                    }
+                  );
+
                   await apiWalletTransaction.post(
                     "",
                     {
@@ -844,6 +886,19 @@ const Payment = () => {
                 )
                 .then(async (response) => {
                   console.log(response.data);
+                  await apiNotifications.post(
+                    "",
+                    {
+                      notify: `Bạn có đơn hàng mới mã số ${response.data.id} `,
+                      isRead: false,
+                      userId: shopId,
+                    },
+                    {
+                      headers: {
+                        Authorization: `Bearer ${Cookies.get("userToken")}`,
+                      },
+                    }
+                  );
 
                   await apiWalletTransaction.post(
                     "",

@@ -55,7 +55,6 @@ namespace EduToyRentAPI.Controllers
             return Ok(orders);
         }
 
-        // GET: api/Orders/5
         [HttpGet("{id}")]
         public ActionResult<OrderResponse> GetOrder(int id)
         {
