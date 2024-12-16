@@ -6,7 +6,10 @@ import axios from "axios";
 import apiWallets from "../../service/ApiWallets";
 import apiUser from "../../service/ApiUser";
 import apiToys from "../../service/ApiToys";
+
 import Notifications from "../Notification/Notification";
+
+import Logo from "../../assets/logoETR.png";
 
 const HeaderForToySupplier = () => {
   const [cartVisible, setCartVisible] = useState(false);
@@ -139,22 +142,17 @@ const HeaderForToySupplier = () => {
             <div className="flex items-center gap-4 text-[#0e161b]">
               {/* Nội dung cho người dùng đã đăng nhập a*/}
               <Link to="#">
-                <div className="size-4">
-                  <svg
-                    viewBox="0 0 48 48"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z"
-                      fill="currentColor"
-                    ></path>
-                  </svg>
-                </div>
+                <img
+                  src={Logo}
+                  alt="User Avatar"
+                  width="50px"
+                  height="50px"
+                  className="rounded-full"
+                />
               </Link>
               <Link to="#">
                 <h2 className="text-[#0e161b] text-lg font-bold leading-tight tracking-[-0.015em]">
-                  Edutoys
+                  EduToyRent
                 </h2>
               </Link>
             </div>
