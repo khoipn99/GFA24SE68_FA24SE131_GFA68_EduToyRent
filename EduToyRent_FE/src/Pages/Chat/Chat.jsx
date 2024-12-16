@@ -40,7 +40,7 @@ const ChatPage = () => {
     const fetchConversations = async () => {
       try {
         const response = await fetch(
-          `https://localhost:44350/api/v1/Conversations/user/${userId}`,
+          `https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/v1/Conversations/user/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -58,7 +58,7 @@ const ChatPage = () => {
   const fetchMessages = async (conversationId) => {
     try {
       const response = await fetch(
-        `https://localhost:44350/api/v1/Messages/conversation/${conversationId}`,
+        `https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/v1/Messages/conversation/${conversationId}`,
         {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -75,7 +75,7 @@ const ChatPage = () => {
   const markAllMessagesAsRead = async (conversationId) => {
     try {
       await fetch(
-        `https://localhost:44350/api/v1/Messages/markread/${conversationId}`,
+        `https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/v1/Messages/markread/${conversationId}`,
         {
           method: "PUT",
           headers: {
@@ -101,9 +101,12 @@ const ChatPage = () => {
   useEffect(() => {
     if (userId) {
       const connect = new HubConnectionBuilder()
-        .withUrl("https://localhost:44350/chatHub", {
-          accessTokenFactory: () => Cookies.get("userToken"),
-        })
+        .withUrl(
+          "https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/chatHub",
+          {
+            accessTokenFactory: () => Cookies.get("userToken"),
+          }
+        )
         .withAutomaticReconnect()
         .build();
 

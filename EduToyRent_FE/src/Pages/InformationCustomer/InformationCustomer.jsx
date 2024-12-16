@@ -13,7 +13,7 @@ import apiTransactionDetail from "../../service/ApiTransactionDetail";
 import apiToys from "../../service/ApiToys";
 import apiRatings from "../../service/ApiRatings";
 import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
-
+import ChatForm from "../Chat/ChatForm";
 const InformationCustomer = () => {
   const [selectedTab, setSelectedTab] = useState("info");
   const [isEditing, setIsEditing] = useState(false);
@@ -2574,6 +2574,7 @@ const InformationCustomer = () => {
       {renderOrderDetails()}
 
       {renderMoney()}
+      <ChatForm />
       <footer>
         <FooterForCustomer />
       </footer>
