@@ -11,7 +11,7 @@ import apiCartItem from "../../service/ApiCartItem";
 import exampleImage from "../../assets/UserUnknow.png";
 import Notifications from "../Notification/Notification";
 import { jwtDecode } from "jwt-decode";
-
+import Logo from "../../assets/logoETR.png";
 const HeaderForCustomer = () => {
   const [cartVisible, setCartVisible] = useState(false);
   const [rentItems, setRentItems] = useState([]);
@@ -44,7 +44,9 @@ const HeaderForCustomer = () => {
       try {
         const decoded = jwtDecode(token);
         const extractedUserId =
-          decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+          decoded[
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+          ];
         console.log("Decoded user ID from token:", extractedUserId);
         setUserId(extractedUserId);
       } catch (error) {
@@ -535,22 +537,17 @@ const HeaderForCustomer = () => {
             <div className="flex items-center gap-4 text-[#0e161b]">
               {/* Nội dung cho người dùng đã đăng nhập a*/}
               <Link to="/">
-                <div className="size-4">
-                  <svg
-                    viewBox="0 0 48 48"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z"
-                      fill="currentColor"
-                    ></path>
-                  </svg>
-                </div>
+                <img
+                  src={Logo}
+                  alt="User Avatar"
+                  width="50px"
+                  height="50px"
+                  className="rounded-full"
+                />
               </Link>
               <Link to="/">
                 <h2 className="text-[#0e161b] text-lg font-bold leading-tight tracking-[-0.015em]">
-                  Edutoys
+                  EduToyRent
                 </h2>
               </Link>
             </div>
@@ -929,22 +926,17 @@ const HeaderForCustomer = () => {
             <div className="flex items-center gap-4 text-[#0e161b]">
               {/* Nội dung cho người dùng chưa đăng nhập */}
               <Link to="/">
-                <div className="size-4">
-                  <svg
-                    viewBox="0 0 48 48"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z"
-                      fill="currentColor"
-                    ></path>
-                  </svg>
-                </div>
+                <img
+                  src={Logo}
+                  alt="User Avatar"
+                  width="50px"
+                  height="50px"
+                  className="rounded-full"
+                />
               </Link>
               <Link to="/">
                 <h2 className="text-[#0e161b] text-lg font-bold leading-tight tracking-[-0.015em]">
-                  Edutoys
+                  EduToyRent
                 </h2>
               </Link>
             </div>

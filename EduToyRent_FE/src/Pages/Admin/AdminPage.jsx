@@ -63,8 +63,21 @@ const AdminPage = () => {
   const [totalUser, setTotalUser] = useState(0);
   const [totalProduct, setTotalProduct] = useState(0);
   const [topSale, setTopSale] = useState([]);
+  const [selectedToyRent, setSelectedToyRent] = useState(null);
+  const [selectedToyBuy, setSelectedToyBuy] = useState(null);
+  const [selectedToyBan, setSelectedToyBan] = useState(null);
+  const [toysRentData, setToysRentData] = useState([]);
+  const [toysBuyData, setToysBuyData] = useState([]);
+  const [toysBanData, setToysBanData] = useState([]);
+
   const [currentPageData, setCurrentPageData] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
+  const [currentPageData1, setCurrentPageData1] = useState(1); // Trang hiện tại cho toysData
+  const [currentPageData2, setCurrentPageData2] = useState(1); // Trang hiện tại cho toysData
+  const [currentPageData3, setCurrentPageData3] = useState(1); // Trang hiện tại cho toysData
+  const [currentPageData4, setCurrentPageData4] = useState(1); // Trang hiện tại cho toysData
   const itemsPerPage = 5; // Số mục trên mỗi trang
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -181,6 +194,9 @@ const AdminPage = () => {
       loadCategories();
       fetchUserData();
       LoadUser();
+      LoadToyBuy();
+      LoadToyRent();
+      LoadToyBan();
       LoadOrder("");
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
@@ -191,6 +207,33 @@ const AdminPage = () => {
       setSelectedMedia(selectedToy.media[0].mediaUrl); // Đặt ảnh/video đầu tiên làm mặc định
     }
   }, [selectedToy]);
+  useEffect(() => {
+    if (
+      selectedToyRent &&
+      selectedToyRent.media &&
+      selectedToyRent.media.length > 0
+    ) {
+      setSelectedMedia(selectedToyRent.media[0].mediaUrl); // Đặt ảnh/video đầu tiên làm mặc định
+    }
+  }, [selectedToyRent]);
+  useEffect(() => {
+    if (
+      selectedToyBuy &&
+      selectedToyBuy.media &&
+      selectedToyBuy.media.length > 0
+    ) {
+      setSelectedMedia(selectedToyBuy.media[0].mediaUrl); // Đặt ảnh/video đầu tiên làm mặc định
+    }
+  }, [selectedToyBuy]);
+  useEffect(() => {
+    if (
+      selectedToyBan &&
+      selectedToyBan.media &&
+      selectedToyBan.media.length > 0
+    ) {
+      setSelectedMedia(selectedToyBan.media[0].mediaUrl); // Đặt ảnh/video đầu tiên làm mặc định
+    }
+  }, [selectedToyBan]);
   const loadCategories = async () => {
     try {
       // Gửi yêu cầu GET để lấy danh sách categories
@@ -452,11 +495,130 @@ const AdminPage = () => {
       console.error("Lỗi khi tải danh sách người dùng", error);
     }
   };
+  const LoadToyRent = async () => {
+    try {
+      const toyResponse = await apiToys.get(`?pageIndex=1&pageSize=2000`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      console.log("Danh sách đồ chơi mới log:", toyResponse.data);
+      // Lọc đồ chơi có trạng thái "Inactive"
+      const inactiveToysRent = toyResponse.data.filter(
+        (toy) => toy.status === "Active" && toy.buyQuantity === -1
+      );
+
+      console.log(`Danh sách đồ chơi có trạng thái thuê:`, inactiveToysRent);
+
+      // Cập nhật dữ liệu đồ chơi
+      setToysRentData(inactiveToysRent);
+      // Cập nhật các đồ chơi của trang hiện tại
+      updateCurrentPageData1(inactiveToysRent);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách đồ chơi: thuê", error);
+    }
+  };
+
+  const LoadToyBuy = async () => {
+    try {
+      const toyResponse = await apiToys.get(`?pageIndex=1&pageSize=2000`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      console.log("Danh sách đồ chơi mới log:", toyResponse.data);
+      // Lọc đồ chơi có trạng thái "Inactive"
+      const inactiveToysBuy = toyResponse.data.filter(
+        (toy) => toy.status === "Active" && toy.buyQuantity >= 1
+      );
+
+      console.log(`Danh sách đồ chơi có trạng thái mua:`, inactiveToysBuy);
+
+      // Cập nhật dữ liệu đồ chơi
+      setToysBuyData(inactiveToysBuy);
+      updateCurrentPageData2(inactiveToysBuy);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách đồ chơi: thuê", error);
+    }
+  };
+  const LoadToyBan = async () => {
+    try {
+      const toyResponse = await apiToys.get(`?pageIndex=1&pageSize=2000`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      console.log("Danh sách đồ chơi mới log:", toyResponse.data);
+      // Lọc đồ chơi có trạng thái "Inactive"
+      const inactiveToysBan = toyResponse.data.filter(
+        (toy) => toy.status === "Banned"
+      );
+
+      console.log(`Danh sách đồ chơi có trạng thái ban:`, inactiveToysBan);
+
+      // Cập nhật dữ liệu đồ chơi
+      setToysBanData(inactiveToysBan);
+      updateCurrentPageData3(inactiveToysBan);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách đồ chơi ban:", error);
+    }
+  };
+  const LoadUserBan = async () => {
+    try {
+      const UserResponse = await apiUser.get(`?pageIndex=1&pageSize=2000`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      console.log("Danh sách user mới log:", UserResponse.data);
+      // Lọc đồ chơi có trạng thái "Inactive"
+      // Lọc người dùng có role ID là 2 hoặc 3
+      const UserData = UserResponse.data.filter(
+        (user) =>
+          (user.role?.id === 2 || user.role?.id === 3) &&
+          user.status === "Banned"
+      );
+
+      console.log(`Danh sách người dùng ban load:`, UserData);
+
+      // Cập nhật dữ liệu đồ chơi
+      setUserUpBanData(UserData);
+      updateCurrentPageData5(UserData);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách người dùng", error);
+    }
+  };
   useEffect(() => {
     // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
     updateCurrentPageData(userUpData);
   }, [currentPageData, userUpData]);
   const [currentToys, setCurrentToys] = useState([]);
+
+  const [currentToys1, setCurrentToys1] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys2, setCurrentToys2] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys3, setCurrentToys3] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys5, setCurrentToys5] = useState([]); // Dữ liệu đồ chơi hiện tại
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData2(toysBuyData);
+  }, [currentPageData1, toysBuyData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData1(toysRentData);
+  }, [currentPage, toysRentData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData3(toysBanData);
+  }, [currentPageData2, toysBanData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+  useEffect(() => {
+    // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
+    updateCurrentPageData5(userUpBanData);
+  }, [currentPageData4, userUpBanData]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
   const updateCurrentPageData = (userUpData) => {
     // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
     const startIndex = (currentPageData - 1) * itemsPerPage;
@@ -468,7 +630,50 @@ const AdminPage = () => {
     // Cập nhật dữ liệu hiển thị
     setCurrentToys(currentItems);
   };
+  const updateCurrentPageData1 = (inactiveToysRent) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = currentPage * itemsPerPage;
 
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = inactiveToysRent.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys1(currentItems);
+  };
+  const updateCurrentPageData2 = (inactiveToysBuy) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData1 - 1) * itemsPerPage;
+    const endIndex = currentPageData1 * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = inactiveToysBuy.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys2(currentItems);
+  };
+  const updateCurrentPageData3 = (inactiveToysBan) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData2 - 1) * itemsPerPage;
+    const endIndex = currentPageData2 * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = inactiveToysBan.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys3(currentItems);
+  };
+  const updateCurrentPageData5 = (UserData) => {
+    // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
+    const startIndex = (currentPageData4 - 1) * itemsPerPage;
+    const endIndex = currentPageData4 * itemsPerPage;
+
+    // Lấy mảng các đồ chơi cho trang hiện tại
+    const currentItems = UserData.slice(startIndex, endIndex);
+
+    // Cập nhật dữ liệu hiển thị
+    setCurrentToys5(currentItems);
+  };
   const handleNext = () => {
     // Kiểm tra điều kiện chuyển trang cho toysRentData
     if (currentPageData * itemsPerPage < userUpData.length) {
@@ -481,6 +686,114 @@ const AdminPage = () => {
     if (currentPageData > 1) {
       setCurrentPageData(currentPageData - 1);
       updateCurrentPageData(userUpData); // Cập nhật dữ liệu cho toysRentData
+    }
+  };
+
+  const handleNext1 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysRentData
+    if (currentPage * itemsPerPage < toysRentData.length) {
+      setCurrentPage(currentPage + 1);
+      updateCurrentPageData1(toysRentData); // Cập nhật dữ liệu cho toysRentData
+    }
+  };
+
+  const handlePrevious1 = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      updateCurrentPageData1(toysRentData); // Cập nhật dữ liệu cho toysRentData
+    }
+  };
+
+  const handleNext2 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysData
+    if (currentPageData1 * itemsPerPage < toysBuyData.length) {
+      setCurrentPageData1(currentPageData1 + 1);
+      updateCurrentPageData2(toysBuyData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handlePrevious2 = () => {
+    if (currentPageData1 > 1) {
+      setCurrentPageData1(currentPageData1 - 1);
+      updateCurrentPageData2(toysBuyData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handleNext3 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysData
+    if (currentPageData2 * itemsPerPage < toysBanData.length) {
+      setCurrentPageData2(currentPageData2 + 1);
+      updateCurrentPageData3(toysBanData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handlePrevious3 = () => {
+    if (currentPageData2 > 1) {
+      setCurrentPageData2(currentPageData2 - 1);
+      updateCurrentPageData3(toysBanData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+  const handleNext5 = () => {
+    // Kiểm tra điều kiện chuyển trang cho toysData
+    if (currentPageData4 * itemsPerPage < userUpBanData.length) {
+      setCurrentPageData4(currentPageData4 + 1);
+      updateCurrentPageData5(userUpBanData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+
+  const handlePrevious5 = () => {
+    if (currentPageData4 > 1) {
+      setCurrentPageData4(currentPageData4 - 1);
+      updateCurrentPageData5(userUpBanData); // Cập nhật dữ liệu cho toysData
+    }
+  };
+  const handleBan = async (toyId) => {
+    // Hiển thị hộp thoại xác nhận
+    const isConfirmed = window.confirm("Bạn có chắc muốn xoá đồ chơi này?");
+
+    // Nếu người dùng không xác nhận, dừng lại
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
+      const requestBody = "Banned"; // Thay đổi thành chuỗi trực tiếp
+
+      // Log request body trước khi gửi đi
+      console.log("Request body:", requestBody);
+
+      // Gửi yêu cầu PATCH
+      const response = await apiToys.patch(
+        `/${toyId}/update-status`,
+        requestBody, // Gửi body như chuỗi
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Log dữ liệu nhận được từ API khi thành công
+      console.log("Response on success:", response);
+
+      if (response.status === 200) {
+        setSelectedToyRent(null);
+        setSelectedToyBuy(null);
+        LoadToyBuy(toysBuyData);
+        LoadToyRent(toysRentData);
+        LoadToyBan(toysBanData);
+      } else {
+        throw new Error(`Failed to update status for toy with ID ${toyId}`);
+      }
+    } catch (error) {
+      // Log lỗi chi tiết nhận được từ API khi có lỗi
+      if (error.response) {
+        console.error("Error response:", error.response);
+      } else {
+        console.error("Error message:", error.message);
+      }
     }
   };
   const handleUserBan = async (userId) => {
@@ -542,31 +855,6 @@ const AdminPage = () => {
       } else {
         console.error("Error message:", error.message);
       }
-    }
-  };
-  const LoadUserBan = async () => {
-    try {
-      const UserResponse = await apiUser.get(`?pageIndex=1&pageSize=2000`, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      });
-
-      console.log("Danh sách user mới log:", UserResponse.data);
-      // Lọc đồ chơi có trạng thái "Inactive"
-      // Lọc người dùng có role ID là 2 hoặc 3
-      const UserData = UserResponse.data.filter(
-        (user) =>
-          (user.role?.id === 2 || user.role?.id === 3 || user.role?.id === 4) &&
-          user.status === "Banned"
-      );
-
-      console.log(`Danh sách người dùng ban load:`, UserData);
-
-      // Cập nhật dữ liệu đồ chơi
-      setUserUpBanData(UserData);
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách người dùng", error);
     }
   };
 
@@ -1098,6 +1386,125 @@ const AdminPage = () => {
       alert("Không thể kết nối đến server. Vui lòng thử lại sau!");
     }
   };
+  const handleUnBan = async (toyId) => {
+    // Hiển thị hộp thoại xác nhận
+    const isConfirmed = window.confirm("Bạn có chắc muốn bỏ cấm đồ chơi này?");
+
+    // Nếu người dùng không xác nhận, dừng lại
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
+      const requestBody = "Active"; // Thay đổi thành chuỗi trực tiếp
+
+      // Log request body trước khi gửi đi
+      console.log("Request body:", requestBody);
+
+      // Gửi yêu cầu PATCH
+      const response = await apiToys.patch(
+        `/${toyId}/update-status`,
+        requestBody, // Gửi body như chuỗi
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Log dữ liệu nhận được từ API khi thành công
+      console.log("Response on success:", response);
+
+      if (response.status === 200) {
+        setSelectedToyBan(null);
+        LoadToyBan(toysBanData);
+        LoadToyBuy(toysBuyData);
+        LoadToyRent(toysRentData);
+      } else {
+        throw new Error(`Failed to update status for toy with ID ${toyId}`);
+      }
+    } catch (error) {
+      // Log lỗi chi tiết nhận được từ API khi có lỗi
+      if (error.response) {
+        console.error("Error response:", error.response);
+      } else {
+        console.error("Error message:", error.message);
+      }
+    }
+  };
+  const handleUserUnBan = async (userId) => {
+    // Hiển thị hộp thoại xác nhận
+    const isConfirmed = window.confirm("Bạn có chắc muốn cấm người dùng này?");
+
+    // Nếu người dùng không xác nhận, dừng lại
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
+      const requestBody = "Active"; // Thay đổi thành chuỗi trực tiếp
+
+      // Log request body trước khi gửi đi
+      console.log("Request body:", requestBody);
+      console.log("d:", selectedUserUpBan);
+      const formData = new FormData();
+
+      //Thêm các trường dữ liệu vào formData
+      formData.append("fullName", selectedUserUpBan.fullName || "Default Name");
+      formData.append(
+        "email",
+        selectedUserUpBan.email || "default@example.com"
+      );
+      formData.append(
+        "password",
+        selectedUserUpBan.password || "defaultPassword"
+      );
+      formData.append(
+        "createDate",
+        selectedUserUpBan.createDate || new Date().toISOString()
+      );
+      formData.append("phone", selectedUserUpBan.phone || "0000000000");
+      formData.append("dob", selectedUserUpBan.dob || new Date().toISOString());
+      formData.append(
+        "address",
+        selectedUserUpBan.address || "Default Address"
+      );
+      formData.append("status", requestBody || "Active");
+      formData.append("roleId", selectedUserUpBan.role.id || "");
+      formData.append("avatarUrl", selectedUserUpBan.avatarUrl || "");
+      // formData.append("description", selectedUserUp.description || "");
+      console.log("dữ liệu sẽ gửi", formData.data);
+
+      const response = await apiUser.put(`/${userId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // Log dữ liệu nhận được từ API khi thành công
+      console.log("Response on success:", response);
+
+      if (response.status === 204) {
+        setSelectedUserUpBan(null);
+        LoadUserBan(userUpBanData);
+        LoadUser(userUpData);
+      } else {
+        throw new Error(`Failed to update status for user with ID ${userId}`);
+      }
+    } catch (error) {
+      // Log lỗi chi tiết nhận được từ API khi có lỗi
+      if (error.response) {
+        console.error("Error response:", error.response);
+      } else {
+        console.error("Error message:", error.message);
+      }
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewUser((prev) => ({ ...prev, [name]: value }));
@@ -1874,7 +2281,7 @@ const AdminPage = () => {
                             className=" w-full max-w-[70%] h-auto object-contain "
                           />
                         ) : (
-                          <span>No media available</span>
+                          <span></span>
                         )}
                       </div>
                     </div>
@@ -1937,7 +2344,1018 @@ const AdminPage = () => {
             )}
           </div>
         );
+      case "ToyRent":
+        return (
+          <div>
+            <div className="flex flex-col">
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow">
+                    <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
+                      <thead className=" bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          ></th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Tên đồ chơi
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Giá
+                          </th>
 
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Xuất xứ
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Tuổi
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Thương hiệu
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Ngày tạo
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Trạng thái
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Hành động
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                        {currentToys1 &&
+                        Array.isArray(currentToys1) &&
+                        currentToys1.length > 0 ? (
+                          currentToys1.map((toy) => (
+                            <tr
+                              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                              key={toy.id}
+                            >
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                  {toy.media && toy.media.length > 0 ? (
+                                    <img
+                                      src={toy.media[0].mediaUrl}
+                                      alt="Toy Media 1"
+                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                    />
+                                  ) : (
+                                    <span></span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white truncate w-[200px]">
+                                  {toy.name}
+                                </div>
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {(toy.price || 0).toLocaleString()} VNĐ
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.origin}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.age}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.brand}
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {new Date(toy.createDate).toLocaleDateString()}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {statusMapping[toy.status] ||
+                                  "Trạng thái không xác định"}
+                              </td>
+
+                              <td className="p-4 space-x-2 whitespace-nowrap">
+                                {/* Nút "Detail" */}
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedToyRent(toy); // Lưu thông tin toy vào state
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
+                                >
+                                  Thông tin
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="13" className="p-4 text-center"></td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handlePrevious1}
+                  disabled={currentPage === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPage === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 mr-1 -ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  Trước
+                </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPage} /{" "}
+                  {Math.ceil(toysRentData.length / itemsPerPage)}
+                </span>
+                <button
+                  onClick={handleNext1}
+                  disabled={
+                    currentPage ===
+                    Math.ceil(toysRentData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPage ===
+                    Math.ceil(toysRentData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
+                >
+                  Sau
+                  <svg
+                    className="w-5 h-5 ml-1 -mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {selectedToyRent && !isEditing && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
+                  {/* Nút đóng ở góc phải */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedToyRent(null)} // Đóng chi tiết khi bấm nút
+                    className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-700"
+                  >
+                    &times;
+                  </button>
+
+                  <div className="flex flex-wrap lg:flex-nowrap gap-10">
+                    {/* Phần hình ảnh */}
+                    <div className="flex-1 flex justify-center items-center flex-col max-w-md mx-auto mt-20">
+                      {/* Hiển thị ảnh hoặc video */}
+                      <div className="w-80 h-80">
+                        {selectedMedia &&
+                        selectedToyRent.media.some(
+                          (media) => media.mediaUrl === selectedMedia
+                        ) ? (
+                          selectedMedia.endsWith(".mp4?alt=media") ? (
+                            <video
+                              src={selectedMedia}
+                              controls
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          ) : (
+                            <img
+                              src={selectedMedia}
+                              alt="Media"
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          )
+                        ) : null}
+                      </div>
+
+                      {/* Ảnh/video nhỏ */}
+                      <div className="flex gap-4 flex-wrap justify-center mt-4">
+                        {" "}
+                        {/* Giữ cho các ảnh nhỏ xếp dưới ảnh lớn */}
+                        {selectedToyRent.media.map((media, index) => (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center"
+                          >
+                            {/* Hiển thị video nếu media là video */}
+                            {media.mediaUrl.endsWith(".mp4?alt=media") ? (
+                              <video
+                                src={media.mediaUrl}
+                                alt={`Video ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+                ${
+                  selectedMedia === media.mediaUrl
+                    ? "border-orange-500 scale-105"
+                    : "border-gray-300"
+                }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn video
+                              />
+                            ) : (
+                              // Hiển thị ảnh nếu media là ảnh
+                              <img
+                                src={media.mediaUrl}
+                                alt={`Hình ảnh ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+                ${
+                  selectedMedia === media.mediaUrl
+                    ? "border-orange-500 scale-105"
+                    : "border-gray-300"
+                }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn ảnh
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Phần thông tin */}
+                    <div className="flex-1 text-sm space-y-6">
+                      <h2 className="text-4xl font-bold mb-10 text-center">
+                        Thông tin đồ chơi
+                      </h2>
+                      <p>
+                        <strong>Tên đồ chơi:</strong> {selectedToyRent.name}
+                      </p>
+                      <p>
+                        <strong>Giá:</strong>{" "}
+                        {(selectedToyRent.price || 0).toLocaleString()} VNĐ
+                      </p>
+                      <p>
+                        <strong>Xuất xứ:</strong> {selectedToyRent.origin}
+                      </p>
+                      <p>
+                        <strong>Tuổi:</strong> {selectedToyRent.age}
+                      </p>
+
+                      <p>
+                        <strong>Thương Hiệu:</strong> {selectedToyRent.brand}
+                      </p>
+                      <p>
+                        <strong>Danh mục:</strong>{" "}
+                        {selectedToyRent.category.name}
+                      </p>
+                      <p>
+                        <strong>Ngày tạo:</strong>{" "}
+                        {new Date(
+                          selectedToyRent.createDate
+                        ).toLocaleDateString()}
+                      </p>
+
+                      <p>
+                        <strong>Trạng thái:</strong>{" "}
+                        {statusMapping[selectedToyRent.status] ||
+                          "Trạng thái không xác định"}
+                      </p>
+                      <p className=" space-x-2 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
+                            handleBan(selectedToyRent.id); // Gọi hàm handleDelete
+                          }}
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
+                        >
+                          Xóa
+                        </button>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case "ToyBuy":
+        return (
+          <div>
+            <div className="flex flex-col">
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow">
+                    <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
+                      <thead className=" bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          ></th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Tên đồ chơi
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Giá
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Xuất xứ
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Tuổi
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Thương hiệu
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Ngày tạo
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Trạng thái
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Hành động
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                        {currentToys2 &&
+                        Array.isArray(currentToys2) &&
+                        currentToys2.length > 0 ? (
+                          currentToys2.map((toy) => (
+                            <tr
+                              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                              key={toy.id}
+                            >
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                  {toy.media && toy.media.length > 0 ? (
+                                    <img
+                                      src={toy.media[0].mediaUrl}
+                                      alt="Toy Media 1"
+                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                    />
+                                  ) : (
+                                    <span></span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white truncate w-[200px]">
+                                  {toy.name}
+                                </div>
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {(toy.price || 0).toLocaleString()} VNĐ
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.origin}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.age}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.brand}
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {new Date(toy.createDate).toLocaleDateString()}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {statusMapping[toy.status] ||
+                                  "Trạng thái không xác định"}
+                              </td>
+
+                              <td className="p-4 space-x-2 whitespace-nowrap">
+                                {/* Nút "Detail" */}
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedToyBuy(toy); // Lưu thông tin toy vào state
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
+                                >
+                                  Thông tin
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="13" className="p-4 text-center"></td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handlePrevious2}
+                  disabled={currentPageData1 === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData1 === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 mr-1 -ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  Trước
+                </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData1} /{" "}
+                  {Math.ceil(toysBuyData.length / itemsPerPage)}
+                </span>
+                <button
+                  onClick={handleNext2}
+                  disabled={
+                    currentPageData1 ===
+                    Math.ceil(toysBuyData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData1 ===
+                    Math.ceil(toysBuyData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
+                >
+                  Sau
+                  <svg
+                    className="w-5 h-5 ml-1 -mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {selectedToyBuy && !isEditing && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
+                  {/* Nút đóng ở góc phải */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedToyBuy(null)} // Đóng chi tiết khi bấm nút
+                    className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-700"
+                  >
+                    &times;
+                  </button>
+
+                  <div className="flex flex-wrap lg:flex-nowrap gap-10">
+                    {/* Phần hình ảnh */}
+                    <div className="flex-1 flex justify-center items-center flex-col max-w-md mx-auto mt-20">
+                      {/* Hiển thị ảnh hoặc video */}
+                      <div className="w-80 h-80">
+                        {selectedMedia &&
+                        selectedToyBuy.media.some(
+                          (media) => media.mediaUrl === selectedMedia
+                        ) ? (
+                          selectedMedia.endsWith(".mp4?alt=media") ? (
+                            <video
+                              src={selectedMedia}
+                              controls
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          ) : (
+                            <img
+                              src={selectedMedia}
+                              alt="Media"
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          )
+                        ) : null}
+                      </div>
+
+                      {/* Ảnh/video nhỏ */}
+                      <div className="flex gap-4 flex-wrap justify-center mt-4">
+                        {" "}
+                        {/* Giữ cho các ảnh nhỏ xếp dưới ảnh lớn */}
+                        {selectedToyBuy.media.map((media, index) => (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center"
+                          >
+                            {/* Hiển thị video nếu media là video */}
+                            {media.mediaUrl.endsWith(".mp4?alt=media") ? (
+                              <video
+                                src={media.mediaUrl}
+                                alt={`Video ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+                ${
+                  selectedMedia === media.mediaUrl
+                    ? "border-orange-500 scale-105"
+                    : "border-gray-300"
+                }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn video
+                              />
+                            ) : (
+                              // Hiển thị ảnh nếu media là ảnh
+                              <img
+                                src={media.mediaUrl}
+                                alt={`Hình ảnh ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+                ${
+                  selectedMedia === media.mediaUrl
+                    ? "border-orange-500 scale-105"
+                    : "border-gray-300"
+                }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn ảnh
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Phần thông tin */}
+                    <div className="flex-1 text-sm space-y-6">
+                      <h2 className="text-4xl font-bold mb-10 text-center">
+                        Thông tin đồ chơi
+                      </h2>
+                      <p>
+                        <strong>Tên đồ chơi:</strong> {selectedToyBuy.name}
+                      </p>
+                      <p>
+                        <strong>Giá:</strong>{" "}
+                        {(selectedToyBuy.price || 0).toLocaleString()} VNĐ
+                      </p>
+                      <p>
+                        <strong>Xuất xứ:</strong> {selectedToyBuy.origin}
+                      </p>
+                      <p>
+                        <strong>Tuổi:</strong> {selectedToyBuy.age}
+                      </p>
+
+                      <p>
+                        <strong>Thương Hiệu:</strong> {selectedToyBuy.brand}
+                      </p>
+                      <p>
+                        <strong>Danh mục:</strong>{" "}
+                        {selectedToyBuy.category.name}
+                      </p>
+                      <p>
+                        <strong>Ngày tạo:</strong>{" "}
+                        {new Date(
+                          selectedToyBuy.createDate
+                        ).toLocaleDateString()}
+                      </p>
+
+                      <p>
+                        <strong>Trạng thái:</strong>{" "}
+                        {statusMapping[selectedToyBuy.status] ||
+                          "Trạng thái không xác định"}
+                      </p>
+                      <p className=" space-x-2 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
+                            handleBan(selectedToyBuy.id); // Gọi hàm handleDelete
+                          }}
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
+                        >
+                          Xoá
+                        </button>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      case "ToyBan":
+        return (
+          <div>
+            <div className="flex flex-col">
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow">
+                    <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
+                      <thead className=" bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          ></th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Tên đồ chơi
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Giá
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Xuất xứ
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Tuổi
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Thương hiệu
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Ngày tạo
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Trạng thái
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Hành động
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                        {currentToys3 &&
+                        Array.isArray(currentToys3) &&
+                        currentToys3.length > 0 ? (
+                          currentToys3.map((toy) => (
+                            <tr
+                              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                              key={toy.id}
+                            >
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                  {toy.media && toy.media.length > 0 ? (
+                                    <img
+                                      src={toy.media[0].mediaUrl}
+                                      alt="Toy Media 1"
+                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                    />
+                                  ) : (
+                                    <span></span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white truncate w-[200px]">
+                                  {toy.name}
+                                </div>
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {(toy.price || 0).toLocaleString()} VNĐ
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.origin}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.age}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {toy.brand}
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {new Date(toy.createDate).toLocaleDateString()}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {statusMapping[toy.status] ||
+                                  "Trạng thái không xác định"}
+                              </td>
+
+                              <td className="p-4 space-x-2 whitespace-nowrap">
+                                {/* Nút "Detail" */}
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedToyBan(toy); // Lưu thông tin toy vào state
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
+                                >
+                                  Thông tin
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="13" className="p-4 text-center"></td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handlePrevious3}
+                  disabled={currentPageData2 === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData2 === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 mr-1 -ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  Trước
+                </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData2} /{" "}
+                  {Math.ceil(toysBanData.length / itemsPerPage)}
+                </span>
+                <button
+                  onClick={handleNext3}
+                  disabled={
+                    currentPageData2 ===
+                    Math.ceil(toysBanData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData2 ===
+                    Math.ceil(toysBanData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
+                >
+                  Sau
+                  <svg
+                    className="w-5 h-5 ml-1 -mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {selectedToyBan && !isEditing && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative  z-[1010]">
+                  {/* Nút đóng ở góc phải */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedToyBan(null)} // Đóng chi tiết khi bấm nút
+                    className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-700"
+                  >
+                    &times;
+                  </button>
+
+                  <div className="flex flex-wrap lg:flex-nowrap gap-10">
+                    {/* Phần hình ảnh */}
+                    <div className="flex-1 flex justify-center items-center flex-col max-w-md mx-auto mt-20">
+                      {/* Hiển thị ảnh hoặc video */}
+                      <div className="w-80 h-80">
+                        {selectedMedia &&
+                        selectedToyBan.media.some(
+                          (media) => media.mediaUrl === selectedMedia
+                        ) ? (
+                          selectedMedia.endsWith(".mp4?alt=media") ? (
+                            <video
+                              src={selectedMedia}
+                              controls
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          ) : (
+                            <img
+                              src={selectedMedia}
+                              alt="Media"
+                              className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                            />
+                          )
+                        ) : null}
+                      </div>
+
+                      {/* Ảnh/video nhỏ */}
+                      <div className="flex gap-4 flex-wrap justify-center mt-4">
+                        {" "}
+                        {/* Giữ cho các ảnh nhỏ xếp dưới ảnh lớn */}
+                        {selectedToyBan.media.map((media, index) => (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center"
+                          >
+                            {/* Hiển thị video nếu media là video */}
+                            {media.mediaUrl.endsWith(".mp4?alt=media") ? (
+                              <video
+                                src={media.mediaUrl}
+                                alt={`Video ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+                ${
+                  selectedMedia === media.mediaUrl
+                    ? "border-orange-500 scale-105"
+                    : "border-gray-300"
+                }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn video
+                              />
+                            ) : (
+                              // Hiển thị ảnh nếu media là ảnh
+                              <img
+                                src={media.mediaUrl}
+                                alt={`Hình ảnh ${index + 1}`}
+                                className={`w-20 h-20 object-cover rounded-lg border-2 cursor-pointer transition-transform duration-200 
+                ${
+                  selectedMedia === media.mediaUrl
+                    ? "border-orange-500 scale-105"
+                    : "border-gray-300"
+                }`}
+                                onClick={() => setSelectedMedia(media.mediaUrl)} // Cập nhật media khi chọn ảnh
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Phần thông tin */}
+                    <div className="flex-1 text-sm space-y-6">
+                      <h2 className="text-4xl font-bold mb-10 text-center">
+                        Thông tin đồ chơi
+                      </h2>
+                      <p>
+                        <strong>Tên đồ chơi:</strong> {selectedToyBan.name}
+                      </p>
+                      <p>
+                        <strong>Giá:</strong>{" "}
+                        {(selectedToyBan.price || 0).toLocaleString()} VNĐ
+                      </p>
+                      <p>
+                        <strong>Xuất xứ:</strong> {selectedToyBan.origin}
+                      </p>
+                      <p>
+                        <strong>Tuổi:</strong> {selectedToyBan.age}
+                      </p>
+
+                      <p>
+                        <strong>Thương Hiệu:</strong> {selectedToyBan.brand}
+                      </p>
+                      <p>
+                        <strong>Danh mục:</strong>{" "}
+                        {selectedToyBan.category.name}
+                      </p>
+                      <p>
+                        <strong>Ngày tạo:</strong>{" "}
+                        {new Date(
+                          selectedToyBan.createDate
+                        ).toLocaleDateString()}
+                      </p>
+
+                      <p>
+                        <strong>Trạng thái:</strong>{" "}
+                        {statusMapping[selectedToyBan.status] ||
+                          "Trạng thái không xác định"}
+                      </p>
+                      <p className=" space-x-2 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
+                            handleUnBan(selectedToyBan.id); // Gọi hàm handleDelete
+                          }}
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
+                        >
+                          Bỏ lệnh cấm
+                        </button>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
       case "dashboard":
         return (
           <div>
@@ -2111,7 +3529,280 @@ const AdminPage = () => {
             </ul>
           </div>
         );
+      case "UserBan":
+        return (
+          <div>
+            <div className="flex flex-col">
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow">
+                    <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
+                      <thead className=" bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          ></th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Tên người dùng
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Email
+                          </th>
 
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Số điện thoại
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Vai trò
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Trạng thái
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Hành động
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                        {currentToys5 &&
+                        Array.isArray(currentToys5) &&
+                        currentToys5.length > 0 ? (
+                          currentToys5.map((user) => (
+                            <tr
+                              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                              key={user.id}
+                            >
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                  {user.avatarUrl &&
+                                  user.avatarUrl.length > 0 ? (
+                                    <img
+                                      src={user.avatarUrl}
+                                      alt="User-Avatar"
+                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                    />
+                                  ) : (
+                                    <span></span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                  {user.fullName}
+                                </div>
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {user.email}
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {user.phone}
+                              </td>
+
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {user.role.name}
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {statusMapping[user.status] ||
+                                  "Trạng thái không xác định"}
+                              </td>
+
+                              <td className="p-4 space-x-2 whitespace-nowrap">
+                                {/* Nút "Detail" */}
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedUserUpBan(user); // Lưu thông tin toy vào state
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
+                                >
+                                  Thông tin
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="13" className="p-4 text-center"></td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 right-0 flex justify-end w-full p-4 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handlePrevious5}
+                  disabled={currentPageData4 === 1}
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData4 === 1
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5 mr-1 -ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  Trước
+                </button>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Trang {currentPageData4} /{" "}
+                  {Math.ceil(userUpBanData.length / itemsPerPage)}
+                </span>
+                <button
+                  onClick={handleNext5}
+                  disabled={
+                    currentPageData4 ===
+                    Math.ceil(userUpBanData.length / itemsPerPage)
+                  }
+                  className={`inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg ${
+                    currentPageData4 ===
+                    Math.ceil(userUpBanData.length / itemsPerPage)
+                      ? "bg-gray-300"
+                      : "bg-blue-500 hover:bg-red-500"
+                  }`}
+                >
+                  Sau
+                  <svg
+                    className="w-5 h-5 ml-1 -mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {selectedUserUpBan && !isEditing && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center  z-[1000]">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
+                  {/* Nút đóng ở góc phải */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedUserUpBan(null)} // Đóng chi tiết khi bấm nút
+                    className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-700"
+                  >
+                    &times;
+                  </button>
+
+                  <div className="flex flex-wrap lg:flex-nowrap gap-10">
+                    {/* Phần hình ảnh */}
+                    <div className="flex-1 flex justify-center items-center flex-col max-w-md mx-auto mt-20">
+                      {/* Hiển thị ảnh hoặc video */}
+                      <div className="w-auto h-auto">
+                        {selectedUserUpBan.avatarUrl &&
+                        selectedUserUpBan.avatarUrl.length > 0 ? (
+                          <img
+                            src={selectedUserUpBan.avatarUrl}
+                            alt="User-Avatar"
+                            className="w-full max-w-[70%] h-auto object-contain"
+                          />
+                        ) : (
+                          <span></span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Phần thông tin */}
+                    <div className="flex-1 text-sm space-y-6">
+                      <h2 className="text-4xl font-bold mb-10 text-center">
+                        Thông tin người dùng
+                      </h2>
+                      <p>
+                        <strong>Tên người dùng:</strong>{" "}
+                        {selectedUserUpBan.fullName}
+                      </p>
+                      <p>
+                        <strong>Email:</strong> {selectedUserUpBan.email}
+                      </p>
+                      <p>
+                        <strong>Ngày tạo:</strong>{" "}
+                        {new Date(
+                          selectedUserUpBan.createDate
+                        ).toLocaleDateString()}
+                      </p>
+                      <p>
+                        <strong>Số điện thoại:</strong>{" "}
+                        {selectedUserUpBan.phone}
+                      </p>
+
+                      <p>
+                        <strong>Ngày sinh:</strong>{" "}
+                        {new Date(selectedUserUpBan.dob).toLocaleDateString()}
+                      </p>
+                      <p>
+                        <strong>Địa chỉ:</strong>
+                        {selectedUserUpBan.address}
+                      </p>
+                      <p>
+                        <strong>Vai trò:</strong> {selectedUserUpBan.role.name}
+                      </p>
+
+                      <p>
+                        <strong>Trạng thái:</strong>{" "}
+                        {statusMapping[selectedUserUpBan.status] ||
+                          "Trạng thái không xác định"}
+                      </p>
+                      <p className=" space-x-2 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
+                            handleUserUnBan(selectedUserUpBan.id); // Gọi hàm handleDelete
+                          }}
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
+                        >
+                          Bỏ lệnh cấm
+                        </button>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
       default:
         return null;
     }
@@ -2143,14 +3834,14 @@ const AdminPage = () => {
             >
               <span className="icon-class mr-2">🏢</span> Bảng thống kê
             </button>
-            <button
+            {/* <button
               onClick={() => setSelectedTab("info")}
               className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
                 selectedTab === "info" ? "bg-gray-300" : ""
               }`}
             >
               <span className="icon-class mr-2">👤</span> Thông tin cá nhân
-            </button>
+            </button> */}
 
             <button
               onClick={() => setSelectedTab("User")}
@@ -2158,7 +3849,42 @@ const AdminPage = () => {
                 selectedTab === "User" ? "bg-gray-300" : ""
               }`}
             >
-              <span className="icon-class mr-2">📦</span> Danh sách người dùng
+              <span className="icon-class mr-2">👥</span> Danh sách người dùng
+            </button>
+            <button
+              onClick={() => setSelectedTab("UserBan")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "UserBan" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">👥 🚫</span> Danh sách người
+              dùng bị cấm
+            </button>
+            <button
+              onClick={() => setSelectedTab("ToyRent")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "ToyRent" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">📦</span> Danh sách sản phẩm
+              thuê
+            </button>
+            <button
+              onClick={() => setSelectedTab("ToyBuy")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "ToyBuy" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">📦</span> Danh sách sản phẩm bán
+            </button>
+            <button
+              onClick={() => setSelectedTab("ToyBan")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "ToyBan" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">📦 🚫</span> Danh sách sản phẩm
+              cấm
             </button>
           </nav>
         </aside>

@@ -3223,7 +3223,7 @@ const StaffPage = () => {
                             className="w-full max-w-[70%] h-auto object-contain"
                           />
                         ) : (
-                          <span>No media available</span>
+                          <span></span>
                         )}
                       </div>
                     </div>
@@ -3335,7 +3335,7 @@ const StaffPage = () => {
                 selectedTab === "ToyRent" ? "bg-gray-300" : ""
               }`}
             >
-              <span className="icon-class mr-2">👥</span> Danh sách sản phẩm chờ
+              <span className="icon-class mr-2">📦</span> Danh sách sản phẩm chờ
               thuê
             </button>
 
@@ -3345,7 +3345,7 @@ const StaffPage = () => {
                 selectedTab === "ToyBuy" ? "bg-gray-300" : ""
               }`}
             >
-              <span className="icon-class mr-2">🏢</span> Danh sách sản phẩm bán
+              <span className="icon-class mr-2">📦</span> Danh sách sản phẩm bán
             </button>
             <button
               onClick={() => setSelectedTab("ToyBan")}
@@ -3353,8 +3353,8 @@ const StaffPage = () => {
                 selectedTab === "ToyBan" ? "bg-gray-300" : ""
               }`}
             >
-              <span className="icon-class mr-2">🏢</span> Danh sách sản phẩm bị
-              cấm
+              <span className="icon-class mr-2">📦 🚫</span> Danh sách sản phẩm
+              bị cấm
             </button>
             <button
               onClick={() => setSelectedTab("User")}
@@ -3362,7 +3362,7 @@ const StaffPage = () => {
                 selectedTab === "User" ? "bg-gray-300" : ""
               }`}
             >
-              <span className="icon-class mr-2">🏢</span> Danh sách người dùng
+              <span className="icon-class mr-2">👥</span> Danh sách người dùng
             </button>
             <button
               onClick={() => setSelectedTab("UserBan")}
@@ -3370,8 +3370,8 @@ const StaffPage = () => {
                 selectedTab === "UserBan" ? "bg-gray-300" : ""
               }`}
             >
-              <span className="icon-class mr-2">🏢</span> Danh sách người dùng
-              bị cấm
+              <span className="icon-class mr-2">👥 🚫</span> Danh sách người
+              dùng bị cấm
             </button>
             <button
               onClick={() => setSelectedTab("Status")}
@@ -3379,7 +3379,7 @@ const StaffPage = () => {
                 selectedTab === "Status" ? "bg-gray-300" : ""
               }`}
             >
-              <span className="icon-class mr-2">🏢</span> Danh sách đơn hàng
+              <span className="icon-class mr-2">🧾</span> Danh sách đơn hàng
               đang chờ trả
             </button>
           </nav>
