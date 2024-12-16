@@ -14,6 +14,8 @@ namespace EduToyRentRepositories.Interface
         IGenericRepository<Category> CategoryRepository { get; }
         IGenericRepository<Conversation> ConversationRepository { get; }
         IGenericRepository<Media> MediaRepository { get; }
+        IGenericRepository<Notification> NotificationRepository { get; }
+        IGenericRepository<OrderCheckImage> OrderCheckImageRepository { get; }
         IGenericRepository<Message> MessageRepository { get; }
         IGenericRepository<Order> OrderRepository { get; }
         IGenericRepository<OrderDetail> OrderDetailRepository { get; }

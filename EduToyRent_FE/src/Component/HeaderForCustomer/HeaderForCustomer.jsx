@@ -10,6 +10,7 @@ import apiCart from "../../service/ApiCart";
 import apiCartItem from "../../service/ApiCartItem";
 import exampleImage from "../../assets/UserUnknow.png";
 import Notifications from "../Notification/Notification";
+import { jwtDecode } from "jwt-decode";
 
 const HeaderForCustomer = () => {
   const [cartVisible, setCartVisible] = useState(false);
@@ -37,7 +38,22 @@ const HeaderForCustomer = () => {
   const handleTopUp = () => {
     navigate("/top-up");
   };
-
+  useEffect(() => {
+    const token = Cookies.get("userToken");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const extractedUserId =
+          decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+        console.log("Decoded user ID from token:", extractedUserId);
+        setUserId(extractedUserId);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    } else {
+      console.log("No token found in cookies.");
+    }
+  }, []);
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -585,7 +601,7 @@ const HeaderForCustomer = () => {
                     className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-lg w-96 h-auto p-4"
                     style={{ zIndex: 1 }}
                   >
-                    <Notifications />
+                    <Notifications show={isNotificationOpen} />
                   </div>
                 )}
               </div>

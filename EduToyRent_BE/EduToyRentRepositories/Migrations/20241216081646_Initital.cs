@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EduToyRentRepositories.Migrations
 {
     /// <inheritdoc />
-    public partial class Intial : Migration
+    public partial class Initital : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -175,6 +175,37 @@ namespace EduToyRentRepositories.Migrations
                         principalTable: "Conversations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Notification",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    Notify = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SentTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notification", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderCheckImages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    MediaUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OrderDetailId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderCheckImages", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -542,6 +573,16 @@ namespace EduToyRentRepositories.Migrations
                 column: "SenderId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Notification_UserId",
+                table: "Notification",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderCheckImages_OrderDetailId",
+                table: "OrderCheckImages",
+                column: "OrderDetailId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OrderDetails_OrderId",
                 table: "OrderDetails",
                 column: "OrderId");
@@ -712,6 +753,22 @@ namespace EduToyRentRepositories.Migrations
                 onDelete: ReferentialAction.Restrict);
 
             migrationBuilder.AddForeignKey(
+                name: "FK_Notification_Users_UserId",
+                table: "Notification",
+                column: "UserId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_OrderCheckImages_OrderDetails_OrderDetailId",
+                table: "OrderCheckImages",
+                column: "OrderDetailId",
+                principalTable: "OrderDetails",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_OrderDetails_Orders_OrderId",
                 table: "OrderDetails",
                 column: "OrderId",
@@ -824,12 +881,8 @@ namespace EduToyRentRepositories.Migrations
                 table: "Wallets");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_OrderDetails_Orders_OrderId",
-                table: "OrderDetails");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_OrderDetails_Ratings_RatingId",
-                table: "OrderDetails");
+                name: "FK_Ratings_OrderDetails_OrderDetailId",
+                table: "Ratings");
 
             migrationBuilder.DropTable(
                 name: "CartItems");
@@ -839,6 +892,12 @@ namespace EduToyRentRepositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "Messages");
+
+            migrationBuilder.DropTable(
+                name: "Notification");
+
+            migrationBuilder.DropTable(
+                name: "OrderCheckImages");
 
             migrationBuilder.DropTable(
                 name: "OrderHistories");
@@ -889,13 +948,13 @@ namespace EduToyRentRepositories.Migrations
                 name: "Wallets");
 
             migrationBuilder.DropTable(
+                name: "OrderDetails");
+
+            migrationBuilder.DropTable(
                 name: "Orders");
 
             migrationBuilder.DropTable(
                 name: "Ratings");
-
-            migrationBuilder.DropTable(
-                name: "OrderDetails");
         }
     }
 }

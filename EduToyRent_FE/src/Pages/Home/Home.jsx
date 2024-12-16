@@ -622,7 +622,7 @@ const Home = () => {
                       HandleToyDetail(deal);
                     }}
                   >
-                    <div
+                    {/* <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
                       style={{
                         backgroundImage: `url(${
@@ -631,8 +631,15 @@ const Home = () => {
                             : ""
                         })`,
                       }}
+                    ></div> */}
+                    <div
+                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
+                      style={{
+                        backgroundImage: `url(${
+                          deal.media?.[0]?.mediaUrl || ""
+                        })`,
+                      }}
                     ></div>
-
                     <p
                       className="text-[#0e161b] text-base font-medium overflow-hidden text-ellipsis"
                       style={{

@@ -1,30 +1,99 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
+import * as signalR from "@microsoft/signalr";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
-const Notifications = () => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Đơn hàng đã được xác nhận",
-      message: "Đơn hàng #12345 đã được xác nhận và đang chuẩn bị giao.",
-      date: new Date(),
-      isRead: false,
-    },
-    {
-      id: 2,
-      title: "Đơn hàng đã giao thành công",
-      message: "Đơn hàng #12344 đã được giao thành công. Cảm ơn bạn!",
-      date: new Date(Date.now() - 10000000),
-      isRead: true,
-    },
-    {
-      id: 3,
-      title: "Đơn hàng bị hủy",
-      message:
-        "Đơn hàng #12343 đã bị hủy do không xác nhận trong thời gian quy định.",
-      date: new Date(Date.now() - 50000000),
-      isRead: false,
-    },
-  ]);
+const Notifications = ({ show }) => {
+  const [notifications, setNotifications] = useState([]);
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    console.log("Checking token to get userId...");
+    const token = Cookies.get("userToken");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const extractedUserId =
+          decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+        console.log("User ID decoded from token:", extractedUserId);
+        setUserId(extractedUserId);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    } else {
+      console.error("Token not found in cookies.");
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log("Notifications component - show:", show, "userId:", userId);
+
+    if (!show || !userId) {
+      console.log("Conditions not met (show && userId), not fetching notifications.");
+      return;
+    }
+
+    console.log("Fetching notifications for userId:", userId);
+
+    axios
+      .get(`https://localhost:44350/api/v1/Notifications/User/${userId}`)
+      .then((response) => {
+        console.log("Old notifications fetched:", response.data);
+        const allNotifications = response.data.map((n) => ({
+          id: n.id,
+          message: n.notify,
+          date: new Date(n.sentTime),
+          isRead: n.isRead,
+        }));
+        setNotifications(allNotifications);
+      })
+      .catch((error) => {
+        console.error(
+          "Error fetching notifications:",
+          error.response?.data || error.message
+        );
+      });
+
+    console.log("Connecting to SignalR hub...");
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl("https://localhost:44350/notificationHub")
+      .withAutomaticReconnect()
+      .build();
+
+    connection
+      .start()
+      .then(() => {
+        console.log("Connected to NotificationHub!");
+        connection.on("ReceiveNotification", (notification) => {
+          console.log("New Notification Received:", notification);
+          setNotifications((prevNotifications) => [
+            {
+              id: notification.id,
+              title: "Thông báo",
+              message: notification.notify,
+              date: new Date(notification.sentTime),
+              isRead: notification.isRead || false,
+            },
+            ...prevNotifications,
+          ]);
+        });
+      })
+      .catch((err) => console.error("Error connecting to SignalR:", err));
+
+    return () => {
+      console.log("Cleaning up Notifications component, stopping connection...");
+      connection.stop();
+    };
+  }, [show, userId]);
+
+  if (!show) {
+    console.log("Notifications component is hidden (show=false).");
+    return null; 
+  }
+
+  console.log("Rendering notifications. Count:", notifications.length);
 
   if (!notifications || notifications.length === 0) {
     return (
