@@ -34,6 +34,28 @@ const TopUpSuccess = () => {
         console.warn("Cookie 'userDataReal' is missing or undefined.");
       }
 
+      apiWalletTransaction
+        .post(
+          "",
+          {
+            transactionType: "Nạp tiền",
+            amount: paymentPrice,
+            date: new Date().toISOString(),
+            walletId: parsedUserData.walletId,
+            paymentTypeId: 5,
+            orderId: null,
+            status: "Success",
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        )
+        .then((response3) => {
+          navigate("/top-up-complete");
+        });
+
       apiWallets
         .get("/" + parsedUserData.walletId, {
           headers: {
@@ -58,26 +80,6 @@ const TopUpSuccess = () => {
               },
             }
           );
-          await apiWalletTransaction
-            .post(
-              "",
-              {
-                transactionType: "Nạp tiền",
-                amount: paymentPrice,
-                date: new Date().toISOString(),
-                walletId: walletTmp.id,
-                paymentTypeId: 5,
-                orderId: null,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${Cookies.get("userToken")}`,
-                },
-              }
-            )
-            .then((response3) => {
-              navigate("/top-up-complete");
-            });
         });
     }
     {
