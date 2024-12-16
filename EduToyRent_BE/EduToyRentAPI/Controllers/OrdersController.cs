@@ -64,6 +64,7 @@ namespace EduToyRentAPI.Controllers
             {
                 return NotFound();
             }
+<<<<<<< Updated upstream
 
             var firstDetail = order.OrderDetails.FirstOrDefault();
             int? shopId = null;
@@ -98,6 +99,10 @@ namespace EduToyRentAPI.Controllers
             };
 
             return Ok(orderResponse);
+=======
+            return Ok(orders);
+
+>>>>>>> Stashed changes
         }
 
 
