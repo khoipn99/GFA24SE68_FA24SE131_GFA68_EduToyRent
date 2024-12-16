@@ -15,7 +15,9 @@ const Notifications = ({ show }) => {
       try {
         const decoded = jwtDecode(token);
         const extractedUserId =
-          decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+          decoded[
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+          ];
         console.log("User ID decoded from token:", extractedUserId);
         setUserId(extractedUserId);
       } catch (error) {
@@ -30,14 +32,18 @@ const Notifications = ({ show }) => {
     console.log("Notifications component - show:", show, "userId:", userId);
 
     if (!show || !userId) {
-      console.log("Conditions not met (show && userId), not fetching notifications.");
+      console.log(
+        "Conditions not met (show && userId), not fetching notifications."
+      );
       return;
     }
 
     console.log("Fetching notifications for userId:", userId);
 
     axios
-      .get(`https://localhost:44350/api/v1/Notifications/User/${userId}`)
+      .get(
+        `https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/v1/Notifications/User/${userId}`
+      )
       .then((response) => {
         console.log("Old notifications fetched:", response.data);
         const allNotifications = response.data.map((n) => ({
@@ -58,7 +64,9 @@ const Notifications = ({ show }) => {
     console.log("Connecting to SignalR hub...");
 
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl("https://localhost:44350/notificationHub")
+      .withUrl(
+        "https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/notificationHub"
+      )
       .withAutomaticReconnect()
       .build();
 
@@ -83,14 +91,16 @@ const Notifications = ({ show }) => {
       .catch((err) => console.error("Error connecting to SignalR:", err));
 
     return () => {
-      console.log("Cleaning up Notifications component, stopping connection...");
+      console.log(
+        "Cleaning up Notifications component, stopping connection..."
+      );
       connection.stop();
     };
   }, [show, userId]);
 
   if (!show) {
     console.log("Notifications component is hidden (show=false).");
-    return null; 
+    return null;
   }
 
   console.log("Rendering notifications. Count:", notifications.length);

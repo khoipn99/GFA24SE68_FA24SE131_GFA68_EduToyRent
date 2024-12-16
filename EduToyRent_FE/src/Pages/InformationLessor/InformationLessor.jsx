@@ -16,6 +16,7 @@ import apiTransactionDetail from "../../service/ApiTransactionDetail";
 import CardDataStats from "../../Component/DashBoard/CardDataStats";
 import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
 import apiNotifications from "../../service/ApiNotifications";
+import ChatForm from "../Chat/ChatForm";
 
 const InformationLessor = () => {
   const [selectedTab, setSelectedTab] = useState("orders");
@@ -1916,6 +1917,7 @@ const InformationLessor = () => {
         </div>
       </main>
       {renderOrderDetails()} {/* Render order details modal a*/}
+      <ChatForm />
       <footer>
         <FooterForCustomer />
       </footer>
