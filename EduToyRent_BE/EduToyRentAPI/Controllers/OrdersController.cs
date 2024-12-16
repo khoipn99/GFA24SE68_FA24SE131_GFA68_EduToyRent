@@ -54,36 +54,35 @@ namespace EduToyRentAPI.Controllers
             return Ok(orders);
         }
 
-        // GET: api/Orders/5
         [HttpGet("{id}")]
         public ActionResult<OrderResponse> GetOrder(int id)
         {
-            var order = _unitOfWork.OrderRepository.GetByID(id);
-
-            if (order == null)
+            var orders = _unitOfWork.OrderRepository.Get(
+                includeProperties: "OrderDetails.Toy,User",
+                filter: od => od.Id == id)
+                .OrderByDescending(orders => orders.Id)
+                .Select(order => new OrderResponse
+                {
+                    Id = order.Id,
+                    OrderDate = order.OrderDate,
+                    ReceiveDate = order.ReceiveDate,
+                    TotalPrice = order.TotalPrice,
+                    RentPrice = order.RentPrice ?? 0,
+                    DepositeBackMoney = order.DepositeBackMoney ?? 0,
+                    ReceiveName = order.ReceiveName,
+                    ReceiveAddress = order.ReceiveAddress,
+                    ReceivePhone = order.ReceivePhone,
+                    Status = order.Status,
+                    UserId = order.UserId,
+                    UserName = order.User.FullName,
+                    ShopId = order.OrderDetails.FirstOrDefault().Toy.UserId,
+                    ShopName = _unitOfWork.UserRepository.GetByID(order.OrderDetails.FirstOrDefault().Toy.UserId).FullName
+                }).First();
+            if (orders == null)
             {
                 return NotFound();
             }
-
-            var orderResponse = new OrderResponse
-            {
-                Id = order.Id,
-                OrderDate = order.OrderDate,
-                ReceiveDate = order.ReceiveDate,
-                TotalPrice = order.TotalPrice,
-                RentPrice = (int)order.RentPrice,
-                DepositeBackMoney = (int)order.DepositeBackMoney,
-                ReceiveName = order.ReceiveName,
-                ReceiveAddress = order.ReceiveAddress,
-                ReceivePhone = order.ReceivePhone,
-                Status = order.Status,
-                UserId = order.UserId,
-                UserName = order.User.FullName,
-                ShopId = order.OrderDetails.FirstOrDefault().Toy.UserId,
-                ShopName =_unitOfWork.UserRepository.GetByID(order.OrderDetails.FirstOrDefault().Toy.UserId).FullName
-            };
-
-            return Ok(orderResponse);
+            return Ok(orders);
         }
 
         // PUT: api/Orders/5

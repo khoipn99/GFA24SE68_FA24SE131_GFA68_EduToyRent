@@ -12,6 +12,7 @@ import apiTransaction from "../../service/ApiTransaction";
 import apiTransactionDetail from "../../service/ApiTransactionDetail";
 import apiToys from "../../service/ApiToys";
 import apiRatings from "../../service/ApiRatings";
+import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
 
 const InformationCustomer = () => {
   const [selectedTab, setSelectedTab] = useState("info");
@@ -40,6 +41,7 @@ const InformationCustomer = () => {
   const [formData, setFormData] = useState({});
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [imageCheck, setImageCheck] = useState([]);
 
   useEffect(() => {
     const userDataCookie1 = Cookies.get("userData");
@@ -111,20 +113,20 @@ const InformationCustomer = () => {
   // };
   const getUserInfo = () => {
     const userDataCookie = Cookies.get("userDataReal");
-  
+
     if (userDataCookie) {
       try {
         const parsedUserData = JSON.parse(userDataCookie);
-  
+
         setCustomerInfo(parsedUserData);
         console.log("Parsed User Data:", parsedUserData);
-  
+
         // Kiểm tra nếu walletId tồn tại
         if (!parsedUserData.walletId) {
           console.error("Wallet ID is missing.");
           return;
         }
-  
+
         // Gọi API lấy thông tin ví
         apiWallets
           .get("/" + parsedUserData.walletId, {
@@ -144,7 +146,7 @@ const InformationCustomer = () => {
           .catch((error) => {
             handleApiError(error, "Fetching wallet info failed.");
           });
-  
+
         // Gọi API lấy giao dịch ví
         apiWalletTransaction
           .get(
@@ -176,10 +178,13 @@ const InformationCustomer = () => {
       console.error("User data cookie is missing.");
     }
   };
-  
+
   const handleApiError = (error, customMessage) => {
     if (error.response) {
-      console.error(customMessage, error.response.data || error.response.status);
+      console.error(
+        customMessage,
+        error.response.data || error.response.status
+      );
     } else if (error.request) {
       console.error(customMessage, "No response received from server.");
     } else {
@@ -436,16 +441,38 @@ const InformationCustomer = () => {
     }
   };
 
-  const handleViewDetails = (order) => {
+  const handleViewDetails = async (order) => {
     setSelectedOrder(order);
 
-    apiOrderDetail
+    await apiOrderDetail
       .get("/Order/" + order.id, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
       })
-      .then((response) => {
+      .then(async (response) => {
+        const mediaUrls = [];
+        for (const item of response.data) {
+          try {
+            const res = await apiOrderCheckImages.get(
+              `/order-detail/${item.id}?pageIndex=1&pageSize=20`,
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+
+            // Lấy mediaUrl từ phản hồi và thêm vào mảng tạm
+            const mediaUrl = res.data[0]?.mediaUrl || "";
+            mediaUrls.push(mediaUrl);
+          } catch (error) {
+            console.error(`Error fetching image for item ${item.id}:`, error);
+          }
+        }
+
+        setImageCheck(mediaUrls);
+
         setOrderDetails(response.data);
         console.log(response.data);
 
@@ -506,11 +533,11 @@ const InformationCustomer = () => {
   const handleEditAvatar = () => {};
 
   const filteredOrdersRent = ordersRent.filter((order) => {
-    return filterStatus === "all" || order.status === filterStatus;
+    return filterStatus == "all" || order.status == filterStatus;
   });
 
   const filteredOrdersSale = ordersSale.filter((order) => {
-    return filterStatus2 === "all" || order.status === filterStatus2;
+    return filterStatus2 == "all" || order.status == filterStatus2;
   });
 
   const handleInputChange2 = (e) => {
@@ -564,6 +591,7 @@ const InformationCustomer = () => {
   const handleReturnSoon = (order) => {
     var tmp = order;
     tmp.status = "Delivering";
+    tmp.endDate = new Date().toISOString();
 
     apiOrderDetail
       .put("/" + order.id, tmp, {
@@ -1601,10 +1629,20 @@ const InformationCustomer = () => {
               >
                 Đang vận chuyển
               </button>
+              {/* <button
+                onClick={() => handleFilterChange("ContinueRent")}
+                className={`p-2 rounded ${
+                  filterStatus == "ContinueRent"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                Thuê tiếp
+              </button> */}
               <button
                 onClick={() => handleFilterChange("Processing")}
                 className={`p-2 rounded ${
-                  filterStatus === "Processing"
+                  filterStatus == "Processing"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -1615,7 +1653,7 @@ const InformationCustomer = () => {
               <button
                 onClick={() => handleFilterChange("Complete")}
                 className={`p-2 rounded ${
-                  filterStatus === "Complete"
+                  filterStatus == "Complete"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -1625,7 +1663,7 @@ const InformationCustomer = () => {
               <button
                 onClick={() => handleFilterChange("Cancel")}
                 className={`p-2 rounded ${
-                  filterStatus === "Cancel"
+                  filterStatus == "Cancel"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -2163,7 +2201,7 @@ const InformationCustomer = () => {
           <div className="w-3/4 p-4">
             <h3 className="text-lg font-semibold">Chi tiết đơn hàng</h3>
             <ul className="space-y-4 mt-4 overflow-y-auto max-h-[700px] w-full px-4 py-4 text-lg">
-              {orderDetails.map((item) => {
+              {orderDetails.map((item, index) => {
                 const currentIndex = getStatusIndex(item.status);
 
                 return (
@@ -2219,12 +2257,12 @@ const InformationCustomer = () => {
                               >
                                 Mua luôn
                               </button>
-                              <button
+                              {/* <button
                                 className="flex items-center mb-2 px-4 py-2 bg-orange-500 text-white font-semibold rounded-md shadow hover:bg-orange-600 transition duration-200 ease-in-out"
                                 onClick={() => handleExtendRental(item)}
                               >
                                 Thuê tiếp
-                              </button>
+                              </button> */}
                               <button
                                 className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
                                 onClick={() => handleReturnOrderDetail(item)}
@@ -2233,6 +2271,27 @@ const InformationCustomer = () => {
                               </button>
                             </div>
                           )}
+                          {imageCheck[index] != null &&
+                            imageCheck[index] != "" && (
+                              <div>
+                                <img
+                                  src={
+                                    imageCheck[index] && imageCheck[index]
+                                      ? imageCheck[index]
+                                      : ""
+                                  }
+                                  alt={item.name}
+                                  style={{
+                                    width: "160px",
+                                    height: "160px",
+                                    objectFit: "cover",
+                                    marginRight: "16px",
+                                  }}
+                                />
+                                <div>Tình trạng đồ chơi</div>
+                              </div>
+                            )}
+
                           {item.status === "DeliveringToUser" && (
                             <div>
                               <button

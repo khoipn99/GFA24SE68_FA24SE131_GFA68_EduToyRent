@@ -14,6 +14,9 @@ import apiWallets from "../../service/ApiWallets";
 import apiWalletTransaction from "../../service/ApiWalletTransaction";
 import { useNavigate } from "react-router-dom";
 import { use } from "react";
+import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
+import axios from "axios";
+import apiNotifications from "../../service/ApiNotifications";
 
 const StaffPage = () => {
   const [userData, setUserData] = useState("");
@@ -164,6 +167,11 @@ const StaffPage = () => {
     } catch (error) {
       console.error("Lỗi khi tải danh sách đồ chơi:", error);
     }
+  };
+  const [newImage, setNewImage] = useState("");
+
+  const handleImageChange = (e) => {
+    setNewImage(e.target.files[0]);
   };
 
   const handleEditClick = () => {
@@ -828,34 +836,119 @@ const StaffPage = () => {
       });
   };
 
-  const handleCheckingBroke = (order) => {
-    var tmp = order;
-    tmp.status = "DeliveringToUser";
+  const handleCheckingBroke = async (order) => {
+    console.log(newImage);
+    if (newImage != null && newImage != "") {
+      apiOrder
+        .get("/" + order.orderId, {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response) => {
+          apiNotifications.post(
+            "",
+            {
+              notify: `Đơn hàng ${response.data.id} đang giao đến bạn`,
+              isRead: false,
+              userId: response.data.userId,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+        });
 
-    apiOrderDetail
-      .put("/" + order.id, tmp, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      })
-      .then((response) => {
-        LoadOrder();
-      });
+      console.log(newImage);
+
+      var formData = new FormData();
+
+      formData.append(`checkImageUrls`, newImage);
+
+      var tmp = order;
+      tmp.status = "DeliveringToUser";
+      axios
+        .post(
+          "https://localhost:44350/api/OrderCheckImages?orderDetailId=" +
+            order.id,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        )
+        .then(async (response) => {
+          await apiOrderDetail
+            .put("/" + order.id, tmp, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response) => {
+              LoadOrder();
+            });
+        });
+    } else {
+      alert("Chưa chọn hình ảnh tình trạng đồ chơi");
+    }
   };
 
-  const handleCheckingGood = (order) => {
-    var tmp = order;
-    tmp.status = "DeliveringToShop";
+  const handleCheckingGood = async (order) => {
+    if (newImage != null && newImage != "") {
+      apiOrder
+        .get("/" + order.orderId, {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response) => {
+          apiNotifications.post(
+            "",
+            {
+              notify: `Đơn hàng ${response.data.id} đang giao đến bạn`,
+              isRead: false,
+              userId: response.data.shopId,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          );
+        });
 
-    apiOrderDetail
-      .put("/" + order.id, tmp, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      })
-      .then((response) => {
-        LoadOrder();
-      });
+      var formData = new FormData();
+      formData.append(`checkImageUrls`, newImage);
+      var tmp = order;
+      tmp.status = "DeliveringToShop";
+      axios
+        .post(
+          "https://localhost:44350/api/OrderCheckImages?orderDetailId=" +
+            order.id,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          }
+        )
+        .then(async (response) => {
+          await apiOrderDetail
+            .put("/" + order.id, tmp, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response) => {
+              LoadOrder();
+            });
+        });
+    } else {
+      alert("Chưa chọn hình ảnh tình trạng đồ chơi");
+    }
   };
 
   const statusMapping = {
@@ -2313,6 +2406,17 @@ const StaffPage = () => {
                       {statusMapping[order.status] ||
                         "Trạng thái không xác định"}
                     </h1>
+                    {order.status == "Checking" && (
+                      <label className="block mb-2">
+                        Hình ảnh tình trạng đồ chơi:
+                        <input
+                          type="file"
+                          onChange={handleImageChange}
+                          className="border border-gray-300 rounded p-1 w-full"
+                          accept="image/*"
+                        />
+                      </label>
+                    )}
                   </div>
                 </div>
                 <div className="flex justify-between p-4">

@@ -14,6 +14,8 @@ import apiUser from "../../service/ApiUser";
 import apiTransaction from "../../service/ApiTransaction";
 import apiTransactionDetail from "../../service/ApiTransactionDetail";
 import CardDataStats from "../../Component/DashBoard/CardDataStats";
+import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
+import apiNotifications from "../../service/ApiNotifications";
 
 const InformationLessor = () => {
   const [selectedTab, setSelectedTab] = useState("orders");
@@ -27,6 +29,7 @@ const InformationLessor = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [walletTransaction, setWalletTransaction] = useState([]);
   const [totalProfit, setTotalProfit] = useState(0);
+  const [imageCheck, setImageCheck] = useState([]);
 
   const navigate = useNavigate();
 
@@ -190,6 +193,21 @@ const InformationLessor = () => {
         },
       })
       .then((response) => {
+        response.data.map((item) => {
+          apiOrderCheckImages
+            .get("/order-detail/" + item.id + "?pageIndex=1&pageSize=20", {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response) => {
+              setImageCheck((prev) => {
+                const mediaUrl = response.data[0]?.mediaUrl || "";
+
+                return [...prev.filter(() => false), mediaUrl];
+              });
+            });
+        });
         setOrderDetails(response.data);
         console.log(response.data);
       });
@@ -502,6 +520,20 @@ const InformationLessor = () => {
   };
 
   const handleAcceptOrder = (order) => {
+    apiNotifications.post(
+      "",
+      {
+        notify: `Đơn hàng ${order.id} đang được giao đến bạn`,
+        isRead: false,
+        userId: order.userId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      }
+    );
+
     var tmp = order;
     tmp.status = "Delivering";
 
@@ -517,6 +549,20 @@ const InformationLessor = () => {
   };
 
   const handleCancelOrder = async (order) => {
+    apiNotifications.post(
+      "",
+      {
+        notify: `Đơn hàng ${order.id} đã bị hủy`,
+        isRead: false,
+        userId: order.userId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      }
+    );
+
     var tmp = order;
     tmp.status = "Cancel";
 
@@ -1656,7 +1702,7 @@ const InformationLessor = () => {
           <div className="w-3/4 p-4">
             <h3 className="text-lg font-semibold">Chi tiết đơn hàng</h3>
             <ul className="space-y-4 mt-4 overflow-y-auto max-h-[700px] w-full px-4 py-4 text-lg">
-              {orderDetails.map((item) => {
+              {orderDetails.map((item, index) => {
                 const currentIndex = getStatusIndex(item.status);
 
                 return (
@@ -1704,6 +1750,26 @@ const InformationLessor = () => {
                                 : "Đang chờ"}
                             </p>
                           </div>
+                          {imageCheck[index] != null &&
+                            imageCheck[index] != "" && (
+                              <div>
+                                <img
+                                  src={
+                                    imageCheck[index] && imageCheck[index]
+                                      ? imageCheck[index]
+                                      : ""
+                                  }
+                                  alt={item.name}
+                                  style={{
+                                    width: "160px",
+                                    height: "160px",
+                                    objectFit: "cover",
+                                    marginRight: "16px",
+                                  }}
+                                />
+                                <div>Tình trạng đồ chơi</div>
+                              </div>
+                            )}
 
                           {item.status === "DeliveringToShop" && (
                             <div>
