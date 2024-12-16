@@ -37,10 +37,11 @@ builder.Services.AddDbContext<EduToyRentDBContext>(options =>
     options.UseSqlServer(connectionString));
 
 
-//var jsonContent = client.GetSecret("firebase-adminsdk").Value.Value;
-//File.WriteAllText("google-credentials.json", jsonContent);
-//Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "google-credentials.json");
-Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", builder.Configuration["FirebaseCredentials:Path"]);
+var jsonContent = client.GetSecret("firebase-adminsdk").Value.Value;
+File.WriteAllText("google-credentials.json", jsonContent);
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "google-credentials.json");
+
+//Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", builder.Configuration["FirebaseCredentials:Path"]);
 
 
 Console.WriteLine("Environment: " + builder.Environment.EnvironmentName);
@@ -91,7 +92,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") 
+        policy.WithOrigins("https://edu-toy-rent.vercel.app/") 
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -190,7 +191,7 @@ app.UseEndpoints(endpoints =>
     endpoints.MapHub<ChatHub>("/chatHub"); 
 });
 app.UseMiddleware<GlobalExceptionMiddleware>();
-app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+//app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 static IEdmModel GetEdmModel()
 {
     ODataConventionModelBuilder builder = new();
