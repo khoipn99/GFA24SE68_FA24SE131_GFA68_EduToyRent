@@ -65,51 +65,127 @@ const InformationCustomer = () => {
     }
   }, []);
 
+  // const getUserInfo = () => {
+  //   const userDataCookie = Cookies.get("userDataReal");
+  //   if (userDataCookie) {
+  //     const parsedUserData = JSON.parse(userDataCookie);
+
+  //     setCustomerInfo(parsedUserData);
+  //     console.log(parsedUserData);
+
+  //     apiWallets
+  //       .get("/" + parsedUserData.walletId, {
+  //         headers: {
+  //           Authorization: `Bearer ${Cookies.get("userToken")}`,
+  //         },
+  //       })
+  //       .then((response) => {
+  //         setWalletInfo(response.data);
+  //         setFormData({
+  //           balance: response.data.balance || 0,
+  //           withdrawInfo: response.data.withdrawInfo || "",
+  //           withdrawMethod: response.data.withdrawMethod || "",
+  //         });
+  //       });
+  //     apiWalletTransaction
+  //       .get(
+  //         "/ByWalletId?walletId=" +
+  //           parsedUserData.walletId +
+  //           "&pageIndex=1&pageSize=100",
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${Cookies.get("userToken")}`,
+  //           },
+  //         }
+  //       )
+  //       .then((response) => {
+  //         setWalletTransaction(
+  //           response.data.filter((transaction) => transaction.amount >= 0)
+  //         );
+  //         setWalletTransactionMinus(
+  //           response.data.filter((transaction) => transaction.amount < 0)
+  //         );
+  //         console.log(parsedUserData.walletId);
+  //       });
+  //   }
+  // };
   const getUserInfo = () => {
     const userDataCookie = Cookies.get("userDataReal");
+  
     if (userDataCookie) {
-      const parsedUserData = JSON.parse(userDataCookie);
-
-      setCustomerInfo(parsedUserData);
-      console.log(parsedUserData);
-
-      apiWallets
-        .get("/" + parsedUserData.walletId, {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        })
-        .then((response) => {
-          setWalletInfo(response.data);
-          setFormData({
-            balance: response.data.balance || 0,
-            withdrawInfo: response.data.withdrawInfo || "",
-            withdrawMethod: response.data.withdrawMethod || "",
-          });
-        });
-      apiWalletTransaction
-        .get(
-          "/ByWalletId?walletId=" +
-            parsedUserData.walletId +
-            "&pageIndex=1&pageSize=100",
-          {
+      try {
+        const parsedUserData = JSON.parse(userDataCookie);
+  
+        setCustomerInfo(parsedUserData);
+        console.log("Parsed User Data:", parsedUserData);
+  
+        // Kiểm tra nếu walletId tồn tại
+        if (!parsedUserData.walletId) {
+          console.error("Wallet ID is missing.");
+          return;
+        }
+  
+        // Gọi API lấy thông tin ví
+        apiWallets
+          .get("/" + parsedUserData.walletId, {
             headers: {
               Authorization: `Bearer ${Cookies.get("userToken")}`,
             },
-          }
-        )
-        .then((response) => {
-          setWalletTransaction(
-            response.data.filter((transaction) => transaction.amount >= 0)
-          );
-          setWalletTransactionMinus(
-            response.data.filter((transaction) => transaction.amount < 0)
-          );
-          console.log(parsedUserData.walletId);
-        });
+          })
+          .then((response) => {
+            console.log("Wallet Info Response:", response.data);
+            setWalletInfo(response.data);
+            setFormData({
+              balance: response.data.balance || 0,
+              withdrawInfo: response.data.withdrawInfo || "",
+              withdrawMethod: response.data.withdrawMethod || "",
+            });
+          })
+          .catch((error) => {
+            handleApiError(error, "Fetching wallet info failed.");
+          });
+  
+        // Gọi API lấy giao dịch ví
+        apiWalletTransaction
+          .get(
+            "/ByWalletId?walletId=" +
+              parsedUserData.walletId +
+              "&pageIndex=1&pageSize=100",
+            {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            }
+          )
+          .then((response) => {
+            console.log("Wallet Transaction Response:", response.data);
+            setWalletTransaction(
+              response.data.filter((transaction) => transaction.amount >= 0)
+            );
+            setWalletTransactionMinus(
+              response.data.filter((transaction) => transaction.amount < 0)
+            );
+          })
+          .catch((error) => {
+            handleApiError(error, "Fetching wallet transactions failed.");
+          });
+      } catch (err) {
+        console.error("Failed to parse user data from cookie:", err.message);
+      }
+    } else {
+      console.error("User data cookie is missing.");
     }
   };
-
+  
+  const handleApiError = (error, customMessage) => {
+    if (error.response) {
+      console.error(customMessage, error.response.data || error.response.status);
+    } else if (error.request) {
+      console.error(customMessage, "No response received from server.");
+    } else {
+      console.error(customMessage, error.message);
+    }
+  };
   const getOrderInfo = () => {
     const userDataCookie = Cookies.get("userDataReal");
     const parsedUserData = JSON.parse(userDataCookie);

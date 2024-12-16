@@ -27,6 +27,7 @@ namespace EduToyRentRepositories.Models
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<OrderCheckImage> OrderCheckImages { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<Media> Media { get; set; }
         public DbSet<Message> Messages { get; set; }
@@ -34,6 +35,7 @@ namespace EduToyRentRepositories.Models
         public DbSet<PaymentType> PaymentTypes { get; set; }
         public DbSet<Premium> Premiums { get; set; }
         public DbSet<Toy> Toys { get; set; }
+        public DbSet<Notification> Notification { get; set; }
         public DbSet<UserConversation> UserConversations { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduToyRentRepositories.Migrations
 {
     [DbContext(typeof(EduToyRentDBContext))]
-    [Migration("20241210034609_Intial")]
-    partial class Intial
+    [Migration("20241216081646_Initital")]
+    partial class Initital
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -198,6 +198,34 @@ namespace EduToyRentRepositories.Migrations
                     b.ToTable("Messages");
                 });
 
+            modelBuilder.Entity("EduToyRentRepositories.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notify")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SentTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notification");
+                });
+
             modelBuilder.Entity("EduToyRentRepositories.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -245,6 +273,32 @@ namespace EduToyRentRepositories.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("EduToyRentRepositories.Models.OrderCheckImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("MediaUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderDetailId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderDetailId");
+
+                    b.ToTable("OrderCheckImages");
                 });
 
             modelBuilder.Entity("EduToyRentRepositories.Models.OrderDetail", b =>
@@ -874,6 +928,17 @@ namespace EduToyRentRepositories.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("EduToyRentRepositories.Models.Notification", b =>
+                {
+                    b.HasOne("EduToyRentRepositories.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("EduToyRentRepositories.Models.Order", b =>
                 {
                     b.HasOne("EduToyRentRepositories.Models.User", "User")
@@ -883,6 +948,17 @@ namespace EduToyRentRepositories.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EduToyRentRepositories.Models.OrderCheckImage", b =>
+                {
+                    b.HasOne("EduToyRentRepositories.Models.OrderDetail", "OrderDetail")
+                        .WithMany()
+                        .HasForeignKey("OrderDetailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("OrderDetail");
                 });
 
             modelBuilder.Entity("EduToyRentRepositories.Models.OrderDetail", b =>
@@ -1052,7 +1128,7 @@ namespace EduToyRentRepositories.Migrations
             modelBuilder.Entity("EduToyRentRepositories.Models.UserConversation", b =>
                 {
                     b.HasOne("EduToyRentRepositories.Models.Conversation", "Conversation")
-                        .WithMany()
+                        .WithMany("UserConversations")
                         .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1116,6 +1192,11 @@ namespace EduToyRentRepositories.Migrations
             modelBuilder.Entity("EduToyRentRepositories.Models.Cart", b =>
                 {
                     b.Navigation("CartItems");
+                });
+
+            modelBuilder.Entity("EduToyRentRepositories.Models.Conversation", b =>
+                {
+                    b.Navigation("UserConversations");
                 });
 
             modelBuilder.Entity("EduToyRentRepositories.Models.Order", b =>
