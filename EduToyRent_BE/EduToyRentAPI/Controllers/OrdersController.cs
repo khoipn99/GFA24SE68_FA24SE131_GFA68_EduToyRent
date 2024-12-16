@@ -65,6 +65,20 @@ namespace EduToyRentAPI.Controllers
                 return NotFound();
             }
 
+            var firstDetail = order.OrderDetails.FirstOrDefault();
+            int? shopId = null;
+            string shopName = null;
+
+            if (firstDetail?.Toy != null)
+            {
+                shopId = firstDetail.Toy.UserId;
+                var shopUser = _unitOfWork.UserRepository.GetByID(shopId.Value);
+                if (shopUser != null)
+                {
+                    shopName = shopUser.FullName;
+                }
+            }
+
             var orderResponse = new OrderResponse
             {
                 Id = order.Id,
@@ -78,13 +92,14 @@ namespace EduToyRentAPI.Controllers
                 ReceivePhone = order.ReceivePhone,
                 Status = order.Status,
                 UserId = order.UserId,
-                UserName = order.User.FullName,
-                ShopId = order.OrderDetails.FirstOrDefault().Toy.UserId,
-                ShopName =_unitOfWork.UserRepository.GetByID(order.OrderDetails.FirstOrDefault().Toy.UserId).FullName
+                UserName = order.User?.FullName,
+                ShopId = (int)shopId,
+                ShopName = shopName
             };
 
             return Ok(orderResponse);
         }
+
 
         // PUT: api/Orders/5
         [HttpPut("{id}")]
