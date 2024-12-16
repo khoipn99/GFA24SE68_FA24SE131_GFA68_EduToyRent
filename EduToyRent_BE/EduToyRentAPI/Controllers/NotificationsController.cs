@@ -184,7 +184,7 @@ namespace EduToyRentAPI.Controllers
             var notification = new Notification
             {
                 Notify = notificationRequest.Notify,
-                SentTime = DateTime.UtcNow,
+                SentTime = DateTime.Now,
                 IsRead = false,
                 UserId = notificationRequest.UserId
             };
