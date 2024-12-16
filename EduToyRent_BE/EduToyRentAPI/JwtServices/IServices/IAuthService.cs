@@ -6,5 +6,6 @@ namespace EduToyRentAPI.JwtServices.IServices
     public interface IAuthService
     {
         Task<User> Login(LoginRequest loginRequest);
+        Task<User> GetUserByEmail(string email);
     }
 }

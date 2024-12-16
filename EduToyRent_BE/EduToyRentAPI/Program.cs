@@ -23,6 +23,8 @@ using Azure.Identity;
 using EduToyRentAPI.Hubs;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using EduToyRentAPI.GmailService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +38,16 @@ var connectionString = builder.Configuration.GetConnectionString("MyDB");
 builder.Services.AddDbContext<EduToyRentDBContext>(options =>
     options.UseSqlServer(connectionString));
 
+builder.Services.AddMemoryCache();
+
+var emailConfig = builder.Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
+builder.Services.AddSingleton<IMailService>(new GmailMailService(
+    emailConfig.From,
+    emailConfig.Password,
+    emailConfig.SmtpServer,
+    emailConfig.Port,
+    "EduToyRent"
+));
 
 var jsonContent = client.GetSecret("firebase-adminsdk").Value.Value;
 File.WriteAllText("google-credentials.json", jsonContent);
@@ -90,6 +102,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
+    options.AddPolicy("AllowAll", builder =>
+        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins("https://edu-toy-rent.vercel.app/") 
