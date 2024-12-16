@@ -491,6 +491,17 @@ const LoginPage = () => {
               </span>
             </p>
           </div>
+          <div className="flex justify-center items-center">
+            <p className="text-gray-600">
+              Quên mật khẩu?{" "}
+              <span
+                className="text-blue-500 cursor-pointer"
+                onClick={() => navigate("/forgot-password")}
+              >
+                Lấy lại mật khẩu
+              </span>
+            </p>
+          </div>
 
           <div className="flex justify-center items-end mt-6">
             <p className="text-center text-gray-600">
