@@ -84,44 +84,7 @@ namespace EduToyRentAPI.Controllers
             {
                 return NotFound();
             }
-<<<<<<< Updated upstream
-
-            var firstDetail = order.OrderDetails.FirstOrDefault();
-            int? shopId = null;
-            string shopName = null;
-
-            if (firstDetail?.Toy != null)
-            {
-                shopId = firstDetail.Toy.UserId;
-                var shopUser = _unitOfWork.UserRepository.GetByID(shopId.Value);
-                if (shopUser != null)
-                {
-                    shopName = shopUser.FullName;
-                }
-            }
-
-            var orderResponse = new OrderResponse
-            {
-                Id = order.Id,
-                OrderDate = order.OrderDate,
-                ReceiveDate = order.ReceiveDate,
-                TotalPrice = order.TotalPrice,
-                RentPrice = (int)order.RentPrice,
-                DepositeBackMoney = (int)order.DepositeBackMoney,
-                ReceiveName = order.ReceiveName,
-                ReceiveAddress = order.ReceiveAddress,
-                ReceivePhone = order.ReceivePhone,
-                Status = order.Status,
-                UserId = order.UserId,
-                UserName = order.User?.FullName,
-                ShopId = (int)shopId,
-                ShopName = shopName
-            };
-
-            return Ok(orderResponse);
-=======
             return Ok(orders);
->>>>>>> Stashed changes
         }
 
 
