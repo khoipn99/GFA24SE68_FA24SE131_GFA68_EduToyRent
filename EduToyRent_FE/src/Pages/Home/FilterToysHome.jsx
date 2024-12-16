@@ -150,7 +150,7 @@ const FilterToys = () => {
     Cookies.remove("ToyDetailFilter");
     Cookies.remove("ToyDetailCategory");
     if (maxPrice) {
-      switch (maxPrice) {
+      switch (maxPrice != "") {
         case "0":
           filters.push(`price ge 0 and price le 500000`);
           break;
@@ -182,16 +182,23 @@ const FilterToys = () => {
     } else if (toyType == "-1") {
       filters.push(`buyQuantity le -1`);
     }
-    if (selectCategory != "All")
+    if (selectCategory && selectCategory != "All") {
+      console.log(selectCategory);
+
       filters.push(`category/name eq '${selectCategory}'`);
+    }
     if (ageGroup) filters.push(`age eq '${ageGroup}'`);
-    if (brand != "") filters.push(`contains(brand, '${brand}')`);
-    if (searchTerm) filters.push(`contains(name, '${searchTerm}')`);
+    if (brand != "")
+      filters.push(`contains(tolower(brand), tolower('${brand}'))`);
+    if (searchTerm != "")
+      filters.push(`contains(tolower(name), tolower('${searchTerm}'))`);
 
     // Kết hợp các bộ lọc
     const query = filters.length > 0 ? `?$filter=${filters.join(" and ")}` : "";
 
     if (query != "") {
+      console.log(query);
+
       apiToys.get("/active" + query).then((response) => {
         console.log(response.data);
         setToys(response.data);
@@ -207,10 +214,7 @@ const FilterToys = () => {
         console.log(response.data);
         setToys(response.data);
         setFilteredToys(
-          response.data.slice(
-            currentPage * itemsPerPage - itemsPerPage,
-            currentPage * itemsPerPage
-          )
+          response.data.slice(1 * itemsPerPage - itemsPerPage, 1 * itemsPerPage)
         );
         loadPageNumber(response.data);
       });
