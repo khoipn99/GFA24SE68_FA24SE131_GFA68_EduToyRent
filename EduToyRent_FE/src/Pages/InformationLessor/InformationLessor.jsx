@@ -812,7 +812,8 @@ const InformationLessor = () => {
         brand: editedProduct.brand,
         categoryId: editedProduct.category.id,
         rentCount: editedProduct.rentCount,
-        rentTime: editedProduct.rentTime,
+        quantitySold: editedProduct.quantitySold,
+        status: editedProduct.status,
       })
       .then((response) => {
         getProductInfo();
