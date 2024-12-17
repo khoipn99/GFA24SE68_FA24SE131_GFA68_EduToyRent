@@ -30,6 +30,10 @@ const InformationCustomer = () => {
   const [walletTransactionPlus, setWalletTransactionPlus] = useState({});
   const [walletTransactionMinus, setWalletTransactionMinus] = useState({});
   const [oldPassword, setOldPassword] = useState("");
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [isEditing2, setIsEditing2] = useState(false);
@@ -120,6 +124,10 @@ const InformationCustomer = () => {
         const parsedUserData = JSON.parse(userDataCookie);
 
         setCustomerInfo(parsedUserData);
+        setName(parsedUserData.fullName);
+        setAddress(parsedUserData.address);
+        setDob(parsedUserData.dob);
+        setPhone(parsedUserData.phone);
         console.log("Parsed User Data:", parsedUserData);
 
         // Kiểm tra nếu walletId tồn tại
@@ -223,14 +231,6 @@ const InformationCustomer = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterStatus2, setFilterStatus2] = useState("all");
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCustomerInfo((prevInfo) => ({
-      ...prevInfo,
-      [name]: value,
-    }));
-  };
-
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
   };
@@ -292,7 +292,7 @@ const InformationCustomer = () => {
               "/" +
                 customerInfo.id +
                 "?fullName=" +
-                customerInfo.fullName +
+                name +
                 "&email=" +
                 customerInfo.email +
                 "&password=" +
@@ -300,11 +300,11 @@ const InformationCustomer = () => {
                 "&createDate=" +
                 customerInfo.createDate +
                 "&phone=" +
-                customerInfo.phone +
+                phone +
                 "&dob=" +
-                customerInfo.dob +
+                dob +
                 "&address=" +
-                customerInfo.address +
+                address +
                 "&roleId=" +
                 customerInfo.role.id +
                 "&status=" +
@@ -370,7 +370,18 @@ const InformationCustomer = () => {
         });
     }
   };
-
+  const handleInputChangeName = (e) => {
+    setName(e);
+  };
+  const handleInputChangeAddress = (e) => {
+    setAddress(e);
+  };
+  const handleInputChangePhone = (e) => {
+    setPhone(e);
+  };
+  const handleInputChangeDob = (e) => {
+    setDob(e);
+  };
   const handleInputChangeOldPassword = (e) => {
     setOldPassword(e);
   };
@@ -574,8 +585,6 @@ const InformationCustomer = () => {
 
     getUserInfo();
   };
-
-  const handleExtendRental = (order) => {};
 
   const handleReturnOrderDetail = (order) => {
     var tmp = order;
@@ -1419,8 +1428,8 @@ const InformationCustomer = () => {
                     <input
                       type="text"
                       name="fullName"
-                      value={customerInfo.fullName}
-                      onChange={handleInputChange}
+                      value={name}
+                      onChange={(e) => handleInputChangeName(e.target.value)}
                       className="w-6/10 border border-gray-300 rounded p-1"
                     />
                   </label>
@@ -1429,8 +1438,8 @@ const InformationCustomer = () => {
                     <input
                       type="text"
                       name="address"
-                      value={customerInfo.address}
-                      onChange={handleInputChange}
+                      value={address}
+                      onChange={(e) => handleInputChangeAddress(e.target.value)}
                       className="w-6/10 border border-gray-300 rounded p-1"
                     />
                   </label>
@@ -1439,8 +1448,8 @@ const InformationCustomer = () => {
                     <input
                       type="tel"
                       name="phone"
-                      value={customerInfo.phone}
-                      onChange={handleInputChange}
+                      value={phone}
+                      onChange={(e) => handleInputChangePhone(e.target.value)}
                       className="w-6/10 border border-gray-300 rounded p-1"
                     />
                   </label>
@@ -1450,13 +1459,13 @@ const InformationCustomer = () => {
                       type="date"
                       name="dob"
                       value={
-                        customerInfo.dob
+                        dob
                           ? new Date(customerInfo.dob)
                               .toISOString()
                               .split("T")[0]
                           : ""
                       }
-                      onChange={handleInputChange}
+                      onChange={(e) => handleInputChangeDob(e.target.value)}
                       className="w-6/10 border border-gray-300 rounded p-1"
                     />
                   </label>
