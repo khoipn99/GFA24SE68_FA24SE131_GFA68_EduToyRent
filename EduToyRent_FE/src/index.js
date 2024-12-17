@@ -27,7 +27,7 @@ import Chat from "./Pages/Chat/Chat";
 import TopUpComplete from "./Pages/TopUp/TopUpComplete";
 import AdminPage from "./Pages/Admin/AdminPage";
 import ForgotPasswordPage from "./Pages/Login/ForgotPasswordPage";
-
+import Term from './Component/Terms/Terms';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -112,6 +112,10 @@ const router = createBrowserRouter([
   {
     path: "/chat",
     element: <Chat />,
+  },
+  {
+    path: "/term",
+    element: <Term />,
   },
   {
     path: "/dashboard",
