@@ -82,19 +82,19 @@ const LessorToysDetails = () => {
     apiToys
       .get(
         "/user/" +
-          Cookies.get("PageShopSaleId") +
+          Cookies.get("PageShopRentId") +
           "?status=Active&pageIndex=1&pageSize=1000"
       )
       .then((response) => {
         setToysOfShop(response.data);
         console.log(response.data);
-        console.log(Cookies.get("toySaleDetailId"));
+        console.log(Cookies.get("PageShopRentId"));
       });
 
     apiToys
       .get(
         "/user/" +
-          Cookies.get("PageShopSaleId") +
+          Cookies.get("PageShopRentId") +
           "?status=Active&pageIndex=1&pageSize=6"
       )
       .then((response) => {

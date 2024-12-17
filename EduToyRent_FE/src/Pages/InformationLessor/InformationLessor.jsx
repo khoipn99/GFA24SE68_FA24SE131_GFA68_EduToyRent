@@ -711,6 +711,14 @@ const InformationLessor = () => {
     setIsModalOpen(true);
   };
   const closeModal = () => setIsModalOpen(false);
+  const statusMapping = {
+    Delivering: "Đang giao",
+    Complete: "Hoàn thành",
+    Active: "Sẵn sàng",
+    Inactive: "Không sẵn sàng",
+    DeliveringToBuyer: "Đang giao cho người dùng",
+    // Các trạng thái khác nếu có
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1273,7 +1281,11 @@ const InformationLessor = () => {
                   <div className="flex-grow">
                     <h4 className="font-semibold">{product.name}</h4>
                     <p>Giá: {product.price.toLocaleString()} VNĐ</p>
-                    <p>Trạng thái: {product.status}</p>
+                    <p>
+                      Trạng thái:
+                      {statusMapping[product.status] ||
+                        "Trạng thái không xác định"}{" "}
+                    </p>
                   </div>
                   <button
                     onClick={() => openDetailModal(product)}
