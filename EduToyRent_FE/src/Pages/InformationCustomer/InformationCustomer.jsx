@@ -164,7 +164,9 @@ const InformationCustomer = () => {
             console.log("Wallet Transaction Response:", response.data);
             setWalletTransaction(response.data);
 
-            setWalletTransactionPlus((transaction) => transaction.amount >= 0);
+            setWalletTransactionPlus(
+              response.data.filter((transaction) => transaction.amount >= 0)
+            );
 
             setWalletTransactionMinus(
               response.data.filter((transaction) => transaction.amount < 0)

@@ -333,10 +333,7 @@ const ChartOne = () => {
         </div>
         <div className="flex w-full max-w-45 justify-end">
           <div className="inline-flex items-center rounded-md bg-whiter p-1.5 dark:bg-meta-4">
-            <button
-              className="rounded py-1 px-3 text-xs font-medium text-black hover:bg-white dark:text-white dark:hover:bg-boxdark"
-              onClick={() => handleTimeFrameChange("Month")}
-            >
+            <button className="rounded py-1 px-3 text-xs font-medium text-black hover:bg-white dark:text-white dark:hover:bg-boxdark">
               Tháng
             </button>
           </div>
