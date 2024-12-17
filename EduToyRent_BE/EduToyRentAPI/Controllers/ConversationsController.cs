@@ -71,10 +71,13 @@ namespace EduToyRentAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateConversation(ConversationRequest request)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var conversation = new Conversation
             {
                 LastMessage = request.LastMessage,
-                LastSentTime = DateTime.UtcNow,
+                LastSentTime = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 Status = request.Status
             };
 
@@ -88,6 +91,9 @@ namespace EduToyRentAPI.Controllers
         [HttpPut("{conversationId}")]
         public async Task<IActionResult> UpdateConversation(int conversationId, ConversationRequest request)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var conversation = _unitOfWork.ConversationRepository.GetByID(conversationId);
 
             if (conversation == null)
@@ -96,7 +102,7 @@ namespace EduToyRentAPI.Controllers
             }
 
             conversation.LastMessage = request.LastMessage;
-            conversation.LastSentTime = DateTime.UtcNow;
+            conversation.LastSentTime = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
             conversation.Status = request.Status;
 
             _unitOfWork.ConversationRepository.Update(conversation);
@@ -104,6 +110,7 @@ namespace EduToyRentAPI.Controllers
 
             return NoContent();
         }
+
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetConversationsByUserId(int userId)
         {
@@ -137,6 +144,7 @@ namespace EduToyRentAPI.Controllers
             }).ToList();
             return Ok(conversationDtos);
         }
+
         [HttpPost("{conversationId}/add-participants")]
         public async Task<IActionResult> AddParticipants(int conversationId, [FromBody] List<int> participantIds)
         {
@@ -161,10 +169,14 @@ namespace EduToyRentAPI.Controllers
 
             return Ok("Participants added successfully");
         }
+
         //check and create
         [HttpPost("check-or-create-conversation")]
         public async Task<IActionResult> CheckOrCreateConversation([FromBody] CreateConversationRequest request)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             int user1Id = request.User1Id;
             int user2Id = request.User2Id;
 
@@ -196,7 +208,7 @@ namespace EduToyRentAPI.Controllers
             var newConversation = new Conversation
             {
                 LastMessage = null,
-                LastSentTime = DateTime.UtcNow,
+                LastSentTime = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 Status = "Active"
             };
 
@@ -212,9 +224,13 @@ namespace EduToyRentAPI.Controllers
 
             return Ok(new { ConversationId = newConversation.Id, Message = "New conversation created" });
         }
+
         [HttpPost("create-group-conversation")]
         public async Task<IActionResult> CreateGroupConversation([FromBody] CreateGroupConversationRequest request)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             if (request.UserIds == null || !request.UserIds.Any())
             {
                 return BadRequest(new { Message = "UserIds list cannot be empty." });
@@ -225,7 +241,7 @@ namespace EduToyRentAPI.Controllers
                 var newConversation = new Conversation
                 {
                     LastMessage = null,
-                    LastSentTime = DateTime.UtcNow,
+                    LastSentTime = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                     Status = "Active"
                 };
 

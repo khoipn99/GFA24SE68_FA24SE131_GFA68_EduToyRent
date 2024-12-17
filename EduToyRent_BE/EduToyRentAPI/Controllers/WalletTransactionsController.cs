@@ -124,6 +124,9 @@ namespace EduToyRentAPI.Controllers
         [EnableQuery]
         public async Task<ActionResult<WalletTransactionResponse>> PostWalletTransaction(WalletTransactionRequest walletTransactionRequest)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int senderId))
             {
@@ -134,7 +137,7 @@ namespace EduToyRentAPI.Controllers
             {
                 TransactionType = walletTransactionRequest.TransactionType,
                 Amount = walletTransactionRequest.Amount,
-                Date = DateTime.Now,
+                Date = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 WalletId = walletTransactionRequest.WalletId,
                 PaymentTypeId = walletTransactionRequest.PaymentTypeId,
                 OrderId = walletTransactionRequest.OrderId,
@@ -149,7 +152,7 @@ namespace EduToyRentAPI.Controllers
             {
                 Id = walletTransaction.Id,
                 TransactionType = walletTransaction.TransactionType,
-                Date = DateTime.Now,
+                Date = walletTransaction.Date,
                 Amount = walletTransaction.Amount,
                 WalletId = walletTransaction.WalletId,
                 PaymentTypeId = walletTransaction.PaymentTypeId,

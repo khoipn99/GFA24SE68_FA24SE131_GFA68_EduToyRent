@@ -134,9 +134,12 @@ namespace EduToyRentAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<OrderResponse>> PostOrder(OrderRequest orderRequest)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var order = new Order
             {
-                OrderDate = DateTime.Now,
+                OrderDate = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 ReceiveDate = orderRequest.ReceiveDate,
                 TotalPrice = orderRequest.TotalPrice, // Xu ly cho nay khi hoan thanh OrderDetail
                 RentPrice = orderRequest.RentPrice,

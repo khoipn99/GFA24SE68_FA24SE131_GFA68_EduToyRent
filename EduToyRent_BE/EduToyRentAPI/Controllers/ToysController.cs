@@ -311,6 +311,9 @@ namespace EduToyRentAPI.Controllers
         [EnableQuery]
         public async Task<ActionResult<ToyResponse>> PostToy(ToyRequest toyRequest)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
             {
@@ -323,16 +326,17 @@ namespace EduToyRentAPI.Controllers
 
             int buyQuantity = 0;
 
-            if (userRole == 3)
-            {
-                buyQuantity = -1;
-                status = "Inactive";
-            }
-            else if (userRole == 2)
-            {
-                buyQuantity = (int)toyRequest.BuyQuantity;
-                status = "Active";
-            }
+            //if (userRole == 3)
+            //{
+            //    buyQuantity = -1;
+            //    status = "Inactive";
+            //}
+            //else if (userRole == 2)
+            //{
+            //    buyQuantity = (int)toyRequest.BuyQuantity;
+            //    status = "Active";
+            //}
+
             var toy = new Toy
             {
                 Name = toyRequest.Name,
@@ -345,10 +349,10 @@ namespace EduToyRentAPI.Controllers
                 QuantitySold = toyRequest.QuantitySold,
                 Brand = toyRequest.Brand,
                 CategoryId = toyRequest.CategoryId,
-                Status = status,
+                Status = toyRequest.Status,
                 UserId = userId,
                 ApproverId = null,
-                CreateDate = DateTime.Now
+                CreateDate = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"))
             };
 
             _unitOfWork.ToyRepository.Insert(toy);
@@ -389,6 +393,9 @@ namespace EduToyRentAPI.Controllers
        // [Authorize]
         public async Task<IActionResult> PutToy(int id, ToyRequest toyRequest)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var toy = _unitOfWork.ToyRepository.GetByID(id);
 
             if (toy == null)
@@ -417,7 +424,7 @@ namespace EduToyRentAPI.Controllers
             toy.QuantitySold = toyRequest.QuantitySold;
             toy.CategoryId = toyRequest.CategoryId;
             toy.Status = toyRequest.Status;
-            toy.CreateDate = DateTime.Now;
+            toy.CreateDate = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
 
             _unitOfWork.ToyRepository.Update(toy);
 

@@ -86,6 +86,9 @@ namespace EduToyRentAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTransactionDetail(int id, TransactionDetailRequest transactionDetail)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var tranDetail = _unitOfWork.TransactionDetailRepository.GetByID(id);
             if (tranDetail == null)
             {
@@ -97,7 +100,7 @@ namespace EduToyRentAPI.Controllers
             tranDetail.DepositBackMoney = transactionDetail.DepositBackMoney;
             tranDetail.OrderDetailId = transactionDetail.OrderDetailId;
             tranDetail.TranSactionId = transactionDetail.TransactionId;
-            tranDetail.Date = DateTime.Now;
+            tranDetail.Date = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
             tranDetail.Status = transactionDetail.Status;
 
             _unitOfWork.TransactionDetailRepository.Update(tranDetail);
@@ -111,6 +114,9 @@ namespace EduToyRentAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<TransactionDetail>> PostTransactionDetail(TransactionDetailRequest transactionDetail)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var transDetail = new TransactionDetail
             {
                 ReceiveMoney = transactionDetail.ReceiveMoney,
@@ -119,7 +125,7 @@ namespace EduToyRentAPI.Controllers
                 DepositBackMoney = transactionDetail.DepositBackMoney,
                 TranSactionId = transactionDetail.TransactionId,
                 OrderDetailId = transactionDetail.OrderDetailId,
-                Date = DateTime.Now,
+                Date = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 Status = transactionDetail.Status
             };
 

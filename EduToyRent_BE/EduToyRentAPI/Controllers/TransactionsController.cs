@@ -127,6 +127,9 @@ namespace EduToyRentAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTransaction(int id, TransactionRequest transaction)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var trans = _unitOfWork.TransactionRepository.GetByID(id);
 
             if (trans == null)
@@ -140,7 +143,7 @@ namespace EduToyRentAPI.Controllers
             trans.DepositBackMoney = transaction.DepositBackMoney;
             trans.Status = transaction.Status;
             trans.OrderId = transaction.OrderId;
-            trans.Date = DateTime.Now;
+            trans.Date = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
 
             _unitOfWork.TransactionRepository.Update(trans);
             _unitOfWork.Save();
@@ -153,6 +156,9 @@ namespace EduToyRentAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Transaction>> PostTransaction(TransactionRequest transaction)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var trans = new Transaction
             {
                 ReceiveMoney = transaction.ReceiveMoney,
@@ -160,7 +166,7 @@ namespace EduToyRentAPI.Controllers
                 DepositBackMoney = transaction.DepositBackMoney,
                 OwnerReceiveMoney = transaction.OwnerReceiveMoney,
                 OrderId = transaction.OrderId,
-                Date = DateTime.Now,
+                Date = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 Status = transaction.Status
             };
 

@@ -118,9 +118,11 @@ const LoginPage = () => {
       if (checkUserResponse.data != "") {
         // Người dùng đã tồn tại, tiến hành đăng nhập
         console.log("dữ liệu đã trả về:", checkUserResponse.data);
+        const userp = checkUserResponse.data[0].password;
+        console.log(userp);
         const loginResponse = await apiLogin.post("", {
           email: userEmail,
-          password: "1", // Mật khẩu mặc định là 1 khi đăng nhập qua Google
+          password: userp, 
         });
 
         if (loginResponse.status === 200) {

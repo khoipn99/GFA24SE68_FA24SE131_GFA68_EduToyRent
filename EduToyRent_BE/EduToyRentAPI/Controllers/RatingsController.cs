@@ -147,6 +147,9 @@ namespace EduToyRentAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<RatingResponse>> PostRating(RatingRequest ratingRequest)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var orderDetail = _unitOfWork.OrderDetailRepository.GetByID(ratingRequest.OrderDetailId);
             if (orderDetail == null)
             {
@@ -163,7 +166,7 @@ namespace EduToyRentAPI.Controllers
                 Star = ratingRequest.Star,
                 UserId = ratingRequest.UserId,
                 OrderDetailId = ratingRequest.OrderDetailId,
-                RatingDate = DateTime.Now
+                RatingDate = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"))
             };
             _unitOfWork.RatingRepository.Insert(rating);
             _unitOfWork.Save(); 

@@ -150,6 +150,9 @@ namespace EduToyRentAPI.Controllers
         //[Authorize(Roles = "1")]
         public async Task<ActionResult<UserResponse>> PostUser([FromForm] UserRequest userRequest)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var user = new User
             {
                 FullName = userRequest.FullName,
@@ -161,7 +164,7 @@ namespace EduToyRentAPI.Controllers
                 //AvatarUrl = userRequest.AvatarUrl,
                 Description = userRequest.Description,
                 Status = userRequest.Status,
-                CreateDate = DateTime.Now,
+                CreateDate = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 RoleId = userRequest.RoleId
             };
 

@@ -116,12 +116,15 @@ namespace EduToyRentAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<MessageResponse>> PostMessage(MessageRequest messageRequest)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var message = new Message
             {
                 IsRead = messageRequest.IsRead,
                 Content = messageRequest.Content,
                 MediaUrl = messageRequest.MediaUrl,
-                SentTime = DateTime.UtcNow,
+                SentTime = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 SenderId = messageRequest.SenderId,
                 ConversationId = messageRequest.ConversationId
             };
@@ -159,6 +162,7 @@ namespace EduToyRentAPI.Controllers
 
             return NoContent();
         }
+
         [HttpGet("conversation/{conversationId}")]
         public async Task<IActionResult> GetMessagesByConversation(int conversationId)
         {
@@ -168,6 +172,7 @@ namespace EduToyRentAPI.Controllers
             {
                 return Unauthorized();
             }
+
             var isParticipant = _unitOfWork.UserConversationRepository.GetV2(
                 uc => uc.UserId == userId && uc.ConversationId == conversationId).Any();
 
@@ -193,6 +198,7 @@ namespace EduToyRentAPI.Controllers
 
             return Ok(messages);
         }
+
         [HttpPut("markread/{conversationId}")]
         public async Task<IActionResult> MarkAllMessagesAsRead(int conversationId)
         {
@@ -212,6 +218,7 @@ namespace EduToyRentAPI.Controllers
             await _unitOfWork.SaveAsync();
             return Ok("All messages marked as read");
         }
+
         private bool MessageExists(int id)
         {
             return _unitOfWork.MessageRepository.Get().Any(m => m.Id == id);
