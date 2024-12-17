@@ -871,7 +871,7 @@ const StaffPage = () => {
       tmp.status = "DeliveringToUser";
       axios
         .post(
-          "https://localhost:44350/api/OrderCheckImages?orderDetailId=" +
+          "https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/OrderCheckImages?orderDetailId=" +
             order.id,
           formData,
           {
@@ -926,7 +926,7 @@ const StaffPage = () => {
       tmp.status = "DeliveringToShop";
       axios
         .post(
-          "https://localhost:44350/api/OrderCheckImages?orderDetailId=" +
+          "https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/OrderCheckImages?orderDetailId=" +
             order.id,
           formData,
           {
