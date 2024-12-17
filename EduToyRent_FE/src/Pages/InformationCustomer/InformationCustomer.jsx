@@ -1487,7 +1487,7 @@ const InformationCustomer = () => {
                       name="dob"
                       value={
                         dob
-                          ? new Date(customerInfo.dob)
+                          ? new Date(dob)
                               .toISOString()
                               .split("T")[0]
                           : ""

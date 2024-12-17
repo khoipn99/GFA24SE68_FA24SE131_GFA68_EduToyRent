@@ -345,7 +345,7 @@ namespace EduToyRentAPI.Controllers
                 Origin = toyRequest.Origin,
                 Age = toyRequest.Age,
                 RentCount = 0,
-                BuyQuantity = buyQuantity,
+                BuyQuantity = toyRequest.BuyQuantity,
                 QuantitySold = toyRequest.QuantitySold,
                 Brand = toyRequest.Brand,
                 CategoryId = toyRequest.CategoryId,
