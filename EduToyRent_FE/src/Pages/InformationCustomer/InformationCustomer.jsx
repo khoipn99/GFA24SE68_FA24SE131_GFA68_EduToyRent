@@ -308,7 +308,11 @@ const InformationCustomer = () => {
                 "&roleId=" +
                 customerInfo.role.id +
                 "&status=" +
-                customerInfo.status,
+                customerInfo.status +
+                "&description=" +
+                customerInfo.description +
+                "&walletId=" +
+                customerInfo.walletId,
               {
                 headers: {
                   Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -336,7 +340,7 @@ const InformationCustomer = () => {
           "/" +
             customerInfo.id +
             "?fullName=" +
-            customerInfo.fullName +
+            name +
             "&email=" +
             customerInfo.email +
             "&password=" +
@@ -344,15 +348,20 @@ const InformationCustomer = () => {
             "&createDate=" +
             customerInfo.createDate +
             "&phone=" +
-            customerInfo.phone +
+            phone +
             "&dob=" +
-            customerInfo.dob +
+            dob +
             "&address=" +
-            customerInfo.address +
+            address +
             "&roleId=" +
             customerInfo.role.id +
             "&status=" +
-            customerInfo.status,
+            customerInfo.status +
+            "&description=" +
+            customerInfo.description +
+            "&walletId=" +
+            customerInfo.walletId,
+
           {
             headers: {
               Authorization: `Bearer ${Cookies.get("userToken")}`,
