@@ -637,9 +637,9 @@ const ToysDetails = () => {
                         {currentToy.star}
                       </span>
                     </div>
-                    <span className="text-[#0e141b] text-sm">
+                    {/* <span className="text-[#0e141b] text-sm">
                       ({reviewCount} đánh giá)
-                    </span>
+                    </span> */}
                   </div>
                   <h2 className="text-[#0e141b] text-sm font-normal leading-normal">
                     Địa chỉ :{owner.address}
@@ -818,11 +818,11 @@ const ToysDetails = () => {
                     </div>
                   ))}
                 </div>
-                <p className="text-[#0e141b] text-base font-normal leading-normal">
+                {/* <p className="text-[#0e141b] text-base font-normal leading-normal">
                   {reviewCount} Đánh giá
-                </p>
+                </p> */}
               </div>
-              <div className="grid min-w-[200px] max-w-[400px] flex-1 grid-cols-[20px_1fr_40px] items-center gap-y-3">
+              {/* <div className="grid min-w-[200px] max-w-[400px] flex-1 grid-cols-[20px_1fr_40px] items-center gap-y-3">
                 {ratings.map((rating) => (
                   <React.Fragment key={rating.score}>
                     <p className="text-[#0e141b] text-sm font-normal leading-normal">
@@ -839,7 +839,7 @@ const ToysDetails = () => {
                     </p>
                   </React.Fragment>
                 ))}
-              </div>
+              </div> */}
 
               <div className="w-full flex flex-wrap gap-x-8 gap-y-6 p-0">
                 {currentReviews != "" &&

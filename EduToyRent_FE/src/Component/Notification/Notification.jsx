@@ -116,7 +116,7 @@ const Notifications = ({ show }) => {
   return (
     <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-4">
       <h3 className="text-lg font-semibold text-gray-700 mb-4">Thông báo</h3>
-      <ul className="space-y-3">
+      <ul className="space-y-3 max-h-60 overflow-y-auto scroll-smooth">
         {notifications.map((notification) => (
           <li
             key={notification.id}

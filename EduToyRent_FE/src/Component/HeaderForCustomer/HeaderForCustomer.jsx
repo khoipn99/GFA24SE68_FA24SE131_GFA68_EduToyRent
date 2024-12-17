@@ -629,9 +629,12 @@ const HeaderForCustomer = () => {
                     <img
                       src={userData.avatarUrl}
                       alt="User Avatar"
-                      width="40px"
-                      height="40px"
-                      className="rounded-full"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        objectFit: "cover",
+                        borderRadius: "50%", // làm tròn góc hình ảnh
+                      }}
                     />
                   </div>
                 ) : (
@@ -639,9 +642,12 @@ const HeaderForCustomer = () => {
                     <img
                       src={exampleImage}
                       alt="User Avatar"
-                      width="40px"
-                      height="40px"
-                      className="rounded-full"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        objectFit: "cover",
+                        borderRadius: "50%", // làm tròn góc hình ảnh
+                      }}
                     />
                   </div>
                 )}

@@ -155,6 +155,12 @@ const Home = () => {
       console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
     }
   };
+
+  const HandleShopPage = (toySuppliers) => {
+    Cookies.set("PageShopSaleId", toySuppliers.id, { expires: 7 });
+    navigate("/toy-store-details");
+  };
+
   const fetchUserCart = async (userId) => {
     try {
       const response = await apiCart.get(`?pageIndex=1&pageSize=1000`, {
@@ -588,7 +594,7 @@ const Home = () => {
                   <div
                     key={position}
                     className="flex flex-col gap-3 pb-3 transition-transform transform hover:scale-105 hover:shadow-lg hover:border hover:border-[#00aaff] hover:bg-[#f5faff] p-2 rounded-lg cursor-pointer"
-                    onClick={() => HandleToyDetailFilterCategory(category.name)}
+                    onClick={() => HandleShopPage(toySuppliers)}
                   >
                     <div
                       className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl hover:opacity-90 transition duration-300"

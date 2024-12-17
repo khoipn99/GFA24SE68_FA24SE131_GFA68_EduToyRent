@@ -149,32 +149,33 @@ const FilterToys = () => {
     const filters = [];
     Cookies.remove("ToyDetailFilter");
     Cookies.remove("ToyDetailCategory");
-    if (maxPrice) {
-      switch (maxPrice != "") {
-        case "0":
-          filters.push(`price gt 0 and price le 500000`);
-          break;
-        case "1":
-          filters.push(`price gt 500000 and price le 1000000`);
-          break;
-        case "2":
-          filters.push(`price gt 1000000 and price le 2000000`);
-          break;
-        case "3":
-          filters.push(`price gt 2000000 and price le 3000000`);
-          break;
-        case "4":
-          filters.push(`price gt 3000000 and price le 4000000`);
-          break;
-        case "5":
-          filters.push(`price gt 4000000 and price le 5000000`);
-          break;
-        case "6":
-          filters.push(`price gt 5000000`);
-          break;
-        default:
-          break; // Không áp dụng bộ lọc giá nếu không có giá trị hợp lệ
-      }
+
+    switch (maxPrice != "") {
+      case "":
+        break;
+      case "0":
+        filters.push(`price gt 0 and price le 500000`);
+        break;
+      case "1":
+        filters.push(`price gt 500000 and price le 1000000`);
+        break;
+      case "2":
+        filters.push(`price gt 1000000 and price le 2000000`);
+        break;
+      case "3":
+        filters.push(`price gt 2000000 and price le 3000000`);
+        break;
+      case "4":
+        filters.push(`price gt 3000000 and price le 4000000`);
+        break;
+      case "5":
+        filters.push(`price gt 4000000 and price le 5000000`);
+        break;
+      case "6":
+        filters.push(`price gt 5000000`);
+        break;
+      default:
+        break;
     }
 
     if (toyType == "1") {

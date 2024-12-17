@@ -32,8 +32,10 @@ const StaffPage = () => {
   const [currentPageData5, setCurrentPageData5] = useState(1); // Trang hiện tại cho toysData
   const itemsPerPage = 5; // Số mục trên mỗi trang
 
-  const [orders, setOrders] = useState([]); // State để lưu trữ danh sách đơn hàng
-
+  const [orders, setOrders] = useState([]);
+  const [wallets, setWallets] = useState([]);
+  const [selectedUser, setSelectedUser] = useState([]);
+  const [selectedUser2, setSelectedUser2] = useState([]);
   const [editedData, setEditedData] = useState({});
   const [imageUrl, setImageUrl] = useState("");
   const [file, setFile] = useState(null);
@@ -53,6 +55,8 @@ const StaffPage = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [selectedToy, setSelectedToy] = useState(null);
   const navigate = useNavigate();
+  const [selectedWallet, setSelectedWallet] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const [totalPages, setTotalPages] = useState(1);
   useEffect(() => {
@@ -117,6 +121,7 @@ const StaffPage = () => {
       LoadUser();
       LoadUserBan();
       LoadOrder("");
+      LoadPayment();
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
@@ -365,6 +370,52 @@ const StaffPage = () => {
       }
     }
   };
+
+  const handleChecking2 = async (wallet) => {
+    await apiWallets
+      .get("/" + wallet.walletId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+          "Content-Type": "application/json",
+        },
+      })
+      .then((response) => {
+        setSelectedUser2(response.data);
+        apiUser
+          .get("/" + response.data.userId, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+              "Content-Type": "application/json",
+            },
+          })
+          .then((response2) => {
+            setSelectedUser(response2.data);
+          });
+      });
+    setSelectedWallet(wallet);
+    setIsDetailOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setIsDetailOpen(false);
+    setSelectedWallet(null);
+  };
+
+  const handleAccept = () => {
+    var tmp = selectedWallet;
+    tmp.status = "Success";
+
+    apiWalletTransaction
+      .put("/" + selectedWallet.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        LoadPayment();
+      });
+  };
+
   const LoadToy = async () => {
     try {
       const toyResponse = await apiToys.get(`?pageIndex=1&pageSize=2000`, {
@@ -508,6 +559,44 @@ const StaffPage = () => {
       console.error("Lỗi khi tải danh sách người dùng", error);
     }
   };
+  const LoadPayment = async (statusFilter) => {
+    const userToken = Cookies.get("userToken");
+    if (!userToken) {
+      alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    // Nếu không có statusFilter thì mặc định là "Delivering"
+    statusFilter = statusFilter || "Await";
+
+    try {
+      // Lấy danh sách đơn hàng với trạng thái lọc
+      const OrderResponse = await apiWalletTransaction.get(
+        `/?pageIndex=1&pageSize=20000&status=${statusFilter}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+      console.log("Danh sách đơn hàng 1:", OrderResponse.data);
+      // Lọc lại đơn hàng theo trạng thái
+      const filteredOrders = OrderResponse.data.filter(
+        (order) => order.status == "Await"
+      );
+      console.log("Danh sách đơn hàng sau khi lọc:", filteredOrders);
+
+      // Cập nhật state orders
+      setWallets(filteredOrders);
+      console.log("Danh sách đơn hàng:", filteredOrders);
+    } catch (error) {
+      console.error(
+        "Lỗi khi tải danh sách đơn hàng hoặc chi tiết đơn hàng:",
+        error
+      );
+    }
+  };
+
   const LoadOrder = async (statusFilter) => {
     const userToken = Cookies.get("userToken");
     if (!userToken) {
@@ -576,6 +665,7 @@ const StaffPage = () => {
     // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
     updateCurrentPageData6(orders);
   }, [currentPageData5, orders]); // Cập nhật khi currentPage hoặc toysRentData thay đổi
+
   const [currentToys, setCurrentToys] = useState([]); // Dữ liệu đồ chơi hiện tại
   const [currentToys1, setCurrentToys1] = useState([]); // Dữ liệu đồ chơi hiện tại
   const [currentToys2, setCurrentToys2] = useState([]); // Dữ liệu đồ chơi hiện tại
@@ -583,6 +673,7 @@ const StaffPage = () => {
   const [currentToys4, setCurrentToys4] = useState([]); // Dữ liệu đồ chơi hiện tại
   const [currentToys5, setCurrentToys5] = useState([]); // Dữ liệu đồ chơi hiện tại
   const [currentToys6, setCurrentToys6] = useState([]); // Dữ liệu đồ chơi hiện tại
+  const [currentToys7, setCurrentToys7] = useState([]); // Dữ liệu đồ chơi hiện tại
   const updateCurrentPageData1 = (inactiveToys) => {
     // Tính toán vị trí bắt đầu và kết thúc cho trang hiện tại
     const startIndex = (currentPageData - 1) * itemsPerPage;
@@ -2370,6 +2461,89 @@ const StaffPage = () => {
             )}
           </div>
         );
+
+      case "Withdraw":
+        return (
+          <div className="container mx-auto py-4">
+            <h2 className="text-2xl font-semibold">
+              Danh sách yêu cầu rút tiền{" "}
+            </h2>
+            {wallets.map((order) => (
+              <div
+                key={order.id}
+                className="bg-white shadow-lg rounded-lg overflow-hidden mt-4"
+              >
+                <div className="flex items-center p-4 border-b">
+                  <div className="ml-4 flex-1">
+                    <h3 className="text-lg font-semibold">
+                      Ngày yêu cầu: {order.date.toLocaleDateString()}
+                    </h3>
+                    <h3 className="text-lg font-semibold">
+                      Số tiền yêu cầu: {order.amount.toLocaleString()}
+                    </h3>
+                  </div>
+                </div>
+                <div className="flex justify-between p-4">
+                  <div className="ml-auto flex gap-4">
+                    <button
+                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                      onClick={() => handleChecking2(order)}
+                    >
+                      Chi tiết
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {isDetailOpen &&
+              selectedWallet &&
+              selectedUser &&
+              selectedUser2 && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                  <div className="bg-white p-6 rounded-lg w-96 shadow-lg">
+                    <h3 className="text-xl font-semibold mb-4">
+                      Chi tiết Yêu cầu
+                    </h3>
+                    <p>
+                      <strong>Ngày yêu cầu:</strong>{" "}
+                      {selectedWallet.date.toLocaleDateString()}
+                    </p>
+                    <p>
+                      <strong>Số tiền yêu cầu:</strong>{" "}
+                      {selectedWallet.amount.toLocaleString()}
+                    </p>
+                    <p>
+                      <strong>Người yêu cầu:</strong> {selectedUser.fullName}
+                    </p>
+                    <p>
+                      <strong>Số tài khoản:</strong>{" "}
+                      {selectedUser2.withdrawInfo}
+                    </p>
+                    <p>
+                      <strong>Ngân hàng:</strong> {selectedUser2.withdrawMethod}
+                    </p>
+
+                    {/* Thêm nút Chấp nhận yêu cầu */}
+                    <div className="flex justify-end gap-4 mt-6">
+                      <button
+                        onClick={() => handleCloseDetail()}
+                        className="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                      >
+                        Đóng
+                      </button>
+                      <button
+                        onClick={() => handleAccept()}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                      >
+                        Chấp nhận yêu cầu
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+          </div>
+        );
       case "Status":
         return (
           <div className="container mx-auto py-4">
@@ -3484,7 +3658,15 @@ const StaffPage = () => {
               }`}
             >
               <span className="icon-class mr-2">🧾</span> Danh sách đơn hàng
-              đang chờ trả
+              đang chờ đánh giá
+            </button>
+            <button
+              onClick={() => setSelectedTab("Withdraw")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "Withdraw" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">🧾</span> Danh sách rút tiền
             </button>
           </nav>
         </aside>
