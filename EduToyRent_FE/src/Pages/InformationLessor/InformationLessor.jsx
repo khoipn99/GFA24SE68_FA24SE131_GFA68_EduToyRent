@@ -716,6 +716,8 @@ const InformationLessor = () => {
     Complete: "Hoàn thành",
     Active: "Sẵn sàng",
     Inactive: "Không sẵn sàng",
+    Renting: "Đang cho thuê",
+    Sold: "Đã bán",
     DeliveringToBuyer: "Đang giao cho người dùng",
     // Các trạng thái khác nếu có
   };
