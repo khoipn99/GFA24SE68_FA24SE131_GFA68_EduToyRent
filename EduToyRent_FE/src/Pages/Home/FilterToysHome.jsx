@@ -11,7 +11,7 @@ import apiToys from "../../service/ApiToys";
 
 import apiCategory from "../../service/ApiCategory";
 import apiCartItem from "../../service/ApiCartItem";
-
+import ChatForm from "../Chat/ChatForm";
 import apiCart from "../../service/ApiCart";
 
 const FilterToys = () => {
@@ -741,7 +741,7 @@ const FilterToys = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-[#0e161b] text-lg">No toys found</p>
+                <p className="text-[#0e161b] text-lg">Không tìm thấy đồ chơi</p>
               )}
             </div>
             {isModalOpen && (
@@ -851,6 +851,7 @@ const FilterToys = () => {
           </div>
         </div>
       </div>
+      <ChatForm />
       <footer>
         <FooterForCustomer />
       </footer>

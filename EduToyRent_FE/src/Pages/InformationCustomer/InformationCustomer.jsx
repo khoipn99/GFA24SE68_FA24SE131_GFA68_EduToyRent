@@ -27,6 +27,7 @@ const InformationCustomer = () => {
 
   const [walletInfo, setWalletInfo] = useState({});
   const [walletTransaction, setWalletTransaction] = useState({});
+  const [walletTransactionPlus, setWalletTransactionPlus] = useState({});
   const [walletTransactionMinus, setWalletTransactionMinus] = useState({});
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -161,9 +162,10 @@ const InformationCustomer = () => {
           )
           .then((response) => {
             console.log("Wallet Transaction Response:", response.data);
-            setWalletTransaction(
-              response.data.filter((transaction) => transaction.amount >= 0)
-            );
+            setWalletTransaction(response.data);
+
+            setWalletTransactionPlus((transaction) => transaction.amount >= 0);
+
             setWalletTransactionMinus(
               response.data.filter((transaction) => transaction.amount < 0)
             );
@@ -1982,7 +1984,7 @@ const InformationCustomer = () => {
                 <div className="flex items-start mb-10">
                   {/* WalletTransaction - Danh sách giao dịch dương */}
                   <ul className="space-y-4 w-1/2">
-                    {walletTransaction.map((transaction) => (
+                    {walletTransactionPlus.map((transaction) => (
                       <li
                         key={transaction.id}
                         className="p-4 border border-gray-300 rounded-lg"

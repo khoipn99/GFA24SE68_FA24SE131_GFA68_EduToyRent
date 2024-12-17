@@ -17,7 +17,7 @@ import ChartTwo from "../../Component/DashBoard/ChartTwo";
 import CardDataStats from "../../Component/DashBoard/CardDataStats";
 import ChartOneSupplier from "../../Component/DashBoard/ChartOneSupplier";
 import apiTransaction from "../../service/ApiTransaction";
-
+import ChatForm from "../Chat/ChatForm";
 const ToySupplierPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("info");
@@ -3094,6 +3094,7 @@ const ToySupplierPage = () => {
         </main>
       </div>
       {renderMoney()}
+      <ChatForm />
       <footer className="bg-white shadow-md p-4">
         <FooterForCustomer />
       </footer>

@@ -17,7 +17,7 @@ import { use } from "react";
 import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
 import axios from "axios";
 import apiNotifications from "../../service/ApiNotifications";
-
+import ChatForm from "../Chat/ChatForm";
 const StaffPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("info");
@@ -3496,6 +3496,7 @@ const StaffPage = () => {
           </div>
         </main>
       </div>
+      <ChatForm />
       <footer className="bg-white shadow-md p-4">
         <FooterForCustomer />
       </footer>

@@ -735,14 +735,11 @@ const ToysDetails = () => {
                   </div>
                 </div>
                 <div className="flex items-center mb-2">
-                  <span className="text-sm text-gray-500 mr-4">
-                    Sản phẩm: 608
-                  </span>
-                  <span className="text-sm text-gray-500 mr-4">
-                    Đánh giá: 252,8k
-                  </span>
                   <span className="text-sm text-gray-500">
-                    Điểm đánh giá trung bình: 5.0
+                    Điểm đánh giá trung bình:{" "}
+                    {currentToy.owner && currentToy.owner.star
+                      ? currentToy.owner.star
+                      : ""}
                   </span>
                 </div>
               </div>
