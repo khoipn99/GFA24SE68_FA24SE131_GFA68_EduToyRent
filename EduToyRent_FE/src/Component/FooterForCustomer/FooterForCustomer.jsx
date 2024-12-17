@@ -14,7 +14,7 @@ const FooterForCustomer = () => {
               <li>Tuyển dụng</li>
               <li>
                 <Link
-                  to="/terms"
+                  to="/term"
                   className="text-gray-600 hover:text-orange-600"
                 >
                   Điều khoản
@@ -58,7 +58,7 @@ const FooterForCustomer = () => {
         {/* Dòng dưới cùng của footer */}
         <div className="border-t mt-8 pt-4">
           <p className="text-center text-gray-500 text-sm">
-            © 2024 Công Ty TNHH Đồ Chơi Trẻ Em. All rights reserved.
+            © 2024 EduToyRent.
           </p>
         </div>
       </div>
