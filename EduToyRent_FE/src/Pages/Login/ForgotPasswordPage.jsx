@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+api;
 
 const ForgotPasswordPage = () => {
   const [step, setStep] = useState(1);
@@ -9,7 +10,10 @@ const ForgotPasswordPage = () => {
 
   const handleSendOTP = async () => {
     try {
-      const response = await axios.post("https://localhost:44350/api/Auth/forgot-password", { email });
+      const response = await axios.post(
+        "https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/Auth/forgot-password",
+        { email }
+      );
       alert(response.data);
       setStep(2);
     } catch (error) {
@@ -19,11 +23,14 @@ const ForgotPasswordPage = () => {
 
   const handleResetPassword = async () => {
     try {
-      const response = await axios.post("https://localhost:44350/api/Auth/reset-password", {
-        email,
-        otp,
-        newPassword
-      });
+      const response = await axios.post(
+        "https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/Auth/reset-password",
+        {
+          email,
+          otp,
+          newPassword,
+        }
+      );
       alert(response.data);
       window.location.href = "/login";
     } catch (error) {
@@ -32,55 +39,55 @@ const ForgotPasswordPage = () => {
   };
 
   const containerStyle = {
-    fontFamily: 'Arial, sans-serif',
-    background: '#f0f2f5',
-    minHeight: '100vh',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '20px'
+    fontFamily: "Arial, sans-serif",
+    background: "#f0f2f5",
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "20px",
   };
 
   const cardStyle = {
-    background: '#fff',
-    borderRadius: '8px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-    width: '320px',
-    padding: '20px',
-    textAlign: 'center'
+    background: "#fff",
+    borderRadius: "8px",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+    width: "320px",
+    padding: "20px",
+    textAlign: "center",
   };
 
   const titleStyle = {
-    fontSize: '1.5em',
-    marginBottom: '10px',
-    color: '#333'
+    fontSize: "1.5em",
+    marginBottom: "10px",
+    color: "#333",
   };
 
   const descriptionStyle = {
-    fontSize: '0.9em',
-    color: '#666',
-    marginBottom: '20px'
+    fontSize: "0.9em",
+    color: "#666",
+    marginBottom: "20px",
   };
 
   const inputStyle = {
-    width: '100%',
-    padding: '10px',
-    borderRadius: '4px',
-    border: '1px solid #ddd',
-    marginBottom: '15px',
-    fontSize: '0.9em'
+    width: "100%",
+    padding: "10px",
+    borderRadius: "4px",
+    border: "1px solid #ddd",
+    marginBottom: "15px",
+    fontSize: "0.9em",
   };
 
   const buttonStyle = {
-    width: '100%',
-    padding: '10px',
-    border: 'none',
-    borderRadius: '4px',
-    background: '#1890ff',
-    color: '#fff',
-    cursor: 'pointer',
-    fontSize: '1em',
-    fontWeight: 'bold'
+    width: "100%",
+    padding: "10px",
+    border: "none",
+    borderRadius: "4px",
+    background: "#1890ff",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "1em",
+    fontWeight: "bold",
   };
 
   return (
@@ -89,7 +96,9 @@ const ForgotPasswordPage = () => {
         {step === 1 && (
           <>
             <h2 style={titleStyle}>Quên mật khẩu</h2>
-            <p style={descriptionStyle}>Nhập email để chúng tôi gửi mã OTP khôi phục mật khẩu</p>
+            <p style={descriptionStyle}>
+              Nhập email để chúng tôi gửi mã OTP khôi phục mật khẩu
+            </p>
             <input
               style={inputStyle}
               type="email"
@@ -106,7 +115,9 @@ const ForgotPasswordPage = () => {
         {step === 2 && (
           <>
             <h2 style={titleStyle}>Đặt lại mật khẩu</h2>
-            <p style={descriptionStyle}>Nhập mã OTP chúng tôi đã gửi qua email cùng mật khẩu mới</p>
+            <p style={descriptionStyle}>
+              Nhập mã OTP chúng tôi đã gửi qua email cùng mật khẩu mới
+            </p>
             <input
               style={inputStyle}
               type="text"
