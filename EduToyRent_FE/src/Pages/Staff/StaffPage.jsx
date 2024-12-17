@@ -2476,7 +2476,7 @@ const StaffPage = () => {
                 <div className="flex items-center p-4 border-b">
                   <div className="ml-4 flex-1">
                     <h3 className="text-lg font-semibold">
-                      Ngày yêu cầu: {order.date.toLocaleDateString()}
+                      Ngày yêu cầu: {new Date(order.date).toLocaleString()}
                     </h3>
                     <h3 className="text-lg font-semibold">
                       Số tiền yêu cầu: {order.amount.toLocaleString()}
@@ -2507,7 +2507,7 @@ const StaffPage = () => {
                     </h3>
                     <p>
                       <strong>Ngày yêu cầu:</strong>{" "}
-                      {selectedWallet.date.toLocaleDateString()}
+                      {new Date(selectedWallet.date).toLocaleString()}
                     </p>
                     <p>
                       <strong>Số tiền yêu cầu:</strong>{" "}

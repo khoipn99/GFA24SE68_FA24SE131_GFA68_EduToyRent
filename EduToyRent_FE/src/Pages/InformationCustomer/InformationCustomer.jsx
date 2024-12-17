@@ -288,7 +288,7 @@ const InformationCustomer = () => {
       if (oldPassword == customerInfo.password) {
         if (newPassword == confirmNewPassword) {
           apiUser
-            .get(
+            .put(
               "/" +
                 customerInfo.id +
                 "?fullName=" +
@@ -296,7 +296,7 @@ const InformationCustomer = () => {
                 "&email=" +
                 customerInfo.email +
                 "&password=" +
-                newPassword +
+                confirmNewPassword +
                 "&createDate=" +
                 customerInfo.createDate +
                 "&phone=" +
@@ -332,7 +332,7 @@ const InformationCustomer = () => {
       }
     } else {
       apiUser
-        .get(
+        .put(
           "/" +
             customerInfo.id +
             "?fullName=" +
