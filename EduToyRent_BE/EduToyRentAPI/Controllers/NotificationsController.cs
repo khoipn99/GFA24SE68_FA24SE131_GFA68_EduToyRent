@@ -181,10 +181,13 @@ namespace EduToyRentAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<NotificationResponse>> AddNotification(NotificationRequest notificationRequest)
         {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
+
             var notification = new Notification
             {
                 Notify = notificationRequest.Notify,
-                SentTime = DateTime.Now,
+                SentTime = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 IsRead = false,
                 UserId = notificationRequest.UserId
             };

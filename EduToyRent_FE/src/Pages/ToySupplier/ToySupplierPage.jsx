@@ -1205,7 +1205,7 @@ const ToySupplierPage = () => {
                   </label>
                 </div>
 
-                <div className="mb-4">
+                {/* <div className="mb-4">
                   <label className="block text-gray-700 font-medium">
                     <p>
                       Ngày sinh:{" "}
@@ -1218,7 +1218,7 @@ const ToySupplierPage = () => {
                         : "Chưa cập nhật"}
                     </p>
                   </label>
-                </div>
+                </div> */}
 
                 <div className="mb-4">
                   <label className="block text-gray-700 font-medium">
@@ -1275,7 +1275,7 @@ const ToySupplierPage = () => {
                       />
                     </div>
 
-                    <div className="mb-4">
+                    {/* <div className="mb-4">
                       <label className="block text-gray-700">Ngày sinh</label>
                       <input
                         type="date"
@@ -1290,7 +1290,7 @@ const ToySupplierPage = () => {
                         }
                         className="w-full p-2 border border-gray-300 rounded"
                       />
-                    </div>
+                    </div> */}
 
                     <div className="mb-4">
                       <label className="block text-gray-700">Địa chỉ</label>

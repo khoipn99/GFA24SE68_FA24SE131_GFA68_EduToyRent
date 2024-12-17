@@ -1006,8 +1006,8 @@ const InformationLessor = () => {
               </button>
             </div>
             {isModalOpen && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="bg-white p-6 rounded shadow-lg w-120">
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-100">
+                <div className="bg-white p-6 rounded shadow-lg w-120 z-110">
                   <h3 className="text-lg font-semibold mb-4">
                     Thêm Sản Phẩm Mới
                   </h3>
@@ -1875,7 +1875,7 @@ const InformationLessor = () => {
         style={{
           position: "sticky",
           top: 0,
-          zIndex: 1000,
+          zIndex: 50,
           backgroundColor: "white",
         }}
       >
