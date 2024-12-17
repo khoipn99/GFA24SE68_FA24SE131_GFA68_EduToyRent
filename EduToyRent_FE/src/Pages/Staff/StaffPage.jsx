@@ -403,7 +403,7 @@ const StaffPage = () => {
 
   const handleAccept = () => {
     var tmp = selectedWallet;
-    tmp.status = "Success";
+    tmp.status = "Complete";
 
     apiWalletTransaction
       .put("/" + selectedWallet.id, tmp, {
@@ -413,6 +413,8 @@ const StaffPage = () => {
       })
       .then((response) => {
         LoadPayment();
+        setIsDetailOpen(false);
+        setSelectedWallet(null);
       });
   };
 

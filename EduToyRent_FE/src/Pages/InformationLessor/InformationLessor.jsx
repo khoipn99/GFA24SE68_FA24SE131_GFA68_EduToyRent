@@ -663,7 +663,7 @@ const InformationLessor = () => {
     price: 0,
     buyQuantity: -1,
     origin: "",
-    age: "",
+    age: "1-3",
     brand: "",
     categoryId: 1,
     rentCount: 0,
@@ -747,7 +747,7 @@ const InformationLessor = () => {
               price: 0,
               buyQuantity: -1,
               origin: "",
-              age: "",
+              age: "1-3",
               brand: "",
               categoryId: 1,
               rentCount: 0,
@@ -1006,7 +1006,12 @@ const InformationLessor = () => {
               </button>
             </div>
             {isModalOpen && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-100">
+              <div
+                className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-100"
+                style={{
+                  zIndex: 60,
+                }}
+              >
                 <div className="bg-white p-6 rounded shadow-lg w-120 z-110">
                   <h3 className="text-lg font-semibold mb-4">
                     Thêm Sản Phẩm Mới
