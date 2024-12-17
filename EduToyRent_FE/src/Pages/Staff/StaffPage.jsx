@@ -1666,7 +1666,7 @@ const StaffPage = () => {
                         {statusMapping[selectedToyRent.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -1675,9 +1675,9 @@ const StaffPage = () => {
                           }}
                           className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
                         >
-                          Xóa
+                          Cấm
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
@@ -2351,7 +2351,7 @@ const StaffPage = () => {
                         {statusMapping[selectedToyBuy.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -2360,9 +2360,9 @@ const StaffPage = () => {
                           }}
                           className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
                         >
-                          Xoá
+                          Cấm
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
@@ -2825,7 +2825,7 @@ const StaffPage = () => {
                         {statusMapping[selectedToyBan.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -2836,7 +2836,7 @@ const StaffPage = () => {
                         >
                           Bỏ lệnh cấm
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
@@ -3098,7 +3098,7 @@ const StaffPage = () => {
                         {statusMapping[selectedUserUp.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3109,7 +3109,7 @@ const StaffPage = () => {
                         >
                           Cấm
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
@@ -3372,7 +3372,7 @@ const StaffPage = () => {
                         {statusMapping[selectedUserUpBan.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3383,7 +3383,7 @@ const StaffPage = () => {
                         >
                           Bỏ lệnh cấm
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
