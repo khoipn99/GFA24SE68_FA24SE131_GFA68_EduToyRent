@@ -1486,11 +1486,7 @@ const InformationCustomer = () => {
                       type="date"
                       name="dob"
                       value={
-                        dob
-                          ? new Date(customerInfo.dob)
-                              .toISOString()
-                              .split("T")[0]
-                          : ""
+                        dob ? new Date(dob).toISOString().split("T")[0] : ""
                       }
                       onChange={(e) => handleInputChangeDob(e.target.value)}
                       className="w-6/10 border border-gray-300 rounded p-1"
