@@ -1233,9 +1233,9 @@ const InformationLessor = () => {
                 Chờ duyệt
               </button>
               <button
-                onClick={() => handleProductFilterChange("approved")}
+                onClick={() => handleProductFilterChange("Active")}
                 className={`p-2 rounded ${
-                  productFilter === "approved"
+                  productFilter === "Active"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-300"
                 }`}
@@ -1289,6 +1289,9 @@ const InformationLessor = () => {
                 <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative z-[1010]">
                   {isEditMode ? (
                     <>
+                      <h3 className="text-lg font-semibold mb-4">
+                        Sửa sản phẩm
+                      </h3>
                       <input
                         name="name"
                         value={editedProduct.name}
