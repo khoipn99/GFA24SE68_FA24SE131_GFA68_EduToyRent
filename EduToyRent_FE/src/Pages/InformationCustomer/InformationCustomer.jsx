@@ -325,6 +325,7 @@ const InformationCustomer = () => {
                 expires: 7,
               });
               alert("Mật khẩu và thông tin của bạn đã được cập nhật.");
+              window.location.reload();
             });
         } else {
           alert("Mật khẩu xác nhận không mật khẩu mới.");
@@ -375,6 +376,7 @@ const InformationCustomer = () => {
           });
           alert("Thông tin của bạn đã được cập nhật.");
           console.log(response.data);
+          window.location.reload();
           console.log(customerInfo);
         });
     }

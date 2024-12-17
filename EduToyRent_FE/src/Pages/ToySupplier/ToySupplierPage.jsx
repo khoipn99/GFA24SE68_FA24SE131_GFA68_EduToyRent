@@ -551,6 +551,8 @@ const ToySupplierPage = () => {
         formData.append("status", editedData.status || "Active");
         formData.append("roleId", editedData.role.id || "");
         formData.append("star", editedData.star || "");
+        formData.append("walletId", editedData.walletId || "");
+        formData.append("description", editedData.description || "");
 
         const response = await apiUser.put(`/${userId}`, formData, {
           headers: {
@@ -613,6 +615,8 @@ const ToySupplierPage = () => {
       formData.append("status", editedData.status || "Active");
       formData.append("roleId", editedData.role.id || "");
       formData.append("avatarUrl", editedData.avatarUrl || "");
+      formData.append("walletId", editedData.walletId || "");
+      formData.append("description", editedData.description || "");
 
       // Bước 2: Gửi yêu cầu PUT để cập nhật thông tin người dùng
       const response = await apiUser.put(`/${userId}`, formData, {
