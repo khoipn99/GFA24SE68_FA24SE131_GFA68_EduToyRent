@@ -321,7 +321,8 @@ const Payment = () => {
                   .post(
                     "",
                     {
-                      orderDate: new Date().toISOString(),
+                      //orderDate: new Date().toISOString(),
+                      orderDate: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString(),
                       receiveDate: null,
                       totalPrice: totalDepositTmp,
                       rentPrice: totalRentPriceTmp,
@@ -367,6 +368,7 @@ const Payment = () => {
                           transactionType: "Thanh toán đơn hàng",
                           amount: -parseInt(totalDepositTmp + 30000 * tmp),
                           date: new Date().toISOString(),
+                          //date: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString(),
                           walletId: customerInfo.walletId,
                           paymentTypeId: 5,
                           orderId: response.data.id,
@@ -492,7 +494,8 @@ const Payment = () => {
                   .post(
                     "",
                     {
-                      orderDate: new Date().toISOString(),
+                      //orderDate: new Date().toISOString(),
+                      orderDate: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString(),
                       receiveDate: null,
                       totalPrice: totalDepositTmp2,
                       rentPrice: 0,
@@ -537,7 +540,8 @@ const Payment = () => {
                       {
                         transactionType: "Thanh toán đơn hàng",
                         amount: -parseInt(totalDepositTmp2),
-                        date: new Date().toISOString(),
+                        //date: new Date().toISOString(),
+                        date: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString(),
                         walletId: customerInfo.walletId,
                         paymentTypeId: 5,
                         orderId: response.data.id,
@@ -709,7 +713,8 @@ const Payment = () => {
                 .post(
                   "",
                   {
-                    orderDate: new Date().toISOString(),
+                    //orderDate: new Date().toISOString(),
+                    orderDate: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString(),
                     receiveDate: null,
                     totalPrice: totalDepositTmp,
                     rentPrice: totalRentPriceTmp,
@@ -746,7 +751,8 @@ const Payment = () => {
                     {
                       transactionType: "Thanh toán đơn hàng",
                       amount: -parseInt(totalDepositTmp + 30000 * tmp),
-                      date: new Date().toISOString(),
+                      //date: new Date().toISOString(),
+                      date: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString(),
                       walletId: customerInfo.walletId,
                       paymentTypeId: 5,
                       orderId: response.data.id,
@@ -868,7 +874,8 @@ const Payment = () => {
                 .post(
                   "",
                   {
-                    orderDate: new Date().toISOString(),
+                    //orderDate: new Date().toISOString(),
+                    orderDate: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString(),
                     receiveDate: null,
                     totalPrice: totalDepositTmp2,
                     rentPrice: 0,
@@ -906,7 +913,8 @@ const Payment = () => {
                     {
                       transactionType: "Thanh toán đơn hàng",
                       amount: -parseInt(totalDepositTmp2),
-                      date: new Date().toISOString(),
+                      //date: new Date().toISOString(),
+                      date: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString(),
                       walletId: customerInfo.walletId,
                       paymentTypeId: 5,
                       orderId: response.data.id,

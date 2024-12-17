@@ -20,14 +20,16 @@ namespace EduToyRentAPI.Controllers
             {
                 var payOS = new PayOS(clientId, apiKey, checksumKey);
 
-                var domain = "http://localhost:3000";
+                var domain = "https://edu-toy-rent.vercel.app";
+
+                //var domain = "https://localhost:3000";
 
                 //string paymentCode = DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
 
                 var paymentLinkRequest = new PaymentData(
                     orderCode: int.Parse(DateTimeOffset.Now.ToString("ffffff")),
                     amount: totalAmount,
-                    description: "EduToyRent ",
+                    description: "Nap vao vi EduToyRent",
                     items: [new("" + orderId, 1, totalAmount)],
                     //returnUrl: domain + "?success=true",
                     //cancelUrl: domain + "?canceled=true"
@@ -48,7 +50,7 @@ namespace EduToyRentAPI.Controllers
             catch (System.Exception exception)
             {
                 Console.WriteLine(exception);
-                return Redirect("http://localhost:3000");
+                return Redirect("https://edu-toy-rent.vercel.app");
             }
         }
 

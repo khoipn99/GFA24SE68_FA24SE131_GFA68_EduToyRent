@@ -49,11 +49,11 @@ builder.Services.AddSingleton<IMailService>(new GmailMailService(
     "EduToyRent"
 ));
 
-//var jsonContent = client.GetSecret("firebase-adminsdk").Value.Value;
-//File.WriteAllText("google-credentials.json", jsonContent);
-//Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "google-credentials.json");
+var jsonContent = client.GetSecret("firebase-adminsdk").Value.Value;
+File.WriteAllText("google-credentials.json", jsonContent);
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "google-credentials.json");
 
-Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", builder.Configuration["FirebaseCredentials:Path"]);
+//Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", builder.Configuration["FirebaseCredentials:Path"]);
 
 
 Console.WriteLine("Environment: " + builder.Environment.EnvironmentName);
@@ -102,11 +102,17 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
-        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy("AllowProduction", policy =>
     {
         policy.WithOrigins("https://edu-toy-rent.vercel.app/") 
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+
+    options.AddPolicy("AllowDevelopment", policy =>
+    {
+        policy.WithOrigins("https://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -193,7 +199,8 @@ builder.Services.AddSwaggerGen(option =>
 
 
 var app = builder.Build();
-app.UseCors("AllowFrontend");
+app.UseCors("AllowProduction");
+app.UseCors("AllowDevelopment");
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseRouting();
