@@ -321,11 +321,20 @@ const InformationCustomer = () => {
             )
             .then((response) => {
               setIsEditing(false);
-              Cookies.set("userDataReal", JSON.stringify(response.data), {
-                expires: 7,
-              });
-              alert("Mật khẩu và thông tin của bạn đã được cập nhật.");
-              window.location.reload();
+              apiUser
+                .get("/" + customerInfo.id, {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                })
+                .then((response2) => {
+                  Cookies.set("userDataReal", JSON.stringify(response2.data), {
+                    expires: 7,
+                  });
+                  alert("Mật khẩu và Thông tin của bạn đã được cập nhật.");
+
+                  window.location.reload();
+                });
             });
         } else {
           alert("Mật khẩu xác nhận không mật khẩu mới.");
@@ -371,13 +380,20 @@ const InformationCustomer = () => {
         )
         .then((response) => {
           setIsEditing(false);
-          Cookies.set("userDataReal", JSON.stringify(response.data), {
-            expires: 7,
-          });
-          alert("Thông tin của bạn đã được cập nhật.");
-          console.log(response.data);
-          window.location.reload();
-          console.log(customerInfo);
+          apiUser
+            .get("/" + customerInfo.id, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response2) => {
+              Cookies.set("userDataReal", JSON.stringify(response2.data), {
+                expires: 7,
+              });
+              alert("Thông tin của bạn đã được cập nhật.");
+
+              window.location.reload();
+            });
         });
     }
   };
