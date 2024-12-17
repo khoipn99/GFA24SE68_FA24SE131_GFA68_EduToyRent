@@ -1113,6 +1113,7 @@ const ToySupplierPage = () => {
     Complete: "Hoàn thành",
     Active: "Sẵn sàng",
     Inactive: "Không sẵn sàng",
+    DeliveringToBuyer: "Đang giao cho người dùng",
     // Các trạng thái khác nếu có
   };
   const renderMoney = () => {
@@ -1646,14 +1647,14 @@ const ToySupplierPage = () => {
                               <strong>Tên đồ chơi:</strong>{" "}
                               {orderDetail.toyName}
                             </p>
-                            <p className="text-sm text-gray-700">
+                            {/* <p className="text-sm text-gray-700">
                               <strong>Giá cọc:</strong>{" "}
                               {(orderDetail.unitPrice || 0).toLocaleString()}{" "}
                               VNĐ
-                            </p>
+                            </p> */}
                             <p className="text-sm text-gray-700">
-                              <strong>Giá thuê:</strong>{" "}
-                              {(orderDetail.rentPrice || 0).toLocaleString()}{" "}
+                              <strong>Giá mua:</strong>{" "}
+                              {(orderDetail.unitPrice || 0).toLocaleString()}{" "}
                               VNĐ
                             </p>
                             <p className="text-sm text-gray-700">
@@ -2032,7 +2033,7 @@ const ToySupplierPage = () => {
                                 >
                                   Chỉnh sửa
                                 </button>
-                                <button
+                                {/* <button
                                   type="button"
                                   onClick={(event) => {
                                     event.stopPropagation();
@@ -2042,7 +2043,7 @@ const ToySupplierPage = () => {
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
                                 >
                                   Xoá
-                                </button>
+                                </button> */}
                               </td>
                             </tr>
                           ))
@@ -2981,7 +2982,7 @@ const ToySupplierPage = () => {
                         {statusMapping[selectedToyDelete.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -2992,7 +2993,7 @@ const ToySupplierPage = () => {
                         >
                           Bỏ xoá đồ chơi
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>

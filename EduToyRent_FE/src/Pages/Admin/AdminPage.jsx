@@ -1830,7 +1830,7 @@ const AdminPage = () => {
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-gray-700">
-                                Password
+                                Mật khẩu
                               </label>
                               <input
                                 type="password"
@@ -1923,7 +1923,7 @@ const AdminPage = () => {
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-gray-700">
-                                Password
+                                Mật khẩu
                               </label>
                               <input
                                 type="password"
@@ -2016,7 +2016,7 @@ const AdminPage = () => {
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-gray-700">
-                                Password
+                                Mật khẩu
                               </label>
                               <input
                                 type="password"
@@ -2332,7 +2332,7 @@ const AdminPage = () => {
                         {statusMapping[selectedUserUp.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -2343,7 +2343,7 @@ const AdminPage = () => {
                         >
                           Cấm
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
@@ -2669,7 +2669,7 @@ const AdminPage = () => {
                         {statusMapping[selectedToyRent.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -2680,7 +2680,7 @@ const AdminPage = () => {
                         >
                           Xóa
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
@@ -3007,7 +3007,7 @@ const AdminPage = () => {
                         {statusMapping[selectedToyBuy.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3018,7 +3018,7 @@ const AdminPage = () => {
                         >
                           Xoá
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
@@ -3344,7 +3344,7 @@ const AdminPage = () => {
                         {statusMapping[selectedToyBan.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3355,7 +3355,7 @@ const AdminPage = () => {
                         >
                           Bỏ lệnh cấm
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
@@ -3818,7 +3818,7 @@ const AdminPage = () => {
                         {statusMapping[selectedUserUpBan.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      <p className=" space-x-2 whitespace-nowrap">
+                      {/* <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3829,7 +3829,7 @@ const AdminPage = () => {
                         >
                           Bỏ lệnh cấm
                         </button>
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
