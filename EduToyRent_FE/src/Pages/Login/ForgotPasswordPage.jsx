@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import axios from "axios";
-api;
 
 const ForgotPasswordPage = () => {
   const [step, setStep] = useState(1);
