@@ -13,6 +13,8 @@ import apiUser from "../../service/ApiUser";
 import apiCart from "../../service/ApiCart";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import apiConversations from "../../service/ApiConversations";
+import ChatForm from "../Chat/ChatForm";
 
 const ToyStoreDetails = () => {
   const images = [
@@ -30,15 +32,15 @@ const ToyStoreDetails = () => {
 
   // Thêm trạng thái cho phân trang
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12; // Số lượng đồ chơi mỗi trang
+  const itemsPerPage = 18; // Số lượng đồ chơi mỗi trang
   const [owner, setOwner] = useState({});
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [toysOfShop, setToysOfShop] = useState([]);
   const [toysRecomment, setToysRecomment] = useState([]);
   const navigate = useNavigate();
   const [cartId, setCartId] = useState(null);
   const [selectCategory, setSelectCategory] = useState("All");
   const [category, setCategory] = useState([]);
+  const [userData, setUserData] = useState([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -72,6 +74,7 @@ const ToyStoreDetails = () => {
         parsedUserData = JSON.parse(userDataCookie);
 
         fetchUserCart(parsedUserData.id);
+        setUserData(parsedUserData);
       } catch (error) {
         console.error("Error parsing userDataCookie:", error);
       }
@@ -101,14 +104,6 @@ const ToyStoreDetails = () => {
         setToysRecomment(response.data);
         console.log(response.data);
       });
-
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) =>
-        prevIndex === images.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 4000); // Thay đổi hình ảnh mỗi 3 giây
-
-    return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
   }, []);
 
   const fetchUserCart = async (userId) => {
@@ -146,6 +141,21 @@ const ToyStoreDetails = () => {
     }
   };
 
+  const HandleAddChat = async () => {
+    await apiConversations.post(
+      `/check-or-create-conversation`,
+      {
+        user1Id: userData.id,
+        user2Id: owner.id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      }
+    );
+  };
+
   const fetchCartItems = async (cartId) => {
     try {
       const response = await apiCartItem.get(`/ByCartId/${cartId}`, {
@@ -165,18 +175,6 @@ const ToyStoreDetails = () => {
     if (event.key === "Enter") {
       handleSearch();
     }
-  };
-
-  const nextImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === images.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-
-  const previousImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === 0 ? images.length - 1 : prevIndex - 1
-    );
   };
 
   // Tính toán phần tử trên trang hiện tại
@@ -406,7 +404,12 @@ const ToyStoreDetails = () => {
                   </h3>
 
                   <div className="flex space-x-2 mt-2">
-                    <button className="border border-blue-500 text-blue-500 font-semibold px-4 py-2 rounded">
+                    <button
+                      className="border border-blue-500 text-blue-500 font-semibold px-4 py-2 rounded"
+                      onClick={() => {
+                        HandleAddChat();
+                      }}
+                    >
                       Chat ngay
                     </button>
                     <div>địa chỉ: {owner.address}</div>
@@ -536,87 +539,9 @@ const ToyStoreDetails = () => {
                 </div>
                 <div className="layout-content-container flex max-w-[1200px] w-full px-4 sm:px-6 lg:px-8">
                   {/* Thanh Filter bên trái */}
-                  <div className="w-1/4 p-4 bg-gray-100 rounded-lg shadow-sm">
-                    <h2 className="text-[#0e161b] text-xl font-bold mb-4">
-                      Bộ lọc
-                    </h2>
 
-                    <div className="mb-4">
-                      <label className="mb-1">Nhóm tuổi:</label>
-                      <select
-                        value={ageGroup}
-                        onChange={(e) => setAgeGroup(e.target.value)}
-                        className="border rounded p-2 w-full"
-                      >
-                        <option value="">Tất cả</option>
-                        <option value="1-3">1-3 Tuổi</option>
-                        <option value="3-5">3-5 Tuổi</option>
-                        <option value="5-7">5-7 Tuổi</option>
-                        <option value="7-9">7-9 Tuổi</option>
-                        <option value="9-11">9-11 Tuổi</option>
-                        <option value="11-13">11-13 Tuổi</option>
-                        <option value="13+">13+ Tuổi</option>
-                      </select>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="mb-1">Mức giá:</label>
-                      <select
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                        className="border rounded p-2 w-full"
-                      >
-                        <option value="">Tất cả</option>
-                        <option value="0">0 - 500.000 VNĐ</option>
-                        <option value="1">500.000 - 1 triệu VNĐ</option>
-                        <option value="2">1 triệu - 2 triệu VNĐ</option>
-                        <option value="3">2 triệu - 3 triệu VNĐ</option>
-                        <option value="4">3 triệu - 4 triệu VNĐ</option>
-                        <option value="5">4 triệu - 5 triệu VNĐ</option>
-                        <option value="6">lớn hơn 5 triệu VNĐ</option>
-                      </select>
-                    </div>
-                    <div className="mb-4">
-                      <label className="mb-1">Loại đồ chơi:</label>
-                      <select
-                        value={selectCategory}
-                        onChange={(e) => setSelectCategory(e.target.value)}
-                        className="border rounded p-2 w-full"
-                      >
-                        <option value="All">Tất cả</option>
-
-                        {category.length > 0 ? (
-                          category.map((item, index) => (
-                            <option value={item.name}>{item.name}</option>
-                          ))
-                        ) : (
-                          <option value=""></option>
-                        )}
-                      </select>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="mb-1">Thương hiệu:</label>
-
-                      <input
-                        type="text"
-                        value={brand}
-                        onChange={(e) => setBrand(e.target.value)}
-                        className="border rounded p-2 w-full"
-                        placeholder="Tìm kiếm bằng tên hãng đồ chơi"
-                      />
-                    </div>
-
-                    <button
-                      onClick={handleSearch}
-                      className="bg-blue-500 text-white px-4 py-2 rounded"
-                    >
-                      Apply Filters
-                    </button>
-                  </div>
-
-                  <div className="w-3/4 pl-6">
-                    <div className="mb-4">
+                  <div className="w-4/4 pl-6">
+                    {/* <div className="mb-4">
                       <input
                         type="text"
                         value={searchTerm}
@@ -625,9 +550,9 @@ const ToyStoreDetails = () => {
                         className="border rounded p-2 w-full"
                         placeholder="Tìm kiếm bằng tên đồ chơi"
                       />
-                    </div>
+                    </div> */}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                       {toysOfShop.length > 0 ? (
                         toysOfShop.map((deal, index) => (
                           <div
@@ -721,6 +646,7 @@ const ToyStoreDetails = () => {
           </div>
         </div>
       </div>
+      <ChatForm />
       <footer>
         <FooterForCustomer />
       </footer>

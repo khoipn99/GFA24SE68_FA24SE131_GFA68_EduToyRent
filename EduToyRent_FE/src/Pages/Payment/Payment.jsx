@@ -15,6 +15,7 @@ import apiTransaction from "../../service/ApiTransaction";
 import apiTransactionDetail from "../../service/ApiTransactionDetail";
 import apiToys from "../../service/ApiToys";
 import apiNotifications from "../../service/ApiNotifications";
+import ChatForm from "../Chat/ChatForm";
 
 const Payment = () => {
   const [cartItems, setCartItems] = useState([]); // Danh sách sản phẩm
@@ -1331,6 +1332,7 @@ const Payment = () => {
           </div>
         </div>
       </div>
+      <ChatForm />
       <footer>
         <FooterForCustomer />
       </footer>

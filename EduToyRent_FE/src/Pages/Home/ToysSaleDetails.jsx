@@ -12,6 +12,7 @@ import apiUser from "../../service/ApiUser";
 import { useNavigate } from "react-router-dom";
 
 import apiCart from "../../service/ApiCart";
+import ChatForm from "../Chat/ChatForm";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 
 const ToysSaleDetails = () => {
@@ -617,14 +618,11 @@ const ToysSaleDetails = () => {
                   </div>
                 </div>
                 <div className="flex items-center mb-2">
-                  <span className="text-sm text-gray-500 mr-4">
-                    Sản phẩm: 608
-                  </span>
-                  <span className="text-sm text-gray-500 mr-4">
-                    Đánh giá: 252,8k
-                  </span>
                   <span className="text-sm text-gray-500">
-                    Điểm đánh giá trung bình: 5.0
+                    Điểm đánh giá trung bình:{" "}
+                    {currentToy.owner && currentToy.owner.star
+                      ? currentToy.owner.star
+                      : ""}
                   </span>
                 </div>
               </div>
@@ -892,6 +890,7 @@ const ToysSaleDetails = () => {
           </div>
         </div>
       </div>
+      <ChatForm />
       <footer>
         <FooterForCustomer />
       </footer>
