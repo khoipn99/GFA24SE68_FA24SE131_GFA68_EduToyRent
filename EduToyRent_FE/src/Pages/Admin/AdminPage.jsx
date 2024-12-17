@@ -2298,36 +2298,36 @@ const AdminPage = () => {
                       <h2 className="text-4xl font-bold mb-10 text-center">
                         Thông tin người dùng
                       </h2>
-                      <p>
+                      <p className="text-lg">
                         <strong>Tên người dùng:</strong>{" "}
                         {selectedUserUp.fullName}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Email:</strong> {selectedUserUp.email}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Ngày tạo:</strong>{" "}
                         {new Date(
                           selectedUserUp.createDate
                         ).toLocaleDateString()}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Số điện thoại:</strong> {selectedUserUp.phone}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Ngày sinh:</strong>{" "}
                         {new Date(selectedUserUp.dob).toLocaleDateString()}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Địa chỉ:</strong>
                         {selectedUserUp.address}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Vai trò:</strong> {selectedUserUp.role.name}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Trạng thái:</strong>{" "}
                         {statusMapping[selectedUserUp.status] ||
                           "Trạng thái không xác định"}
@@ -2636,35 +2636,35 @@ const AdminPage = () => {
                       <h2 className="text-4xl font-bold mb-10 text-center">
                         Thông tin đồ chơi
                       </h2>
-                      <p>
+                      <p className="text-lg">
                         <strong>Tên đồ chơi:</strong> {selectedToyRent.name}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Giá:</strong>{" "}
                         {(selectedToyRent.price || 0).toLocaleString()} VNĐ
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Xuất xứ:</strong> {selectedToyRent.origin}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Tuổi:</strong> {selectedToyRent.age}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Thương Hiệu:</strong> {selectedToyRent.brand}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Danh mục:</strong>{" "}
                         {selectedToyRent.category.name}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Ngày tạo:</strong>{" "}
                         {new Date(
                           selectedToyRent.createDate
                         ).toLocaleDateString()}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Trạng thái:</strong>{" "}
                         {statusMapping[selectedToyRent.status] ||
                           "Trạng thái không xác định"}
@@ -2974,35 +2974,35 @@ const AdminPage = () => {
                       <h2 className="text-4xl font-bold mb-10 text-center">
                         Thông tin đồ chơi
                       </h2>
-                      <p>
+                      <p className="text-lg">
                         <strong>Tên đồ chơi:</strong> {selectedToyBuy.name}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Giá:</strong>{" "}
                         {(selectedToyBuy.price || 0).toLocaleString()} VNĐ
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Xuất xứ:</strong> {selectedToyBuy.origin}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Tuổi:</strong> {selectedToyBuy.age}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Thương Hiệu:</strong> {selectedToyBuy.brand}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Danh mục:</strong>{" "}
                         {selectedToyBuy.category.name}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Ngày tạo:</strong>{" "}
                         {new Date(
                           selectedToyBuy.createDate
                         ).toLocaleDateString()}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Trạng thái:</strong>{" "}
                         {statusMapping[selectedToyBuy.status] ||
                           "Trạng thái không xác định"}
@@ -3311,35 +3311,35 @@ const AdminPage = () => {
                       <h2 className="text-4xl font-bold mb-10 text-center">
                         Thông tin đồ chơi
                       </h2>
-                      <p>
+                      <p className="text-lg">
                         <strong>Tên đồ chơi:</strong> {selectedToyBan.name}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Giá:</strong>{" "}
                         {(selectedToyBan.price || 0).toLocaleString()} VNĐ
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Xuất xứ:</strong> {selectedToyBan.origin}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Tuổi:</strong> {selectedToyBan.age}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Thương Hiệu:</strong> {selectedToyBan.brand}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Danh mục:</strong>{" "}
                         {selectedToyBan.category.name}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Ngày tạo:</strong>{" "}
                         {new Date(
                           selectedToyBan.createDate
                         ).toLocaleDateString()}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Trạng thái:</strong>{" "}
                         {statusMapping[selectedToyBan.status] ||
                           "Trạng thái không xác định"}
@@ -3783,37 +3783,37 @@ const AdminPage = () => {
                       <h2 className="text-4xl font-bold mb-10 text-center">
                         Thông tin người dùng
                       </h2>
-                      <p>
+                      <p className="text-lg">
                         <strong>Tên người dùng:</strong>{" "}
                         {selectedUserUpBan.fullName}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Email:</strong> {selectedUserUpBan.email}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Ngày tạo:</strong>{" "}
                         {new Date(
                           selectedUserUpBan.createDate
                         ).toLocaleDateString()}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Số điện thoại:</strong>{" "}
                         {selectedUserUpBan.phone}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Ngày sinh:</strong>{" "}
                         {new Date(selectedUserUpBan.dob).toLocaleDateString()}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Địa chỉ:</strong>
                         {selectedUserUpBan.address}
                       </p>
-                      <p>
+                      <p className="text-lg">
                         <strong>Vai trò:</strong> {selectedUserUpBan.role.name}
                       </p>
 
-                      <p>
+                      <p className="text-lg">
                         <strong>Trạng thái:</strong>{" "}
                         {statusMapping[selectedUserUpBan.status] ||
                           "Trạng thái không xác định"}

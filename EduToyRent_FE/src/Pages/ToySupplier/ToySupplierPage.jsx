@@ -455,6 +455,8 @@ const ToySupplierPage = () => {
         console.log("Danh sách đơn hàng:", orders);
       } else {
         // Nếu không có đơn hàng nào, bạn có thể thông báo cho người dùng
+        setOrders(orders); // Cập nhật danh sách đơn hàng
+        console.log("Danh sách đơn hàng rỗng:", orders);
       }
     } catch (error) {
       console.error("Lỗi khi tải danh sách đơn hàng:", error);
