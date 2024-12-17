@@ -40,9 +40,7 @@ const TopUp = () => {
     const numericAmount = parseInt(amount.replace(/\./g, ""), 10);
 
     apiPayment
-      .post(
-        "/create-payment-link?totalAmount=" + numericAmount + "&orderId=6368"
-      )
+      .post("/create-payment-link?totalAmount=" + numericAmount + "&orderId=")
       .then((response) => {
         Cookies.set("TopUpMoney", numericAmount, { expires: 1 });
         window.location.href = response.data.url;
