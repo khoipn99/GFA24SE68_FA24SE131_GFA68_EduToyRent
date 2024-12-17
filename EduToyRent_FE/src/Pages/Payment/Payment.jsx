@@ -16,6 +16,7 @@ import apiTransactionDetail from "../../service/ApiTransactionDetail";
 import apiToys from "../../service/ApiToys";
 import apiNotifications from "../../service/ApiNotifications";
 import ChatForm from "../Chat/ChatForm";
+import Term from "../../Component/Terms/Terms";
 
 const Payment = () => {
   const [cartItems, setCartItems] = useState([]); // Danh sách sản phẩm
@@ -41,6 +42,7 @@ const Payment = () => {
   const [oldAddress, setOldAddress] = useState("");
   const [useNewAddress, setUseNewAddress] = useState(false);
   const navigate = useNavigate();
+  const [isChecked, setIsChecked] = useState(false); // State để kiểm tra checkbox
 
   useEffect(() => {
     const userDataCookie1 = Cookies.get("userData");
@@ -183,6 +185,10 @@ const Payment = () => {
       });
   };
 
+  const handleCheckboxChange2 = (e) => {
+    setIsChecked(e.target.checked);
+  };
+
   const handleDistrictChange = (e) => {
     const selectedDistrict = e.target.value;
     setShippingInfo({ ...shippingInfo, district: selectedDistrict, ward: "" });
@@ -214,6 +220,10 @@ const Payment = () => {
     } else {
       setError("");
     }
+  };
+
+  const handleTermsClick = () => {
+    navigate("/term");
   };
 
   const calculateTotalPrice = (items) =>
@@ -256,29 +266,425 @@ const Payment = () => {
   };
 
   const handlePayment = async () => {
-    if (wallet.balance >= totalAfterDiscount + totalFee) {
-      if (
-        shippingInfo.fullName != "" &&
-        shippingInfo.phoneNumber != "" &&
-        error == ""
-      ) {
-        if (useNewAddress) {
-          if (
-            shippingInfo.detail != "" &&
-            shippingInfo.ward != "" &&
-            shippingInfo.district != "" &&
-            shippingInfo.city != ""
-          ) {
-            const city = cities.find(
-              (city) => city.code == shippingInfo.city
-            ).name;
-            const distric = districts.find(
-              (district) => district.code == shippingInfo.district
-            ).name;
-            const war = wards.find(
-              (ward) => ward.code == shippingInfo.ward
-            ).name;
+    if (isChecked) {
+      if (wallet.balance >= totalAfterDiscount + totalFee) {
+        if (
+          shippingInfo.fullName != "" &&
+          shippingInfo.phoneNumber != "" &&
+          error == ""
+        ) {
+          if (useNewAddress) {
+            if (
+              shippingInfo.detail != "" &&
+              shippingInfo.ward != "" &&
+              shippingInfo.district != "" &&
+              shippingInfo.city != ""
+            ) {
+              const city = cities.find(
+                (city) => city.code == shippingInfo.city
+              ).name;
+              const distric = districts.find(
+                (district) => district.code == shippingInfo.district
+              ).name;
+              const war = wards.find(
+                (ward) => ward.code == shippingInfo.ward
+              ).name;
 
+              if (rentItems != "") {
+                const groupedItems = rentItems.reduce((acc, item) => {
+                  const shopId = item.shopId; // Hoặc thuộc tính phân biệt shop
+                  if (!acc[shopId]) {
+                    acc[shopId] = []; // Tạo mảng mới nếu chưa tồn tại
+                  }
+                  acc[shopId].push(item); // Thêm item vào mảng tương ứng
+                  return acc;
+                }, {});
+
+                console.log(groupedItems);
+                for (const shopId of Object.keys(groupedItems)) {
+                  const tmp = groupedItems[shopId].length;
+                  console.log(`Shop ID: ${shopId}`);
+                  console.log("Items:", groupedItems[shopId]); // Mảng của shop này
+
+                  var totalRentPriceTmp = 0;
+                  await groupedItems[shopId].map((item, index) => {
+                    if (item.orderTypeId == 4) {
+                      totalRentPriceTmp += item.price * 0.15;
+                    } else if (item.orderTypeId == 5) {
+                      totalRentPriceTmp += item.price * 0.25;
+                    } else if (item.orderTypeId == 6) {
+                      totalRentPriceTmp += item.price * 0.3;
+                    }
+                  });
+                  console.log(totalRentPriceTmp);
+
+                  var totalDepositTmp = 0;
+                  await groupedItems[shopId].map((item, index) => {
+                    totalDepositTmp += item.price;
+                  });
+                  console.log(totalDepositTmp);
+                  console.log(shippingInfo.fullName);
+                  console.log(
+                    shippingInfo.detail + "," + war + "," + distric + "," + city
+                  );
+
+                  await apiOrder
+                    .post(
+                      "",
+                      {
+                        orderDate: new Date().toISOString(),
+                        receiveDate: null,
+                        totalPrice: totalDepositTmp,
+                        rentPrice: totalRentPriceTmp,
+                        depositeBackMoney: 0,
+                        receiveName: shippingInfo.fullName,
+                        receiveAddress:
+                          shippingInfo.detail +
+                          "," +
+                          war +
+                          "," +
+                          distric +
+                          "," +
+                          city,
+                        receivePhone: shippingInfo.phoneNumber,
+                        status: "Pending",
+                        userId: customerInfo.id,
+                      },
+                      {
+                        headers: {
+                          Authorization: `Bearer ${Cookies.get("userToken")}`,
+                        },
+                      }
+                    )
+                    .then(async (response) => {
+                      await apiNotifications.post(
+                        "",
+                        {
+                          notify: `Bạn có đơn hàng mới mã số ${response.data.id} `,
+                          isRead: false,
+                          userId: shopId,
+                        },
+                        {
+                          headers: {
+                            Authorization: `Bearer ${Cookies.get("userToken")}`,
+                          },
+                        }
+                      );
+
+                      await apiWalletTransaction
+                        .post(
+                          "",
+                          {
+                            transactionType: "Thanh toán đơn hàng",
+                            amount: -parseInt(totalDepositTmp + 30000 * tmp),
+                            date: new Date().toISOString(),
+                            walletId: customerInfo.walletId,
+                            paymentTypeId: 5,
+                            orderId: response.data.id,
+                            status: "Success",
+                          },
+                          {
+                            headers: {
+                              Authorization: `Bearer ${Cookies.get(
+                                "userToken"
+                              )}`,
+                            },
+                          }
+                        )
+                        .then((response) => {});
+
+                      await apiWallets
+                        .get("/" + customerInfo.walletId, {
+                          headers: {
+                            Authorization: `Bearer ${Cookies.get("userToken")}`,
+                          },
+                        })
+                        .then(async (response2) => {
+                          await apiWallets.put(
+                            `/${response2.data.id}`,
+                            {
+                              balance:
+                                response2.data.balance -
+                                (totalDepositTmp + 30000 * tmp),
+                              withdrawMethod: response2.data.withdrawMethod,
+                              withdrawInfo: response2.data.withdrawInfo,
+                              status: response2.data.status,
+                              userId: response2.data.userId,
+                            },
+                            {
+                              headers: {
+                                Authorization: `Bearer ${Cookies.get(
+                                  "userToken"
+                                )}`,
+                              },
+                            }
+                          );
+                        });
+
+                      console.log(response.data);
+                      await Promise.all(
+                        groupedItems[shopId].map(async (item, index) => {
+                          var rentPriceTmp = 0;
+                          if (item.orderTypeId == 4) {
+                            rentPriceTmp = item.price * 0.15;
+                          } else if (item.orderTypeId == 5) {
+                            rentPriceTmp = item.price * 0.25;
+                          } else if (item.orderTypeId == 6) {
+                            rentPriceTmp = item.price * 0.3;
+                          }
+                          await apiOrderDetail.post(
+                            "",
+                            {
+                              rentPrice: rentPriceTmp,
+                              deposit: item.price,
+                              unitPrice: item.price,
+                              quantity: -1,
+                              startDate: null,
+                              endDate: null,
+                              status: "Await",
+                              orderId: response.data.id,
+                              toyId: item.toyId,
+                              orderTypeId: item.orderTypeId,
+                              ratingId: null,
+                            },
+                            {
+                              headers: {
+                                Authorization: `Bearer ${Cookies.get(
+                                  "userToken"
+                                )}`,
+                              },
+                            }
+                          );
+
+                          await apiToys.patch(
+                            `/${item.toyId}/update-status`,
+                            JSON.stringify("Renting"), // Adjust the key as per API requirements
+                            {
+                              headers: {
+                                "Content-Type": "application/json", // Specify the correct Content-Type
+                                Authorization: `Bearer ${Cookies.get(
+                                  "userToken"
+                                )}`,
+                              },
+                            }
+                          );
+                        })
+                      );
+                    });
+                }
+              }
+
+              if (buyItems != "") {
+                const groupedItems = buyItems.reduce((acc, item) => {
+                  const shopId = item.shopId; // Hoặc thuộc tính phân biệt shop
+                  if (!acc[shopId]) {
+                    acc[shopId] = []; // Tạo mảng mới nếu chưa tồn tại
+                  }
+                  acc[shopId].push(item); // Thêm item vào mảng tương ứng
+                  return acc;
+                }, {});
+
+                console.log(groupedItems);
+                for (const shopId of Object.keys(groupedItems)) {
+                  console.log(`Shop ID: ${shopId}`);
+                  console.log("Items:", groupedItems[shopId]); // Mảng của shop này
+
+                  console.log(buyItems);
+
+                  var totalDepositTmp2 = 0;
+                  await groupedItems[shopId].map((item, index) => {
+                    totalDepositTmp2 += item.price * item.quantity;
+                  });
+                  console.log(totalDepositTmp2);
+                  console.log(shippingInfo.fullName);
+                  console.log(
+                    shippingInfo.detail + "," + war + "," + distric + "," + city
+                  );
+
+                  await apiOrder
+                    .post(
+                      "",
+                      {
+                        orderDate: new Date().toISOString(),
+                        receiveDate: null,
+                        totalPrice: totalDepositTmp2,
+                        rentPrice: 0,
+                        depositeBackMoney: 0,
+                        receiveName: shippingInfo.fullName,
+                        receiveAddress:
+                          shippingInfo.detail +
+                          "," +
+                          war +
+                          "," +
+                          distric +
+                          "," +
+                          city,
+                        receivePhone: shippingInfo.phoneNumber,
+                        status: "Delivering",
+                        userId: customerInfo.id,
+                      },
+                      {
+                        headers: {
+                          Authorization: `Bearer ${Cookies.get("userToken")}`,
+                        },
+                      }
+                    )
+                    .then(async (response) => {
+                      console.log(response.data);
+                      await apiNotifications.post(
+                        "",
+                        {
+                          notify: `Bạn có đơn hàng mới mã số ${response.data.id} `,
+                          isRead: false,
+                          userId: shopId,
+                        },
+                        {
+                          headers: {
+                            Authorization: `Bearer ${Cookies.get("userToken")}`,
+                          },
+                        }
+                      );
+
+                      await apiWalletTransaction.post(
+                        "",
+                        {
+                          transactionType: "Thanh toán đơn hàng",
+                          amount: -parseInt(totalDepositTmp2),
+                          date: new Date().toISOString(),
+                          walletId: customerInfo.walletId,
+                          paymentTypeId: 5,
+                          orderId: response.data.id,
+                          status: "Success",
+                        },
+                        {
+                          headers: {
+                            Authorization: `Bearer ${Cookies.get("userToken")}`,
+                          },
+                        }
+                      );
+
+                      await apiWallets
+                        .get("/" + customerInfo.walletId, {
+                          headers: {
+                            Authorization: `Bearer ${Cookies.get("userToken")}`,
+                          },
+                        })
+                        .then(async (response2) => {
+                          await apiWallets.put(
+                            `/${response2.data.id}`,
+                            {
+                              balance:
+                                response2.data.balance - totalDepositTmp2,
+                              withdrawMethod: response2.data.withdrawMethod,
+                              withdrawInfo: response2.data.withdrawInfo,
+                              status: response2.data.status,
+                              userId: response2.data.userId,
+                            },
+                            {
+                              headers: {
+                                Authorization: `Bearer ${Cookies.get(
+                                  "userToken"
+                                )}`,
+                              },
+                            }
+                          );
+                        });
+
+                      await Promise.all(
+                        groupedItems[shopId].map(async (item, index) => {
+                          await apiOrderDetail.post(
+                            "",
+                            {
+                              rentPrice: 0,
+                              deposit: 0,
+                              unitPrice: item.price,
+                              quantity: item.quantity,
+                              startDate: null,
+                              endDate: null,
+                              status: "DeliveringToBuyer",
+                              orderId: response.data.id,
+                              toyId: item.toyId,
+                              orderTypeId: item.orderTypeId,
+                              ratingId: null,
+                            },
+                            {
+                              headers: {
+                                Authorization: `Bearer ${Cookies.get(
+                                  "userToken"
+                                )}`,
+                              },
+                            }
+                          );
+                          await apiToys
+                            .get("/" + item.toyId, {
+                              headers: {
+                                Authorization: `Bearer ${Cookies.get(
+                                  "userToken"
+                                )}`,
+                              },
+                            })
+                            .then(async (response) => {
+                              await apiToys
+                                .put(
+                                  "/" + item.toyId,
+                                  {
+                                    name: response.data.name,
+                                    description: response.data.description,
+                                    price: response.data.price,
+                                    buyQuantity:
+                                      response.data.buyQuantity - item.quantity,
+                                    origin: response.data.origin,
+                                    age: response.data.age,
+                                    brand: response.data.brand,
+                                    categoryId: response.data.category.id,
+                                    rentCount: response.data.rentCount,
+                                    quantitySold:
+                                      response.data.quantitySold +
+                                      item.quantity,
+                                    status: response.data.status,
+                                  },
+                                  {
+                                    headers: {
+                                      Authorization: `Bearer ${Cookies.get(
+                                        "userToken"
+                                      )}`,
+                                    },
+                                  }
+                                )
+                                .then(async (response) => {});
+                            });
+                        })
+                      );
+                    });
+                }
+              }
+
+              cartItems.map(async (item) => {
+                await apiCartItem.delete("/" + item.id, {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                });
+              });
+
+              await apiCart.put(
+                `/${cart.id}`,
+                {
+                  totalPrice: 0,
+                  status: "active",
+                  userId: cart.userId,
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                }
+              );
+              navigate("/payments-success");
+            } else {
+              alert("Bạn nhập thiếu thông tin giao hàng!");
+            }
+          } else {
             if (rentItems != "") {
               const groupedItems = rentItems.reduce((acc, item) => {
                 const shopId = item.shopId; // Hoặc thuộc tính phân biệt shop
@@ -291,10 +697,10 @@ const Payment = () => {
 
               console.log(groupedItems);
               for (const shopId of Object.keys(groupedItems)) {
-                const tmp = groupedItems[shopId].length;
                 console.log(`Shop ID: ${shopId}`);
                 console.log("Items:", groupedItems[shopId]); // Mảng của shop này
 
+                const tmp = groupedItems[shopId].length;
                 var totalRentPriceTmp = 0;
                 await groupedItems[shopId].map((item, index) => {
                   if (item.orderTypeId == 4) {
@@ -313,9 +719,6 @@ const Payment = () => {
                 });
                 console.log(totalDepositTmp);
                 console.log(shippingInfo.fullName);
-                console.log(
-                  shippingInfo.detail + "," + war + "," + distric + "," + city
-                );
 
                 await apiOrder
                   .post(
@@ -327,14 +730,7 @@ const Payment = () => {
                       rentPrice: totalRentPriceTmp,
                       depositeBackMoney: 0,
                       receiveName: shippingInfo.fullName,
-                      receiveAddress:
-                        shippingInfo.detail +
-                        "," +
-                        war +
-                        "," +
-                        distric +
-                        "," +
-                        city,
+                      receiveAddress: oldAddress,
                       receivePhone: shippingInfo.phoneNumber,
                       status: "Pending",
                       userId: customerInfo.id,
@@ -360,25 +756,23 @@ const Payment = () => {
                       }
                     );
 
-                    await apiWalletTransaction
-                      .post(
-                        "",
-                        {
-                          transactionType: "Thanh toán đơn hàng",
-                          amount: -parseInt(totalDepositTmp + 30000 * tmp),
-                          date: new Date().toISOString(),
-                          walletId: customerInfo.walletId,
-                          paymentTypeId: 5,
-                          orderId: response.data.id,
-                          status: "Success",
+                    await apiWalletTransaction.post(
+                      "",
+                      {
+                        transactionType: "Thanh toán đơn hàng",
+                        amount: -parseInt(totalDepositTmp + 30000 * tmp),
+                        date: new Date().toISOString(),
+                        walletId: customerInfo.walletId,
+                        paymentTypeId: 5,
+                        orderId: response.data.id,
+                        status: "Success",
+                      },
+                      {
+                        headers: {
+                          Authorization: `Bearer ${Cookies.get("userToken")}`,
                         },
-                        {
-                          headers: {
-                            Authorization: `Bearer ${Cookies.get("userToken")}`,
-                          },
-                        }
-                      )
-                      .then((response) => {});
+                      }
+                    );
 
                     await apiWallets
                       .get("/" + customerInfo.walletId, {
@@ -387,25 +781,29 @@ const Payment = () => {
                         },
                       })
                       .then(async (response2) => {
-                        await apiWallets.put(
-                          `/${response2.data.id}`,
-                          {
-                            balance:
-                              response2.data.balance -
-                              (totalDepositTmp + 30000 * tmp),
-                            withdrawMethod: response2.data.withdrawMethod,
-                            withdrawInfo: response2.data.withdrawInfo,
-                            status: response2.data.status,
-                            userId: response2.data.userId,
-                          },
-                          {
-                            headers: {
-                              Authorization: `Bearer ${Cookies.get(
-                                "userToken"
-                              )}`,
+                        await apiWallets
+                          .put(
+                            `/${response2.data.id}`,
+                            {
+                              balance:
+                                response2.data.balance -
+                                (totalDepositTmp + 30000 * tmp),
+                              withdrawMethod: response2.data.withdrawMethod,
+                              withdrawInfo: response2.data.withdrawInfo,
+                              status: response2.data.status,
+                              userId: response2.data.userId,
                             },
-                          }
-                        );
+                            {
+                              headers: {
+                                Authorization: `Bearer ${Cookies.get(
+                                  "userToken"
+                                )}`,
+                              },
+                            }
+                          )
+                          .then((response) => {
+                            console.log(response2.data);
+                          });
                       });
 
                     console.log(response.data);
@@ -484,9 +882,6 @@ const Payment = () => {
                 });
                 console.log(totalDepositTmp2);
                 console.log(shippingInfo.fullName);
-                console.log(
-                  shippingInfo.detail + "," + war + "," + distric + "," + city
-                );
 
                 await apiOrder
                   .post(
@@ -498,14 +893,7 @@ const Payment = () => {
                       rentPrice: 0,
                       depositeBackMoney: 0,
                       receiveName: shippingInfo.fullName,
-                      receiveAddress:
-                        shippingInfo.detail +
-                        "," +
-                        war +
-                        "," +
-                        distric +
-                        "," +
-                        city,
+                      receiveAddress: oldAddress,
                       receivePhone: shippingInfo.phoneNumber,
                       status: "Delivering",
                       userId: customerInfo.id,
@@ -652,392 +1040,32 @@ const Payment = () => {
               });
             });
 
-            await apiCart.put(
-              `/${cart.id}`,
-              {
-                totalPrice: 0,
-                status: "active",
-                userId: cart.userId,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+            await apiCart
+              .put(
+                `/${cart.id}`,
+                {
+                  totalPrice: 0,
+                  status: "active",
+                  userId: cart.userId,
                 },
-              }
-            );
-            navigate("/payments-success");
-          } else {
-            alert("Bạn nhập thiếu thông tin giao hàng!");
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                }
+              )
+              .then((response) => {
+                navigate("/payments-success");
+              });
           }
         } else {
-          if (rentItems != "") {
-            const groupedItems = rentItems.reduce((acc, item) => {
-              const shopId = item.shopId; // Hoặc thuộc tính phân biệt shop
-              if (!acc[shopId]) {
-                acc[shopId] = []; // Tạo mảng mới nếu chưa tồn tại
-              }
-              acc[shopId].push(item); // Thêm item vào mảng tương ứng
-              return acc;
-            }, {});
-
-            console.log(groupedItems);
-            for (const shopId of Object.keys(groupedItems)) {
-              console.log(`Shop ID: ${shopId}`);
-              console.log("Items:", groupedItems[shopId]); // Mảng của shop này
-
-              const tmp = groupedItems[shopId].length;
-              var totalRentPriceTmp = 0;
-              await groupedItems[shopId].map((item, index) => {
-                if (item.orderTypeId == 4) {
-                  totalRentPriceTmp += item.price * 0.15;
-                } else if (item.orderTypeId == 5) {
-                  totalRentPriceTmp += item.price * 0.25;
-                } else if (item.orderTypeId == 6) {
-                  totalRentPriceTmp += item.price * 0.3;
-                }
-              });
-              console.log(totalRentPriceTmp);
-
-              var totalDepositTmp = 0;
-              await groupedItems[shopId].map((item, index) => {
-                totalDepositTmp += item.price;
-              });
-              console.log(totalDepositTmp);
-              console.log(shippingInfo.fullName);
-
-              await apiOrder
-                .post(
-                  "",
-                  {
-                    orderDate: new Date().toISOString(),
-                    receiveDate: null,
-                    totalPrice: totalDepositTmp,
-                    rentPrice: totalRentPriceTmp,
-                    depositeBackMoney: 0,
-                    receiveName: shippingInfo.fullName,
-                    receiveAddress: oldAddress,
-                    receivePhone: shippingInfo.phoneNumber,
-                    status: "Pending",
-                    userId: customerInfo.id,
-                  },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${Cookies.get("userToken")}`,
-                    },
-                  }
-                )
-                .then(async (response) => {
-                  await apiNotifications.post(
-                    "",
-                    {
-                      notify: `Bạn có đơn hàng mới mã số ${response.data.id} `,
-                      isRead: false,
-                      userId: shopId,
-                    },
-                    {
-                      headers: {
-                        Authorization: `Bearer ${Cookies.get("userToken")}`,
-                      },
-                    }
-                  );
-
-                  await apiWalletTransaction.post(
-                    "",
-                    {
-                      transactionType: "Thanh toán đơn hàng",
-                      amount: -parseInt(totalDepositTmp + 30000 * tmp),
-                      date: new Date().toISOString(),
-                      walletId: customerInfo.walletId,
-                      paymentTypeId: 5,
-                      orderId: response.data.id,
-                      status: "Success",
-                    },
-                    {
-                      headers: {
-                        Authorization: `Bearer ${Cookies.get("userToken")}`,
-                      },
-                    }
-                  );
-
-                  await apiWallets
-                    .get("/" + customerInfo.walletId, {
-                      headers: {
-                        Authorization: `Bearer ${Cookies.get("userToken")}`,
-                      },
-                    })
-                    .then(async (response2) => {
-                      await apiWallets
-                        .put(
-                          `/${response2.data.id}`,
-                          {
-                            balance:
-                              response2.data.balance -
-                              (totalDepositTmp + 30000 * tmp),
-                            withdrawMethod: response2.data.withdrawMethod,
-                            withdrawInfo: response2.data.withdrawInfo,
-                            status: response2.data.status,
-                            userId: response2.data.userId,
-                          },
-                          {
-                            headers: {
-                              Authorization: `Bearer ${Cookies.get(
-                                "userToken"
-                              )}`,
-                            },
-                          }
-                        )
-                        .then((response) => {
-                          console.log(response2.data);
-                        });
-                    });
-
-                  console.log(response.data);
-                  await Promise.all(
-                    groupedItems[shopId].map(async (item, index) => {
-                      var rentPriceTmp = 0;
-                      if (item.orderTypeId == 4) {
-                        rentPriceTmp = item.price * 0.15;
-                      } else if (item.orderTypeId == 5) {
-                        rentPriceTmp = item.price * 0.25;
-                      } else if (item.orderTypeId == 6) {
-                        rentPriceTmp = item.price * 0.3;
-                      }
-                      await apiOrderDetail.post(
-                        "",
-                        {
-                          rentPrice: rentPriceTmp,
-                          deposit: item.price,
-                          unitPrice: item.price,
-                          quantity: -1,
-                          startDate: null,
-                          endDate: null,
-                          status: "Await",
-                          orderId: response.data.id,
-                          toyId: item.toyId,
-                          orderTypeId: item.orderTypeId,
-                          ratingId: null,
-                        },
-                        {
-                          headers: {
-                            Authorization: `Bearer ${Cookies.get("userToken")}`,
-                          },
-                        }
-                      );
-
-                      await apiToys.patch(
-                        `/${item.toyId}/update-status`,
-                        JSON.stringify("Renting"), // Adjust the key as per API requirements
-                        {
-                          headers: {
-                            "Content-Type": "application/json", // Specify the correct Content-Type
-                            Authorization: `Bearer ${Cookies.get("userToken")}`,
-                          },
-                        }
-                      );
-                    })
-                  );
-                });
-            }
-          }
-
-          if (buyItems != "") {
-            const groupedItems = buyItems.reduce((acc, item) => {
-              const shopId = item.shopId; // Hoặc thuộc tính phân biệt shop
-              if (!acc[shopId]) {
-                acc[shopId] = []; // Tạo mảng mới nếu chưa tồn tại
-              }
-              acc[shopId].push(item); // Thêm item vào mảng tương ứng
-              return acc;
-            }, {});
-
-            console.log(groupedItems);
-            for (const shopId of Object.keys(groupedItems)) {
-              console.log(`Shop ID: ${shopId}`);
-              console.log("Items:", groupedItems[shopId]); // Mảng của shop này
-
-              console.log(buyItems);
-
-              var totalDepositTmp2 = 0;
-              await groupedItems[shopId].map((item, index) => {
-                totalDepositTmp2 += item.price * item.quantity;
-              });
-              console.log(totalDepositTmp2);
-              console.log(shippingInfo.fullName);
-
-              await apiOrder
-                .post(
-                  "",
-                  {
-                    orderDate: new Date().toISOString(),
-                    receiveDate: null,
-                    totalPrice: totalDepositTmp2,
-                    rentPrice: 0,
-                    depositeBackMoney: 0,
-                    receiveName: shippingInfo.fullName,
-                    receiveAddress: oldAddress,
-                    receivePhone: shippingInfo.phoneNumber,
-                    status: "Delivering",
-                    userId: customerInfo.id,
-                  },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${Cookies.get("userToken")}`,
-                    },
-                  }
-                )
-                .then(async (response) => {
-                  console.log(response.data);
-                  await apiNotifications.post(
-                    "",
-                    {
-                      notify: `Bạn có đơn hàng mới mã số ${response.data.id} `,
-                      isRead: false,
-                      userId: shopId,
-                    },
-                    {
-                      headers: {
-                        Authorization: `Bearer ${Cookies.get("userToken")}`,
-                      },
-                    }
-                  );
-
-                  await apiWalletTransaction.post(
-                    "",
-                    {
-                      transactionType: "Thanh toán đơn hàng",
-                      amount: -parseInt(totalDepositTmp2),
-                      date: new Date().toISOString(),
-                      walletId: customerInfo.walletId,
-                      paymentTypeId: 5,
-                      orderId: response.data.id,
-                      status: "Success",
-                    },
-                    {
-                      headers: {
-                        Authorization: `Bearer ${Cookies.get("userToken")}`,
-                      },
-                    }
-                  );
-
-                  await apiWallets
-                    .get("/" + customerInfo.walletId, {
-                      headers: {
-                        Authorization: `Bearer ${Cookies.get("userToken")}`,
-                      },
-                    })
-                    .then(async (response2) => {
-                      await apiWallets.put(
-                        `/${response2.data.id}`,
-                        {
-                          balance: response2.data.balance - totalDepositTmp2,
-                          withdrawMethod: response2.data.withdrawMethod,
-                          withdrawInfo: response2.data.withdrawInfo,
-                          status: response2.data.status,
-                          userId: response2.data.userId,
-                        },
-                        {
-                          headers: {
-                            Authorization: `Bearer ${Cookies.get("userToken")}`,
-                          },
-                        }
-                      );
-                    });
-
-                  await Promise.all(
-                    groupedItems[shopId].map(async (item, index) => {
-                      await apiOrderDetail.post(
-                        "",
-                        {
-                          rentPrice: 0,
-                          deposit: 0,
-                          unitPrice: item.price,
-                          quantity: item.quantity,
-                          startDate: null,
-                          endDate: null,
-                          status: "DeliveringToBuyer",
-                          orderId: response.data.id,
-                          toyId: item.toyId,
-                          orderTypeId: item.orderTypeId,
-                          ratingId: null,
-                        },
-                        {
-                          headers: {
-                            Authorization: `Bearer ${Cookies.get("userToken")}`,
-                          },
-                        }
-                      );
-                      await apiToys
-                        .get("/" + item.toyId, {
-                          headers: {
-                            Authorization: `Bearer ${Cookies.get("userToken")}`,
-                          },
-                        })
-                        .then(async (response) => {
-                          await apiToys
-                            .put(
-                              "/" + item.toyId,
-                              {
-                                name: response.data.name,
-                                description: response.data.description,
-                                price: response.data.price,
-                                buyQuantity:
-                                  response.data.buyQuantity - item.quantity,
-                                origin: response.data.origin,
-                                age: response.data.age,
-                                brand: response.data.brand,
-                                categoryId: response.data.category.id,
-                                rentCount: response.data.rentCount,
-                                quantitySold:
-                                  response.data.quantitySold + item.quantity,
-                                status: response.data.status,
-                              },
-                              {
-                                headers: {
-                                  Authorization: `Bearer ${Cookies.get(
-                                    "userToken"
-                                  )}`,
-                                },
-                              }
-                            )
-                            .then(async (response) => {});
-                        });
-                    })
-                  );
-                });
-            }
-          }
-
-          cartItems.map(async (item) => {
-            await apiCartItem.delete("/" + item.id, {
-              headers: {
-                Authorization: `Bearer ${Cookies.get("userToken")}`,
-              },
-            });
-          });
-
-          await apiCart
-            .put(
-              `/${cart.id}`,
-              {
-                totalPrice: 0,
-                status: "active",
-                userId: cart.userId,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${Cookies.get("userToken")}`,
-                },
-              }
-            )
-            .then((response) => {
-              navigate("/payments-success");
-            });
+          alert("Bạn nhập thiếu thông tin giao hàng!");
         }
       } else {
-        alert("Bạn nhập thiếu thông tin giao hàng!");
+        alert("Số dư trong tài khoản của bạn không đủ để thực hiện giao dịch!");
       }
     } else {
-      alert("Số dư trong tài khoản của bạn không đủ để thực hiện giao dịch!");
+      alert("Bạn cần tích vào ô checkbox trước khi đặt hàng.");
     }
   };
   const handleCheckboxChange = () => {
@@ -1323,12 +1351,41 @@ const Payment = () => {
               Tổng thanh toán:{" "}
               {(totalAfterDiscount + totalFee).toLocaleString()} ₫
             </p>
-            <button
-              className="mt-4 bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600"
-              onClick={() => handlePayment()}
-            >
-              Đặt hàng
-            </button>
+            <div className="flex items-center">
+              {/* Checkbox */}
+              <input
+                type="checkbox"
+                id="confirmCheckbox"
+                className="mr-2 h-5 w-5"
+                checked={isChecked}
+                onChange={handleCheckboxChange2}
+              />
+              <label htmlFor="confirmCheckbox" className="text-gray-700">
+                Tôi đồng ý với điều khoản đặt hàng
+              </label>
+              <label
+                htmlFor="confirmCheckbox"
+                className="text-blue-700 cursor-pointer"
+                onClick={() => handleTermsClick()}
+              >
+                Điều khoản
+              </label>
+
+              {/* Nút Đặt hàng */}
+              <button
+                className={`ml-4 bg-green-500 text-white px-6 py-2 rounded-md ${
+                  isChecked
+                    ? "hover:bg-green-600"
+                    : "opacity-50 cursor-not-allowed"
+                }`}
+                onClick={() => {
+                  if (isChecked) handlePayment();
+                }}
+                disabled={!isChecked} // Vô hiệu hóa nút khi chưa check
+              >
+                Đặt hàng
+              </button>
+            </div>
           </div>
         </div>
       </div>
