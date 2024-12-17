@@ -10,7 +10,7 @@ import apiCategory from "../../service/ApiCategory";
 import apiCartItem from "../../service/ApiCartItem";
 import apiUser from "../../service/ApiUser";
 import { useNavigate } from "react-router-dom";
-
+import apiConversations from "../../service/ApiConversations";
 import apiCart from "../../service/ApiCart";
 import ChatForm from "../Chat/ChatForm";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
@@ -370,6 +370,21 @@ const ToysSaleDetails = () => {
     navigate("/toy-store-details");
   };
 
+  const HandleAddChat = async () => {
+    await apiConversations.post(
+      `/check-or-create-conversation`,
+      {
+        user1Id: userData.id,
+        user2Id: owner.id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      }
+    );
+  };
+
   const indexOfLastReview = currentPage * itemsPerPage;
   const indexOfFirstReview = indexOfLastReview - itemsPerPage;
   const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
@@ -603,7 +618,12 @@ const ToysSaleDetails = () => {
                   </h3>
 
                   <div className="flex space-x-2 mt-2">
-                    <button className="border border-blue-500 text-blue-500 font-semibold px-4 py-2 rounded">
+                    <button
+                      className="border border-blue-500 text-blue-500 font-semibold px-4 py-2 rounded"
+                      onClick={() => {
+                        HandleAddChat();
+                      }}
+                    >
                       Chat ngay
                     </button>
 

@@ -152,10 +152,10 @@ const FilterToys = () => {
     if (maxPrice) {
       switch (maxPrice != "") {
         case "0":
-          filters.push(`price ge 0 and price le 500000`);
+          filters.push(`price gt 0 and price le 500000`);
           break;
         case "1":
-          filters.push(`price ge 500000 and price le 1000000`);
+          filters.push(`price gt 500000 and price le 1000000`);
           break;
         case "2":
           filters.push(`price gt 1000000 and price le 2000000`);
