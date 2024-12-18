@@ -147,6 +147,67 @@ const Term = () => {
             </p>
           </div>
         );
+      case "4":
+        return (
+          <div class="rules-container">
+            <h3>
+              Để đảm bảo quá trình hợp tác diễn ra thuận lợi, chúng tôi kính
+              mong quý khách vui lòng cung cấp các giấy tờ sau để trở thành nhà
+              cung cấp:
+            </h3>
+            <ul>
+              <li>
+                <strong>Giấy chứng nhận đăng ký doanh nghiệp:</strong> Giấy tờ
+                này chứng minh doanh nghiệp của quý khách đã được thành lập hợp
+                pháp theo quy định của pháp luật.
+              </li>
+              <li>
+                <strong>Giấy phép kinh doanh:</strong> Giấy phép này cho phép
+                doanh nghiệp hoạt động trong lĩnh vực kinh doanh đồ chơi.
+              </li>
+              <li>
+                <strong>Mã số thuế:</strong> Giấy tờ này chứng minh doanh nghiệp
+                của quý khách đã đăng ký nộp thuế.
+              </li>
+              <li>
+                <strong>Giấy phép đăng ký sản phẩm (nếu có):</strong> Nếu doanh
+                nghiệp của quý khách tự sản xuất đồ chơi, chúng tôi cần giấy
+                phép này để đảm bảo sản phẩm đáp ứng các tiêu chuẩn chất lượng
+                và an toàn.
+              </li>
+            </ul>
+            <p>
+              Gửi về mail: <strong>Edutoyrent@gmail.com</strong> hoặc về Zalo
+              SĐT: <strong>0969760721 (Khôi Nhật)</strong> để được cung cấp tài
+              khoản.
+            </p>
+          </div>
+        );
+      case "5":
+        return (
+          <div class="rules-container">
+            <h2 class="text-lg font-semibold mb-4 text-center text-blue-600">
+              Điều khoản của người cho thuê
+            </h2>
+            <p class="mb-2">
+              Lúc tạo sản phẩm cho thuê mới sẽ nhập tất cả thông tin của đồ chơi
+              và giá trị gốc của đồ chơi.
+            </p>
+            <p class="mb-2">
+              Hệ thống sẽ tự động hiển thị giá thuê với 3 mức giá:{" "}
+              <strong>15%</strong>, <strong>25%</strong>, <strong>30%</strong>
+              (1 tuần, 2 tuần, 1 tháng) giá trị gốc của sản phẩm làm tiền thuê.
+            </p>
+            <p class="mb-2">
+              Khi có đơn thuê thì phí ship sẽ do{" "}
+              <strong>2 bên tự thỏa thuận</strong>.
+            </p>
+            <p class="mb-2">
+              Trong trường hợp trả hàng, bên người đi thuê và người cho thuê sẽ
+              chịu mỗi bên <strong>30k tiền ship</strong>.
+            </p>
+          </div>
+        );
       default:
         return null;
     }
@@ -193,6 +254,24 @@ const Term = () => {
               }`}
             >
               <span className="icon-class mr-2">🏢</span> Hình thức đặt cọc
+            </button>
+            <button
+              onClick={() => setSelectedTab("4")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "4" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">🏢</span> Điều khoản trở thành
+              nhà cung cấp
+            </button>
+            <button
+              onClick={() => setSelectedTab("5")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "5" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">🏢</span> Điều khoản của người
+              cho thuê
             </button>
           </nav>
         </aside>
