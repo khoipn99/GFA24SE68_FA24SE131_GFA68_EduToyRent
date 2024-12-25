@@ -339,6 +339,41 @@ namespace EduToyRentAPI.Controllers
 
             return Ok();
         }
+        // ban 
+        [HttpPut("BanUser/{userId}")]
+        public async Task<IActionResult> BanUser(int userId)
+        {
+            var user = _unitOfWork.UserRepository.GetByID(userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            var userToys = _unitOfWork.ToyRepository.GetV2(t => t.UserId == userId).ToList();
+            var hasRentingOrAwaiting = userToys.Any(toy => toy.Status == "Renting" || toy.Status == "Awaiting");
+
+            foreach (var toy in userToys)
+            {
+                if (toy.Status != "Renting" && toy.Status != "Awaiting")
+                {
+                    toy.Status = "Banned";
+                    _unitOfWork.ToyRepository.Update(toy);
+                }
+            }
+
+            if (hasRentingOrAwaiting)
+            {
+                _unitOfWork.Save();
+                return BadRequest("Cannot ban user as they have toys in Renting or Awaiting status. Other toys have been banned.");
+            }
+
+            user.Status = "Inactive";
+            _unitOfWork.UserRepository.Update(user);
+            _unitOfWork.Save();
+
+            return Ok("User banned and all toys updated successfully.");
+        }
+
 
         private bool UserExists(int id)
         {

@@ -23,6 +23,8 @@ namespace EduToyRentRepositories.DTO.Request
         public int OrderDetailId { get; set; }
         [Required]
         public int TransactionId { get; set; }
+        public int PlatformFeeId { get; set; }
+        public float? FineFee { get; set; }
         public DateTime Date { get; set; }
     }
 }

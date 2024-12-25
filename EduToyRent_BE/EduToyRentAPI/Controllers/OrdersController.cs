@@ -42,6 +42,7 @@ namespace EduToyRentAPI.Controllers
                     TotalPrice = order.TotalPrice,
                     RentPrice = (int)order.RentPrice,
                     DepositeBackMoney = (int)order.DepositeBackMoney,
+                    Fine = (int)order.Fine,
                     ReceiveName = order.ReceiveName,
                     ReceiveAddress = order.ReceiveAddress,
                     ReceivePhone = order.ReceivePhone,
@@ -70,6 +71,7 @@ namespace EduToyRentAPI.Controllers
                     TotalPrice = order.TotalPrice,
                     RentPrice = order.RentPrice ?? 0,
                     DepositeBackMoney = order.DepositeBackMoney ?? 0,
+                    Fine = (int)order.Fine,
                     ReceiveName = order.ReceiveName,
                     ReceiveAddress = order.ReceiveAddress,
                     ReceivePhone = order.ReceivePhone,
@@ -103,6 +105,7 @@ namespace EduToyRentAPI.Controllers
             order.TotalPrice = orderRequest.TotalPrice;
             order.RentPrice = orderRequest.RentPrice;
             order.DepositeBackMoney = orderRequest.DepositeBackMoney;
+            order.Fine = orderRequest.Fine;
             order.ReceiveName = orderRequest.ReceiveName;
             order.ReceiveAddress = orderRequest.ReceiveAddress;
             order.ReceivePhone = orderRequest.ReceivePhone;
@@ -144,6 +147,7 @@ namespace EduToyRentAPI.Controllers
                 TotalPrice = orderRequest.TotalPrice, // Xu ly cho nay khi hoan thanh OrderDetail
                 RentPrice = orderRequest.RentPrice,
                 DepositeBackMoney = orderRequest.DepositeBackMoney,
+                Fine = orderRequest.Fine,
                 ReceiveName = orderRequest.ReceiveName,
                 ReceiveAddress = orderRequest.ReceiveAddress,
                 ReceivePhone = orderRequest.ReceivePhone,
@@ -162,6 +166,7 @@ namespace EduToyRentAPI.Controllers
                 TotalPrice = order.TotalPrice,
                 RentPrice = (int)order.RentPrice,
                 DepositeBackMoney = (int)order.DepositeBackMoney,
+                Fine = (int)order.Fine,
                 ReceiveName = order.ReceiveName,
                 ReceiveAddress = order.ReceiveAddress,
                 ReceivePhone = order.ReceivePhone,
@@ -222,6 +227,7 @@ namespace EduToyRentAPI.Controllers
                         TotalPrice = o.TotalPrice,
                         RentPrice = o.RentPrice??0,
                         DepositeBackMoney = o.DepositeBackMoney ?? 0,
+                        Fine = (int)o.Fine,
                         ReceiveName = o.ReceiveName,
                         ReceiveAddress = o.ReceiveAddress,
                         ReceivePhone = o.ReceivePhone,
@@ -262,6 +268,7 @@ namespace EduToyRentAPI.Controllers
                 TotalPrice = order.TotalPrice,
                 RentPrice = (int)order.RentPrice,
                 DepositeBackMoney = (int)order.DepositeBackMoney,
+                Fine = (int)order.Fine,
                 ReceiveName = order.ReceiveName,
                 ReceiveAddress = order.ReceiveAddress,
                 ReceivePhone = order.ReceivePhone,
@@ -298,6 +305,7 @@ namespace EduToyRentAPI.Controllers
                 TotalPrice = o.TotalPrice,
                 RentPrice = o.RentPrice ?? 0,
                 DepositeBackMoney = o.DepositeBackMoney ?? 0,
+                Fine = (int)o.Fine,
                 ReceiveName = o.ReceiveName,
                 ReceiveAddress = o.ReceiveAddress,
                 ReceivePhone = o.ReceivePhone,

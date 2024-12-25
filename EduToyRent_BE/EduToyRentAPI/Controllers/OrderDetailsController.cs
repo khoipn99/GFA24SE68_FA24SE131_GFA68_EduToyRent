@@ -48,6 +48,8 @@ namespace EduToyRentAPI.Controllers
                     Quantity = orderDetail.Quantity,
                     StartDate = orderDetail.StartDate,
                     EndDate = orderDetail.EndDate,
+                    Fine = orderDetail.Fine,
+                    RentCount = orderDetail.RentCount,
                     Status = orderDetail.Status,
                     OrderId = orderDetail.OrderId,
                     ToyId = orderDetail.ToyId,
@@ -92,6 +94,8 @@ namespace EduToyRentAPI.Controllers
                 Quantity = orderDetail.Quantity,
                 StartDate = orderDetail.StartDate,
                 EndDate = orderDetail.EndDate,
+                Fine = orderDetail.Fine,
+                RentCount = orderDetail.RentCount,
                 Status = orderDetail.Status,
                 OrderId = orderDetail.OrderId,
                 ToyId = orderDetail.ToyId,
@@ -122,6 +126,8 @@ namespace EduToyRentAPI.Controllers
             orderDetail.Quantity = orderDetailRequest.Quantity;
             orderDetail.StartDate = orderDetailRequest.StartDate;
             orderDetail.EndDate = orderDetailRequest.EndDate;
+            orderDetail.Fine = orderDetailRequest.Fine;
+            orderDetail.RentCount = orderDetailRequest.RentCount;
             orderDetail.Status = orderDetailRequest.Status;
             orderDetail.OrderId = orderDetailRequest.OrderId;
             orderDetail.ToyId = orderDetailRequest.ToyId;
@@ -160,6 +166,8 @@ namespace EduToyRentAPI.Controllers
                 Quantity = orderDetailRequest.Quantity,
                 StartDate = orderDetailRequest.StartDate,
                 EndDate = orderDetailRequest.EndDate,
+                Fine = orderDetailRequest.Fine,
+                RentCount = orderDetailRequest.RentCount,
                 Status = orderDetailRequest.Status,
                 OrderId = orderDetailRequest.OrderId,
                 ToyId = orderDetailRequest.ToyId,
@@ -191,6 +199,8 @@ namespace EduToyRentAPI.Controllers
                 Quantity = orderDetail.Quantity,
                 StartDate = orderDetail.StartDate,
                 EndDate = orderDetail.EndDate,
+                Fine = orderDetail.Fine,
+                RentCount = orderDetail.RentCount,
                 Status = orderDetail.Status,
                 OrderId = orderDetail.OrderId,
                 ToyId = orderDetail.ToyId,
@@ -256,6 +266,8 @@ namespace EduToyRentAPI.Controllers
                     Quantity = orderDetail.Quantity,
                     StartDate = orderDetail.StartDate,
                     EndDate = orderDetail.EndDate,
+                    Fine = orderDetail.Fine,
+                    RentCount = orderDetail.RentCount,
                     Status = orderDetail.Status,
                     OrderId = orderDetail.OrderId,
                     ToyId = orderDetail.ToyId,
@@ -300,6 +312,8 @@ namespace EduToyRentAPI.Controllers
                     Quantity = orderDetail.Quantity,
                     StartDate = orderDetail.StartDate,
                     EndDate = orderDetail.EndDate,
+                    Fine = orderDetail.Fine,
+                    RentCount = orderDetail.RentCount,
                     Status = orderDetail.Status,
                     OrderId = orderDetail.OrderId,
                     ToyId = orderDetail.ToyId,
@@ -338,6 +352,8 @@ namespace EduToyRentAPI.Controllers
                     Quantity = orderDetail.Quantity,
                     StartDate = orderDetail.StartDate,
                     EndDate = orderDetail.EndDate,
+                    Fine = orderDetail.Fine,
+                    RentCount = orderDetail.RentCount,
                     Status = orderDetail.Status,
                     OrderId = orderDetail.OrderId,
                     ToyId = orderDetail.ToyId,
@@ -351,7 +367,31 @@ namespace EduToyRentAPI.Controllers
 
             return Ok(orderDetailResponses);
         }
+        // Chuyển process sang expired
+        [HttpPut("UpdateExpiredStatus")]
+        public async Task<IActionResult> UpdateExpiredStatusForOrderDetails()
+        {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var currentDate = TimeZoneInfo.ConvertTime(DateTime.Now, vietnamTimeZone);
 
+            var orderDetails = _unitOfWork.OrderDetailRepository.Get(
+                filter: od => od.Status == "Processing" && od.EndDate <= currentDate).ToList();
+
+            if (!orderDetails.Any())
+            {
+                return Ok("No OrderDetails to update.");
+            }
+
+            foreach (var orderDetail in orderDetails)
+            {
+                orderDetail.Status = "Expired";
+                _unitOfWork.OrderDetailRepository.Update(orderDetail);
+            }
+
+            _unitOfWork.Save();
+
+            return Ok($"Updated {orderDetails.Count} OrderDetails to Expired status.");
+        }
         private bool OrderDetailExists(int id)
         {
             return _unitOfWork.OrderDetailRepository.Get().Any(e => e.Id == id);

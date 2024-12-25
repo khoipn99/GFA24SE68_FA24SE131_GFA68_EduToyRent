@@ -19,6 +19,7 @@ namespace EduToyRentRepositories.Models
         public float? PlatformFee { get; set; } = default(float?);
         public float? OwnerReceiveMoney { get; set; } = default(float?);
         public float? DepositBackMoney { get; set; } = default(float?);
+        public float? FineFee { get; set; } = default(float?);
         public DateTime? Date {  get; set; } 
         public string Status { get; set; }
         public int OrderId { get; set; }

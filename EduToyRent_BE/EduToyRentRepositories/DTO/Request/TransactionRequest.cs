@@ -21,6 +21,7 @@ namespace EduToyRentRepositories.DTO.Request
         public string Status { get; set; }
         [Required]
         public int OrderId { get; set; }
+        public float? FineFee { get; set; }
         public DateTime Date { get; set; }
     }
 }
