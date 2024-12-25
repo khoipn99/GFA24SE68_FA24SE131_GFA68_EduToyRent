@@ -19,8 +19,12 @@ namespace EduToyRentRepositories.Models
         public float? PlatformFee { get; set; } =  default(float?);
         public float? OwnerReceiveMoney { get; set; } = default(float?);
         public float? DepositBackMoney { get; set; } = default(float?);
+        public float? FineFee { get; set; } = default(float?);
         public DateTime? Date { get; set; }
         public string Status { get; set; }
+        public int PlatformFeeId { get; set; }
+        [ForeignKey(nameof(PlatformFeeId))]
+        public virtual PlatformFee PfFee { get; set; } = null!;
         public int OrderDetailId { get; set; }
         [ForeignKey(nameof(OrderDetailId))]
         public virtual OrderDetail OrderDetail { get; set; } = null!;

@@ -25,6 +25,8 @@ namespace EduToyRentRepositories.Models
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Cart> Carts { get; set; }
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<PlatformFee> PlatformFees { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<OrderCheckImage> OrderCheckImages { get; set; }

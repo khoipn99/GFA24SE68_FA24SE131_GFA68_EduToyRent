@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduToyRentRepositories.Migrations
 {
     [DbContext(typeof(EduToyRentDBContext))]
-    [Migration("20241216081646_Initital")]
-    partial class Initital
+    [Migration("20241225224900_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -237,6 +237,9 @@ namespace EduToyRentRepositories.Migrations
                     b.Property<int?>("DepositeBackMoney")
                         .HasColumnType("int");
 
+                    b.Property<float?>("Fine")
+                        .HasColumnType("real");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
@@ -315,6 +318,9 @@ namespace EduToyRentRepositories.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<float?>("Fine")
+                        .HasColumnType("real");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
@@ -325,6 +331,9 @@ namespace EduToyRentRepositories.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("RatingId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RentCount")
                         .HasColumnType("int");
 
                     b.Property<int?>("RentPrice")
@@ -431,6 +440,22 @@ namespace EduToyRentRepositories.Migrations
                     b.ToTable("PaymentTypes");
                 });
 
+            modelBuilder.Entity("EduToyRentRepositories.Models.PlatformFee", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<float>("Percent")
+                        .HasColumnType("real");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlatformFees");
+                });
+
             modelBuilder.Entity("EduToyRentRepositories.Models.Premium", b =>
                 {
                     b.Property<int>("Id")
@@ -519,6 +544,40 @@ namespace EduToyRentRepositories.Migrations
                     b.HasIndex("RatingId");
 
                     b.ToTable("RatingImages");
+                });
+
+            modelBuilder.Entity("EduToyRentRepositories.Models.Report", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderDetailId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderDetailId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("EduToyRentRepositories.Models.Role", b =>
@@ -622,6 +681,9 @@ namespace EduToyRentRepositories.Migrations
                     b.Property<float?>("DepositBackMoney")
                         .HasColumnType("real");
 
+                    b.Property<float?>("FineFee")
+                        .HasColumnType("real");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
@@ -659,6 +721,9 @@ namespace EduToyRentRepositories.Migrations
                     b.Property<float?>("DepositBackMoney")
                         .HasColumnType("real");
 
+                    b.Property<float?>("FineFee")
+                        .HasColumnType("real");
+
                     b.Property<int>("OrderDetailId")
                         .HasColumnType("int");
 
@@ -667,6 +732,9 @@ namespace EduToyRentRepositories.Migrations
 
                     b.Property<float?>("PlatformFee")
                         .HasColumnType("real");
+
+                    b.Property<int>("PlatformFeeId")
+                        .HasColumnType("int");
 
                     b.Property<float?>("ReceiveMoney")
                         .HasColumnType("real");
@@ -681,6 +749,8 @@ namespace EduToyRentRepositories.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrderDetailId");
+
+                    b.HasIndex("PlatformFeeId");
 
                     b.HasIndex("TranSactionId");
 
@@ -1044,6 +1114,25 @@ namespace EduToyRentRepositories.Migrations
                     b.Navigation("Rating");
                 });
 
+            modelBuilder.Entity("EduToyRentRepositories.Models.Report", b =>
+                {
+                    b.HasOne("EduToyRentRepositories.Models.OrderDetail", "OrderDetail")
+                        .WithMany()
+                        .HasForeignKey("OrderDetailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EduToyRentRepositories.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("OrderDetail");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("EduToyRentRepositories.Models.Toy", b =>
                 {
                     b.HasOne("EduToyRentRepositories.Models.User", "Approver")
@@ -1089,6 +1178,12 @@ namespace EduToyRentRepositories.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("EduToyRentRepositories.Models.PlatformFee", "PfFee")
+                        .WithMany()
+                        .HasForeignKey("PlatformFeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EduToyRentRepositories.Models.Transaction", "Transaction")
                         .WithMany()
                         .HasForeignKey("TranSactionId")
@@ -1096,6 +1191,8 @@ namespace EduToyRentRepositories.Migrations
                         .IsRequired();
 
                     b.Navigation("OrderDetail");
+
+                    b.Navigation("PfFee");
 
                     b.Navigation("Transaction");
                 });

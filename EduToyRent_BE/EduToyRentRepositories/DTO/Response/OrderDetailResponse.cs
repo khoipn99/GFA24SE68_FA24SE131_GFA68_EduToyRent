@@ -15,6 +15,8 @@ namespace EduToyRentRepositories.DTO.Response
         public int Quantity { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public float? Fine { get; set; }
+        public int? RentCount { get; set; }
         public string Status { get; set; }
         public int OrderId { get; set; }
         public int ToyId { get; set; }
