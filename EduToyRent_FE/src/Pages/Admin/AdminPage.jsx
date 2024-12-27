@@ -19,7 +19,7 @@ import apiTransaction from "../../service/ApiTransaction";
 import apiLogin from "../../service/ApiLogin";
 import apiCart from "../../service/ApiCart";
 import { jwtDecode } from "jwt-decode";
-
+import apiOrderTypes from "../../service/ApiOrderTypes";
 import { useNavigate } from "react-router-dom";
 
 const AdminPage = () => {
@@ -70,7 +70,8 @@ const AdminPage = () => {
   const [toysRentData, setToysRentData] = useState([]);
   const [toysBuyData, setToysBuyData] = useState([]);
   const [toysBanData, setToysBanData] = useState([]);
-
+  const [orderType, setOrderType] = useState([]);
+  const [selectedOrderType, setSelectedOrderType] = useState(null);
   const [currentPageData, setCurrentPageData] = useState(1);
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
   const [currentPageData1, setCurrentPageData1] = useState(1); // Trang hiện tại cho toysData
@@ -79,6 +80,7 @@ const AdminPage = () => {
   const [currentPageData4, setCurrentPageData4] = useState(1); // Trang hiện tại cho toysData
   const itemsPerPage = 5; // Số mục trên mỗi trang
 
+  const [isEditCardVisible, setEditCardVisible] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -205,6 +207,7 @@ const AdminPage = () => {
       LoadToyRent();
       LoadToyBan();
       LoadOrder("");
+      LoadOrderTypes();
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
@@ -599,6 +602,26 @@ const AdminPage = () => {
       console.error("Lỗi khi tải danh sách người dùng", error);
     }
   };
+  const LoadOrderTypes = async () => {
+    try {
+      const OrderTypesResponse = await apiOrderTypes.get(
+        `?pageIndex=1&pageSize=2000`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      console.log("Danh sách phí nền tảng mới log:", OrderTypesResponse.data);
+      const OrderType = OrderTypesResponse.data;
+      // Cập nhật dữ liệu đồ chơi
+      setOrderType(OrderType);
+      console.log(`Danh sách phí nền tảng:`, OrderType);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách người dùng", error);
+    }
+  };
   useEffect(() => {
     // Gọi hàm khi currentPage thay đổi để cập nhật dữ liệu cho trang hiện tại
     updateCurrentPageData(userUpData);
@@ -875,6 +898,14 @@ const AdminPage = () => {
     Member: "Thành viên",
     Staff: "Nhân viên",
   };
+  const timeMapping = {
+    "1 week": "1 tuần", //
+    "2 week": "2 tuần", //
+    "4 week": "1 tháng", //
+    buy: "Mua", // "mua" tương ứng với "Đã mua"
+    NULL: "Chưa xác định", // NULL trường hợp chưa xác định
+  };
+
   const handleCreateUser = async () => {
     const createDate = new Date().toISOString();
     const dob = new Date().toISOString();
@@ -1515,6 +1546,46 @@ const AdminPage = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewUser((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditOrderType = (orderType) => {
+    setSelectedOrderType(orderType); // Lưu thông tin loại đơn hàng được chọn
+    setEditCardVisible(true); // Hiển thị card chỉnh sửa
+  };
+
+  const handleOrderType = async (id) => {
+    try {
+      // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
+      console.log("d:", selectedOrderType);
+      const formData = new FormData();
+
+      //Thêm các trường dữ liệu vào formData
+      formData.append("id", selectedOrderType.id || "");
+      formData.append("time", selectedOrderType.time || "");
+      formData.append("percentPrice", selectedOrderType.percentPrice || "");
+
+      console.log("dữ liệu sẽ gửi", formData.data);
+
+      const response = await apiOrderTypes.put(`/${id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Log dữ liệu nhận được từ API khi thành công
+      console.log("Response on success:", response);
+
+      if (response.status === 204) {
+        // selectedOrderType(null);
+        LoadOrderTypes();
+      } else {
+        throw new Error(`Failed to update status for user with ID ${id}`);
+      }
+    } catch (error) {
+      // Log lỗi chi tiết nhận được từ API khi có lỗi
+      console.error("Error message:", error.message);
+    }
   };
   const renderContent = () => {
     switch (selectedTab) {
@@ -3837,6 +3908,161 @@ const AdminPage = () => {
             )}
           </div>
         );
+      case "platfrom":
+        return (
+          <div>
+            <div className="flex flex-col">
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow">
+                    <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
+                      <thead className=" bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Thời gian thuê
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Phần trăm giá
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Hành động
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                        {orderType &&
+                        Array.isArray(orderType) &&
+                        orderType.length > 0 ? (
+                          orderType.map((user) => (
+                            <tr
+                              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                              key={user.id}
+                            >
+                              <td className="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                <div className="text-base font-semibold text-gray-900 dark:text-white">
+                                  {timeMapping[user.time] ||
+                                    "Trạng thái không xác định"}
+                                </div>
+                              </td>
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {user.percentPrice}
+                              </td>
+
+                              <td className="p-4 space-x-2 whitespace-nowrap">
+                                {/* Nút "Detail" */}
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleEditOrderType(user); // Hiển thị card chỉnh sửa
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
+                                >
+                                  Chỉnh sửa
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="13" className="p-4 text-center"></td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                    {isEditCardVisible && (
+                      <div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-black bg-opacity-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                          <h2 className="text-lg font-semibold mb-4">
+                            Chỉnh sửa phần trăm giá
+                          </h2>
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              // Xử lý lưu dữ liệu ở đây
+                              console.log(selectedOrderType);
+                              setEditCardVisible(false); // Đóng card chỉnh sửa
+                            }}
+                          >
+                            <div className="mb-4">
+                              <label className="block text-sm font-medium text-gray-700">
+                                Thời gian thuê
+                              </label>
+                              <input
+                                type="text"
+                                value={
+                                  timeMapping[selectedOrderType?.time] ||
+                                  selectedOrderType?.time ||
+                                  ""
+                                }
+                                onChange={(e) =>
+                                  setSelectedOrderType({
+                                    ...selectedOrderType,
+                                    time:
+                                      Object.keys(timeMapping).find(
+                                        (key) =>
+                                          timeMapping[key] === e.target.value
+                                      ) || e.target.value,
+                                  })
+                                }
+                                className="border border-gray-300 px-3 py-2 rounded-md w-full focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div className="mb-4">
+                              <label className="block text-sm font-medium text-gray-700">
+                                Phần trăm giá
+                              </label>
+                              <input
+                                type="number"
+                                value={selectedOrderType?.percentPrice || ""}
+                                onChange={(e) =>
+                                  setSelectedOrderType({
+                                    ...selectedOrderType,
+                                    percentPrice: e.target.value,
+                                  })
+                                }
+                                className="border border-gray-300 px-3 py-2 rounded-md w-full focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div className="flex justify-end space-x-4">
+                              <button
+                                type="button"
+                                onClick={() => setEditCardVisible(false)} // Đóng card
+                                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                              >
+                                Hủy
+                              </button>
+                              <button
+                                type="submit"
+                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                onClick={(event) => {
+                                  event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
+                                  handleOrderType(selectedOrderType.id); // Gọi hàm handleDelete
+                                }}
+                              >
+                                Lưu
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -3919,6 +4145,15 @@ const AdminPage = () => {
             >
               <span className="icon-class mr-2">📦 🚫</span> Danh sách sản phẩm
               cấm
+            </button>
+            <button
+              onClick={() => setSelectedTab("platfrom")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "platfrom" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">💵</span> Chỉnh sửa phí thuê đồ
+              chơi
             </button>
           </nav>
         </aside>
