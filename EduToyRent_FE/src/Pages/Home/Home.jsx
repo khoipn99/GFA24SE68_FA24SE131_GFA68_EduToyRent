@@ -15,7 +15,7 @@ import apiCartItem from "../../service/ApiCartItem";
 import apiCart from "../../service/ApiCart";
 import apiUser from "../../service/ApiUser";
 import ChatForm from "../Chat/ChatForm";
-
+import apiOrderTypes from "../../service/ApiOrderTypes";
 const Home = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedToy, setSelectedToy] = useState(null);
@@ -33,7 +33,7 @@ const Home = () => {
   const [toySuppliers, setToySuppliers] = useState([]);
   const [dealsOfTheDay, setdealsOfTheDay] = useState([]);
   const [cartId, setCartId] = useState(null);
-
+  const [orderType, setOrderType] = useState([]);
   const PictureCategory = [
     {
       image:
@@ -107,6 +107,8 @@ const Home = () => {
         console.log(response.data);
         setToySuppliers(response.data);
       });
+
+    LoadOrderTypes();
   }, []);
 
   useEffect(() => {
@@ -231,6 +233,28 @@ const Home = () => {
     }
     return stars;
   };
+
+  const LoadOrderTypes = async () => {
+    try {
+      const OrderTypesResponse = await apiOrderTypes.get(
+        `?pageIndex=1&pageSize=2000`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      console.log("Danh sách phí nền tảng mới log:", OrderTypesResponse.data);
+      const OrderType = OrderTypesResponse.data;
+      // Cập nhật dữ liệu đồ chơi
+      setOrderType(OrderType);
+      console.log(`Danh sách phí nền tảng:`, OrderType);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách người dùng", error);
+    }
+  };
+
   // Hàm thêm sản phẩm vào giỏ hàng
   const addToCart = async (toy) => {
     if (!cartId) {
@@ -262,7 +286,7 @@ const Home = () => {
         // Kiểm tra giá trị orderTypeId và tính giá thuê
         const orderTypeId = rentalDuration
           ? calculateOrderTypeId(rentalDuration)
-          : 1; // 7 là giá trị mặc định cho "Mua"
+          : 7; // 7 là giá trị mặc định cho "Mua"
 
         // Tính giá thuê dựa trên rentalDuration (orderTypeId)
         let rentalPrice = 0;
@@ -407,23 +431,34 @@ const Home = () => {
   };
   // Hàm tính giá thuê
   const calculateRentalPrice = (price, duration) => {
-    let rentalPrice = 0;
-    switch (duration) {
-      case "1 tuần":
-        rentalPrice = price * 0.15;
-        break;
-      case "2 tuần":
-        rentalPrice = price * 0.25;
-        break;
-      case "1 tháng":
-        rentalPrice = price * 0.3;
-        break;
-      case "Mua":
-        rentalPrice = price; // 100% giá
-        break;
-      default:
-        rentalPrice = 0; // Giá trị mặc định nếu duration không hợp lệ
+    // Ánh xạ duration tiếng Việt sang tiếng Anh
+    const durationMapping = {
+      "1 tuần": "1 week",
+      "2 tuần": "2 week",
+      "1 tháng": "4 week",
+      Mua: "buy",
+    };
+
+    const mappedDuration = durationMapping[duration];
+
+    if (!mappedDuration) {
+      console.error("Không tìm thấy ánh xạ cho thời gian thuê:", duration);
+      return 0;
     }
+
+    // Tìm đối tượng trong orderType dựa trên mappedDuration
+    const matchingOrder = orderType.find(
+      (item) => item.time === mappedDuration
+    );
+
+    if (!matchingOrder) {
+      console.error("Không tìm thấy thời gian thuê phù hợp:", mappedDuration);
+      return 0;
+    }
+
+    const rentalPrice = price * (matchingOrder.percentPrice || 0);
+    console.log("Rental Price:", rentalPrice);
+
     return rentalPrice;
   };
 
@@ -611,7 +646,7 @@ const Home = () => {
                   </div>
                 ))
               ) : (
-                <p>No toys available</p>
+                <p></p>
               )}
             </div>
             <h2 className="text-[#0e161b] text-[22px] font-bold px-4 pt-5">
@@ -781,13 +816,18 @@ const Home = () => {
                   </button>
                   {selectedToy && (
                     <img
-                      src={selectedToy.media[0].mediaUrl}
-                      alt={selectedToy.name}
-                      className="w-1/2 h-full object-cover rounded-l-lg"
+                      // src={selectedToy.media[0].mediaUrl}
+                      src={images[0]}
+                      alt={
+                        selectedToy.name.length > 20
+                          ? `${selectedToy.name.substring(0, 20)}...`
+                          : selectedToy.name
+                      }
+                      className="w-1/2 h-full object-cover rounded-l-lg "
                     />
                   )}
                   <div className="pl-4 pt-0 flex-grow">
-                    <h2 className="text-2xl font-bold mb-2">
+                    <h2 className="text-2xl font-bold mb-2 truncate w-[200px]">
                       {selectedToy.name}
                     </h2>
                     <p className="text-sm text-gray-600 mb-2">

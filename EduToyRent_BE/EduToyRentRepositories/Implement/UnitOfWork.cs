@@ -12,6 +12,8 @@ namespace EduToyRentRepositories.Implement
     {
         private readonly EduToyRentDBContext _context;
         private IGenericRepository<OrderCheckImage> orderCheckImageRepository;
+        private IGenericRepository<PlatformFee> platformFeeRepository;
+        private IGenericRepository<Report> reportRepository;
         private IGenericRepository<Cart> cartRepository;
         private IGenericRepository<CartItem> cartItemRepository;
         private IGenericRepository<Category> categoryRepository;
@@ -45,6 +47,20 @@ namespace EduToyRentRepositories.Implement
             get
             {
                 return notificationRepository ??= new GenericRepository<Notification>(_context);
+            }
+        }
+        public IGenericRepository<PlatformFee> PlatformFeeRepository
+        {
+            get
+            {
+                return platformFeeRepository ??= new GenericRepository<PlatformFee>(_context);
+            }
+        }
+        public IGenericRepository<Report> ReportRepository
+        {
+            get
+            {
+                return reportRepository ??= new GenericRepository<Report>(_context);
             }
         }
         public IGenericRepository<OrderCheckImage> OrderCheckImageRepository

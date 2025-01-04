@@ -42,8 +42,14 @@ namespace EduToyRentAPI.Controllers
                     DepositBackMoney = (float)transactionDetail.DepositBackMoney,
                     OrderDetailId = transactionDetail.OrderDetailId,
                     TransactionId = transactionDetail.TranSactionId,
+                    FineFee = (float)transactionDetail.FineFee,
                     Date = transactionDetail.Date ?? DateTime.MinValue,
                     Status = transactionDetail.Status,
+                    PlatformFeeResponse = new PlatformFeeResponse()
+                    {
+                        Id = transactionDetail.PlatformFeeId,
+                        Percent = _unitOfWork.PlatformFeeRepository.GetByID(transactionDetail.PlatformFeeId).Percent,
+                    }
                 }).ToList();
 
             if (!transactionDetails.Any())
@@ -74,8 +80,14 @@ namespace EduToyRentAPI.Controllers
                 DepositBackMoney = (float)transactionDetail.DepositBackMoney,
                 OrderDetailId = transactionDetail.OrderDetailId,
                 TransactionId = transactionDetail.TranSactionId,
+                FineFee= (float)transactionDetail.FineFee,
                 Date = transactionDetail.Date ?? DateTime.MinValue,
-                Status = transactionDetail.Status
+                Status = transactionDetail.Status,
+                PlatformFeeResponse = new PlatformFeeResponse()
+                {
+                    Id = transactionDetail.PlatformFeeId,
+                    Percent = _unitOfWork.PlatformFeeRepository.GetByID(transactionDetail.PlatformFeeId).Percent,
+                }
             };
 
             return transactionDetailResponse;
@@ -100,8 +112,10 @@ namespace EduToyRentAPI.Controllers
             tranDetail.DepositBackMoney = transactionDetail.DepositBackMoney;
             tranDetail.OrderDetailId = transactionDetail.OrderDetailId;
             tranDetail.TranSactionId = transactionDetail.TransactionId;
+            tranDetail.FineFee = transactionDetail.FineFee;
             tranDetail.Date = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
             tranDetail.Status = transactionDetail.Status;
+            tranDetail.PlatformFeeId = transactionDetail.PlatformFeeId;
 
             _unitOfWork.TransactionDetailRepository.Update(tranDetail);
             _unitOfWork.Save();
@@ -125,8 +139,10 @@ namespace EduToyRentAPI.Controllers
                 DepositBackMoney = transactionDetail.DepositBackMoney,
                 TranSactionId = transactionDetail.TransactionId,
                 OrderDetailId = transactionDetail.OrderDetailId,
+                FineFee = transactionDetail.FineFee,
                 Date = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
-                Status = transactionDetail.Status
+                Status = transactionDetail.Status,
+                PlatformFeeId = transactionDetail.PlatformFeeId,
             };
 
             _unitOfWork.TransactionDetailRepository.Insert(transDetail);
@@ -141,8 +157,14 @@ namespace EduToyRentAPI.Controllers
                 OwnerReceiveMoney = (float)transDetail.OwnerReceiveMoney,
                 TransactionId = transactionDetail.TransactionId,
                 OrderDetailId = transactionDetail.OrderDetailId,
+                FineFee= transactionDetail.FineFee,
                 Date = transDetail.Date?? DateTime.MinValue,
-                Status = transactionDetail.Status
+                Status = transactionDetail.Status,
+                PlatformFeeResponse = new PlatformFeeResponse()
+                {
+                    Id = transactionDetail.PlatformFeeId,
+                    Percent = _unitOfWork.PlatformFeeRepository.GetByID(transDetail.PlatformFeeId).Percent,
+                }
             };
 
             return CreatedAtAction("GetTransactionDetail", new { id = transDetail.Id }, transactionDetail);
@@ -182,8 +204,14 @@ namespace EduToyRentAPI.Controllers
                     DepositBackMoney = (float)transactionDetail.DepositBackMoney,
                     OrderDetailId = transactionDetail.OrderDetailId,
                     TransactionId = transactionDetail.TranSactionId,
+                    FineFee = (float)transactionDetail.FineFee,
                     Date = transactionDetail.Date ?? DateTime.MinValue,
                     Status = transactionDetail.Status,
+                    PlatformFeeResponse = new PlatformFeeResponse()
+                    {
+                        Id = transactionDetail.PlatformFeeId,
+                        Percent = _unitOfWork.PlatformFeeRepository.GetByID(transactionDetail.PlatformFeeId).Percent,
+                    }
                 }).ToList();
 
             if (!transactionDetails.Any())

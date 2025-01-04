@@ -20,6 +20,7 @@ namespace EduToyRentRepositories.Models
         public int TotalPrice { get; set; }
         public int? RentPrice { get; set; } = 0;
         public int? DepositeBackMoney { get; set; } = 0;
+        public float? Fine { get; set; } = 0;
         public string ReceiveName { get; set; }
         public string ReceiveAddress { get; set; }
         public string ReceivePhone { get; set; }

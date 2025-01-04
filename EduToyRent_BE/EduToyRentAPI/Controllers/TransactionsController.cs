@@ -44,6 +44,7 @@ namespace EduToyRentAPI.Controllers
                     PlatformFee = (float)transaction.PlatformFee,
                     OwnerReceiveMoney = (float)transaction.OwnerReceiveMoney,
                     DepositBackMoney = (float)transaction.DepositBackMoney,
+                    FineFee = (float)transaction.FineFee,
                     Date = transaction.Date ?? DateTime.MinValue,
                     Status = transaction.Status,
                     Order = new OrderResponse
@@ -54,6 +55,7 @@ namespace EduToyRentAPI.Controllers
                         TotalPrice = transaction.Order.TotalPrice,
                         RentPrice = (int)(float)transaction.Order.RentPrice,
                         DepositeBackMoney = (int)transaction.Order.DepositeBackMoney,
+                        Fine = (int)transaction.Order.Fine,
                         ReceiveName = transaction.Order.ReceiveName,
                         ReceiveAddress = transaction.Order.ReceiveAddress,
                         ReceivePhone = transaction.Order.ReceivePhone,
@@ -98,6 +100,7 @@ namespace EduToyRentAPI.Controllers
                 PlatformFee = (float)transaction.PlatformFee,
                 OwnerReceiveMoney = (float)transaction.OwnerReceiveMoney,
                 DepositBackMoney = (float)transaction.DepositBackMoney,
+                FineFee = (float)transaction.FineFee,
                 Date = transaction.Date ?? DateTime.MinValue,
                 Status = transaction.Status,
                 Order = new OrderResponse
@@ -108,6 +111,7 @@ namespace EduToyRentAPI.Controllers
                     TotalPrice = order.TotalPrice,
                     RentPrice = (int)order.RentPrice,
                     DepositeBackMoney = (int)order.DepositeBackMoney,
+                    Fine = (int)transaction.Order.Fine,
                     ReceiveName = order.ReceiveName,
                     ReceiveAddress = order.ReceiveAddress,
                     ReceivePhone = order.ReceivePhone,
@@ -143,6 +147,7 @@ namespace EduToyRentAPI.Controllers
             trans.DepositBackMoney = transaction.DepositBackMoney;
             trans.Status = transaction.Status;
             trans.OrderId = transaction.OrderId;
+            trans.FineFee = transaction.FineFee;
             trans.Date = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
 
             _unitOfWork.TransactionRepository.Update(trans);
@@ -166,6 +171,7 @@ namespace EduToyRentAPI.Controllers
                 DepositBackMoney = transaction.DepositBackMoney,
                 OwnerReceiveMoney = transaction.OwnerReceiveMoney,
                 OrderId = transaction.OrderId,
+                FineFee = transaction.FineFee,
                 Date = TimeZoneInfo.ConvertTime(DateTime.Now, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")),
                 Status = transaction.Status
             };
@@ -186,6 +192,7 @@ namespace EduToyRentAPI.Controllers
                 PlatformFee = (float)trans.PlatformFee,
                 OwnerReceiveMoney = (float)trans.OwnerReceiveMoney,
                 DepositBackMoney = (float)trans.DepositBackMoney,
+                FineFee = (float)trans.FineFee,
                 Date = trans.Date ?? DateTime.MinValue,
                 Status = trans.Status,
                 Order = new OrderResponse
@@ -196,6 +203,7 @@ namespace EduToyRentAPI.Controllers
                     TotalPrice = order.TotalPrice,
                     RentPrice = (int)order.RentPrice,
                     DepositeBackMoney = (int)order.DepositeBackMoney,
+                    Fine = (int)order.Fine,
                     ReceiveName = order.ReceiveName,
                     ReceiveAddress = order.ReceiveAddress,
                     ReceivePhone = order.ReceivePhone,
@@ -248,6 +256,7 @@ namespace EduToyRentAPI.Controllers
                     PlatformFee = (float)transaction.PlatformFee,
                     OwnerReceiveMoney = (float)transaction.OwnerReceiveMoney,
                     DepositBackMoney = (float)transaction.DepositBackMoney,
+                    FineFee = (float)transaction.FineFee,
                     Date = transaction.Date ?? DateTime.MinValue,
                     Status = transaction.Status,
                     Order = new OrderResponse
@@ -258,6 +267,7 @@ namespace EduToyRentAPI.Controllers
                         TotalPrice = transaction.Order.TotalPrice,
                         RentPrice = (int)transaction.Order.RentPrice,
                         DepositeBackMoney = (int)transaction.Order.DepositeBackMoney,
+                        Fine = (int)transaction.Order.Fine,
                         ReceiveName = transaction.Order.ReceiveName,
                         ReceiveAddress = transaction.Order.ReceiveAddress,
                         ReceivePhone = transaction.Order.ReceivePhone,

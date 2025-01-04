@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EduToyRentRepositories.Migrations
 {
     /// <inheritdoc />
-    public partial class Initital : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -67,6 +67,19 @@ namespace EduToyRentRepositories.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PaymentTypes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PlatformFees",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Percent = table.Column<float>(type: "real", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PlatformFees", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -220,6 +233,8 @@ namespace EduToyRentRepositories.Migrations
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Fine = table.Column<float>(type: "real", nullable: true),
+                    RentCount = table.Column<int>(type: "int", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OrderId = table.Column<int>(type: "int", nullable: false),
                     ToyId = table.Column<int>(type: "int", nullable: false),
@@ -271,6 +286,7 @@ namespace EduToyRentRepositories.Migrations
                     TotalPrice = table.Column<int>(type: "int", nullable: false),
                     RentPrice = table.Column<int>(type: "int", nullable: true),
                     DepositeBackMoney = table.Column<int>(type: "int", nullable: true),
+                    Fine = table.Column<float>(type: "real", nullable: true),
                     ReceiveName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ReceiveAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ReceivePhone = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -292,6 +308,7 @@ namespace EduToyRentRepositories.Migrations
                     PlatformFee = table.Column<float>(type: "real", nullable: true),
                     OwnerReceiveMoney = table.Column<float>(type: "real", nullable: true),
                     DepositBackMoney = table.Column<float>(type: "real", nullable: true),
+                    FineFee = table.Column<float>(type: "real", nullable: true),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OrderId = table.Column<int>(type: "int", nullable: false)
@@ -317,8 +334,10 @@ namespace EduToyRentRepositories.Migrations
                     PlatformFee = table.Column<float>(type: "real", nullable: true),
                     OwnerReceiveMoney = table.Column<float>(type: "real", nullable: true),
                     DepositBackMoney = table.Column<float>(type: "real", nullable: true),
+                    FineFee = table.Column<float>(type: "real", nullable: true),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PlatformFeeId = table.Column<int>(type: "int", nullable: false),
                     OrderDetailId = table.Column<int>(type: "int", nullable: false),
                     TranSactionId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -329,6 +348,12 @@ namespace EduToyRentRepositories.Migrations
                         name: "FK_TransactionDetails_OrderDetails_OrderDetailId",
                         column: x => x.OrderDetailId,
                         principalTable: "OrderDetails",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_TransactionDetails_PlatformFees_PlatformFeeId",
+                        column: x => x.PlatformFeeId,
+                        principalTable: "PlatformFees",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -371,6 +396,29 @@ namespace EduToyRentRepositories.Migrations
                     table.PrimaryKey("PK_Ratings", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Ratings_OrderDetails_OrderDetailId",
+                        column: x => x.OrderDetailId,
+                        principalTable: "OrderDetails",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reports",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    VideoUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OrderDetailId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reports", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Reports_OrderDetails_OrderDetailId",
                         column: x => x.OrderDetailId,
                         principalTable: "OrderDetails",
                         principalColumn: "Id",
@@ -633,6 +681,16 @@ namespace EduToyRentRepositories.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Reports_OrderDetailId",
+                table: "Reports",
+                column: "OrderDetailId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reports_UserId",
+                table: "Reports",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Toys_ApproverId",
                 table: "Toys",
                 column: "ApproverId");
@@ -651,6 +709,11 @@ namespace EduToyRentRepositories.Migrations
                 name: "IX_TransactionDetails_OrderDetailId",
                 table: "TransactionDetails",
                 column: "OrderDetailId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionDetails_PlatformFeeId",
+                table: "TransactionDetails",
+                column: "PlatformFeeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TransactionDetails_TranSactionId",
@@ -825,6 +888,14 @@ namespace EduToyRentRepositories.Migrations
                 onDelete: ReferentialAction.Restrict);
 
             migrationBuilder.AddForeignKey(
+                name: "FK_Reports_Users_UserId",
+                table: "Reports",
+                column: "UserId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_Toys_Users_ApproverId",
                 table: "Toys",
                 column: "ApproverId",
@@ -906,6 +977,9 @@ namespace EduToyRentRepositories.Migrations
                 name: "RatingImages");
 
             migrationBuilder.DropTable(
+                name: "Reports");
+
+            migrationBuilder.DropTable(
                 name: "TransactionDetails");
 
             migrationBuilder.DropTable(
@@ -916,6 +990,9 @@ namespace EduToyRentRepositories.Migrations
 
             migrationBuilder.DropTable(
                 name: "Carts");
+
+            migrationBuilder.DropTable(
+                name: "PlatformFees");
 
             migrationBuilder.DropTable(
                 name: "Transactions");

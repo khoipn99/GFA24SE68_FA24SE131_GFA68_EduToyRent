@@ -12,9 +12,11 @@ namespace EduToyRentRepositories.Interface
         IGenericRepository<Cart> CartRepository { get; }
         IGenericRepository<CartItem> CartItemRepository { get; }
         IGenericRepository<Category> CategoryRepository { get; }
+        IGenericRepository<PlatformFee> PlatformFeeRepository { get; }
         IGenericRepository<Conversation> ConversationRepository { get; }
         IGenericRepository<Media> MediaRepository { get; }
         IGenericRepository<Notification> NotificationRepository { get; }
+        IGenericRepository<Report> ReportRepository { get; }
         IGenericRepository<OrderCheckImage> OrderCheckImageRepository { get; }
         IGenericRepository<Message> MessageRepository { get; }
         IGenericRepository<Order> OrderRepository { get; }
