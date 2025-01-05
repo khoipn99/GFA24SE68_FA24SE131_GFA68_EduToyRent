@@ -28,10 +28,17 @@ namespace EduToyRentAPI.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<RatingResponse>> GetRatings(int pageIndex = 1, int pageSize = 20)
         {
+
             var ratings = _unitOfWork.RatingRepository.Get(
                 pageIndex: pageIndex,
-                pageSize: pageSize)
-                .Select(rating => new RatingResponse
+                pageSize: pageSize);
+            var ratingResponses = ratings.Select(rating =>
+            {
+                var RatingImageList = _unitOfWork.RatingImageRepository
+                .GetV2(m => m.RatingId == rating.Id)
+                .Select(m => m.MediaUrl)
+                .ToList();
+                return new RatingResponse
                 {
                     Id = rating.Id,
                     Comment = rating.Comment,
@@ -40,8 +47,11 @@ namespace EduToyRentAPI.Controllers
                     RatingDate = rating.RatingDate,
                     UserName = _unitOfWork.UserRepository.GetByID(rating.UserId).FullName,
                     AvartarUrl = _unitOfWork.UserRepository.GetByID(rating.UserId).AvatarUrl,
-                    OrderDetailId = rating.OrderDetailId
-                }).ToList();
+                    OrderDetailId = rating.OrderDetailId,
+                    RatingImgUrls = RatingImageList
+                };
+            }).ToList();
+                
 
             return Ok(ratings);
         }
@@ -56,7 +66,10 @@ namespace EduToyRentAPI.Controllers
             {
                 return NotFound();
             }
-
+            var RatingImageList = _unitOfWork.RatingImageRepository
+                .GetV2(m => m.RatingId == rating.Id)
+                .Select(m => m.MediaUrl)
+                .ToList();
             var ratingResponse = new RatingResponse
             {
                 Id = rating.Id,
@@ -66,7 +79,8 @@ namespace EduToyRentAPI.Controllers
                 RatingDate = rating.RatingDate,
                 UserName = _unitOfWork.UserRepository.GetByID(rating.UserId).FullName,
                 AvartarUrl = _unitOfWork.UserRepository.GetByID(rating.UserId).AvatarUrl,
-                OrderDetailId = rating.OrderDetailId
+                OrderDetailId = rating.OrderDetailId,
+                RatingImgUrls = RatingImageList
             };
 
             return Ok(ratingResponse);
@@ -239,27 +253,35 @@ namespace EduToyRentAPI.Controllers
         {
             var ratings = _unitOfWork.RatingRepository.Get(
                 filter: r => r.OrderDetail.ToyId == toyId,
-                includeProperties: "OrderDetail,User", 
+                includeProperties: "OrderDetail,User",
                 pageIndex: pageIndex,
-                pageSize: pageSize)
-                .Select(r => new RatingResponse
+                pageSize: pageSize);
+            var ratingResponses = ratings.Select(rating =>
+            {
+                var RatingImageList = _unitOfWork.RatingImageRepository
+                .GetV2(m => m.RatingId == rating.Id)
+                .Select(m => m.MediaUrl)
+                .ToList();
+                return new RatingResponse
                 {
-                    Id = r.Id,
-                    Comment = r.Comment,
-                    Star = r.Star,
-                    UserId = r.UserId,
-                    RatingDate = r.RatingDate,
-                    UserName = r.User.FullName,
-                    AvartarUrl = _unitOfWork.UserRepository.GetByID(r.UserId).AvatarUrl,
-                    OrderDetailId = r.OrderDetailId
-                }).ToList();
+                    Id = rating.Id,
+                    Comment = rating.Comment,
+                    Star = rating.Star,
+                    UserId = rating.UserId,
+                    RatingDate = rating.RatingDate,
+                    UserName = _unitOfWork.UserRepository.GetByID(rating.UserId).FullName,
+                    AvartarUrl = _unitOfWork.UserRepository.GetByID(rating.UserId).AvatarUrl,
+                    OrderDetailId = rating.OrderDetailId,
+                    RatingImgUrls = RatingImageList
+                };
+            }).ToList();
 
             if (ratings == null || !ratings.Any())
             {
                 return NotFound(new { Message = $"No ratings found for toy with ID {toyId}" });
             }
 
-            return Ok(ratings);
+            return Ok(ratingResponses);
         }
 
         private bool RatingExists(int id)

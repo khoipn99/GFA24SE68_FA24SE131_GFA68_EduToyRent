@@ -38,7 +38,14 @@ namespace EduToyRentAPI.Controllers
                     .GetV2(m => m.ToyId == orderDetail.ToyId)
                     .Select(m => m.MediaUrl)
                     .ToList();
-
+                var ReportVideoList = _unitOfWork.ReportRepository
+                    .GetV2(m => m.OrderDetailId == orderDetail.Id)
+                    .Select(m => m.VideoUrl)
+                    .ToList();
+                var OrderCheckImageList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == orderDetail.Id)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
                 return new OrderDetailResponse
                 {
                     Id = orderDetail.Id,
@@ -56,6 +63,8 @@ namespace EduToyRentAPI.Controllers
                     ToyName = orderDetail.Toy.Name,
                     ToyPrice = orderDetail.Toy.Price,
                     ToyImgUrls = mediaList,
+                    ReportVideoUrl = ReportVideoList,
+                    OrderCheckImageUrl = OrderCheckImageList,
                     OrderTypeId = orderDetail.OrderTypeId,
                     RatingId = orderDetail.RatingId,
                 };
@@ -84,7 +93,14 @@ namespace EduToyRentAPI.Controllers
                 .GetV2(m => m.ToyId == orderDetail.ToyId)
                 .Select(m => m.MediaUrl)
                 .ToList();
-
+            var ReportVideoList = _unitOfWork.ReportRepository
+                    .GetV2(m => m.OrderDetailId == orderDetail.Id)
+                    .Select(m => m.VideoUrl)
+                    .ToList();
+            var OrderCheckImageList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == orderDetail.Id)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
             var orderDetailResponse = new OrderDetailResponse
             {
                 Id = orderDetail.Id,
@@ -102,6 +118,8 @@ namespace EduToyRentAPI.Controllers
                 ToyName = _unitOfWork.ToyRepository.GetByID(orderDetail.ToyId).Name,
                 ToyPrice = _unitOfWork.ToyRepository.GetByID(orderDetail.ToyId).Price,
                 ToyImgUrls = mediaList,
+                ReportVideoUrl = ReportVideoList,
+                OrderCheckImageUrl = OrderCheckImageList,
                 OrderTypeId = orderDetail.OrderTypeId,
                 RatingId = orderDetail.RatingId,
             };
@@ -257,6 +275,14 @@ namespace EduToyRentAPI.Controllers
                         .GetV2(m => m.ToyId == orderDetail.ToyId)
                         .Select(m => m.MediaUrl)
                         .ToList();
+                var ReportVideoList = _unitOfWork.ReportRepository
+                    .GetV2(m => m.OrderDetailId == orderDetail.Id)
+                    .Select(m => m.VideoUrl)
+                    .ToList();
+                var OrderCheckImageList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == orderDetail.Id)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
                 return new OrderDetailResponse
                 {
                     Id = orderDetail.Id,
@@ -274,6 +300,8 @@ namespace EduToyRentAPI.Controllers
                     ToyName = orderDetail.Toy.Name,
                     ToyPrice = orderDetail.Toy.Price,
                     ToyImgUrls = mediaList,
+                    ReportVideoUrl = ReportVideoList,
+                    OrderCheckImageUrl = OrderCheckImageList,
                     OrderTypeId = orderDetail.OrderTypeId,
                     RatingId = orderDetail.RatingId
                 };
@@ -303,6 +331,14 @@ namespace EduToyRentAPI.Controllers
                         .GetV2(m => m.ToyId == orderDetail.ToyId)
                         .Select(m => m.MediaUrl)
                         .ToList();
+                var ReportVideoList = _unitOfWork.ReportRepository
+                    .GetV2(m => m.OrderDetailId == orderDetail.Id)
+                    .Select(m => m.VideoUrl)
+                    .ToList();
+                var OrderCheckImageList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == orderDetail.Id)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
                 return new OrderDetailResponse
                 {
                     Id = orderDetail.Id,
@@ -320,6 +356,8 @@ namespace EduToyRentAPI.Controllers
                     ToyName = orderDetail.Toy.Name,
                     ToyPrice = orderDetail.Toy.Price,
                     ToyImgUrls = mediaList,
+                    ReportVideoUrl = ReportVideoList,
+                    OrderCheckImageUrl = OrderCheckImageList,
                     OrderTypeId = orderDetail.OrderTypeId,
                     RatingId = orderDetail.RatingId
                 };
@@ -343,6 +381,14 @@ namespace EduToyRentAPI.Controllers
                         .GetV2(m => m.ToyId == orderDetail.ToyId)
                         .Select(m => m.MediaUrl)
                         .ToList();
+                var ReportVideoList = _unitOfWork.ReportRepository
+                    .GetV2(m => m.OrderDetailId == orderDetail.Id)
+                    .Select(m => m.VideoUrl)
+                    .ToList();
+                var OrderCheckImageList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == orderDetail.Id)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
                 return new OrderDetailResponse
                 {
                     Id = orderDetail.Id,
@@ -360,6 +406,8 @@ namespace EduToyRentAPI.Controllers
                     ToyName = orderDetail.Toy.Name,
                     ToyPrice = orderDetail.Toy.Price,
                     ToyImgUrls = mediaList,
+                    ReportVideoUrl = ReportVideoList,
+                    OrderCheckImageUrl = OrderCheckImageList,
                     OrderTypeId = orderDetail.OrderTypeId,
                     RatingId = orderDetail.RatingId
                 };
