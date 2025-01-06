@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
-
+import exampleImage from "../../assets/UserUnknow.png";
 import apiUser from "../../service/ApiUser";
 import Logo from "../../assets/logoETR.png";
 const HeaderForStaff = () => {
@@ -142,15 +142,33 @@ const HeaderForStaff = () => {
                 onMouseLeave={handleMouseLeave}
                 className="relative flex items-center space-x-2"
               >
-                <div className="text-[#0e161b]">
-                  <img
-                    src={userData.avatarUrl}
-                    alt="User Avatar"
-                    width="40px"
-                    height="40px"
-                    className="rounded-full"
-                  />
-                </div>
+                {userData.avatarUrl ? (
+                  <div className="text-[#0e161b]">
+                    <img
+                      src={userData.avatarUrl}
+                      alt="User Avatar"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        objectFit: "cover",
+                        borderRadius: "50%", // làm tròn góc hình ảnh
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-[#0e161b]">
+                    <img
+                      src={exampleImage}
+                      alt="User Avatar"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        objectFit: "cover",
+                        borderRadius: "50%", // làm tròn góc hình ảnh
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="flex justify-center items-center">
                   <p>{userData.fullName || userData.name}</p>
                 </div>

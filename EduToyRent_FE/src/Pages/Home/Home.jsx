@@ -254,7 +254,23 @@ const Home = () => {
       console.error("Lỗi khi tải danh sách người dùng", error);
     }
   };
+  const calculatePriceWithOneWeekPercent = (price, orderType) => {
+    if (!orderType || orderType.length === 0) {
+      console.error("orderType không hợp lệ:", orderType);
+      return 0;
+    }
 
+    const oneWeekType = orderType.find((type) => type.time === "1 week");
+    if (!oneWeekType) {
+      console.error("Không tìm thấy orderType cho '1 week'");
+      return 0;
+    }
+
+    const percentPrice = oneWeekType.percentPrice || 0;
+    console.log("Phần trăm giá cho '1 week':", percentPrice);
+
+    return price * percentPrice;
+  };
   // Hàm thêm sản phẩm vào giỏ hàng
   const addToCart = async (toy) => {
     if (!cartId) {
@@ -706,9 +722,47 @@ const Home = () => {
                         {(deal.price || 0).toLocaleString()} VNĐ
                       </p>
                     ) : (
-                      <p className="text-[#0e161b] text-lg font-bold">
-                        {(deal.price * 0.15 || 0).toLocaleString()} VNĐ
-                      </p>
+                      <div>
+                        {deal.buyQuantity >= 0 ? (
+                          <p className="text-[#0e161b] text-lg font-bold">
+                            {(deal.price || 0).toLocaleString()} VNĐ
+                          </p>
+                        ) : (
+                          <div>
+                            {deal ? (
+                              <p className="text-[#0e161b] text-lg font-bold">
+                                {(() => {
+                                  // Tính giá dựa trên phần trăm của '1 week'
+                                  console.log("Thông tin deal:", deal);
+                                  console.log(
+                                    "Danh sách orderType:",
+                                    orderType
+                                  );
+
+                                  const calculatedPrice =
+                                    calculatePriceWithOneWeekPercent(
+                                      deal.price,
+                                      orderType
+                                    );
+                                  console.log(
+                                    "Giá tính toán là:",
+                                    calculatedPrice
+                                  );
+
+                                  return (
+                                    calculatedPrice || 0
+                                  ).toLocaleString();
+                                })()}{" "}
+                                VNĐ
+                              </p>
+                            ) : (
+                              <p className="text-[#0e161b] text-lg font-bold">
+                                Không có deal
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                   {deal.buyQuantity >= 0 ? (
@@ -783,9 +837,31 @@ const Home = () => {
                       <div className="flex items-center gap-1">
                         {renderStars(toy.star)}
                       </div>
-                      <p className="text-[#0e161b] text-lg font-bold">
-                        {(toy.price * 0.15 || 0).toLocaleString()} VNĐ
-                      </p>
+                      <div>
+                        {toy ? (
+                          <p className="text-[#0e161b] text-lg font-bold">
+                            {(() => {
+                              // Tính giá dựa trên phần trăm của '1 week'
+                              console.log("Thông tin toy:", toy);
+                              console.log("Danh sách orderType:", orderType);
+
+                              const calculatedPrice =
+                                calculatePriceWithOneWeekPercent(
+                                  toy.price,
+                                  orderType
+                                );
+                              console.log("Giá tính toán là:", calculatedPrice);
+
+                              return (calculatedPrice || 0).toLocaleString();
+                            })()}{" "}
+                            VNĐ
+                          </p>
+                        ) : (
+                          <p className="text-[#0e161b] text-lg font-bold">
+                            Không có deal
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <button

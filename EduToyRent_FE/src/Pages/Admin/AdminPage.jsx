@@ -21,7 +21,7 @@ import apiCart from "../../service/ApiCart";
 import { jwtDecode } from "jwt-decode";
 import apiOrderTypes from "../../service/ApiOrderTypes";
 import { useNavigate } from "react-router-dom";
-
+import apiPlatformFees from "../../service/ApiPlatfromFees";
 const AdminPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("dashboard");
@@ -72,6 +72,8 @@ const AdminPage = () => {
   const [toysBanData, setToysBanData] = useState([]);
   const [orderType, setOrderType] = useState([]);
   const [selectedOrderType, setSelectedOrderType] = useState(null);
+  const [platformFee, setPlatformFee] = useState([]);
+  const [selectedPlatformFee, setSelectedPlatformFee] = useState(null);
   const [currentPageData, setCurrentPageData] = useState(1);
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
   const [currentPageData1, setCurrentPageData1] = useState(1); // Trang hiện tại cho toysData
@@ -81,6 +83,7 @@ const AdminPage = () => {
   const itemsPerPage = 5; // Số mục trên mỗi trang
 
   const [isEditCardVisible, setEditCardVisible] = useState(false);
+  const [isEditCardVisible1, setEditCardVisible1] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -208,6 +211,7 @@ const AdminPage = () => {
       LoadToyBan();
       LoadOrder("");
       LoadOrderTypes();
+      LoadPlatFormFees();
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
@@ -590,7 +594,7 @@ const AdminPage = () => {
       const UserData = UserResponse.data.filter(
         (user) =>
           (user.role?.id === 2 || user.role?.id === 3) &&
-          user.status === "Banned"
+          user.status === "Inactive"
       );
 
       console.log(`Danh sách người dùng ban load:`, UserData);
@@ -613,11 +617,31 @@ const AdminPage = () => {
         }
       );
 
-      console.log("Danh sách phí nền tảng mới log:", OrderTypesResponse.data);
+      console.log("Danh sách phí thuê mới log:", OrderTypesResponse.data);
       const OrderType = OrderTypesResponse.data;
       // Cập nhật dữ liệu đồ chơi
       setOrderType(OrderType);
-      console.log(`Danh sách phí nền tảng:`, OrderType);
+      console.log(`Danh sách phí thuê:`, OrderType);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách người dùng", error);
+    }
+  };
+  const LoadPlatFormFees = async () => {
+    try {
+      const PlatFromFeesResponse = await apiPlatformFees.get(
+        `?pageIndex=1&pageSize=2000`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      console.log("Danh sách phí nền tảng ", PlatFromFeesResponse.data);
+      const PlatFromFees = PlatFromFeesResponse.data;
+      // Cập nhật dữ liệu đồ chơi
+      setPlatformFee(PlatFromFees);
+      console.log(`Danh sách phí nền tảng:`, PlatFromFees);
     } catch (error) {
       console.error("Lỗi khi tải danh sách người dùng", error);
     }
@@ -826,6 +850,68 @@ const AdminPage = () => {
       }
     }
   };
+  // const handleUserBan = async (userId) => {
+  //   // Hiển thị hộp thoại xác nhận
+  //   const isConfirmed = window.confirm("Bạn có chắc muốn cấm người dùng này?");
+
+  //   // Nếu người dùng không xác nhận, dừng lại
+  //   if (!isConfirmed) {
+  //     return;
+  //   }
+
+  //   try {
+  //     // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
+  //     const requestBody = "Banned"; // Thay đổi thành chuỗi trực tiếp
+
+  //     // Log request body trước khi gửi đi
+  //     console.log("Request body:", requestBody);
+  //     console.log("d:", selectedUserUp);
+  //     const formData = new FormData();
+
+  //     //Thêm các trường dữ liệu vào formData
+  //     formData.append("fullName", selectedUserUp.fullName || "Default Name");
+  //     formData.append("email", selectedUserUp.email || "default@example.com");
+  //     formData.append("password", selectedUserUp.password || "defaultPassword");
+  //     formData.append(
+  //       "createDate",
+  //       selectedUserUp.createDate || new Date().toISOString()
+  //     );
+  //     formData.append("phone", selectedUserUp.phone || "0000000000");
+  //     formData.append("dob", selectedUserUp.dob || new Date().toISOString());
+  //     formData.append("address", selectedUserUp.address || "Default Address");
+  //     formData.append("status", requestBody || "Banned");
+  //     formData.append("roleId", selectedUserUp.role.id || "");
+  //     formData.append("avatarUrl", selectedUserUp.avatarUrl || "");
+  //     // formData.append("description", selectedUserUp.description || "");
+  //     console.log("dữ liệu sẽ gửi", formData.data);
+
+  //     const response = await apiUser.put(`/${userId}`, formData, {
+  //       headers: {
+  //         Authorization: `Bearer ${Cookies.get("userToken")}`,
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
+
+  //     // Log dữ liệu nhận được từ API khi thành công
+  //     console.log("Response on success:", response.data);
+
+  //     if (response.status === 204) {
+  //       setSelectedUserUp(null);
+  //       LoadUser(userUpData);
+  //       LoadUserBan(userUpBanData);
+  //     } else {
+  //       throw new Error(`Failed to update status for user with ID ${userId}`);
+  //     }
+  //   } catch (error) {
+  //     // Log lỗi chi tiết nhận được từ API khi có lỗi
+  //     if (error.response) {
+  //       console.error("Error response:", error.response);
+  //     } else {
+  //       console.error("Error message:", error.message);
+  //     }
+  //   }
+  // };
+
   const handleUserBan = async (userId) => {
     // Hiển thị hộp thoại xác nhận
     const isConfirmed = window.confirm("Bạn có chắc muốn cấm người dùng này?");
@@ -837,31 +923,8 @@ const AdminPage = () => {
 
     try {
       // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
-      const requestBody = "Banned"; // Thay đổi thành chuỗi trực tiếp
 
-      // Log request body trước khi gửi đi
-      console.log("Request body:", requestBody);
-      console.log("d:", selectedUserUp);
-      const formData = new FormData();
-
-      //Thêm các trường dữ liệu vào formData
-      formData.append("fullName", selectedUserUp.fullName || "Default Name");
-      formData.append("email", selectedUserUp.email || "default@example.com");
-      formData.append("password", selectedUserUp.password || "defaultPassword");
-      formData.append(
-        "createDate",
-        selectedUserUp.createDate || new Date().toISOString()
-      );
-      formData.append("phone", selectedUserUp.phone || "0000000000");
-      formData.append("dob", selectedUserUp.dob || new Date().toISOString());
-      formData.append("address", selectedUserUp.address || "Default Address");
-      formData.append("status", requestBody || "Banned");
-      formData.append("roleId", selectedUserUp.role.id || "");
-      formData.append("avatarUrl", selectedUserUp.avatarUrl || "");
-      // formData.append("description", selectedUserUp.description || "");
-      console.log("dữ liệu sẽ gửi", formData.data);
-
-      const response = await apiUser.put(`/${userId}`, formData, {
+      const response = await apiUser.put(`/BanUser/${userId}`, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
           "Content-Type": "multipart/form-data",
@@ -871,7 +934,7 @@ const AdminPage = () => {
       // Log dữ liệu nhận được từ API khi thành công
       console.log("Response on success:", response.data);
 
-      if (response.status === 204) {
+      if (response.status === 200) {
         setSelectedUserUp(null);
         LoadUser(userUpData);
         LoadUserBan(userUpBanData);
@@ -887,7 +950,6 @@ const AdminPage = () => {
       }
     }
   };
-
   const statusMapping = {
     Delivering: "Đang giao",
     Checking: "Đợi đánh giá đồ chơi",
@@ -1553,6 +1615,11 @@ const AdminPage = () => {
     setEditCardVisible(true); // Hiển thị card chỉnh sửa
   };
 
+  const handleEditPlatformfee = (platformFee) => {
+    setSelectedPlatformFee(platformFee); // Lưu thông tin loại đơn hàng được chọn
+    setEditCardVisible1(true); // Hiển thị card chỉnh sửa
+  };
+
   const handleOrderType = async (id) => {
     try {
       // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
@@ -1579,6 +1646,41 @@ const AdminPage = () => {
       if (response.status === 204) {
         // selectedOrderType(null);
         LoadOrderTypes();
+      } else {
+        throw new Error(`Failed to update status for user with ID ${id}`);
+      }
+    } catch (error) {
+      // Log lỗi chi tiết nhận được từ API khi có lỗi
+      console.error("Error message:", error.message);
+    }
+  };
+
+  const handlePlatformfee = async (id) => {
+    try {
+      // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
+      console.log("d:", selectedPlatformFee);
+      const formData = new FormData();
+
+      //Thêm các trường dữ liệu vào formData
+      formData.append("id", selectedPlatformFee.id || "");
+
+      formData.append("percent", selectedPlatformFee.percent || "");
+
+      console.log("dữ liệu sẽ gửi", formData.data);
+
+      const response = await apiPlatformFees.put(`/${id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Log dữ liệu nhận được từ API khi thành công
+      console.log("Response on success:", response);
+
+      if (response.status === 204) {
+        // selectedOrderType(null);
+        LoadPlatFormFees();
       } else {
         throw new Error(`Failed to update status for user with ID ${id}`);
       }
@@ -2220,7 +2322,7 @@ const AdminPage = () => {
                                     <img
                                       src={user.avatarUrl}
                                       alt="User-Avatar"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -2403,7 +2505,7 @@ const AdminPage = () => {
                         {statusMapping[selectedUserUp.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -2414,7 +2516,7 @@ const AdminPage = () => {
                         >
                           Cấm
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -2505,7 +2607,7 @@ const AdminPage = () => {
                                     <img
                                       src={toy.media[0].mediaUrl}
                                       alt="Toy Media 1"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -2740,7 +2842,7 @@ const AdminPage = () => {
                         {statusMapping[selectedToyRent.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -2751,7 +2853,7 @@ const AdminPage = () => {
                         >
                           Xóa
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -2843,7 +2945,7 @@ const AdminPage = () => {
                                     <img
                                       src={toy.media[0].mediaUrl}
                                       alt="Toy Media 1"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -3078,7 +3180,7 @@ const AdminPage = () => {
                         {statusMapping[selectedToyBuy.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3089,7 +3191,7 @@ const AdminPage = () => {
                         >
                           Xoá
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -3180,7 +3282,7 @@ const AdminPage = () => {
                                     <img
                                       src={toy.media[0].mediaUrl}
                                       alt="Toy Media 1"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -3415,7 +3517,7 @@ const AdminPage = () => {
                         {statusMapping[selectedToyBan.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3426,7 +3528,7 @@ const AdminPage = () => {
                         >
                           Bỏ lệnh cấm
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -3706,7 +3808,7 @@ const AdminPage = () => {
                                     <img
                                       src={user.avatarUrl}
                                       alt="User-Avatar"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -3889,7 +3991,7 @@ const AdminPage = () => {
                         {statusMapping[selectedUserUpBan.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3900,7 +4002,7 @@ const AdminPage = () => {
                         >
                           Bỏ lệnh cấm
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -4047,7 +4149,137 @@ const AdminPage = () => {
                                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                                 onClick={(event) => {
                                   event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
-                                  handleOrderType(selectedOrderType.id); // Gọi hàm handleDelete
+                                  const confirmed = window.confirm(
+                                    "Bạn có chắc chắn muốn lưu thay đổi?"
+                                  );
+                                  if (confirmed) {
+                                    handleOrderType(selectedOrderType.id); // Gọi hàm xử lý lưu
+                                    setEditCardVisible(false); // Đóng form chỉnh sửa (nếu cần)
+                                  }
+                                }}
+                              >
+                                Lưu
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case "platfromfee":
+        return (
+          <div>
+            <div className="flex flex-col">
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden shadow">
+                    <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
+                      <thead className=" bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Phí nền tảng
+                          </th>
+                          <th
+                            scope="col"
+                            className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400"
+                          >
+                            Hành động
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                        {platformFee &&
+                        Array.isArray(platformFee) &&
+                        platformFee.length > 0 ? (
+                          platformFee.map((user) => (
+                            <tr
+                              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                              key={user.id}
+                            >
+                              <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                {user.percent}
+                              </td>
+
+                              <td className="p-4 space-x-2 whitespace-nowrap">
+                                {/* Nút "Detail" */}
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleEditPlatformfee(user); // Hiển thị card chỉnh sửa
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-900"
+                                >
+                                  Chỉnh sửa
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="13" className="p-4 text-center"></td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                    {isEditCardVisible1 && (
+                      <div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-black bg-opacity-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                          <h2 className="text-lg font-semibold mb-4">
+                            Chỉnh sửa phí nền tảng
+                          </h2>
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              // Xử lý lưu dữ liệu ở đây
+                              console.log(selectedPlatformFee);
+                              setEditCardVisible1(false); // Đóng card chỉnh sửa
+                            }}
+                          >
+                            <div className="mb-4">
+                              <label className="block text-sm font-medium text-gray-700">
+                                Phần trăm phí nền tảng
+                              </label>
+                              <input
+                                type="number"
+                                value={selectedPlatformFee?.percent || ""}
+                                onChange={(e) =>
+                                  setSelectedPlatformFee({
+                                    ...selectedPlatformFee,
+                                    percent: e.target.value,
+                                  })
+                                }
+                                className="border border-gray-300 px-3 py-2 rounded-md w-full focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div className="flex justify-end space-x-4">
+                              <button
+                                type="button"
+                                onClick={() => setEditCardVisible1(false)} // Đóng card
+                                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                              >
+                                Hủy
+                              </button>
+                              <button
+                                type="submit"
+                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                onClick={(event) => {
+                                  event.stopPropagation(); // Ngăn sự kiện lan truyền lên <tr>
+                                  const confirmed = window.confirm(
+                                    "Bạn có chắc chắn muốn lưu thay đổi phí nền tảng?"
+                                  );
+                                  if (confirmed) {
+                                    handlePlatformfee(selectedPlatformFee.id); // Gọi hàm lưu dữ liệu
+                                    setEditCardVisible1(false); // Đóng card chỉnh sửa
+                                  }
                                 }}
                               >
                                 Lưu
@@ -4154,6 +4386,14 @@ const AdminPage = () => {
             >
               <span className="icon-class mr-2">💵</span> Chỉnh sửa phí thuê đồ
               chơi
+            </button>
+            <button
+              onClick={() => setSelectedTab("platfromfee")}
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-200 ${
+                selectedTab === "platfromfee" ? "bg-gray-300" : ""
+              }`}
+            >
+              <span className="icon-class mr-2">💵</span> Chỉnh sửa phí nền tảng
             </button>
           </nav>
         </aside>

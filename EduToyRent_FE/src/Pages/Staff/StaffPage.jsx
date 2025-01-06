@@ -549,7 +549,7 @@ const StaffPage = () => {
       const UserData = UserResponse.data.filter(
         (user) =>
           (user.role?.id === 2 || user.role?.id === 3) &&
-          user.status === "Banned"
+          user.status === "Inactive"
       );
 
       console.log(`Danh sách người dùng ban load:`, UserData);
@@ -1107,6 +1107,67 @@ const StaffPage = () => {
       }
     }
   };
+  // const handleUserBan = async (userId) => {
+  //   // Hiển thị hộp thoại xác nhận
+  //   const isConfirmed = window.confirm("Bạn có chắc muốn cấm người dùng này?");
+
+  //   // Nếu người dùng không xác nhận, dừng lại
+  //   if (!isConfirmed) {
+  //     return;
+  //   }
+
+  //   try {
+  //     // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
+  //     const requestBody = "Banned"; // Thay đổi thành chuỗi trực tiếp
+
+  //     // Log request body trước khi gửi đi
+  //     console.log("Request body:", requestBody);
+  //     console.log("d:", selectedUserUp);
+  //     const formData = new FormData();
+
+  //     //Thêm các trường dữ liệu vào formData
+  //     formData.append("fullName", selectedUserUp.fullName || "Default Name");
+  //     formData.append("email", selectedUserUp.email || "default@example.com");
+  //     formData.append("password", selectedUserUp.password || "defaultPassword");
+  //     formData.append(
+  //       "createDate",
+  //       selectedUserUp.createDate || new Date().toISOString()
+  //     );
+  //     formData.append("phone", selectedUserUp.phone || "0000000000");
+  //     formData.append("dob", selectedUserUp.dob || new Date().toISOString());
+  //     formData.append("address", selectedUserUp.address || "Default Address");
+  //     formData.append("status", requestBody || "Banned");
+  //     formData.append("roleId", selectedUserUp.role.id || "");
+  //     formData.append("avatarUrl", selectedUserUp.avatarUrl || "");
+  //     // formData.append("description", selectedUserUp.description || "");
+  //     console.log("dữ liệu sẽ gửi", formData.data);
+
+  //     const response = await apiUser.put(`/${userId}`, formData, {
+  //       headers: {
+  //         Authorization: `Bearer ${Cookies.get("userToken")}`,
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
+
+  //     // Log dữ liệu nhận được từ API khi thành công
+  //     console.log("Response on success:", response.data);
+
+  //     if (response.status === 204) {
+  //       setSelectedUserUp(null);
+  //       LoadUser(userUpData);
+  //       LoadUserBan(userUpBanData);
+  //     } else {
+  //       throw new Error(`Failed to update status for user with ID ${userId}`);
+  //     }
+  //   } catch (error) {
+  //     // Log lỗi chi tiết nhận được từ API khi có lỗi
+  //     if (error.response) {
+  //       console.error("Error response:", error.response);
+  //     } else {
+  //       console.error("Error message:", error.message);
+  //     }
+  //   }
+  // };
   const handleUserBan = async (userId) => {
     // Hiển thị hộp thoại xác nhận
     const isConfirmed = window.confirm("Bạn có chắc muốn cấm người dùng này?");
@@ -1118,31 +1179,8 @@ const StaffPage = () => {
 
     try {
       // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
-      const requestBody = "Banned"; // Thay đổi thành chuỗi trực tiếp
 
-      // Log request body trước khi gửi đi
-      console.log("Request body:", requestBody);
-      console.log("d:", selectedUserUp);
-      const formData = new FormData();
-
-      //Thêm các trường dữ liệu vào formData
-      formData.append("fullName", selectedUserUp.fullName || "Default Name");
-      formData.append("email", selectedUserUp.email || "default@example.com");
-      formData.append("password", selectedUserUp.password || "defaultPassword");
-      formData.append(
-        "createDate",
-        selectedUserUp.createDate || new Date().toISOString()
-      );
-      formData.append("phone", selectedUserUp.phone || "0000000000");
-      formData.append("dob", selectedUserUp.dob || new Date().toISOString());
-      formData.append("address", selectedUserUp.address || "Default Address");
-      formData.append("status", requestBody || "Banned");
-      formData.append("roleId", selectedUserUp.role.id || "");
-      formData.append("avatarUrl", selectedUserUp.avatarUrl || "");
-      // formData.append("description", selectedUserUp.description || "");
-      console.log("dữ liệu sẽ gửi", formData.data);
-
-      const response = await apiUser.put(`/${userId}`, formData, {
+      const response = await apiUser.put(`/BanUser/${userId}`, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
           "Content-Type": "multipart/form-data",
@@ -1152,7 +1190,7 @@ const StaffPage = () => {
       // Log dữ liệu nhận được từ API khi thành công
       console.log("Response on success:", response.data);
 
-      if (response.status === 204) {
+      if (response.status === 200) {
         setSelectedUserUp(null);
         LoadUser(userUpData);
         LoadUserBan(userUpBanData);
@@ -1524,7 +1562,7 @@ const StaffPage = () => {
                                     <img
                                       src={toy.media[0].mediaUrl}
                                       alt="Toy Media 1"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -1759,7 +1797,7 @@ const StaffPage = () => {
                         {statusMapping[selectedToyRent.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -1770,7 +1808,7 @@ const StaffPage = () => {
                         >
                           Cấm
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1861,7 +1899,7 @@ const StaffPage = () => {
                                     <img
                                       src={toy.media[0].mediaUrl}
                                       alt="Toy Media 1"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -2209,7 +2247,7 @@ const StaffPage = () => {
                                     <img
                                       src={toy.media[0].mediaUrl}
                                       alt="Toy Media 1"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -2444,7 +2482,7 @@ const StaffPage = () => {
                         {statusMapping[selectedToyBuy.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -2455,7 +2493,7 @@ const StaffPage = () => {
                         >
                           Cấm
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -2766,7 +2804,7 @@ const StaffPage = () => {
                                     <img
                                       src={toy.media[0].mediaUrl}
                                       alt="Toy Media 1"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -3001,7 +3039,7 @@ const StaffPage = () => {
                         {statusMapping[selectedToyBan.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3012,7 +3050,7 @@ const StaffPage = () => {
                         >
                           Bỏ lệnh cấm
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -3092,7 +3130,7 @@ const StaffPage = () => {
                                     <img
                                       src={user.avatarUrl}
                                       alt="User-Avatar"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -3274,7 +3312,7 @@ const StaffPage = () => {
                         {statusMapping[selectedUserUp.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3285,7 +3323,7 @@ const StaffPage = () => {
                         >
                           Cấm
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -3365,7 +3403,7 @@ const StaffPage = () => {
                                     <img
                                       src={user.avatarUrl}
                                       alt="User-Avatar"
-                                      className="w-full max-w-[50px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -3548,7 +3586,7 @@ const StaffPage = () => {
                         {statusMapping[selectedUserUpBan.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -3559,7 +3597,7 @@ const StaffPage = () => {
                         >
                           Bỏ lệnh cấm
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>

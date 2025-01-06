@@ -150,8 +150,8 @@ const ToySupplierPage = () => {
 
             console.log("Dữ liệu đồ chơi của người dùng:", toyResponse.data);
 
-            //Cập nhật dữ liệu đồ chơi (nếu cần thiết)
-            setToysData(toyResponse.data);
+            // //Cập nhật dữ liệu đồ chơi (nếu cần thiết)
+            // setToysData(toyResponse.data);
             // Lấy thông tin ví của người dùng từ walletId
             const walletResponse = await apiWallets.get(
               `/${user.walletId}` // Sử dụng user.walletId thay vì userResponse.walletId
@@ -1981,7 +1981,7 @@ const ToySupplierPage = () => {
                                         toy.media ? toy.media[0].mediaUrl : ""
                                       }
                                       alt={`Toy Media ${toy.id + 1}`}
-                                      className="w-full max-w-[70px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -2039,7 +2039,7 @@ const ToySupplierPage = () => {
                                 >
                                   Chỉnh sửa
                                 </button>
-                                {/* <button
+                                <button
                                   type="button"
                                   onClick={(event) => {
                                     event.stopPropagation();
@@ -2049,7 +2049,7 @@ const ToySupplierPage = () => {
                                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
                                 >
                                   Xoá
-                                </button> */}
+                                </button>
                               </td>
                             </tr>
                           ))
@@ -2752,7 +2752,7 @@ const ToySupplierPage = () => {
                                         toy.media ? toy.media[0].mediaUrl : ""
                                       }
                                       alt={`Toy Media ${toy.id + 1}`}
-                                      className="w-full max-w-[70px] h-auto object-contain mr-2"
+                                      className="max-w-[100px] h-auto object-contain"
                                     />
                                   ) : (
                                     <span></span>
@@ -2874,7 +2874,7 @@ const ToySupplierPage = () => {
             </div>
             {selectedToyDelete && !isEditing && (
               <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
-                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7x l w-full h-auto overflow-auto relative ">
+                <div className="bg-white p-16 rounded-2xl shadow-2xl max-w-7xl w-full h-auto overflow-auto relative ">
                   {/* Nút đóng ở góc phải */}
                   <button
                     type="button"
@@ -2988,7 +2988,7 @@ const ToySupplierPage = () => {
                         {statusMapping[selectedToyDelete.status] ||
                           "Trạng thái không xác định"}
                       </p>
-                      {/* <p className=" space-x-2 whitespace-nowrap">
+                      <p className=" space-x-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={(event) => {
@@ -2999,7 +2999,7 @@ const ToySupplierPage = () => {
                         >
                           Bỏ xoá đồ chơi
                         </button>
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
