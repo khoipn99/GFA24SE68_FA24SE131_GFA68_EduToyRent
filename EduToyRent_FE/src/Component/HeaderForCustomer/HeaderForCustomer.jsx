@@ -12,6 +12,7 @@ import exampleImage from "../../assets/UserUnknow.png";
 import Notifications from "../Notification/Notification";
 import { jwtDecode } from "jwt-decode";
 import Logo from "../../assets/logoETR.png";
+import apiOrderTypes from "../../service/ApiOrderTypes";
 const HeaderForCustomer = () => {
   const [cartVisible, setCartVisible] = useState(false);
   const [rentItems, setRentItems] = useState([]);
@@ -31,6 +32,7 @@ const HeaderForCustomer = () => {
   const handleMouseLeave = () => setIsDropdownOpen(false);
   const [totalDeposit, setTotalDeposit] = useState(0);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [orderType, setOrderType] = useState([]);
   const navigateTo = (url) => {
     navigate(url);
   };
@@ -179,7 +181,7 @@ const HeaderForCustomer = () => {
           console.error("Lỗi khi lấy thông tin ví của người dùng:", error);
         }
       };
-
+      LoadOrderTypes();
       fetchUserData();
     } else {
       //console.error("Không tìm thấy thông tin người dùng trong cookie.");
@@ -415,25 +417,55 @@ const HeaderForCustomer = () => {
       console.error("Đã xảy ra lỗi khi xóa sản phẩm:", error);
     }
   };
+  const LoadOrderTypes = async () => {
+    try {
+      const OrderTypesResponse = await apiOrderTypes.get(
+        `?pageIndex=1&pageSize=2000`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
 
-  const calculateRentalPrice = (toyPrice, duration) => {
-    let rentalPrice = 0;
-    switch (duration) {
-      case "1 tuần":
-        rentalPrice = toyPrice * 0.15;
-        break;
-      case "2 tuần":
-        rentalPrice = toyPrice * 0.25;
-        break;
-      case "1 tháng":
-        rentalPrice = toyPrice * 0.3;
-        break;
-      case "Mua":
-        rentalPrice = toyPrice; // 100% giá
-        break;
-      default:
-        rentalPrice = 0; // Giá trị mặc định nếu duration không hợp lệ
+      console.log("Danh sách phí nền tảng mới log:", OrderTypesResponse.data);
+      const OrderType = OrderTypesResponse.data;
+      // Cập nhật dữ liệu đồ chơi
+      setOrderType(OrderType);
+      console.log(`Danh sách phí nền tảng:`, OrderType);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách người dùng", error);
     }
+  };
+  const calculateRentalPrice = (price, duration) => {
+    // Ánh xạ duration tiếng Việt sang tiếng Anh
+    const durationMapping = {
+      "1 tuần": "1 week",
+      "2 tuần": "2 week",
+      "1 tháng": "4 week",
+      Mua: "buy",
+    };
+
+    const mappedDuration = durationMapping[duration];
+
+    if (!mappedDuration) {
+      console.error("Không tìm thấy ánh xạ cho thời gian thuê:", duration);
+      return 0;
+    }
+
+    // Tìm đối tượng trong orderType dựa trên mappedDuration
+    const matchingOrder = orderType.find(
+      (item) => item.time === mappedDuration
+    );
+
+    if (!matchingOrder) {
+      console.error("Không tìm thấy thời gian thuê phù hợp:", mappedDuration);
+      return 0;
+    }
+
+    const rentalPrice = price * (matchingOrder.percentPrice || 0);
+    console.log("Rental Price:", rentalPrice);
+
     return rentalPrice;
   };
 
@@ -589,7 +621,6 @@ const HeaderForCustomer = () => {
                     >
                       <path d="M12 2C9.243 2 7 4.243 7 7v3.08C5.5 11.215 4 13.294 4 15.5V18l-2 2v1h20v-1l-2-2v-2.5c0-2.206-1.5-4.285-3-5.42V7c0-2.757-2.243-5-5-5zm-3 5c0-1.654 1.346-3 3-3s3 1.346 3 3v3h-6V7zm9 11H6v-2.5c0-1.38.966-2.733 2.578-3.345L9 12.806V13h6v-.194l.422.15C17.034 13.767 18 15.12 18 16.5V18zm-3.29 2a3.972 3.972 0 0 1-7.42 0h7.42z"></path>
                     </svg>
-
                   </div>
                 </button>
 

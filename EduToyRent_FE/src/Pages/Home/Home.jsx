@@ -311,7 +311,7 @@ const Home = () => {
         if (rentalDuration) {
           rentalPrice = calculateRentalPrice(toy.price, rentalDuration); // Tính giá thuê
         }
-
+        console.log("Rental Price thuê là:", rentalPrice);
         const cartItemData = {
           price: toy.price, // Sử dụng giá thuê
           quantity: toy.buyQuantity,
@@ -319,7 +319,7 @@ const Home = () => {
           cartId: cartId,
           toyId: toy.id,
           toyName: toy.name,
-          toyPrice: toy.price, // Lưu giá thuê vào database
+          toyPrice: toy.rentalPrice, // Lưu giá thuê vào database
           toyImgUrls: toy.imageUrls,
           orderTypeId: orderTypeId, // Sử dụng orderTypeId thay cho startDate và endDate
         };
@@ -354,7 +354,7 @@ const Home = () => {
       const cartItems = response.data || [];
       existingItem = cartItems.find((item) => item.toyId == toy.id);
     } catch (error) {
-      console.error("Lỗi khi thêm sản phẩm vào danh sách mua:", error);
+      //console.error("Lỗi khi thêm sản phẩm vào danh sách mua:", error);
       //alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
     }
 
@@ -474,7 +474,7 @@ const Home = () => {
       return 0;
     }
 
-    const rentalPrice = (price * (matchingOrder.percentPrice || 0)) / 100;
+    const rentalPrice = price * (matchingOrder.percentPrice || 0);
     console.log("Rental Price:", rentalPrice);
 
     return rentalPrice;
