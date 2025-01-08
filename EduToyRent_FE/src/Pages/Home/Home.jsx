@@ -16,6 +16,7 @@ import apiCart from "../../service/ApiCart";
 import apiUser from "../../service/ApiUser";
 import ChatForm from "../Chat/ChatForm";
 import apiOrderTypes from "../../service/ApiOrderTypes";
+
 const Home = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedToy, setSelectedToy] = useState(null);
@@ -34,6 +35,7 @@ const Home = () => {
   const [dealsOfTheDay, setdealsOfTheDay] = useState([]);
   const [cartId, setCartId] = useState(null);
   const [orderType, setOrderType] = useState([]);
+
   const PictureCategory = [
     {
       image:
@@ -472,7 +474,7 @@ const Home = () => {
       return 0;
     }
 
-    const rentalPrice = price * (matchingOrder.percentPrice || 0);
+    const rentalPrice = (price * (matchingOrder.percentPrice || 0)) / 100;
     console.log("Rental Price:", rentalPrice);
 
     return rentalPrice;

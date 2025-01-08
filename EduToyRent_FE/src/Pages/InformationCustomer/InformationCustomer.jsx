@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import HeaderForCustomer from "../../Component/HeaderForCustomer/HeaderForCustomer";
 import FooterForCustomer from "../../Component/FooterForCustomer/FooterForCustomer";
 import Cookies from "js-cookie"; // Đảm bảo bạn đã import js-cookie
@@ -14,7 +14,12 @@ import apiToys from "../../service/ApiToys";
 import apiRatings from "../../service/ApiRatings";
 import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
 import ChatForm from "../Chat/ChatForm";
+import "react-image-lightbox/style.css";
+import Lightbox from "react-image-lightbox";
+
 const InformationCustomer = () => {
+  const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+  const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
   const [selectedTab, setSelectedTab] = useState("info");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -47,6 +52,8 @@ const InformationCustomer = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [imageCheck, setImageCheck] = useState([]);
+  const [openImage, setOpenImage] = useState("");
+  const [openVideoReturn, setOpenVideoReturn] = useState("");
 
   useEffect(() => {
     const userDataCookie1 = Cookies.get("userData");
@@ -190,6 +197,10 @@ const InformationCustomer = () => {
       console.error("User data cookie is missing.");
     }
   };
+
+  const MemoizedLightbox = React.memo(({ openImage, onClose }) => (
+    <Lightbox mainSrc={openImage} onCloseRequest={onClose} />
+  ));
 
   const handleApiError = (error, customMessage) => {
     if (error.response) {
@@ -396,6 +407,45 @@ const InformationCustomer = () => {
             });
         });
     }
+  };
+
+  const handleFileChange2 = (event, fieldName) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Kiểm tra kích thước tệp
+    if (fieldName.startsWith("image") && file.size > MAX_IMAGE_SIZE) {
+      alert("Hình ảnh phải có kích thước tối đa 2MB.");
+      return;
+    }
+
+    if (fieldName === "video" && file.size > MAX_VIDEO_SIZE) {
+      alert("Video phải có kích thước tối đa 10MB.");
+      return;
+    }
+
+    // Nếu hợp lệ, lưu tệp vào state
+    setOpenVideoReturn((prev) => ({ ...prev, [fieldName]: file }));
+    console.log(openVideoReturn);
+  };
+
+  const handleDrop = (event, fieldName) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (!file) return;
+
+    if (fieldName === "video" && !file.type.startsWith("video/")) {
+      alert("Vui lòng chỉ thả video vào ô này này.");
+      return;
+    }
+
+    if (fieldName === "video" && file.size > MAX_VIDEO_SIZE) {
+      alert("Video phải có kích thước bé hơn 10MB.");
+      return;
+    }
+
+    // Nếu hợp lệ, lưu tệp vào state
+    setOpenVideoReturn((prev) => ({ ...prev, [fieldName]: file }));
   };
   const handleInputChangeName = (e) => {
     setName(e);
@@ -629,19 +679,34 @@ const InformationCustomer = () => {
   };
 
   const handleReturnSoon = (order) => {
-    var tmp = order;
-    tmp.status = "Delivering";
-    tmp.endDate = new Date().toISOString();
+    if (openVideoReturn == null || openVideoReturn == "") {
+      alert("bạn chưa chọn video của đồ chơi trước khi trả hàng !");
+    } else {
+      var formData = new FormData();
 
-    apiOrderDetail
-      .put("/" + order.id, tmp, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      })
-      .then((response) => {
-        ViewDetails();
-      });
+      formData.append(`checkImageUrls`, openVideoReturn.video);
+
+      apiOrderCheckImages
+        .post("?orderDetailId=" + order.id, formData, {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response) => {
+          var tmp = order;
+          tmp.status = "Delivering";
+          tmp.endDate = new Date().toISOString();
+          apiOrderDetail
+            .put("/" + order.id, tmp, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response) => {
+              ViewDetails();
+            });
+        });
+    }
   };
 
   const handleBuyToy = async (order) => {
@@ -692,38 +757,6 @@ const InformationCustomer = () => {
           .then(async (response2) => {
             const walletTmp = response2.data;
             console.log(walletTmp.id);
-            await apiWallets.put(
-              "/" + walletTmp.id,
-              {
-                balance: walletTmp.balance + 30000,
-                withdrawMethod: walletTmp.withdrawMethod,
-                withdrawInfo: walletTmp.withdrawInfo,
-                status: walletTmp.status,
-                userId: walletTmp.userId,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${Cookies.get("userToken")}`,
-                },
-              }
-            );
-            await apiWalletTransaction.post(
-              "",
-              {
-                transactionType: "Nhận lại tiền ship từ đơn hàng",
-                amount: 30000,
-                date: new Date().toISOString(),
-                walletId: walletTmp.id,
-                paymentTypeId: 5,
-                orderId: selectedOrder.id,
-                status: "Success",
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${Cookies.get("userToken")}`,
-                },
-              }
-            );
           });
 
         await apiUser
@@ -800,9 +833,10 @@ const InformationCustomer = () => {
                 receiveMoney: order.unitPrice,
                 platformFee: order.unitPrice * 0.15,
                 ownerReceiveMoney: order.unitPrice * 0.85,
-                depositBackMoney: 30000,
+                depositBackMoney: 0,
                 status: "Success",
                 orderId: selectedOrder.id,
+                fineFee: 0,
                 date: new Date().toISOString(),
               },
               {
@@ -821,10 +855,12 @@ const InformationCustomer = () => {
                   receiveMoney: order.unitPrice,
                   platformFee: order.unitPrice * 0.15,
                   ownerReceiveMoney: order.unitPrice * 0.85,
-                  depositBackMoney: 30000,
+                  depositBackMoney: 0,
                   status: "ToyBroke",
                   orderDetailId: order.id,
                   transactionId: response.data.id,
+                  platformFeeId: 1,
+                  fineFee: 0,
                   date: new Date().toISOString(),
                 },
                 {
@@ -844,9 +880,10 @@ const InformationCustomer = () => {
                   transactionTmp[0].platformFee + order.unitPrice * 0.15,
                 ownerReceiveMoney:
                   transactionTmp[0].ownerReceiveMoney + order.unitPrice * 0.85,
-                depositBackMoney: transactionTmp[0].depositBackMoney + 30000,
+                depositBackMoney: transactionTmp[0].depositBackMoney,
                 status: "Success",
                 orderId: selectedOrder.id,
+                fineFee: transactionTmp[0].fineFee,
                 date: new Date().toISOString(),
               },
               {
@@ -865,10 +902,12 @@ const InformationCustomer = () => {
                   receiveMoney: order.unitPrice,
                   platformFee: order.unitPrice * 0.15,
                   ownerReceiveMoney: order.unitPrice * 0.85,
-                  depositBackMoney: 30000,
+                  depositBackMoney: 0,
                   status: "ToyBroke",
                   orderDetailId: order.id,
                   transactionId: transactionTmp[0].id,
+                  platformFeeId: 1,
+                  fineFee: 0,
                   date: new Date().toISOString(),
                 },
                 {
@@ -943,7 +982,7 @@ const InformationCustomer = () => {
                 await apiWallets.put(
                   "/" + walletTmp.id,
                   {
-                    balance: walletTmp.balance + (order.deposit * 0.85 - 30000),
+                    balance: walletTmp.balance + order.deposit * 0.85,
                     withdrawMethod: walletTmp.withdrawMethod,
                     withdrawInfo: walletTmp.withdrawInfo,
                     status: walletTmp.status,
@@ -960,23 +999,6 @@ const InformationCustomer = () => {
                   {
                     transactionType: "Nhận tiền từ đơn hàng",
                     amount: parseInt(order.deposit * 0.85),
-                    date: new Date().toISOString(),
-                    walletId: walletTmp.id,
-                    paymentTypeId: 5,
-                    orderId: selectedOrder.id,
-                    status: "Success",
-                  },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${Cookies.get("userToken")}`,
-                    },
-                  }
-                );
-                await apiWalletTransaction.post(
-                  "",
-                  {
-                    transactionType: "Phí ship của đơn hàng",
-                    amount: -30000,
                     date: new Date().toISOString(),
                     walletId: walletTmp.id,
                     paymentTypeId: 5,
@@ -1011,11 +1033,12 @@ const InformationCustomer = () => {
               "",
               {
                 receiveMoney: order.unitPrice,
-                platformFee: order.unitPrice * 0.15 + 60000,
-                ownerReceiveMoney: order.unitPrice * 0.85 - 30000,
+                platformFee: order.unitPrice * 0.15,
+                ownerReceiveMoney: order.unitPrice * 0.85,
                 depositBackMoney: 0,
                 status: "Success",
                 orderId: selectedOrder.id,
+                fineFee: 0,
                 date: new Date().toISOString(),
               },
               {
@@ -1032,12 +1055,14 @@ const InformationCustomer = () => {
                 "",
                 {
                   receiveMoney: order.unitPrice,
-                  platformFee: order.unitPrice * 0.15 + 60000,
-                  ownerReceiveMoney: order.unitPrice * 0.85 - 30000,
+                  platformFee: order.unitPrice * 0.15,
+                  ownerReceiveMoney: order.unitPrice * 0.85,
                   depositBackMoney: 0,
                   status: "ToyBroke",
                   orderDetailId: order.id,
                   transactionId: response.data.id,
+                  platformFeeId: 1,
+                  fineFee: 0,
                   date: new Date().toISOString(),
                 },
                 {
@@ -1054,16 +1079,13 @@ const InformationCustomer = () => {
               {
                 receiveMoney: transactionTmp[0].receiveMoney + order.unitPrice,
                 platformFee:
-                  transactionTmp[0].platformFee +
-                  order.unitPrice * 0.15 +
-                  60000,
+                  transactionTmp[0].platformFee + order.unitPrice * 0.15,
                 ownerReceiveMoney:
-                  transactionTmp[0].ownerReceiveMoney +
-                  order.unitPrice * 0.85 -
-                  30000,
+                  transactionTmp[0].ownerReceiveMoney + order.unitPrice * 0.85,
                 depositBackMoney: transactionTmp[0].depositBackMoney,
                 status: "Success",
                 orderId: selectedOrder.id,
+                fineFee: transactionTmp[0].fineFee,
                 date: new Date().toISOString(),
               },
               {
@@ -1080,12 +1102,14 @@ const InformationCustomer = () => {
                 "",
                 {
                   receiveMoney: order.unitPrice,
-                  platformFee: order.unitPrice * 0.15 + 60000,
-                  ownerReceiveMoney: order.unitPrice * 0.85 - 30000,
+                  platformFee: order.unitPrice * 0.15,
+                  ownerReceiveMoney: order.unitPrice * 0.85,
                   depositBackMoney: 0,
                   status: "ToyBroke",
                   orderDetailId: order.id,
                   transactionId: transactionTmp[0].id,
+                  platformFeeId: 1,
+                  fineFee: 0,
                   date: new Date().toISOString(),
                 },
                 {
@@ -1148,35 +1172,15 @@ const InformationCustomer = () => {
               }
             );
             apiOrderDetail.get("/Order/" + order.id).then((response) => {
-              apiWallets.put(
-                "/" + walletTmp.id,
-                {
-                  balance:
-                    walletTmp.balance +
-                    order.totalPrice +
-                    30000 * response.data.length,
-                  withdrawMethod: walletTmp.withdrawMethod,
-                  withdrawInfo: walletTmp.withdrawInfo,
-                  status: walletTmp.status,
-                  userId: walletTmp.userId,
-                },
-                {
-                  headers: {
-                    Authorization: `Bearer ${Cookies.get("userToken")}`,
-                  },
-                }
-              );
-
-              apiWalletTransaction
-                .post(
-                  "",
+              apiWallets
+                .put(
+                  "/" + walletTmp.id,
                   {
-                    transactionType: "Nhận lại tiền ship từ đơn hàng",
-                    amount: 30000 * response.data.length,
-                    date: new Date().toISOString(),
-                    walletId: walletTmp.id,
-                    paymentTypeId: 5,
-                    orderId: order.id,
+                    balance: walletTmp.balance + order.totalPrice,
+                    withdrawMethod: walletTmp.withdrawMethod,
+                    withdrawInfo: walletTmp.withdrawInfo,
+                    status: walletTmp.status,
+                    userId: walletTmp.userId,
                   },
                   {
                     headers: {
@@ -1268,6 +1272,7 @@ const InformationCustomer = () => {
             depositBackMoney: 0,
             status: "Success",
             orderId: orderToUpdate.id,
+            fineFee: 0,
             date: new Date().toISOString(),
           },
           {
@@ -1307,6 +1312,8 @@ const InformationCustomer = () => {
                     status: "Success",
                     orderDetailId: item.id,
                     transactionId: response.data.id,
+                    platformFeeId: 1,
+                    fineFee: 0,
                     date: new Date().toISOString(),
                   },
                   {
@@ -2185,8 +2192,7 @@ const InformationCustomer = () => {
       "Expired",
       "Delivering",
       "Checking",
-      "DeliveringToShop",
-      "DeliveringToUser",
+      "AcceptFee",
       "Complete",
     ];
     const getStatusIndex = (status) => stages.indexOf(status);
@@ -2270,9 +2276,22 @@ const InformationCustomer = () => {
                             }
                             alt={item.name}
                             className="w-20 h-20 object-cover mr-4"
+                            onClick={() => setOpenImage(item.toyImgUrls[0])}
                           />
+                          {openImage && (
+                            <MemoizedLightbox
+                              openImage={openImage}
+                              onClose={() => setOpenImage("")}
+                            />
+                          )}
+
                           <div className="flex-grow">
-                            <h4 className="font-semibold">{item.toyName}</h4>
+                            <h4
+                              className="font-semibold"
+                              style={{ width: "40%" }}
+                            >
+                              {item.toyName}
+                            </h4>
                             <p>
                               Giá cọc: {(item.unitPrice || 0).toLocaleString()}{" "}
                               VNĐ
@@ -2350,6 +2369,44 @@ const InformationCustomer = () => {
                               >
                                 Đã nhận hàng
                               </button>
+                            </div>
+                          )}
+
+                          {item.status === "Processing" && (
+                            <div
+                              className="border border border-gray-300 rounded p-4 mb-4 w-full text-center"
+                              onDrop={(e) => handleDrop(e, "video")}
+                              onDragOver={(e) => e.preventDefault()}
+                              style={{
+                                width: "600px", // Kích thước cố định (có thể tùy chỉnh)
+                                height: "200px",
+                                overflow: "hidden",
+                              }}
+                            >
+                              {openVideoReturn ? (
+                                <video
+                                  controls
+                                  className="w-full h-auto max-h-40 object-contain"
+                                  src={URL.createObjectURL(
+                                    openVideoReturn.video
+                                  )}
+                                />
+                              ) : (
+                                <p>Kéo và thả video tại đây hoặc nhấp vào</p>
+                              )}
+                              <input
+                                type="file"
+                                accept="video/*"
+                                onChange={(e) => handleFileChange2(e, "video")}
+                                className="hidden"
+                                id="video-input"
+                              />
+                              <label
+                                htmlFor="video-input"
+                                className="text-blue-500 underline cursor-pointer"
+                              >
+                                chọn tệp
+                              </label>
                             </div>
                           )}
                           {item.status === "Processing" && (
@@ -2450,20 +2507,17 @@ const InformationCustomer = () => {
                                 )}
 
                                 {stage === "Delivering" && (
-                                  <div className="text-sm">
-                                    Giao hàng tới kho đánh giá
-                                  </div>
+                                  <div className="text-sm">Đang trả hàng</div>
                                 )}
 
                                 {stage === "Checking" && (
                                   <div className="text-sm">Đang đánh giá</div>
                                 )}
 
-                                {stage == "DeliveringToShop" && (
-                                  <div className="text-sm">Đồ chơi tốt</div>
-                                )}
-                                {stage == "DeliveringToUser" && (
-                                  <div className="text-sm">Đồ chơi bị hỏng</div>
+                                {stage == "AcceptFee" && (
+                                  <div className="text-sm">
+                                    Phí phạt (Nếu có)
+                                  </div>
                                 )}
 
                                 {stage === "Complete" && (

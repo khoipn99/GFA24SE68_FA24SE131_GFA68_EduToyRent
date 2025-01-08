@@ -2587,7 +2587,7 @@ const StaffPage = () => {
       case "Status":
         return (
           <div className="container mx-auto py-4">
-            <h2 className="text-2xl font-semibold">Danh sách đơn hàng</h2>
+            <h2 className="text-2xl font-semibold">Danh sách khiếu nại</h2>
             {currentToys6.map((order) => (
               <div
                 key={order.id}
@@ -3697,8 +3697,8 @@ const StaffPage = () => {
                 selectedTab === "Status" ? "bg-gray-300" : ""
               }`}
             >
-              <span className="icon-class mr-2">🧾</span> Danh sách đơn hàng
-              đang chờ đánh giá
+              <span className="icon-class mr-2">🧾</span> Danh sách đơn khiếu
+              nại
             </button>
             <button
               onClick={() => setSelectedTab("Withdraw")}
