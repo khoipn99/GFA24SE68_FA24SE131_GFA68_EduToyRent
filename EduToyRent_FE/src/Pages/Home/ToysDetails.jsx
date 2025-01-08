@@ -15,7 +15,7 @@ import apiConversations from "../../service/ApiConversations";
 import ChatForm from "../Chat/ChatForm";
 import { useNavigate } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa"; // Import các biểu tượng sao
-
+import apiOrderTypes from "../../service/ApiOrderTypes";
 const ToysDetails = () => {
   const [userData, setUserData] = useState("");
   const [userId, setUserId] = useState(null);
@@ -47,7 +47,7 @@ const ToysDetails = () => {
   const [toysOfShop, setToysOfShop] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rentItems, setRentItems] = useState([]);
-
+  const [orderType, setOrderType] = useState([]);
   // Mặc định tính giá thuê 1 tuần khi mở trang
   useEffect(() => {
     if (currentToy) {
@@ -216,12 +216,49 @@ const ToysDetails = () => {
           console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
         }
       };
-
+      LoadOrderTypes();
       fetchUserData();
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
   }, []);
+  const LoadOrderTypes = async () => {
+    try {
+      const OrderTypesResponse = await apiOrderTypes.get(
+        `?pageIndex=1&pageSize=2000`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      console.log("Danh sách phí nền tảng mới log:", OrderTypesResponse.data);
+      const OrderType = OrderTypesResponse.data;
+      // Cập nhật dữ liệu đồ chơi
+      setOrderType(OrderType);
+      console.log(`Danh sách phí nền tảng:`, OrderType);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách người dùng", error);
+    }
+  };
+  const calculatePriceWithOneWeekPercent = (price, orderType) => {
+    if (!orderType || orderType.length === 0) {
+      console.error("orderType không hợp lệ:", orderType);
+      return 0;
+    }
+
+    const oneWeekType = orderType.find((type) => type.time === "1 week");
+    if (!oneWeekType) {
+      console.error("Không tìm thấy orderType cho '1 week'");
+      return 0;
+    }
+
+    const percentPrice = oneWeekType.percentPrice || 0;
+    console.log("Phần trăm giá cho '1 week':", percentPrice);
+
+    return price * percentPrice;
+  };
 
   const HandleToyDetail = (toy) => {
     console.log(toy);
@@ -368,7 +405,7 @@ const ToysDetails = () => {
         // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
         existingItem = cartItems.find((item) => item.toyId == currentToy.id);
       } catch (error) {
-        console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
+        // console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
         //alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
       }
       if (existingItem) {
@@ -432,23 +469,34 @@ const ToysDetails = () => {
     }
   };
   const calculateRentalPrice = (price, duration) => {
-    let rentalPrice = 0;
-    switch (duration) {
-      case "1 tuần":
-        rentalPrice = price * 0.15;
-        break;
-      case "2 tuần":
-        rentalPrice = price * 0.25;
-        break;
-      case "1 tháng":
-        rentalPrice = price * 0.3;
-        break;
-      case "Mua":
-        rentalPrice = price; // 100% giá
-        break;
-      default:
-        rentalPrice = 0; // Giá trị mặc định nếu duration không hợp lệ
+    // Ánh xạ duration tiếng Việt sang tiếng Anh
+    const durationMapping = {
+      "1 tuần": "1 week",
+      "2 tuần": "2 week",
+      "1 tháng": "4 week",
+      Mua: "buy",
+    };
+
+    const mappedDuration = durationMapping[duration];
+
+    if (!mappedDuration) {
+      console.error("Không tìm thấy ánh xạ cho thời gian thuê:", duration);
+      return 0;
     }
+
+    // Tìm đối tượng trong orderType dựa trên mappedDuration
+    const matchingOrder = orderType.find(
+      (item) => item.time === mappedDuration
+    );
+
+    if (!matchingOrder) {
+      console.error("Không tìm thấy thời gian thuê phù hợp:", mappedDuration);
+      return 0;
+    }
+
+    const rentalPrice = price * (matchingOrder.percentPrice || 0);
+    console.log("Rental Price:", rentalPrice);
+
     return rentalPrice;
   };
 
