@@ -3,6 +3,7 @@ import axios from "axios";
 import * as signalR from "@microsoft/signalr";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import apiNotifications from "../../service/ApiNotifications";
 
 const Notifications = ({ show }) => {
   const [notifications, setNotifications] = useState([]);
@@ -40,10 +41,8 @@ const Notifications = ({ show }) => {
 
     console.log("Fetching notifications for userId:", userId);
 
-    axios
-      .get(
-        `https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/v1/Notifications/User/${userId}`
-      )
+    apiNotifications
+      .get(`/User/${userId}`)
       .then((response) => {
         console.log("Old notifications fetched:", response.data);
         const allNotifications = response.data.map((n) => ({
@@ -65,7 +64,8 @@ const Notifications = ({ show }) => {
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(
-        "https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/notificationHub"
+        //"https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/notificationHub"
+        "https://localhost:44350/notificationHub"
       )
       .withAutomaticReconnect()
       .build();

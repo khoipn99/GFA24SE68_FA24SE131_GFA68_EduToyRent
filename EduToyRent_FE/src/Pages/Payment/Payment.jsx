@@ -17,6 +17,7 @@ import apiToys from "../../service/ApiToys";
 import apiNotifications from "../../service/ApiNotifications";
 import ChatForm from "../Chat/ChatForm";
 import Term from "../../Component/Terms/Terms";
+import apiOrderTypes from "../../service/ApiOrderTypes";
 
 const Payment = () => {
   const [cartItems, setCartItems] = useState([]); // Danh sách sản phẩm
@@ -43,6 +44,7 @@ const Payment = () => {
   const [useNewAddress, setUseNewAddress] = useState(false);
   const navigate = useNavigate();
   const [isChecked, setIsChecked] = useState(false); // State để kiểm tra checkbox
+  const [orderType, setOrderType] = useState([]);
 
   useEffect(() => {
     const userDataCookie1 = Cookies.get("userData");
@@ -108,6 +110,7 @@ const Payment = () => {
 
         setCart(cart); // Lưu cartId vào state
         fetchCartItems(cartId); // Gọi API lấy CartItems
+        LoadOrderTypes();
       } else {
         console.error("Không tìm thấy giỏ hàng cho người dùng.");
       }
@@ -129,7 +132,7 @@ const Payment = () => {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
           },
         })
-        .then((response) => {
+        .then(async (response) => {
           setCartItems(response.data);
 
           if (response.data == "Empty List!") {
@@ -141,18 +144,55 @@ const Payment = () => {
             .filter((item) => item.quantity === -1)
             .map((item) => ({
               ...item,
-              rentalDuration: calculateRentalDuration(item.orderTypeId), // Chuyển sang dùng orderTypeId
+              rentalDuration: calculateRentalDuration(item.orderTypeId),
             }));
           const buyItems = response.data.filter((item) => item.quantity >= 1);
 
-          // Lưu vào state
-          setRentItems(rentItems);
+          const itemsWithRentalPrices = await Promise.all(
+            rentItems.map(async (item) => {
+              const rentalPrice = await calculateRentalPrice(
+                item.price,
+                item.orderTypeId
+              );
+              console.log(item.price);
+              console.log(item.orderTypeId);
+              console.log(rentalPrice);
+              return {
+                ...item,
+                rentalPrice,
+              };
+            })
+          );
+
+          setRentItems(itemsWithRentalPrices);
           setBuyItems(buyItems);
+          console.log(itemsWithRentalPrices);
           console.log(rentItems);
         });
 
       console.log("Các mục trong giỏ hàng:", response.data);
     } catch (error) {}
+  };
+
+  const LoadOrderTypes = async () => {
+    try {
+      const OrderTypesResponse = await apiOrderTypes.get(
+        `?pageIndex=1&pageSize=2000`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      );
+
+      console.log("Danh sách phí nền tảng mới log:", OrderTypesResponse.data);
+      const OrderType = OrderTypesResponse.data;
+      // Cập nhật dữ liệu đồ chơi
+      setOrderType(OrderType);
+      console.log(`Danh sách phí nền tảng:`, OrderType);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách người dùng", error);
+    }
   };
 
   const calculateRentalDuration = (orderTypeId) => {
@@ -199,6 +239,28 @@ const Payment = () => {
       });
   };
 
+  const calculateRentalPrice = async (price, duration) => {
+    try {
+      const response = await apiOrderTypes.get(`?pageIndex=1&pageSize=2000`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      });
+
+      const matchingOrder = response.data.find((item) => item.id == duration);
+      if (!matchingOrder) {
+        throw new Error("Matching order not found");
+      }
+
+      const rentalPrice = (price * (matchingOrder.percentPrice || 0)) / 100;
+      console.log(matchingOrder.time); // Log giá trị `time`
+      return rentalPrice; // Trả về rentalPrice
+    } catch (error) {
+      console.error("Error calculating rental price:", error);
+      return undefined; // Xử lý lỗi và trả về undefined nếu có lỗi
+    }
+  };
+
   const handleWardChange = (e) => {
     setShippingInfo({ ...shippingInfo, ward: e.target.value });
   };
@@ -229,9 +291,6 @@ const Payment = () => {
   const calculateTotalPrice = (items) =>
     items.reduce((total, item) => total + item.price * (item.quantity || 1), 0);
 
-  const calculateTotalFee = (items) =>
-    items.reduce((total, item) => total + 30000, 0);
-
   const calculateTotalPrice2 = (items) =>
     items.reduce((total, item) => total + item.price, 0);
 
@@ -250,7 +309,6 @@ const Payment = () => {
 
   const totalRentPrice = calculateTotalPrice2(rentItems);
   const totalBuyPrice = calculateTotalPrice(buyItems);
-  const totalFee = calculateTotalFee(rentItems);
   const totalPrice = totalRentPrice + totalBuyPrice;
 
   // Tính tổng thanh toán sau giảm giá
@@ -267,7 +325,7 @@ const Payment = () => {
 
   const handlePayment = async () => {
     if (isChecked) {
-      if (wallet.balance >= totalAfterDiscount + totalFee) {
+      if (wallet.balance >= totalAfterDiscount) {
         if (
           shippingInfo.fullName != "" &&
           shippingInfo.phoneNumber != "" &&
@@ -307,14 +365,13 @@ const Payment = () => {
                   console.log("Items:", groupedItems[shopId]); // Mảng của shop này
 
                   var totalRentPriceTmp = 0;
-                  await groupedItems[shopId].map((item, index) => {
-                    if (item.orderTypeId == 4) {
-                      totalRentPriceTmp += item.price * 0.15;
-                    } else if (item.orderTypeId == 5) {
-                      totalRentPriceTmp += item.price * 0.25;
-                    } else if (item.orderTypeId == 6) {
-                      totalRentPriceTmp += item.price * 0.3;
-                    }
+                  await groupedItems[shopId].map(async (item, index) => {
+                    orderType.map((item2, index) => {
+                      if (item.orderTypeId == item2.id) {
+                        totalRentPriceTmp +=
+                          (item.price * item2.percentPrice) / 100;
+                      }
+                    });
                   });
                   console.log(totalRentPriceTmp);
 
@@ -337,6 +394,7 @@ const Payment = () => {
                         totalPrice: totalDepositTmp,
                         rentPrice: totalRentPriceTmp,
                         depositeBackMoney: 0,
+                        fine: 0,
                         receiveName: shippingInfo.fullName,
                         receiveAddress:
                           shippingInfo.detail +
@@ -376,7 +434,7 @@ const Payment = () => {
                           "",
                           {
                             transactionType: "Thanh toán đơn hàng",
-                            amount: -parseInt(totalDepositTmp + 30000 * tmp),
+                            amount: -parseInt(totalDepositTmp),
                             date: new Date().toISOString(),
                             walletId: customerInfo.walletId,
                             paymentTypeId: 5,
@@ -403,9 +461,7 @@ const Payment = () => {
                           await apiWallets.put(
                             `/${response2.data.id}`,
                             {
-                              balance:
-                                response2.data.balance -
-                                (totalDepositTmp + 30000 * tmp),
+                              balance: response2.data.balance - totalDepositTmp,
                               withdrawMethod: response2.data.withdrawMethod,
                               withdrawInfo: response2.data.withdrawInfo,
                               status: response2.data.status,
@@ -425,13 +481,12 @@ const Payment = () => {
                       await Promise.all(
                         groupedItems[shopId].map(async (item, index) => {
                           var rentPriceTmp = 0;
-                          if (item.orderTypeId == 4) {
-                            rentPriceTmp = item.price * 0.15;
-                          } else if (item.orderTypeId == 5) {
-                            rentPriceTmp = item.price * 0.25;
-                          } else if (item.orderTypeId == 6) {
-                            rentPriceTmp = item.price * 0.3;
-                          }
+                          orderType.map((item2, index) => {
+                            if (item.orderTypeId == item2.id) {
+                              rentPriceTmp +=
+                                (item.price * item2.percentPrice) / 100;
+                            }
+                          });
                           await apiOrderDetail.post(
                             "",
                             {
@@ -441,6 +496,8 @@ const Payment = () => {
                               quantity: -1,
                               startDate: null,
                               endDate: null,
+                              fine: 0,
+                              rentCount: 1,
                               status: "Await",
                               orderId: response.data.id,
                               toyId: item.toyId,
@@ -510,6 +567,7 @@ const Payment = () => {
                         totalPrice: totalDepositTmp2,
                         rentPrice: 0,
                         depositeBackMoney: 0,
+                        fine: 0,
                         receiveName: shippingInfo.fullName,
                         receiveAddress:
                           shippingInfo.detail +
@@ -601,6 +659,8 @@ const Payment = () => {
                               quantity: item.quantity,
                               startDate: null,
                               endDate: null,
+                              fine: 0,
+                              rentCount: 1,
                               status: "DeliveringToBuyer",
                               orderId: response.data.id,
                               toyId: item.toyId,
@@ -703,13 +763,12 @@ const Payment = () => {
                 const tmp = groupedItems[shopId].length;
                 var totalRentPriceTmp = 0;
                 await groupedItems[shopId].map((item, index) => {
-                  if (item.orderTypeId == 4) {
-                    totalRentPriceTmp += item.price * 0.15;
-                  } else if (item.orderTypeId == 5) {
-                    totalRentPriceTmp += item.price * 0.25;
-                  } else if (item.orderTypeId == 6) {
-                    totalRentPriceTmp += item.price * 0.3;
-                  }
+                  orderType.map((item2, index) => {
+                    if (item.orderTypeId == item2.id) {
+                      totalRentPriceTmp +=
+                        (item.price * item2.percentPrice) / 100;
+                    }
+                  });
                 });
                 console.log(totalRentPriceTmp);
 
@@ -729,6 +788,7 @@ const Payment = () => {
                       totalPrice: totalDepositTmp,
                       rentPrice: totalRentPriceTmp,
                       depositeBackMoney: 0,
+                      fine: 0,
                       receiveName: shippingInfo.fullName,
                       receiveAddress: oldAddress,
                       receivePhone: shippingInfo.phoneNumber,
@@ -760,7 +820,7 @@ const Payment = () => {
                       "",
                       {
                         transactionType: "Thanh toán đơn hàng",
-                        amount: -parseInt(totalDepositTmp + 30000 * tmp),
+                        amount: -parseInt(totalDepositTmp),
                         date: new Date().toISOString(),
                         walletId: customerInfo.walletId,
                         paymentTypeId: 5,
@@ -785,9 +845,7 @@ const Payment = () => {
                           .put(
                             `/${response2.data.id}`,
                             {
-                              balance:
-                                response2.data.balance -
-                                (totalDepositTmp + 30000 * tmp),
+                              balance: response2.data.balance - totalDepositTmp,
                               withdrawMethod: response2.data.withdrawMethod,
                               withdrawInfo: response2.data.withdrawInfo,
                               status: response2.data.status,
@@ -810,13 +868,12 @@ const Payment = () => {
                     await Promise.all(
                       groupedItems[shopId].map(async (item, index) => {
                         var rentPriceTmp = 0;
-                        if (item.orderTypeId == 4) {
-                          rentPriceTmp = item.price * 0.15;
-                        } else if (item.orderTypeId == 5) {
-                          rentPriceTmp = item.price * 0.25;
-                        } else if (item.orderTypeId == 6) {
-                          rentPriceTmp = item.price * 0.3;
-                        }
+                        orderType.map((item2, index) => {
+                          if (item.orderTypeId == item2.id) {
+                            rentPriceTmp +=
+                              (item.price * item2.percentPrice) / 100;
+                          }
+                        });
                         await apiOrderDetail.post(
                           "",
                           {
@@ -826,6 +883,8 @@ const Payment = () => {
                             quantity: -1,
                             startDate: null,
                             endDate: null,
+                            fine: 0,
+                            rentCount: 1,
                             status: "Await",
                             orderId: response.data.id,
                             toyId: item.toyId,
@@ -892,6 +951,7 @@ const Payment = () => {
                       totalPrice: totalDepositTmp2,
                       rentPrice: 0,
                       depositeBackMoney: 0,
+                      fine: 0,
                       receiveName: shippingInfo.fullName,
                       receiveAddress: oldAddress,
                       receivePhone: shippingInfo.phoneNumber,
@@ -975,6 +1035,8 @@ const Payment = () => {
                             quantity: item.quantity,
                             startDate: null,
                             endDate: null,
+                            fine: 0,
+                            rentCount: 1,
                             status: "DeliveringToBuyer",
                             orderId: response.data.id,
                             toyId: item.toyId,
@@ -1217,11 +1279,11 @@ const Payment = () => {
           <h2 className="text-xl font-semibold mb-4">
             Danh sách sản phẩm thuê
           </h2>
-          <div className="grid grid-cols-6 text-gray-700 font-semibold border-b pb-2 mb-4">
+          <div className="grid grid-cols-5 text-gray-700 font-semibold border-b pb-2 mb-4">
             <p className="col-span-2"></p>
             <p className="text-center">Số ngày thuê</p>
             <p className="text-center">Giá thuê</p>
-            <p className="text-center">Phí trả hàng</p>
+
             <p className="text-center">Tiền cọc</p>
           </div>
           <div className="border rounded-md p-4">
@@ -1229,7 +1291,7 @@ const Payment = () => {
               rentItems.map((item, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-6 items-center border-b py-2"
+                  className="grid grid-cols-5 items-center border-b py-2"
                 >
                   <div className="col-span-2 flex items-center gap-4">
                     <img
@@ -1253,16 +1315,11 @@ const Payment = () => {
                   </p>
 
                   <p className="text-center">
-                    {item.orderTypeId === 4
-                      ? (item.price * 0.15).toLocaleString()
-                      : item.orderTypeId === 5
-                      ? (item.price * 0.25).toLocaleString()
-                      : item.orderTypeId === 6
-                      ? (item.price * 0.3).toLocaleString()
-                      : item.price.toLocaleString()}{" "}
+                    {item.rentalPrice && item.rentalPrice
+                      ? item.rentalPrice
+                      : 0}{" "}
                     ₫
                   </p>
-                  <p className="text-center">30.000 ₫</p>
 
                   <p className="text-center font-medium">
                     {(item.price || 0).toLocaleString()} ₫
@@ -1344,12 +1401,9 @@ const Payment = () => {
           <div className="w-full md:w-1/2 text-right">
             <h3 className="text-lg font-semibold mb-2">Thông tin thanh toán</h3>
             <p>Tổng tiền hàng: {totalPrice.toLocaleString()} ₫</p>
-
-            <p>Tổng phí trả hàng: {totalFee.toLocaleString()} ₫</p>
             <p>Voucher giảm giá: -{discount.toLocaleString()} ₫</p>
             <p className="font-semibold">
-              Tổng thanh toán:{" "}
-              {(totalAfterDiscount + totalFee).toLocaleString()} ₫
+              Tổng thanh toán: {totalAfterDiscount.toLocaleString()} ₫
             </p>
             <div className="flex items-center">
               {/* Checkbox */}

@@ -19,6 +19,9 @@ import apiNotifications from "../../service/ApiNotifications";
 import ChatForm from "../Chat/ChatForm";
 
 const InformationLessor = () => {
+  const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+  const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
+
   const [selectedTab, setSelectedTab] = useState("orders");
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -256,6 +259,36 @@ const InformationLessor = () => {
   const filteredOrders = orders.filter((order) => {
     return filterStatus === "all" || order.status === filterStatus;
   });
+
+  const handleDeliveringOrderDetail = async (order) => {
+    var tmp = order;
+    tmp.status = "Checking";
+
+    await apiOrderDetail
+      .put("/" + order.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        ViewDetails();
+      });
+  };
+
+  const handleCheckingOrderDetail = async (order) => {
+    var tmp = order;
+    tmp.status = "Checking";
+
+    await apiOrderDetail
+      .put("/" + order.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        ViewDetails();
+      });
+  };
 
   const handleFinishOrderDetail = async (order) => {
     var tmp = order;
@@ -678,38 +711,52 @@ const InformationLessor = () => {
       [name]: name === "price" ? parseFloat(value) : value,
     }));
   };
-
-  const [newImage, setNewImage] = useState([]);
-  const [newImage2, setNewImage2] = useState([]);
-  const [newImage3, setNewImage3] = useState([]);
-  const [newImage4, setNewImage4] = useState([]);
-  const [newImage5, setNewImage5] = useState([]);
-  const [newVideo, setNewVideo] = useState([]);
-
-  const handleImageChange = (e) => {
-    setNewImage(e.target.files[0]);
-  };
-
-  const handleImageChange2 = (e) => {
-    setNewImage2(e.target.files[0]);
-  };
-
-  const handleImageChange3 = (e) => {
-    setNewImage3(e.target.files[0]);
-  };
-  const handleImageChange4 = (e) => {
-    setNewImage4(e.target.files[0]);
-  };
-  const handleImageChange5 = (e) => {
-    setNewImage5(e.target.files[0]);
-  };
-  const handleVideo = (e) => {
-    setNewVideo(e.target.files[0]);
-  };
-
   const openModal = () => {
     setIsModalOpen(true);
   };
+
+  const [selectedFiles, setSelectedFiles] = useState({});
+
+  const handleFileChange = (event, fieldName) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Kiểm tra kích thước tệp
+    if (fieldName.startsWith("image") && file.size > MAX_IMAGE_SIZE) {
+      alert("Hình ảnh phải có kích thước tối đa 2MB.");
+      return;
+    }
+
+    if (fieldName === "video" && file.size > MAX_VIDEO_SIZE) {
+      alert("Video phải có kích thước tối đa 10MB.");
+      return;
+    }
+
+    // Nếu hợp lệ, lưu tệp vào state
+    setSelectedFiles((prev) => ({ ...prev, [fieldName]: file }));
+    console.log(selectedFiles);
+  };
+
+  const handleDrop = (event, fieldName) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (!file) return;
+
+    // Kiểm tra kích thước tệp
+    if (fieldName.startsWith("image") && file.size > MAX_IMAGE_SIZE) {
+      alert("Hình ảnh phải có kích thước bé hơn 2MB.");
+      return;
+    }
+
+    if (fieldName === "video" && file.size > MAX_VIDEO_SIZE) {
+      alert("Video phải có kích thước bé hơn 10MB.");
+      return;
+    }
+
+    // Nếu hợp lệ, lưu tệp vào state
+    setSelectedFiles((prev) => ({ ...prev, [fieldName]: file }));
+  };
+
   const closeModal = () => setIsModalOpen(false);
   const statusMapping = {
     Delivering: "Đang giao",
@@ -724,7 +771,7 @@ const InformationLessor = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (newVideo == "") {
+    if (selectedFiles.video == null) {
       alert("Bạn chưa chọn video để xác thực đồ chơi");
       return;
     }
@@ -737,12 +784,11 @@ const InformationLessor = () => {
       .then((response) => {
         var formData = new FormData();
 
-        formData.append(`mediaUrls`, newImage);
-        formData.append(`mediaUrls`, newImage2);
-        formData.append(`mediaUrls`, newImage3);
-        formData.append(`mediaUrls`, newImage4);
-        formData.append(`mediaUrls`, newImage5);
-        formData.append(`mediaUrls`, newVideo);
+        formData.append(`mediaUrls`, selectedFiles.image1);
+        formData.append(`mediaUrls`, selectedFiles.image2);
+        formData.append(`mediaUrls`, selectedFiles.image3);
+        formData.append(`mediaUrls`, selectedFiles.image4);
+        formData.append(`mediaUrls`, selectedFiles.video);
 
         apiMedia
           .post("/upload-toy-media/" + response.data.id, formData, {
@@ -764,12 +810,7 @@ const InformationLessor = () => {
               quantitySold: 0,
               status: "Inactive",
             });
-            setNewVideo([]);
-            setNewImage([]);
-            setNewImage2([]);
-            setNewImage3([]);
-            setNewImage4([]);
-            setNewImage5([]);
+            setSelectedFiles({});
             getProductInfo();
           });
       });
@@ -1137,62 +1178,123 @@ const InformationLessor = () => {
                       </label>
                     </div>
 
-                    {/* Phần đăng hình ảnh và video */}
                     <div style={{ flex: 1 }}>
-                      <label className="block mb-2">
-                        Hình ảnh:
+                      <div className="flex flex-wrap">
+                        {/* Cột bên trái */}
+                        <div className="w-1/2 pr-2">
+                          {Array.from({ length: 2 }).map((_, index) => (
+                            <div
+                              key={`image-drop-left-${index + 1}`}
+                              className="border border-dashed border-gray-300 rounded p-4 mb-4 text-center"
+                              onDrop={(e) => handleDrop(e, `image${index + 1}`)}
+                              onDragOver={(e) => e.preventDefault()}
+                            >
+                              {selectedFiles[`image${index + 1}`] ? (
+                                <img
+                                  src={URL.createObjectURL(
+                                    selectedFiles[`image${index + 1}`]
+                                  )}
+                                  alt={`Hình ảnh ${index + 1}`}
+                                  className="w-full h-auto max-h-40 object-contain"
+                                />
+                              ) : (
+                                <p>
+                                  Kéo và thả hình ảnh {index + 1} tại đây hoặc
+                                  nhấp vào
+                                </p>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) =>
+                                  handleFileChange(e, `image${index + 1}`)
+                                }
+                                className="hidden"
+                                id={`file-input-left-${index + 1}`}
+                              />
+                              <label
+                                htmlFor={`file-input-left-${index + 1}`}
+                                className="text-blue-500 underline cursor-pointer"
+                              >
+                                chọn tệp
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Cột bên phải */}
+                        <div className="w-1/2 pl-2">
+                          {Array.from({ length: 2 }).map((_, index) => (
+                            <div
+                              key={`image-drop-right-${index + 3}`}
+                              className="border border-dashed border-gray-300 rounded p-4 mb-4 text-center"
+                              onDrop={(e) => handleDrop(e, `image${index + 3}`)}
+                              onDragOver={(e) => e.preventDefault()}
+                            >
+                              {selectedFiles[`image${index + 3}`] ? (
+                                <img
+                                  src={URL.createObjectURL(
+                                    selectedFiles[`image${index + 3}`]
+                                  )}
+                                  alt={`Hình ảnh ${index + 3}`}
+                                  className="w-full h-auto max-h-40 object-contain"
+                                />
+                              ) : (
+                                <p>
+                                  Kéo và thả hình ảnh {index + 3} tại đây hoặc
+                                  nhấp vào
+                                </p>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) =>
+                                  handleFileChange(e, `image${index + 3}`)
+                                }
+                                className="hidden"
+                                id={`file-input-right-${index + 3}`}
+                              />
+                              <label
+                                htmlFor={`file-input-right-${index + 3}`}
+                                className="text-blue-500 underline cursor-pointer"
+                              >
+                                chọn tệp
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Video */}
+                      <div
+                        className="border border-dashed border-gray-300 rounded p-4 mb-4 w-full text-center"
+                        onDrop={(e) => handleDrop(e, "video")}
+                        onDragOver={(e) => e.preventDefault()}
+                      >
+                        {selectedFiles.video ? (
+                          <video
+                            controls
+                            className="w-full h-auto max-h-40 object-contain"
+                            src={URL.createObjectURL(selectedFiles.video)}
+                          />
+                        ) : (
+                          <p>Kéo và thả video tại đây hoặc nhấp vào</p>
+                        )}
                         <input
                           type="file"
-                          onChange={handleImageChange}
-                          className="border border-gray-300 rounded p-1 w-full"
-                          accept="image/*"
-                        />
-                      </label>
-                      <label className="block mb-2">
-                        Hình ảnh 2:
-                        <input
-                          type="file"
-                          onChange={handleImageChange2}
-                          className="border border-gray-300 rounded p-1 w-full"
-                          accept="image/*"
-                        />
-                      </label>
-                      <label className="block mb-2">
-                        Hình ảnh 3:
-                        <input
-                          type="file"
-                          onChange={handleImageChange3}
-                          className="border border-gray-300 rounded p-1 w-full"
-                          accept="image/*"
-                        />
-                      </label>
-                      <label className="block mb-2">
-                        Hình ảnh 4:
-                        <input
-                          type="file"
-                          onChange={handleImageChange4}
-                          className="border border-gray-300 rounded p-1 w-full"
-                          accept="image/*"
-                        />
-                      </label>
-                      <label className="block mb-2">
-                        Hình ảnh 5:
-                        <input
-                          type="file"
-                          onChange={handleImageChange5}
-                          className="border border-gray-300 rounded p-1 w-full"
-                          accept="image/*"
-                        />
-                      </label>
-                      <label className="block mb-2">
-                        Video xác thực đồ chơi:
-                        <input
-                          type="file"
-                          onChange={handleVideo}
-                          className="border border-gray-300 rounded p-1 w-full"
                           accept="video/*"
+                          onChange={(e) => handleFileChange(e, "video")}
+                          className="hidden"
+                          id="video-input"
                         />
-                      </label>
+                        <label
+                          htmlFor="video-input"
+                          className="text-blue-500 underline cursor-pointer"
+                        >
+                          chọn tệp
+                        </label>
+                      </div>
+
                       <button
                         type="submit"
                         className="mt-4 p-2 bg-blue-500 text-white rounded"
@@ -1666,8 +1768,7 @@ const InformationLessor = () => {
       "Expired",
       "Delivering",
       "Checking",
-      "DeliveringToShop",
-      "DeliveringToUser",
+      "AcceptFee",
       "Complete",
     ];
     const getStatusIndex = (status) => stages.indexOf(status);
@@ -1747,7 +1848,12 @@ const InformationLessor = () => {
                             className="w-20 h-20 object-cover mr-4"
                           />
                           <div className="flex-grow">
-                            <h4 className="font-semibold">{item.toyName}</h4>
+                            <h4
+                              className="font-semibold"
+                              style={{ width: "40%" }}
+                            >
+                              {item.toyName}
+                            </h4>
                             <p>
                               Giá cọc: {(item.unitPrice || 0).toLocaleString()}{" "}
                               VNĐ
@@ -1795,13 +1901,26 @@ const InformationLessor = () => {
                               </div>
                             )}
 
-                          {item.status === "DeliveringToShop" && (
+                          {item.status === "Delivering" && (
                             <div>
                               <button
                                 className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
-                                onClick={() => handleFinishOrderDetail(item)}
+                                onClick={() =>
+                                  handleDeliveringOrderDetail(item)
+                                }
                               >
                                 Đã nhận hàng
+                              </button>
+                            </div>
+                          )}
+
+                          {item.status === "Checking" && (
+                            <div>
+                              <button
+                                className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                                onClick={() => handleCheckingOrderDetail(item)}
+                              >
+                                Xác nhận đánh giá
                               </button>
                             </div>
                           )}
@@ -1831,20 +1950,17 @@ const InformationLessor = () => {
                                   <div className="text-sm">Chờ trả hàng</div>
                                 )}
                                 {stage === "Delivering" && (
-                                  <div className="text-sm">
-                                    Giao hàng tới kho đánh giá
-                                  </div>
+                                  <div className="text-sm">Đang trả hàng</div>
                                 )}
 
                                 {stage === "Checking" && (
                                   <div className="text-sm">Đang đánh giá</div>
                                 )}
 
-                                {stage === "DeliveringToShop" && (
-                                  <div className="text-sm">Đồ chơi tốt</div>
-                                )}
-                                {stage === "DeliveringToUser" && (
-                                  <div className="text-sm">Đồ chơi bị hỏng</div>
+                                {stage == "AcceptFee" && (
+                                  <div className="text-sm">
+                                    Phí phạt (Nếu có)
+                                  </div>
                                 )}
                                 {stage === "Complete" && (
                                   <div className="text-sm">Hoàn thành</div>
