@@ -51,9 +51,10 @@ const InformationCustomer = () => {
   const [formData, setFormData] = useState({});
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [imageCheck, setImageCheck] = useState([]);
   const [openImage, setOpenImage] = useState("");
-  const [openVideoReturn, setOpenVideoReturn] = useState("");
+  const [openVideoReturn, setOpenVideoReturn] = useState([]);
+  const [openVideoReview, setOpenVideoReview] = useState([]);
+  const [isReviewFormVisible, setIsReviewFormVisible] = useState(false);
 
   useEffect(() => {
     const userDataCookie1 = Cookies.get("userData");
@@ -409,13 +410,15 @@ const InformationCustomer = () => {
     }
   };
 
-  const handleFileChange2 = (event, fieldName) => {
+  const handleFileChange2 = (event, fieldName, index) => {
+    console.log(index);
+
     const file = event.target.files[0];
     if (!file) return;
 
     // Kiểm tra kích thước tệp
-    if (fieldName.startsWith("image") && file.size > MAX_IMAGE_SIZE) {
-      alert("Hình ảnh phải có kích thước tối đa 2MB.");
+    if (fieldName === "video" && !file.type.startsWith("video/")) {
+      alert("Vui lòng chỉ thả video vào ô này.");
       return;
     }
 
@@ -424,18 +427,51 @@ const InformationCustomer = () => {
       return;
     }
 
-    // Nếu hợp lệ, lưu tệp vào state
-    setOpenVideoReturn((prev) => ({ ...prev, [fieldName]: file }));
-    console.log(openVideoReturn);
+    setOpenVideoReturn((prev) => {
+      const updatedVideos = [...(prev[fieldName] || [])];
+      updatedVideos[index] = file;
+      return { ...prev, [fieldName]: updatedVideos };
+    });
+    console.log(openVideoReturn.video);
   };
 
-  const handleDrop = (event, fieldName) => {
+  const handleFileChangeReview = (event, fieldName, index) => {
+    console.log(index);
+
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (fieldName === "video" && file.size > MAX_VIDEO_SIZE) {
+      alert("Video phải có kích thước tối đa 10MB.");
+      return;
+    }
+
+    setOpenVideoReview(file);
+    console.log(openVideoReturn.video);
+  };
+
+  const handleDropReview = (event, fieldName, index) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (!file) return;
+
+    if (fieldName === "video" && file.size > MAX_VIDEO_SIZE) {
+      alert("Video phải có kích thước bé hơn 10MB.");
+      return;
+    }
+
+    // Nếu hợp lệ, cập nhật hoặc thêm video vào danh sách dựa trên index
+    setOpenVideoReview(file);
+    console.log(openVideoReturn.video);
+  };
+
+  const handleDrop = (event, fieldName, index) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
     if (!file) return;
 
     if (fieldName === "video" && !file.type.startsWith("video/")) {
-      alert("Vui lòng chỉ thả video vào ô này này.");
+      alert("Vui lòng chỉ thả video vào ô này.");
       return;
     }
 
@@ -444,9 +480,15 @@ const InformationCustomer = () => {
       return;
     }
 
-    // Nếu hợp lệ, lưu tệp vào state
-    setOpenVideoReturn((prev) => ({ ...prev, [fieldName]: file }));
+    // Nếu hợp lệ, cập nhật hoặc thêm video vào danh sách dựa trên index
+    setOpenVideoReturn((prev) => {
+      const updatedVideos = [...(prev[fieldName] || [])];
+      updatedVideos[index] = file; // Ghi đè tại vị trí index
+      return { ...prev, [fieldName]: updatedVideos };
+    });
+    console.log(openVideoReturn.video);
   };
+
   const handleInputChangeName = (e) => {
     setName(e);
   };
@@ -543,28 +585,6 @@ const InformationCustomer = () => {
         },
       })
       .then(async (response) => {
-        const mediaUrls = [];
-        for (const item of response.data) {
-          try {
-            const res = await apiOrderCheckImages.get(
-              `/order-detail/${item.id}?pageIndex=1&pageSize=20`,
-              {
-                headers: {
-                  Authorization: `Bearer ${Cookies.get("userToken")}`,
-                },
-              }
-            );
-
-            // Lấy mediaUrl từ phản hồi và thêm vào mảng tạm
-            const mediaUrl = res.data[0]?.mediaUrl || "";
-            mediaUrls.push(mediaUrl);
-          } catch (error) {
-            console.error(`Error fetching image for item ${item.id}:`, error);
-          }
-        }
-
-        setImageCheck(mediaUrls);
-
         setOrderDetails(response.data);
         console.log(response.data);
 
@@ -678,13 +698,15 @@ const InformationCustomer = () => {
       });
   };
 
-  const handleReturnSoon = (order) => {
-    if (openVideoReturn == null || openVideoReturn == "") {
-      alert("bạn chưa chọn video của đồ chơi trước khi trả hàng !");
-    } else {
+  const handleReturnSoon = (order, index) => {
+    if (
+      openVideoReturn &&
+      Array.isArray(openVideoReturn.video) &&
+      openVideoReturn.video[index] != null
+    ) {
       var formData = new FormData();
 
-      formData.append(`checkImageUrls`, openVideoReturn.video);
+      formData.append(`checkImageUrls`, openVideoReturn.video[index]);
 
       apiOrderCheckImages
         .post("?orderDetailId=" + order.id, formData, {
@@ -706,6 +728,8 @@ const InformationCustomer = () => {
               ViewDetails();
             });
         });
+    } else {
+      alert("bạn chưa chọn video của đồ chơi trước khi trả hàng !");
     }
   };
 
@@ -2286,10 +2310,7 @@ const InformationCustomer = () => {
                           )}
 
                           <div className="flex-grow">
-                            <h4
-                              className="font-semibold"
-                              style={{ width: "40%" }}
-                            >
+                            <h4 className="font-semibold" style={{}}>
                               {item.toyName}
                             </h4>
                             <p>
@@ -2317,6 +2338,13 @@ const InformationCustomer = () => {
                                     .substring(9)
                                 : "Đang chờ"}
                             </p>
+                            {item.orderCheckImageUrl[1] != null &&
+                              item.orderCheckImageUrl[1] != "" && (
+                                <p className="text-red-500">
+                                  Phí phạt yêu cầu :{" "}
+                                  {item.fine.toLocaleString()} VNĐ
+                                </p>
+                              )}
                           </div>
                           {item.status === "Expired" && (
                             <div>
@@ -2340,26 +2368,93 @@ const InformationCustomer = () => {
                               </button>
                             </div>
                           )}
-                          {imageCheck[index] != null &&
-                            imageCheck[index] != "" && (
-                              <div>
-                                <img
-                                  src={
-                                    imageCheck[index] && imageCheck[index]
-                                      ? imageCheck[index]
-                                      : ""
-                                  }
-                                  alt={item.name}
-                                  style={{
-                                    width: "160px",
-                                    height: "160px",
-                                    objectFit: "cover",
-                                    marginRight: "16px",
-                                  }}
-                                />
-                                <div>Tình trạng đồ chơi</div>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: "16px",
+                            }}
+                          >
+                            {item.orderCheckImageUrl[0] != null &&
+                              item.orderCheckImageUrl[0] != "" && (
+                                <div>
+                                  <video
+                                    src={
+                                      item.orderCheckImageUrl[0] &&
+                                      item.orderCheckImageUrl[0]
+                                        ? item.orderCheckImageUrl[0]
+                                        : ""
+                                    }
+                                    style={{
+                                      width: "300px",
+                                      height: "160px",
+                                      objectFit: "cover",
+                                      marginRight: "16px",
+                                    }}
+                                    controls
+                                    muted
+                                  >
+                                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                                  </video>
+                                  <div>Video tình trạng đồ chơi của tôi</div>
+                                </div>
+                              )}
+
+                            {item.orderCheckImageUrl[1] != null &&
+                              item.orderCheckImageUrl[1] != "" && (
+                                <div>
+                                  <video
+                                    src={
+                                      item.orderCheckImageUrl[1] &&
+                                      item.orderCheckImageUrl[1]
+                                        ? item.orderCheckImageUrl[1]
+                                        : ""
+                                    }
+                                    style={{
+                                      width: "300px",
+                                      height: "160px",
+                                      objectFit: "cover",
+                                      marginRight: "16px",
+                                      marginLeft: "16px",
+                                    }}
+                                    controls
+                                    muted
+                                  >
+                                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                                  </video>
+                                  <div>
+                                    Video tình trạng đồ chơi người thuê gửi
+                                  </div>
+                                </div>
+                              )}
+
+                            {item.status === "AcceptFee" && (
+                              <div
+                                style={{
+                                  width: "300px",
+                                  height: "160px",
+                                  objectFit: "cover",
+                                  marginRight: "16px",
+                                  marginLeft: "16px",
+                                }}
+                              >
+                                <button
+                                  className="flex items-center mb-2 px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
+                                  // onClick={() => handleFinishOrderDetail(item)}
+                                >
+                                  Chấp nhận phí phạt
+                                </button>
+
+                                <button
+                                  className="flex items-center mb-2 px-4 py-2 bg-red-500 text-white font-semibold rounded-md shadow hover:bg-red-600 transition duration-200 ease-in-out"
+                                  // onClick={() => handleFinishOrderDetail(item)}
+                                >
+                                  Không chấp nhận
+                                </button>
                               </div>
                             )}
+                          </div>
 
                           {item.status === "DeliveringToUser" && (
                             <div>
@@ -2375,7 +2470,7 @@ const InformationCustomer = () => {
                           {item.status === "Processing" && (
                             <div
                               className="border border border-gray-300 rounded p-4 mb-4 w-full text-center"
-                              onDrop={(e) => handleDrop(e, "video")}
+                              onDrop={(e) => handleDrop(e, "video", index)}
                               onDragOver={(e) => e.preventDefault()}
                               style={{
                                 width: "600px", // Kích thước cố định (có thể tùy chỉnh)
@@ -2383,12 +2478,12 @@ const InformationCustomer = () => {
                                 overflow: "hidden",
                               }}
                             >
-                              {openVideoReturn ? (
+                              {openVideoReturn?.video?.[index] ? (
                                 <video
                                   controls
                                   className="w-full h-auto max-h-40 object-contain"
                                   src={URL.createObjectURL(
-                                    openVideoReturn.video
+                                    openVideoReturn.video[index]
                                   )}
                                 />
                               ) : (
@@ -2396,13 +2491,14 @@ const InformationCustomer = () => {
                               )}
                               <input
                                 type="file"
-                                accept="video/*"
-                                onChange={(e) => handleFileChange2(e, "video")}
+                                onChange={(e) =>
+                                  handleFileChange2(e, "video", index)
+                                }
                                 className="hidden"
-                                id="video-input"
+                                id={`video-input-${index}`}
                               />
                               <label
-                                htmlFor="video-input"
+                                htmlFor={`video-input-${index}`}
                                 className="text-blue-500 underline cursor-pointer"
                               >
                                 chọn tệp
@@ -2413,7 +2509,7 @@ const InformationCustomer = () => {
                             <div>
                               <button
                                 className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
-                                onClick={() => handleReturnSoon(item)}
+                                onClick={() => handleReturnSoon(item, index)}
                               >
                                 Trả hàng sớm
                               </button>
@@ -2422,62 +2518,149 @@ const InformationCustomer = () => {
                           {item.ratingId == null &&
                             item.status == "Complete" && (
                               <div>
-                                <form
-                                  onSubmit={(e) =>
-                                    handleSubmitReview(e, item.id, item)
-                                  }
-                                  className="flex items-center space-x-6 mt-4"
-                                >
-                                  {/* Chọn số sao */}
-                                  <div className="flex items-center space-x-2">
-                                    <label className="text-sm font-medium text-gray-700">
-                                      Đánh giá:
-                                    </label>
-                                    <div className="flex">
-                                      {[1, 2, 3, 4, 5].map((star) => (
+                                {isReviewFormVisible && (
+                                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                                    <div className="bg-white p-6 rounded-md shadow-lg w-96 relative">
+                                      <form
+                                        onSubmit={(e) =>
+                                          handleSubmitReview(e, item.id, item)
+                                        }
+                                        className="flex flex-col space-y-4"
+                                      >
+                                        {/* Nút đóng (X) nằm bên trong form */}
                                         <button
-                                          key={star}
-                                          type="button"
-                                          className={`text-2xl ${
-                                            star <= reviews[item.id].rating
-                                              ? "text-yellow-400"
-                                              : "text-gray-300"
-                                          } transition-colors duration-200 ease-in-out`}
-                                          onClick={() =>
-                                            handleRatingChange(item.id, star)
-                                          }
+                                          type="button" // Sử dụng type="button" để ngăn không gửi form
+                                          onClick={() => {
+                                            setOpenVideoReview("");
+                                            setIsReviewFormVisible(false);
+                                          }}
+                                          className="absolute top-3 right-3 text-xl text-red-500 hover:text-red-700"
                                         >
-                                          ★
+                                          ✖
                                         </button>
-                                      ))}
+
+                                        {/* Chọn số sao */}
+                                        <div className="flex items-center space-x-2">
+                                          <label className="text-sm font-medium text-gray-700">
+                                            Đánh giá:
+                                          </label>
+                                          <div className="flex">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                              <button
+                                                key={star}
+                                                type="button"
+                                                className={`text-2xl ${
+                                                  star <=
+                                                  reviews[item.id].rating
+                                                    ? "text-yellow-400"
+                                                    : "text-gray-300"
+                                                } transition-colors duration-200 ease-in-out`}
+                                                onClick={() =>
+                                                  handleRatingChange(
+                                                    item.id,
+                                                    star
+                                                  )
+                                                }
+                                              >
+                                                ★
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+
+                                        {/* Nội dung đánh giá */}
+                                        <div>
+                                          <textarea
+                                            value={reviews[item.id].review}
+                                            onChange={(e) =>
+                                              handleReviewChange(
+                                                item.id,
+                                                e.target.value
+                                              )
+                                            }
+                                            rows="4"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                            placeholder="Nhập nội dung đánh giá..."
+                                            required
+                                          ></textarea>
+                                        </div>
+                                        <div
+                                          className="border border border-gray-300 rounded p-4 mb-4 w-full text-center"
+                                          onDrop={(e) =>
+                                            handleDropReview(e, "video", index)
+                                          }
+                                          onDragOver={(e) => e.preventDefault()}
+                                        >
+                                          {openVideoReview ? (
+                                            // Kiểm tra xem tệp là video hay hình ảnh
+                                            openVideoReview.type.startsWith(
+                                              "video/"
+                                            ) ? (
+                                              <video
+                                                controls
+                                                className="w-full h-auto max-h-40 object-contain"
+                                                src={URL.createObjectURL(
+                                                  openVideoReview
+                                                )}
+                                              />
+                                            ) : openVideoReview.type.startsWith(
+                                                "image/"
+                                              ) ? (
+                                              <img
+                                                className="w-full h-auto max-h-40 object-contain"
+                                                src={URL.createObjectURL(
+                                                  openVideoReview
+                                                )}
+                                                alt="Hình ảnh tải lên"
+                                              />
+                                            ) : (
+                                              <p>Định dạng không hợp lệ</p> // Nếu tệp không phải là video hoặc hình ảnh
+                                            )
+                                          ) : (
+                                            <p>
+                                              Kéo và thả video/hình ảnh tại đây
+                                              hoặc nhấp vào
+                                            </p>
+                                          )}
+
+                                          <input
+                                            type="file"
+                                            onChange={(e) =>
+                                              handleFileChangeReview(
+                                                e,
+                                                "video",
+                                                index
+                                              )
+                                            }
+                                            className="hidden"
+                                            id={`video-input`}
+                                          />
+                                          <label
+                                            htmlFor={`video-input`}
+                                            className="text-blue-500 underline cursor-pointer"
+                                          >
+                                            chọn tệp
+                                          </label>
+                                        </div>
+                                        {/* Nút gửi đánh giá */}
+                                        <button
+                                          type="submit"
+                                          className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
+                                        >
+                                          Gửi
+                                        </button>
+                                      </form>
                                     </div>
                                   </div>
+                                )}
 
-                                  {/* Nội dung đánh giá */}
-                                  <div className="flex-1">
-                                    <textarea
-                                      value={reviews[item.id].review}
-                                      onChange={(e) =>
-                                        handleReviewChange(
-                                          item.id,
-                                          e.target.value
-                                        )
-                                      }
-                                      rows="2"
-                                      className="w-full px-4 py-8 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                      placeholder="Nhập nội dung đánh giá..."
-                                      required
-                                    ></textarea>
-                                  </div>
-
-                                  {/* Nút gửi đánh giá */}
-                                  <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
-                                  >
-                                    Gửi
-                                  </button>
-                                </form>
+                                {/* Nút mở form đánh giá */}
+                                <button
+                                  onClick={() => setIsReviewFormVisible(true)}
+                                  className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                                >
+                                  Đánh giá
+                                </button>
                               </div>
                             )}
                         </div>
@@ -2556,59 +2739,145 @@ const InformationCustomer = () => {
                         </div>
                         {item.ratingId == null && item.status == "Complete" && (
                           <div>
-                            <form
-                              onSubmit={(e) =>
-                                handleSubmitReview(e, item.id, item)
-                              }
-                              className="flex items-center space-x-6 mt-4"
-                            >
-                              {/* Chọn số sao */}
-                              <div className="flex items-center space-x-2">
-                                <label className="text-sm font-medium text-gray-700">
-                                  Đánh giá:
-                                </label>
-                                <div className="flex">
-                                  {[1, 2, 3, 4, 5].map((star) => (
+                            {isReviewFormVisible && (
+                              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                                <div className="bg-white p-6 rounded-md shadow-lg w-96 relative">
+                                  <form
+                                    onSubmit={(e) =>
+                                      handleSubmitReview(e, item.id, item)
+                                    }
+                                    className="flex flex-col space-y-4"
+                                  >
+                                    {/* Nút đóng (X) nằm bên trong form */}
                                     <button
-                                      key={star}
-                                      type="button"
-                                      className={`text-2xl ${
-                                        star <= reviews[item.id].rating
-                                          ? "text-yellow-400"
-                                          : "text-gray-300"
-                                      } transition-colors duration-200 ease-in-out`}
-                                      onClick={() =>
-                                        handleRatingChange(item.id, star)
-                                      }
+                                      type="button" // Sử dụng type="button" để ngăn không gửi form
+                                      onClick={() => {
+                                        setOpenVideoReview("");
+                                        setIsReviewFormVisible(false);
+                                      }}
+                                      className="absolute top-3 right-3 text-xl text-red-500 hover:text-red-700"
                                     >
-                                      ★
+                                      ✖
                                     </button>
-                                  ))}
+
+                                    {/* Chọn số sao */}
+                                    <div className="flex items-center space-x-2">
+                                      <label className="text-sm font-medium text-gray-700">
+                                        Đánh giá:
+                                      </label>
+                                      <div className="flex">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                          <button
+                                            key={star}
+                                            type="button"
+                                            className={`text-2xl ${
+                                              star <= reviews[item.id].rating
+                                                ? "text-yellow-400"
+                                                : "text-gray-300"
+                                            } transition-colors duration-200 ease-in-out`}
+                                            onClick={() =>
+                                              handleRatingChange(item.id, star)
+                                            }
+                                          >
+                                            ★
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    {/* Nội dung đánh giá */}
+                                    <div>
+                                      <textarea
+                                        value={reviews[item.id].review}
+                                        onChange={(e) =>
+                                          handleReviewChange(
+                                            item.id,
+                                            e.target.value
+                                          )
+                                        }
+                                        rows="4"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        placeholder="Nhập nội dung đánh giá..."
+                                        required
+                                      ></textarea>
+                                    </div>
+                                    <div
+                                      className="border border border-gray-300 rounded p-4 mb-4 w-full text-center"
+                                      onDrop={(e) =>
+                                        handleDropReview(e, "video", index)
+                                      }
+                                      onDragOver={(e) => e.preventDefault()}
+                                    >
+                                      {openVideoReview ? (
+                                        // Kiểm tra xem tệp là video hay hình ảnh
+                                        openVideoReview.type.startsWith(
+                                          "video/"
+                                        ) ? (
+                                          <video
+                                            controls
+                                            className="w-full h-auto max-h-40 object-contain"
+                                            src={URL.createObjectURL(
+                                              openVideoReview
+                                            )}
+                                          />
+                                        ) : openVideoReview.type.startsWith(
+                                            "image/"
+                                          ) ? (
+                                          <img
+                                            className="w-full h-auto max-h-40 object-contain"
+                                            src={URL.createObjectURL(
+                                              openVideoReview
+                                            )}
+                                            alt="Hình ảnh tải lên"
+                                          />
+                                        ) : (
+                                          <p>Định dạng không hợp lệ</p> // Nếu tệp không phải là video hoặc hình ảnh
+                                        )
+                                      ) : (
+                                        <p>
+                                          Kéo và thả video/hình ảnh tại đây hoặc
+                                          nhấp vào
+                                        </p>
+                                      )}
+
+                                      <input
+                                        type="file"
+                                        onChange={(e) =>
+                                          handleFileChangeReview(
+                                            e,
+                                            "video",
+                                            index
+                                          )
+                                        }
+                                        className="hidden"
+                                        id={`video-input`}
+                                      />
+                                      <label
+                                        htmlFor={`video-input`}
+                                        className="text-blue-500 underline cursor-pointer"
+                                      >
+                                        chọn tệp
+                                      </label>
+                                    </div>
+                                    {/* Nút gửi đánh giá */}
+                                    <button
+                                      type="submit"
+                                      className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
+                                    >
+                                      Gửi
+                                    </button>
+                                  </form>
                                 </div>
                               </div>
+                            )}
 
-                              {/* Nội dung đánh giá */}
-                              <div className="flex-1">
-                                <textarea
-                                  value={reviews[item.id].review}
-                                  onChange={(e) =>
-                                    handleReviewChange(item.id, e.target.value)
-                                  }
-                                  rows="2"
-                                  className="w-full px-4 py-8 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                  placeholder="Nhập nội dung đánh giá..."
-                                  required
-                                ></textarea>
-                              </div>
-
-                              {/* Nút gửi đánh giá */}
-                              <button
-                                type="submit"
-                                className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
-                              >
-                                Gửi
-                              </button>
-                            </form>
+                            {/* Nút mở form đánh giá */}
+                            <button
+                              onClick={() => setIsReviewFormVisible(true)}
+                              className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                            >
+                              Đánh giá
+                            </button>
                           </div>
                         )}
                       </div>
