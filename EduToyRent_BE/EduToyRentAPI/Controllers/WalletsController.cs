@@ -11,6 +11,7 @@ using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -27,6 +28,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Wallets
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<WalletResponse>> GetWallets(int pageIndex = 1, int pageSize = 50)
         {
             var wallets = _unitOfWork.WalletRepository.Get(
@@ -47,6 +49,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Wallets/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<WalletResponse>> GetWallet(int id)
         {
             var wallet = _unitOfWork.WalletRepository.GetByID(id);

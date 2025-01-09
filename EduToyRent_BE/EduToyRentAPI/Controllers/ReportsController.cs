@@ -4,6 +4,7 @@ using EduToyRentRepositories.Interface;
 using EduToyRentRepositories.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduToyRentAPI.Controllers
@@ -21,6 +22,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Reports
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<ReportResponse>> GetReports(int pageIndex = 1, int pageSize = 20)
         {
             var reports = _unitOfWork.ReportRepository.Get(
@@ -54,6 +56,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Reports/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public ActionResult<ReportResponse> GetReport(int id)
         {
             var report = _unitOfWork.ReportRepository.Get(
@@ -186,6 +189,7 @@ namespace EduToyRentAPI.Controllers
         }
         // GET: api/Reports/Status/{status}
         [HttpGet("Status/{status}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<ReportResponse>> GetReportsByStatus(string status, int pageIndex = 1, int pageSize = 20)
         {
             var reports = _unitOfWork.ReportRepository.Get(
@@ -224,6 +228,7 @@ namespace EduToyRentAPI.Controllers
         }
         // GET: api/Reports/OrderDetail/{orderDetailId}
         [HttpGet("OrderDetail/{orderDetailId}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<ReportResponse>> GetReportsByOrderDetailId(int orderDetailId, int pageIndex = 1, int pageSize = 20)
         {
             var reports = _unitOfWork.ReportRepository.Get(

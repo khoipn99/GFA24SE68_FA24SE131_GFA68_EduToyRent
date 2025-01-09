@@ -30,6 +30,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/RatingImages
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<OrderCheckImageResponse>> GetOrderCheckImages(int pageIndex = 1, int pageSize = 20)
         {
             var orderCheckImages = _unitOfWork.OrderCheckImageRepository.Get(
@@ -49,6 +50,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/RatingImages/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<OrderCheckImageResponse>> GetOrderCheckImage(int id)
         {
             var orderCheckImage = _unitOfWork.OrderCheckImageRepository.GetByID(id);
@@ -73,7 +75,7 @@ namespace EduToyRentAPI.Controllers
         // POST: api/RatingImages
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<OrderCheckImage>> UploadOrderCheckImage([FromForm] List<IFormFile> checkImageUrls, int orderDetailId)
+        public async Task<ActionResult<OrderCheckImage>> UploadOrderCheckImage([FromForm] List<IFormFile> checkImageUrls, int orderDetailId, string status)
         {
             var orderDetail = _unitOfWork.OrderDetailRepository.GetByID(orderDetailId);
 
@@ -88,11 +90,12 @@ namespace EduToyRentAPI.Controllers
             }
 
             var imageUrls = await _fireBaseService.UploadImagesAsync(checkImageUrls);
+            status = string.IsNullOrEmpty(status) ? "Active" : status;
 
             var checkImages = imageUrls.Select(mediaUrl => new OrderCheckImage
             {
                 MediaUrl = mediaUrl,
-                Status = "Active",
+                Status = status,
                 OrderDetailId = orderDetailId
             }).ToList();
 

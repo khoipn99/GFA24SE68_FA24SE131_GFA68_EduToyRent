@@ -11,6 +11,7 @@ using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
 using Google.Apis.Storage.v1.Data;
 using System.Drawing.Printing;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -27,6 +28,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Orders
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<OrderResponse>> GetOrders(int pageIndex = 1, int pageSize = 20)
         {
             var orders = _unitOfWork.OrderRepository.Get(
@@ -57,6 +59,7 @@ namespace EduToyRentAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [EnableQuery]
         public ActionResult<OrderResponse> GetOrder(int id)
         {
             var orders = _unitOfWork.OrderRepository.Get(
@@ -195,6 +198,7 @@ namespace EduToyRentAPI.Controllers
         }
         // GET: api/Orders/ByUserId
         [HttpGet("ByUserId")]
+        [EnableQuery]
         public ActionResult<IEnumerable<OrderResponse>> GetOrdersByUserId(int userId, string? status = null, int pageIndex = 1, int pageSize = 20)
         {
             var user = _unitOfWork.UserRepository.GetByID(userId);
@@ -247,6 +251,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Orders/Status/{status}
         [HttpGet("Status/{status}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<OrderResponse>> GetOrdersByStatus(string status, int pageIndex = 1, int pageSize = 20)
         {
             var orders = _unitOfWork.OrderRepository.Get(
@@ -283,6 +288,7 @@ namespace EduToyRentAPI.Controllers
         }
         // GET: api/Orders/ByShop
         [HttpGet("ByShop")]
+        [EnableQuery]
         public ActionResult<IEnumerable<OrderResponse>> GetOrdersByShop(int shopId, string? status = null, int pageIndex = 1, int pageSize = 20)
         {
             var shop = _unitOfWork.UserRepository.GetByID(shopId);

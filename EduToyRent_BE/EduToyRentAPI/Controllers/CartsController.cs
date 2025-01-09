@@ -10,6 +10,7 @@ using EduToyRentRepositories.DTO.Request;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -27,6 +28,7 @@ namespace EduToyRentAPI.Controllers
         // GET: api/Carts
         [HttpGet]
         //[Authorize(Roles = "1")]
+        [EnableQuery]
         public ActionResult<IEnumerable<CartResponse>> GetCarts(int pageIndex = 1, int pageSize = 50)
         {
             var carts = _unitOfWork.CartRepository.Get(pageIndex: pageIndex, pageSize: pageSize)
@@ -44,6 +46,7 @@ namespace EduToyRentAPI.Controllers
         // GET: api/Carts/5
         [HttpGet("{id}")]
         //[Authorize(Roles = "1,3")]
+        [EnableQuery]
         public async Task<ActionResult<CartResponse>> GetCart(int id)
         {
             var cart = _unitOfWork.CartRepository.GetByID(id);

@@ -4,6 +4,7 @@ using EduToyRentRepositories.Interface;
 using EduToyRentRepositories.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduToyRentAPI.Controllers
@@ -21,6 +22,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/PlatformFees
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<PlatformFeeResponse>> GetPlatformFees(int pageIndex = 1, int pageSize = 20)
         {
             var platformFees = _unitOfWork.PlatformFeeRepository.Get(
@@ -38,6 +40,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/PlatformFees/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public ActionResult<PlatformFeeResponse> GetPlatformFee(int id)
         {
             var platformFee = _unitOfWork.PlatformFeeRepository.GetByID(id);

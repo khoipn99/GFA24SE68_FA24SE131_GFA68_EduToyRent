@@ -2,6 +2,7 @@
 using EduToyRentRepositories.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduToyRentAPI.Controllers
@@ -19,6 +20,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/OrderType
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<OrderType>> GetOrderTypes(int pageIndex = 1, int pageSize = 50)
         {
             var orderTypes = _unitOfWork.OrderTypeRepository.Get(
@@ -30,6 +32,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/OrderType/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<OrderType>> GetOrderType(int id)
         {
             var orderType = _unitOfWork.OrderTypeRepository.GetByID(id);
