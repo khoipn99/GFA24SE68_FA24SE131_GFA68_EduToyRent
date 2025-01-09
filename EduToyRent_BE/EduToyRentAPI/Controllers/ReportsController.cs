@@ -1,4 +1,5 @@
-﻿using EduToyRentRepositories.DTO.Request;
+﻿using EduToyRentAPI.FireBaseService;
+using EduToyRentRepositories.DTO.Request;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
 using EduToyRentRepositories.Models;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -14,10 +16,11 @@ namespace EduToyRentAPI.Controllers
     public class ReportsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-
-        public ReportsController(IUnitOfWork unitOfWork)
+        private readonly IFireBaseService _fireBaseService;
+        public ReportsController(IUnitOfWork unitOfWork, IFireBaseService fireBaseService)
         {
             _unitOfWork = unitOfWork;
+            _fireBaseService = fireBaseService;
         }
 
         // GET: api/Reports
@@ -79,16 +82,42 @@ namespace EduToyRentAPI.Controllers
 
         // PUT: api/Reports/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutReport(int id, ReportRequest reportRequest)
+        public async Task<IActionResult> PutReport([FromForm] ReportRequest reportRequest, int id)
         {
             var report = _unitOfWork.ReportRepository.GetByID(id);
-
             if (report == null)
             {
-                return NotFound();
+                return NotFound(new { Message = "Report not found" });
             }
 
-            report.VideoUrl = reportRequest.VideoUrl;
+            if (reportRequest.VideoUrl == null || reportRequest.VideoUrl.Length == 0)
+            {
+                return BadRequest(new { Message = "No video file was uploaded" });
+            }
+
+            if (!string.IsNullOrEmpty(report.VideoUrl))
+            {
+                try
+                {
+                    await _fireBaseService.DeleteImageAsync(report.VideoUrl);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"Failed to delete old video: {ex.Message}" });
+                }
+            }
+
+            string newVideoUrl;
+            try
+            {
+                newVideoUrl = await _fireBaseService.UploadImageAsync(reportRequest.VideoUrl);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"Failed to upload new video: {ex.Message}" });
+            }
+
+            report.VideoUrl = newVideoUrl;
             report.Description = reportRequest.Description;
             report.Status = reportRequest.Status;
             report.OrderDetailId = reportRequest.OrderDetailId;
@@ -102,7 +131,7 @@ namespace EduToyRentAPI.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ReportExists(id))
+                if (!_unitOfWork.ReportRepository.GetV2().Any(e => e.Id == id))
                 {
                     return NotFound();
                 }
@@ -115,13 +144,36 @@ namespace EduToyRentAPI.Controllers
             return NoContent();
         }
 
+
         // POST: api/Reports
         [HttpPost]
-        public async Task<ActionResult<ReportResponse>> PostReport(ReportRequest reportRequest)
+        [EnableQuery]
+        public async Task<ActionResult<ReportResponse>> PostReport([FromForm] ReportRequest reportRequest)
         {
+            var orderDetail = _unitOfWork.OrderDetailRepository.GetByID(reportRequest.OrderDetailId);
+            if (orderDetail == null)
+            {
+                return NotFound(new { Message = "Order detail not found" });
+            }
+
+            if (reportRequest.VideoUrl == null || reportRequest.VideoUrl.Length == 0)
+            {
+                return BadRequest(new { Message = "No video file was uploaded" });
+            }
+
+            string uploadedVideoUrl;
+            try
+            {
+                uploadedVideoUrl = await _fireBaseService.UploadImageAsync(reportRequest.VideoUrl);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"Failed to upload video: {ex.Message}" });
+            }
+
             var report = new Report
             {
-                VideoUrl = reportRequest.VideoUrl,
+                VideoUrl = uploadedVideoUrl,
                 Description = reportRequest.Description,
                 Status = reportRequest.Status,
                 OrderDetailId = reportRequest.OrderDetailId,
@@ -134,6 +186,11 @@ namespace EduToyRentAPI.Controllers
             var createdReport = _unitOfWork.ReportRepository.Get(
                 includeProperties: "OrderDetail.Toy,User",
                 filter: r => r.Id == report.Id).FirstOrDefault();
+
+            if (createdReport == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Failed to retrieve the created report" });
+            }
 
             var reportResponse = new ReportResponse
             {
