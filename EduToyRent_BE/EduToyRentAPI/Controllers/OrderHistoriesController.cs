@@ -10,6 +10,7 @@ using EduToyRentRepositories.DTO.Request;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
 using System.Security.Claims;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -26,6 +27,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/OrderHistory
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<OrderHistoryResponse>> GetOrderHistories(int pageIndex = 1, int pageSize = 50)
         {
             var orderHistories = _unitOfWork.OrderHistoryRepository.Get(
@@ -47,6 +49,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/OrderHistory/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<OrderHistoryResponse>> GetOrderHistory(int id)
         {
             var orderHistory = _unitOfWork.OrderHistoryRepository.GetByID(id);
@@ -168,6 +171,7 @@ namespace EduToyRentAPI.Controllers
         }
         // GET: api/OrderHistory/byOrderDetailId/{orderDetailId}
         [HttpGet("byOrderDetailId/{orderDetailId}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<OrderHistoryResponse>> GetByOrderDetailId(int orderDetailId, int pageIndex = 1, int pageSize = 50)
         {
             var orderHistories = _unitOfWork.OrderHistoryRepository.Get(
@@ -194,6 +198,7 @@ namespace EduToyRentAPI.Controllers
         }
         // GET: api/OrderHistory/byUserUpdateId/{userUpdateId}
         [HttpGet("byUserUpdateId/{userUpdateId}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<OrderHistoryResponse>> GetByUserUpdateId(int userUpdateId, int pageIndex = 1, int pageSize = 50)
         {
             var orderHistories = _unitOfWork.OrderHistoryRepository.Get(

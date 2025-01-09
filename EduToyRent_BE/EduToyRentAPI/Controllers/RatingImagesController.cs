@@ -30,6 +30,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/RatingImages
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<RatingImageResponse>> GetRatingImages(int pageIndex = 1, int pageSize = 20)
         {
             var ratingImages = _unitOfWork.RatingImageRepository.Get(
@@ -49,6 +50,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/RatingImages/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<RatingImageResponse>> GetRatingImage(int id)
         {
             var ratingImage = _unitOfWork.RatingImageRepository.GetByID(id);

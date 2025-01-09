@@ -10,6 +10,7 @@ using EduToyRentRepositories.DTO.Request;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
 using System.Security.Claims;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -26,6 +27,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Messages
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<MessageResponse>> GetMessages(int pageIndex = 1, int pageSize = 50)
         {
             var messages = _unitOfWork.MessageRepository.Get(
@@ -49,6 +51,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Messages/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<MessageResponse>> GetMessage(int id)
         {
             var message = _unitOfWork.MessageRepository.GetByID(id);
@@ -164,6 +167,7 @@ namespace EduToyRentAPI.Controllers
         }
 
         [HttpGet("conversation/{conversationId}")]
+        [EnableQuery]
         public async Task<IActionResult> GetMessagesByConversation(int conversationId)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);

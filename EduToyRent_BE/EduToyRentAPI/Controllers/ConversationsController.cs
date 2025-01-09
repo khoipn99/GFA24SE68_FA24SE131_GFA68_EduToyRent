@@ -4,6 +4,7 @@ using EduToyRentRepositories.Interface;
 using EduToyRentRepositories.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using System.Security.Claims;
 
 namespace EduToyRentAPI.Controllers
@@ -21,6 +22,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/v1/Conversations/my
         [HttpGet("my")]
+        [EnableQuery]
         public async Task<IActionResult> GetMyConversations()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -47,6 +49,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/v1/Conversations/{conversationId}
         [HttpGet("{conversationId}")]
+        [EnableQuery]
         public async Task<IActionResult> GetConversationById(int conversationId)
         {
             var conversation = _unitOfWork.ConversationRepository.GetByID(conversationId);
@@ -112,6 +115,7 @@ namespace EduToyRentAPI.Controllers
         }
 
         [HttpGet("user/{userId}")]
+        [EnableQuery]
         public async Task<IActionResult> GetConversationsByUserId(int userId)
         {
             var userConversations = await _unitOfWork.UserConversationRepository.GetAsync(

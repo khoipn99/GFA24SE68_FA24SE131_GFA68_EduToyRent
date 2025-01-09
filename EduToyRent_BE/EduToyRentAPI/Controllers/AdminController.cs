@@ -1,6 +1,7 @@
 ﻿using EduToyRentRepositories.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -16,6 +17,7 @@ namespace EduToyRentAPI.Controllers
         }
 
         [HttpGet("total")]
+        [EnableQuery]
         public ActionResult GetTotal()
         {
             var totalUsers = _unitOfWork.UserRepository.Get().ToList().Count;
@@ -33,6 +35,7 @@ namespace EduToyRentAPI.Controllers
         }
 
         [HttpGet("revenue")]
+        [EnableQuery]
         public ActionResult GetRevenue()
         {
             var totalRevenue = _unitOfWork.TransactionRepository.Get()
@@ -55,6 +58,7 @@ namespace EduToyRentAPI.Controllers
         }
 
         [HttpGet("revenue-by-time")]
+        [EnableQuery]
         public ActionResult GetRevenueByTime(DateTime? startDate, DateTime? endDate, bool? isMonth)
         {
             var transactions = _unitOfWork.TransactionRepository.Get();

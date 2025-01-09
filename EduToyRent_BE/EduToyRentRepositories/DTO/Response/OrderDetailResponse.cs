@@ -27,5 +27,6 @@ namespace EduToyRentRepositories.DTO.Response
         public List<string> ToyImgUrls { get; set; }
         public List<string>? ReportVideoUrl { get; set; }
         public List<string>? OrderCheckImageUrl { get; set; }
+        public List<string>? OrderCheckStatus { get; set; }
     }
 }

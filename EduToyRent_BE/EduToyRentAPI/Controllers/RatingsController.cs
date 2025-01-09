@@ -10,6 +10,7 @@ using EduToyRentRepositories.DTO.Request;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
 using EduToyRentRepositories.Implement;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -26,6 +27,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Ratings
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<RatingResponse>> GetRatings(int pageIndex = 1, int pageSize = 20)
         {
 
@@ -58,6 +60,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/Ratings/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public ActionResult<RatingResponse> GetRating(int id)
         {
             var rating = _unitOfWork.RatingRepository.GetByID(id);
@@ -249,6 +252,7 @@ namespace EduToyRentAPI.Controllers
             return NoContent();
         }
         [HttpGet("ByToyId/{toyId}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<RatingResponse>> GetRatingsByToyId(int toyId, int pageIndex = 1, int pageSize = 20)
         {
             var ratings = _unitOfWork.RatingRepository.Get(

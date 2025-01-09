@@ -11,6 +11,7 @@ using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.DTO.Request;
 using Microsoft.AspNetCore.SignalR;
 using EduToyRentAPI.Hubs;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -28,6 +29,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/v1/Notifications
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<NotificationResponse>> GetNotifications(int pageIndex = 1, int pageSize = 50)
         {
             var notifications = _unitOfWork.NotificationRepository.Get(
@@ -49,6 +51,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/v1/Notifications/{id}
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<NotificationResponse>> GetNotification(int id)
         {
             var notification = _unitOfWork.NotificationRepository.GetByID(id);
@@ -72,6 +75,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/v1/Notifications/User/{userId}
         [HttpGet("User/{userId}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<NotificationResponse>> GetNotificationsByUser(int userId, int pageIndex = 1, int pageSize = 50)
         {
             var notifications = _unitOfWork.NotificationRepository.Get(

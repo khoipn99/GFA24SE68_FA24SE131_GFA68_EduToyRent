@@ -11,6 +11,7 @@ using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Humanizer;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -27,6 +28,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/CartItems
         [HttpGet]
+        [EnableQuery]
         public ActionResult<IEnumerable<CartItemResponse>> GetCartItems(int pageIndex = 1, int pageSize = 50)
         {
             var cartItems = _unitOfWork.CartItemRepository.Get(pageIndex: pageIndex, pageSize: pageSize).ToList();
@@ -60,6 +62,7 @@ namespace EduToyRentAPI.Controllers
 
         // GET: api/CartItems/5
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<CartItemResponse>> GetCartItem(int id)
         {
             var cartItem = _unitOfWork.CartItemRepository.GetByID(id);
@@ -93,6 +96,7 @@ namespace EduToyRentAPI.Controllers
 
         // PUT: api/CartItems/5
         [HttpPut("{id}")]
+        [EnableQuery]
         public async Task<IActionResult> PutCartItem(int id, CartItemRequest cartItemRequest)
         {
             var cartItem = _unitOfWork.CartItemRepository.GetByID(id);
@@ -140,6 +144,7 @@ namespace EduToyRentAPI.Controllers
 
         // POST: api/CartItems
         [HttpPost]
+        [EnableQuery]
         public async Task<ActionResult<CartItemResponse>> PostCartItem(CartItemRequest cartItemRequest)
         {
             var toy = _unitOfWork.ToyRepository.GetByID(cartItemRequest.ToyId);
@@ -246,6 +251,7 @@ namespace EduToyRentAPI.Controllers
         }
         // lay cartItem theo cartId 
         [HttpGet("ByCartId/{cartId}")]
+        [EnableQuery]
         public ActionResult<IEnumerable<CartItemResponse>> GetCartItemsByCartId(int cartId)
         {
             var cartItems = _unitOfWork.CartItemRepository.Get(
