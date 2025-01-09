@@ -618,10 +618,14 @@ const AdminPage = () => {
       );
 
       console.log("Danh sách phí thuê mới log:", OrderTypesResponse.data);
-      const OrderType = OrderTypesResponse.data;
+      const allOrderTypes = OrderTypesResponse.data;
+
+      // Lấy 3 phần tử đầu tiên, không lấy phần tử cuối cùng
+      const filteredOrderTypes = allOrderTypes.slice(0, 3);
+
       // Cập nhật dữ liệu đồ chơi
-      setOrderType(OrderType);
-      console.log(`Danh sách phí thuê:`, OrderType);
+      setOrderType(filteredOrderTypes);
+      console.log(`Danh sách phí thuê (3 phần tử đầu):`, filteredOrderTypes);
     } catch (error) {
       console.error("Lỗi khi tải danh sách người dùng", error);
     }
@@ -1658,7 +1662,7 @@ const AdminPage = () => {
   const handlePlatformfee = async (id) => {
     try {
       // Gửi giá trị chuỗi trực tiếp thay vì đối tượng
-      console.log("d:", selectedPlatformFee);
+      console.log("Phí nền tảng nè:", selectedPlatformFee);
       const formData = new FormData();
 
       //Thêm các trường dữ liệu vào formData
@@ -4057,7 +4061,7 @@ const AdminPage = () => {
                                 </div>
                               </td>
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {user.percentPrice}
+                                {user.percentPrice * 100}%
                               </td>
 
                               <td className="p-4 space-x-2 whitespace-nowrap">
@@ -4127,11 +4131,13 @@ const AdminPage = () => {
                               </label>
                               <input
                                 type="number"
-                                value={selectedOrderType?.percentPrice || ""}
+                                value={
+                                  selectedOrderType?.percentPrice * 100 || ""
+                                }
                                 onChange={(e) =>
                                   setSelectedOrderType({
                                     ...selectedOrderType,
-                                    percentPrice: e.target.value,
+                                    percentPrice: e.target.value / 100,
                                   })
                                 }
                                 className="border border-gray-300 px-3 py-2 rounded-md w-full focus:ring-2 focus:ring-blue-500"
@@ -4206,7 +4212,7 @@ const AdminPage = () => {
                               key={user.id}
                             >
                               <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {user.percent}
+                                {user.percent * 100}%
                               </td>
 
                               <td className="p-4 space-x-2 whitespace-nowrap">
@@ -4251,11 +4257,11 @@ const AdminPage = () => {
                               </label>
                               <input
                                 type="number"
-                                value={selectedPlatformFee?.percent || ""}
+                                value={selectedPlatformFee?.percent * 100 || ""}
                                 onChange={(e) =>
                                   setSelectedPlatformFee({
                                     ...selectedPlatformFee,
-                                    percent: e.target.value,
+                                    percent: e.target.value / 100,
                                   })
                                 }
                                 className="border border-gray-300 px-3 py-2 rounded-md w-full focus:ring-2 focus:ring-blue-500"
