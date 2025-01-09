@@ -33,7 +33,9 @@ const InformationLessor = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [walletTransaction, setWalletTransaction] = useState([]);
   const [totalProfit, setTotalProfit] = useState(0);
-  const [imageCheck, setImageCheck] = useState([]);
+  const [openVideoReturn, setOpenVideoReturn] = useState("");
+  const [returnDescription, setReturnDescription] = useState("");
+  const [returnFee, setReturnFee] = useState(0);
 
   const navigate = useNavigate();
 
@@ -197,21 +199,6 @@ const InformationLessor = () => {
         },
       })
       .then((response) => {
-        response.data.map((item) => {
-          apiOrderCheckImages
-            .get("/order-detail/" + item.id + "?pageIndex=1&pageSize=20", {
-              headers: {
-                Authorization: `Bearer ${Cookies.get("userToken")}`,
-              },
-            })
-            .then((response) => {
-              setImageCheck((prev) => {
-                const mediaUrl = response.data[0]?.mediaUrl || "";
-
-                return [...prev.filter(() => false), mediaUrl];
-              });
-            });
-        });
         setOrderDetails(response.data);
         console.log(response.data);
       });
@@ -275,19 +262,28 @@ const InformationLessor = () => {
       });
   };
 
-  const handleCheckingOrderDetail = async (order) => {
-    var tmp = order;
-    tmp.status = "Checking";
-
-    await apiOrderDetail
-      .put("/" + order.id, tmp, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      })
-      .then((response) => {
-        ViewDetails();
-      });
+  const handleCheckingOrderDetail = async (order, index) => {
+    if (
+      (returnFee == 0 && returnDescription == "") ||
+      (returnFee == "" && returnDescription == "")
+    ) {
+      alert("xong");
+      //handleFinishOrderDetail(order);
+      return;
+    }
+    if (
+      returnFee != 0 &&
+      returnFee != "" &&
+      returnDescription != "" &&
+      openVideoReturn &&
+      Array.isArray(openVideoReturn.video) &&
+      openVideoReturn.video[index] != null
+    ) {
+      handleFeeOrderDetail(order, index);
+      // Xử lý logic khi các điều kiện đúng
+    } else {
+      alert("Bạn chưa nhập đủ thông tin phí phạt");
+    }
   };
 
   const handleFinishOrderDetail = async (order) => {
@@ -395,7 +391,7 @@ const InformationLessor = () => {
         await apiWallets.put(
           "/" + walletTmp.id,
           {
-            balance: walletTmp.balance + (order.rentPrice * 0.85 - 30000),
+            balance: walletTmp.balance + order.rentPrice * 0.85,
             withdrawMethod: walletTmp.withdrawMethod,
             withdrawInfo: walletTmp.withdrawInfo,
             status: walletTmp.status,
@@ -413,23 +409,6 @@ const InformationLessor = () => {
           {
             transactionType: "Nhận tiền từ đơn hàng",
             amount: parseInt(order.rentPrice * 0.85),
-            date: new Date().toISOString(),
-            walletId: customerInfo.walletId,
-            paymentTypeId: 5,
-            orderId: selectedOrder.id,
-            status: "Success",
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("userToken")}`,
-            },
-          }
-        );
-        await apiWalletTransaction.post(
-          "",
-          {
-            transactionType: "Phí ship của đơn hàng",
-            amount: -30000,
             date: new Date().toISOString(),
             walletId: customerInfo.walletId,
             paymentTypeId: 5,
@@ -463,11 +442,12 @@ const InformationLessor = () => {
               "",
               {
                 receiveMoney: order.unitPrice,
-                platformFee: order.rentPrice * 0.15 + 60000,
-                ownerReceiveMoney: order.rentPrice * 0.85 - 30000,
+                platformFee: order.rentPrice * 0.15,
+                ownerReceiveMoney: order.rentPrice * 0.85,
                 depositBackMoney: order.unitPrice - order.rentPrice,
                 status: "Success",
                 orderId: selectedOrder.id,
+                fineFee: 0,
                 date: new Date().toISOString(),
               },
               {
@@ -484,12 +464,14 @@ const InformationLessor = () => {
                 "",
                 {
                   receiveMoney: order.unitPrice,
-                  platformFee: order.rentPrice * 0.15 + 60000,
-                  ownerReceiveMoney: order.rentPrice * 0.85 - 30000,
+                  platformFee: order.rentPrice * 0.15,
+                  ownerReceiveMoney: order.rentPrice * 0.85,
                   depositBackMoney: order.unitPrice - order.rentPrice,
                   status: "ToyGood",
                   orderDetailId: order.id,
                   transactionId: response.data.id,
+                  platformFeeId: 1,
+                  fineFee: 0,
                   date: new Date().toISOString(),
                 },
                 {
@@ -506,18 +488,15 @@ const InformationLessor = () => {
               {
                 receiveMoney: transactionTmp[0].receiveMoney + order.unitPrice,
                 platformFee:
-                  transactionTmp[0].platformFee +
-                  order.rentPrice * 0.15 +
-                  60000,
+                  transactionTmp[0].platformFee + order.rentPrice * 0.15,
                 ownerReceiveMoney:
-                  transactionTmp[0].ownerReceiveMoney +
-                  order.rentPrice * 0.85 -
-                  30000,
+                  transactionTmp[0].ownerReceiveMoney + order.rentPrice * 0.85,
                 depositBackMoney:
                   transactionTmp[0].depositBackMoney +
                   (order.unitPrice - order.rentPrice),
                 status: "Success",
                 orderId: selectedOrder.id,
+                fineFee: 0,
                 date: new Date().toISOString(),
               },
               {
@@ -534,12 +513,14 @@ const InformationLessor = () => {
                 "",
                 {
                   receiveMoney: order.unitPrice,
-                  platformFee: order.rentPrice * 0.15 + 60000,
-                  ownerReceiveMoney: order.rentPrice * 0.85 - 30000,
+                  platformFee: order.rentPrice * 0.15,
+                  ownerReceiveMoney: order.rentPrice * 0.85,
                   depositBackMoney: order.unitPrice - order.rentPrice,
                   status: "ToyGood",
                   orderDetailId: order.id,
                   transactionId: transactionTmp[0].id,
+                  platformFeeId: 1,
+                  fineFee: 0,
                   date: new Date().toISOString(),
                 },
                 {
@@ -551,6 +532,269 @@ const InformationLessor = () => {
             });
         }
       });
+  };
+
+  const handleFeeOrderDetail = async (order, index) => {
+    var formData = new FormData();
+
+    formData.append(`checkImageUrls`, openVideoReturn.video[index]);
+
+    await apiOrderCheckImages
+      .post("?orderDetailId=" + order.id, formData, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        var tmp = order;
+        tmp.status = "AcceptFee";
+        tmp.fine = returnFee;
+        apiOrderDetail
+          .put("/" + order.id, tmp, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then((response) => {
+            ViewDetails();
+          });
+      });
+
+    // await apiToys
+    //   .get("/" + order.toyId, {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //     },
+    //   })
+    //   .then(async (response) => {
+    //     const updatedToy = {
+    //       name: response.data.name || "Default Toy Name",
+    //       description: response.data.description || "Default Description",
+    //       price: response.data.price || "0",
+    //       buyQuantity: response.data.buyQuantity || "0",
+    //       origin: response.data.origin || "Default Origin",
+    //       age: response.data.age || "All Ages",
+    //       brand: response.data.brand || "Default Brand",
+    //       categoryId: response.data.category.id || "1",
+    //       rentCount: response.data.rentCount || "0",
+    //       quantitySold: response.data.quantitySold || "0",
+    //       status: "Active",
+    //     };
+
+    //     await apiToys.put(`/${order.toyId}`, updatedToy, {
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //         Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //       },
+    //     });
+    //   });
+
+    // await apiUser
+    //   .get("/" + selectedOrder.userId, {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //     },
+    //   })
+    //   .then(async (response) => {
+    //     console.log(response.data);
+    //     const userTmp = response.data;
+    //     await apiWallets
+    //       .get("/" + userTmp.walletId, {
+    //         headers: {
+    //           Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //         },
+    //       })
+    //       .then(async (response2) => {
+    //         const walletTmp = response2.data;
+    //         console.log(walletTmp);
+    //         await apiWallets.put(
+    //           "/" + walletTmp.id,
+    //           {
+    //             balance: walletTmp.balance + (order.deposit - order.rentPrice),
+    //             withdrawMethod: walletTmp.withdrawMethod,
+    //             withdrawInfo: walletTmp.withdrawInfo,
+    //             status: walletTmp.status,
+    //             userId: walletTmp.userId,
+    //           },
+    //           {
+    //             headers: {
+    //               Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //             },
+    //           }
+    //         );
+    //         await apiWalletTransaction.post(
+    //           "",
+    //           {
+    //             transactionType: "Nhận lại tiền cọc",
+    //             amount: parseInt(order.deposit - order.rentPrice),
+    //             date: new Date().toISOString(),
+    //             walletId: walletTmp.id,
+    //             paymentTypeId: 5,
+    //             orderId: selectedOrder.id,
+    //             status: "Success",
+    //           },
+    //           {
+    //             headers: {
+    //               Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //             },
+    //           }
+    //         );
+    //       });
+    //   });
+
+    // await apiWallets
+    //   .get("/" + customerInfo.walletId, {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //     },
+    //   })
+    //   .then(async (response2) => {
+    //     const walletTmp = response2.data;
+    //     console.log(walletTmp);
+    //     await apiWallets.put(
+    //       "/" + walletTmp.id,
+    //       {
+    //         balance: walletTmp.balance + order.rentPrice * 0.85,
+    //         withdrawMethod: walletTmp.withdrawMethod,
+    //         withdrawInfo: walletTmp.withdrawInfo,
+    //         status: walletTmp.status,
+    //         userId: walletTmp.userId,
+    //       },
+    //       {
+    //         headers: {
+    //           Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //         },
+    //       }
+    //     );
+
+    //     await apiWalletTransaction.post(
+    //       "",
+    //       {
+    //         transactionType: "Nhận tiền từ đơn hàng",
+    //         amount: parseInt(order.rentPrice * 0.85),
+    //         date: new Date().toISOString(),
+    //         walletId: customerInfo.walletId,
+    //         paymentTypeId: 5,
+    //         orderId: selectedOrder.id,
+    //         status: "Success",
+    //       },
+    //       {
+    //         headers: {
+    //           Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //         },
+    //       }
+    //     );
+    //   });
+
+    // await apiTransaction
+    //   .get("?pageIndex=1&pageSize=1000", {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //     },
+    //   })
+    //   .then(async (response1) => {
+    //     ViewDetails();
+    //     const transactionTmp = response1.data.filter(
+    //       (transaction) => transaction.order.id == selectedOrder.id
+    //     );
+    //     console.log(transactionTmp);
+
+    //     if (transactionTmp == "") {
+    //       await apiTransaction
+    //         .post(
+    //           "",
+    //           {
+    //             receiveMoney: order.unitPrice,
+    //             platformFee: order.rentPrice * 0.15,
+    //             ownerReceiveMoney: order.rentPrice * 0.85,
+    //             depositBackMoney: order.unitPrice - order.rentPrice,
+    //             status: "Success",
+    //             orderId: selectedOrder.id,
+    //             fineFee: 0,
+    //             date: new Date().toISOString(),
+    //           },
+    //           {
+    //             headers: {
+    //               Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //             },
+    //           }
+    //         )
+    //         .then(async (response) => {
+    //           console.log(response.data);
+
+    //           console.log(order);
+    //           await apiTransactionDetail.post(
+    //             "",
+    //             {
+    //               receiveMoney: order.unitPrice,
+    //               platformFee: order.rentPrice * 0.15,
+    //               ownerReceiveMoney: order.rentPrice * 0.85,
+    //               depositBackMoney: order.unitPrice - order.rentPrice,
+    //               status: "ToyGood",
+    //               orderDetailId: order.id,
+    //               transactionId: response.data.id,
+    //               platformFeeId: 1,
+    //               fineFee: 0,
+    //               date: new Date().toISOString(),
+    //             },
+    //             {
+    //               headers: {
+    //                 Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //               },
+    //             }
+    //           );
+    //         });
+    //     } else {
+    //       await apiTransaction
+    //         .put(
+    //           "/" + transactionTmp[0].id,
+    //           {
+    //             receiveMoney: transactionTmp[0].receiveMoney + order.unitPrice,
+    //             platformFee:
+    //               transactionTmp[0].platformFee + order.rentPrice * 0.15,
+    //             ownerReceiveMoney:
+    //               transactionTmp[0].ownerReceiveMoney + order.rentPrice * 0.85,
+    //             depositBackMoney:
+    //               transactionTmp[0].depositBackMoney +
+    //               (order.unitPrice - order.rentPrice),
+    //             status: "Success",
+    //             orderId: selectedOrder.id,
+    //             fineFee: 0,
+    //             date: new Date().toISOString(),
+    //           },
+    //           {
+    //             headers: {
+    //               Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //             },
+    //           }
+    //         )
+    //         .then(async (response) => {
+    //           console.log(response.data);
+
+    //           console.log(order);
+    //           await apiTransactionDetail.post(
+    //             "",
+    //             {
+    //               receiveMoney: order.unitPrice,
+    //               platformFee: order.rentPrice * 0.15,
+    //               ownerReceiveMoney: order.rentPrice * 0.85,
+    //               depositBackMoney: order.unitPrice - order.rentPrice,
+    //               status: "ToyGood",
+    //               orderDetailId: order.id,
+    //               transactionId: transactionTmp[0].id,
+    //               platformFeeId: 1,
+    //               fineFee: 0,
+    //               date: new Date().toISOString(),
+    //             },
+    //             {
+    //               headers: {
+    //                 Authorization: `Bearer ${Cookies.get("userToken")}`,
+    //               },
+    //             }
+    //           );
+    //         });
+    //     }
+    //   });
   };
 
   const handleAcceptOrder = (order) => {
@@ -644,35 +888,15 @@ const InformationLessor = () => {
               }
             );
             apiOrderDetail.get("/Order/" + order.id).then((response) => {
-              apiWallets.put(
-                "/" + walletTmp.id,
-                {
-                  balance:
-                    walletTmp.balance +
-                    order.totalPrice +
-                    30000 * response.data.length,
-                  withdrawMethod: walletTmp.withdrawMethod,
-                  withdrawInfo: walletTmp.withdrawInfo,
-                  status: walletTmp.status,
-                  userId: walletTmp.userId,
-                },
-                {
-                  headers: {
-                    Authorization: `Bearer ${Cookies.get("userToken")}`,
-                  },
-                }
-              );
-
-              apiWalletTransaction
-                .post(
-                  "",
+              apiWallets
+                .put(
+                  "/" + walletTmp.id,
                   {
-                    transactionType: "Nhận lại tiền ship từ đơn hàng",
-                    amount: 30000 * response.data.length,
-                    date: new Date().toISOString(),
-                    walletId: walletTmp.id,
-                    paymentTypeId: 5,
-                    orderId: order.id,
+                    balance: walletTmp.balance + order.totalPrice,
+                    withdrawMethod: walletTmp.withdrawMethod,
+                    withdrawInfo: walletTmp.withdrawInfo,
+                    status: walletTmp.status,
+                    userId: walletTmp.userId,
                   },
                   {
                     headers: {
@@ -880,6 +1104,55 @@ const InformationLessor = () => {
       ...prevProduct,
       [name]: value,
     }));
+  };
+
+  const handleFileChange2 = (event, fieldName, index) => {
+    console.log(index);
+
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Kiểm tra kích thước tệp
+    if (fieldName === "video" && !file.type.startsWith("video/")) {
+      alert("Vui lòng chỉ thả video vào ô này.");
+      return;
+    }
+
+    if (fieldName === "video" && file.size > MAX_VIDEO_SIZE) {
+      alert("Video phải có kích thước tối đa 10MB.");
+      return;
+    }
+
+    setOpenVideoReturn((prev) => {
+      const updatedVideos = [...(prev[fieldName] || [])];
+      updatedVideos[index] = file;
+      return { ...prev, [fieldName]: updatedVideos };
+    });
+    console.log(openVideoReturn.video);
+  };
+
+  const handleDrop2 = (event, fieldName, index) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (!file) return;
+
+    if (fieldName === "video" && !file.type.startsWith("video/")) {
+      alert("Vui lòng chỉ thả video vào ô này.");
+      return;
+    }
+
+    if (fieldName === "video" && file.size > MAX_VIDEO_SIZE) {
+      alert("Video phải có kích thước bé hơn 10MB.");
+      return;
+    }
+
+    // Nếu hợp lệ, cập nhật hoặc thêm video vào danh sách dựa trên index
+    setOpenVideoReturn((prev) => {
+      const updatedVideos = [...(prev[fieldName] || [])];
+      updatedVideos[index] = file; // Ghi đè tại vị trí index
+      return { ...prev, [fieldName]: updatedVideos };
+    });
+    console.log(openVideoReturn.video);
   };
 
   const handleChangeCategory = (event) => {
@@ -1848,10 +2121,7 @@ const InformationLessor = () => {
                             className="w-20 h-20 object-cover mr-4"
                           />
                           <div className="flex-grow">
-                            <h4
-                              className="font-semibold"
-                              style={{ width: "40%" }}
-                            >
+                            <h4 className="font-semibold" style={{}}>
                               {item.toyName}
                             </h4>
                             <p>
@@ -1879,27 +2149,203 @@ const InformationLessor = () => {
                                     .substring(9)
                                 : "Đang chờ"}
                             </p>
+                            {item.orderCheckImageUrl[1] != null &&
+                              item.orderCheckImageUrl[1] != "" && (
+                                <p className="text-red-500">
+                                  Phí phạt yêu cầu :{" "}
+                                  {item.fine.toLocaleString()} VNĐ
+                                </p>
+                              )}
                           </div>
-                          {imageCheck[index] != null &&
-                            imageCheck[index] != "" && (
-                              <div>
-                                <img
-                                  src={
-                                    imageCheck[index] && imageCheck[index]
-                                      ? imageCheck[index]
-                                      : ""
-                                  }
-                                  alt={item.name}
-                                  style={{
-                                    width: "160px",
-                                    height: "160px",
-                                    objectFit: "cover",
-                                    marginRight: "16px",
-                                  }}
-                                />
-                                <div>Tình trạng đồ chơi</div>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: "16px",
+                            }}
+                          >
+                            {item.orderCheckImageUrl[0] != null &&
+                              item.orderCheckImageUrl[0] != "" && (
+                                <div>
+                                  <video
+                                    src={
+                                      item.orderCheckImageUrl[0] &&
+                                      item.orderCheckImageUrl[0]
+                                        ? item.orderCheckImageUrl[0]
+                                        : ""
+                                    }
+                                    style={{
+                                      width: "200px",
+                                      height: "160px",
+                                      objectFit: "cover",
+                                      marginRight: "16px",
+                                    }}
+                                    controls
+                                    muted
+                                  >
+                                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                                  </video>
+                                  <div>
+                                    Video tình trạng đồ chơi người thuê gửi
+                                  </div>
+                                </div>
+                              )}
+
+                            {item.orderCheckImageUrl[1] != null &&
+                              item.orderCheckImageUrl[1] != "" && (
+                                <div>
+                                  <video
+                                    src={
+                                      item.orderCheckImageUrl[1] &&
+                                      item.orderCheckImageUrl[1]
+                                        ? item.orderCheckImageUrl[1]
+                                        : ""
+                                    }
+                                    style={{
+                                      width: "200px",
+                                      height: "160px",
+                                      objectFit: "cover",
+                                      marginRight: "16px",
+                                    }}
+                                    controls
+                                    muted
+                                  >
+                                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                                  </video>
+                                  <div>Video tình trạng đồ chơi bị hỏng</div>
+                                </div>
+                              )}
+
+                            {item.status === "Checking" && (
+                              <div
+                                style={{
+                                  width: "300px",
+                                  objectFit: "cover",
+                                  marginRight: "16px",
+                                }}
+                              >
+                                <div style={{ marginBottom: "12px" }}>
+                                  <label
+                                    htmlFor="fineAmount"
+                                    style={{
+                                      display: "block",
+                                      marginBottom: "4px",
+                                      fontWeight: "bold",
+                                      fontSize: "14px",
+                                    }}
+                                  >
+                                    Số tiền phạt (nếu có):
+                                  </label>
+                                  <input
+                                    type="number"
+                                    id="fineAmount"
+                                    placeholder="Nhập số tiền phạt"
+                                    onChange={(e) => {
+                                      setReturnFee(e.target.value);
+                                      console.log(e.target.value);
+                                    }}
+                                    style={{
+                                      width: "100%",
+                                      padding: "8px",
+                                      border: "1px solid #ccc",
+                                      borderRadius: "4px",
+                                    }}
+                                  />
+                                </div>
+
+                                <div>
+                                  <label
+                                    htmlFor="fineReason"
+                                    style={{
+                                      display: "block",
+                                      marginBottom: "4px",
+                                      fontWeight: "bold",
+                                      fontSize: "14px",
+                                    }}
+                                  >
+                                    Lý do phạt (nếu có):
+                                  </label>
+                                  <textarea
+                                    id="fineReason"
+                                    placeholder="Nhập lý do phạt"
+                                    rows="3"
+                                    onChange={(e) => {
+                                      setReturnDescription(e.target.value);
+                                      console.log(e.target.value);
+                                    }}
+                                    style={{
+                                      width: "100%",
+                                      padding: "8px",
+                                      border: "1px solid #ccc",
+                                      borderRadius: "4px",
+                                      resize: "none",
+                                    }}
+                                  ></textarea>
+                                </div>
                               </div>
                             )}
+                            <div
+                              style={{
+                                width: "300px",
+                                objectFit: "cover",
+                                marginRight: "16px",
+                              }}
+                            >
+                              {item.status === "Checking" && (
+                                <div
+                                  className="border border border-gray-300 rounded p-4 mb-4 w-full text-center"
+                                  onDrop={(e) => handleDrop2(e, "video", index)}
+                                  onDragOver={(e) => e.preventDefault()}
+                                  style={{
+                                    width: "200px", // Kích thước cố định (có thể tùy chỉnh)
+                                    height: "160px",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  {openVideoReturn?.video?.[index] ? (
+                                    <video
+                                      controls
+                                      className="w-full h-auto max-h-40 object-contain"
+                                      src={URL.createObjectURL(
+                                        openVideoReturn.video[index]
+                                      )}
+                                    />
+                                  ) : (
+                                    <p>
+                                      Kéo và thả video tại đây hoặc nhấp vào
+                                    </p>
+                                  )}
+                                  <input
+                                    type="file"
+                                    onChange={(e) =>
+                                      handleFileChange2(e, "video", index)
+                                    }
+                                    className="hidden"
+                                    id={`video-input-${index}`}
+                                  />
+                                  <label
+                                    htmlFor={`video-input-${index}`}
+                                    className="text-blue-500 underline cursor-pointer"
+                                  >
+                                    chọn tệp
+                                  </label>
+                                </div>
+                              )}
+                              {item.status === "Checking" && (
+                                <div>
+                                  <button
+                                    className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                                    onClick={() =>
+                                      handleCheckingOrderDetail(item, index)
+                                    }
+                                  >
+                                    Xác nhận đánh giá
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
                           {item.status === "Delivering" && (
                             <div>
@@ -1910,17 +2356,6 @@ const InformationLessor = () => {
                                 }
                               >
                                 Đã nhận hàng
-                              </button>
-                            </div>
-                          )}
-
-                          {item.status === "Checking" && (
-                            <div>
-                              <button
-                                className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
-                                onClick={() => handleCheckingOrderDetail(item)}
-                              >
-                                Xác nhận đánh giá
                               </button>
                             </div>
                           )}
