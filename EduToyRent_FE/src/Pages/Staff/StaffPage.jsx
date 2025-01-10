@@ -18,6 +18,11 @@ import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
 import axios from "axios";
 import apiNotifications from "../../service/ApiNotifications";
 import ChatForm from "../Chat/ChatForm";
+import apiReport from "../../service/ApiReport";
+import apiPlatformFees from "../../service/ApiPlatfromFees";
+import apiTransaction from "../../service/ApiTransaction";
+import apiTransactionDetail from "../../service/ApiTransactionDetail";
+
 const StaffPage = () => {
   const [userData, setUserData] = useState("");
   const [selectedTab, setSelectedTab] = useState("info");
@@ -30,6 +35,7 @@ const StaffPage = () => {
   const [currentPageData3, setCurrentPageData3] = useState(1); // Trang hiện tại cho toysData
   const [currentPageData4, setCurrentPageData4] = useState(1); // Trang hiện tại cho toysData
   const [currentPageData5, setCurrentPageData5] = useState(1); // Trang hiện tại cho toysData
+  const [isReportFormVisible, setIsReportFormVisible] = useState(false);
   const itemsPerPage = 5; // Số mục trên mỗi trang
 
   const [orders, setOrders] = useState([]);
@@ -59,6 +65,15 @@ const StaffPage = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const [totalPages, setTotalPages] = useState(1);
+
+  const [selectedOrder, setSelectedOrder] = useState({});
+  const [selectedOrderDetail, setSelectedOrderDetail] = useState({});
+  const [selectedOwnerToy, setSelectedOwnerToy] = useState({});
+  const [selectedReport, setSelectedReport] = useState({});
+  const [selectedOwnerReport, setSelectedOwnerReport] = useState({});
+  const [feeReport, setFeeReport] = useState(0);
+  const [platformFee, setPlatformFee] = useState([]);
+
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
     if (userDataCookie) {
@@ -84,6 +99,16 @@ const StaffPage = () => {
             console.error("Token không hợp lệ hoặc hết hạn.");
             return;
           }
+
+          apiPlatformFees
+            .get("?pageIndex=1&pageSize=20", {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response) => {
+              setPlatformFee(response.data);
+            });
 
           //  Lấy thông tin người dùng dựa trên email
           const userResponse = await apiUser.get(
@@ -607,22 +632,25 @@ const StaffPage = () => {
     }
 
     // Nếu không có statusFilter thì mặc định là "Delivering"
-    statusFilter = statusFilter || "Delivering";
+    statusFilter = statusFilter || "Await";
 
     try {
       // Lấy danh sách đơn hàng với trạng thái lọc
-      const OrderResponse = await apiOrderDetail.get(
-        `/?pageIndex=1&pageSize=20000&status=${statusFilter}`,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-          },
-        }
-      );
+      apiOrderDetail.put(`/UpdateExpiredStatus`, {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+
+      const OrderResponse = await apiReport.get(`?pageIndex=1&pageSize=2000`, {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
       console.log("Danh sách đơn hàng 1:", OrderResponse.data);
       // Lọc lại đơn hàng theo trạng thái
       const filteredOrders = OrderResponse.data.filter(
-        (order) => order.status == "Delivering" || order.status == "Checking"
+        (order) => order.status == "Await"
       );
       console.log("Danh sách đơn hàng sau khi lọc:", filteredOrders);
 
@@ -752,6 +780,8 @@ const StaffPage = () => {
 
     // Lấy mảng các đồ chơi cho trang hiện tại
     const currentItems = filteredOrders.slice(startIndex, endIndex);
+
+    console.log(currentItems);
 
     // Cập nhật dữ liệu hiển thị
     setCurrentToys6(currentItems);
@@ -914,134 +944,347 @@ const StaffPage = () => {
     }
   };
 
-  const handleChecking = (order) => {
-    var tmp = order;
-    tmp.status = "Checking";
+  const handleChecking = async () => {
+    const tmp2 = selectedReport;
 
-    apiOrderDetail
-      .put("/" + order.id, tmp, {
+    const unitPrice = parseFloat(selectedOrderDetail.unitPrice);
+    const rentPrice = parseFloat(selectedOrderDetail.rentPrice);
+    const platformfee = parseFloat(platformFee[0].percent);
+    const fee = parseFloat(feeReport);
+
+    await apiReport.put(
+      "/" + selectedReport.id,
+      {
+        videoUrl: tmp2.videoUrl,
+        description: tmp2.description,
+        status: "Success",
+        orderDetailId: tmp2.orderDetailId,
+        userId: tmp2.userId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      }
+    );
+
+    var tmp = selectedOrderDetail;
+    tmp.status = "Complete";
+    tmp.fine = feeReport;
+
+    await apiOrderDetail.put("/" + selectedOrderDetail.id, tmp, {
+      headers: {
+        Authorization: `Bearer ${Cookies.get("userToken")}`,
+      },
+    });
+
+    await apiToys
+      .get("/" + selectedOrderDetail.toyId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then(async (response) => {
+        const updatedToy = {
+          name: response.data.name || "Default Toy Name",
+          description: response.data.description || "Default Description",
+          price: response.data.price || "0",
+          buyQuantity: response.data.buyQuantity || "0",
+          origin: response.data.origin || "Default Origin",
+          age: response.data.age || "All Ages",
+          brand: response.data.brand || "Default Brand",
+          categoryId: response.data.category.id || "1",
+
+          rentCount: response.data.rentCount + 1 || "0",
+          quantitySold: response.data.quantitySold || "0",
+          status: "Active",
+        };
+
+        await apiToys.put(`/${selectedOrderDetail.toyId}`, updatedToy, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        });
+
+        await apiWallets
+          .get("/" + selectedOwnerReport.walletId, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then(async (response3) => {
+            const walletTmp = response3.data;
+            console.log(walletTmp.id);
+
+            const result2 = parseInt(unitPrice - (rentPrice + fee));
+
+            await apiWallets.put(
+              "/" + walletTmp.id,
+              {
+                balance: walletTmp.balance + result2,
+                withdrawMethod: walletTmp.withdrawMethod,
+                withdrawInfo: walletTmp.withdrawInfo,
+                status: walletTmp.status,
+                userId: walletTmp.userId,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+            console.log(
+              selectedOrderDetail.unitPrice -
+                (selectedOrderDetail.rentPrice + feeReport)
+            );
+
+            const result1 = parseInt(unitPrice - (rentPrice + fee));
+
+            await apiWalletTransaction.post(
+              "",
+              {
+                transactionType: "Nhận lại tiền cọc",
+                amount: parseInt(result1),
+                date: new Date().toISOString(),
+                walletId: walletTmp.id,
+                paymentTypeId: 5,
+                orderId: selectedOrder.id,
+                status: "Success",
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+          });
+
+        await apiUser
+          .get("/" + response.data.owner.id, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then(async (response1) => {
+            console.log(response1.data);
+            const userTmp = response1.data;
+            await apiWallets
+              .get("/" + userTmp.walletId, {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              })
+              .then(async (response2) => {
+                const walletTmp = response2.data;
+                console.log(walletTmp.id);
+
+                const result3 = rentPrice * (1 - platformfee) + fee;
+
+                await apiWallets.put(
+                  "/" + walletTmp.id,
+                  {
+                    balance: walletTmp.balance + result3,
+                    withdrawMethod: walletTmp.withdrawMethod,
+                    withdrawInfo: walletTmp.withdrawInfo,
+                    status: walletTmp.status,
+                    userId: walletTmp.userId,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                );
+                await apiWalletTransaction.post(
+                  "",
+                  {
+                    transactionType: "Nhận tiền từ đơn hàng",
+                    amount: parseInt(result3),
+                    date: new Date().toISOString(),
+                    walletId: walletTmp.id,
+                    paymentTypeId: 5,
+                    orderId: selectedOrder.id,
+                    status: "Success",
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                );
+              });
+          });
+      });
+
+    await apiTransaction
+      .get("?pageIndex=1&pageSize=1000", {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then(async (response1) => {
+        const transactionTmp = response1.data.filter(
+          (transaction) => transaction.order.id == selectedOrder.id
+        );
+        console.log(transactionTmp);
+
+        if (transactionTmp == "") {
+          const result4 = rentPrice * (1 - platformfee) + fee;
+          const result5 = unitPrice - (rentPrice + fee);
+          await apiTransaction
+            .post(
+              "",
+              {
+                receiveMoney: selectedOrderDetail.unitPrice,
+                platformFee:
+                  selectedOrderDetail.rentPrice * platformFee[0].percent,
+                ownerReceiveMoney: result4,
+                depositBackMoney: result5,
+                status: "Success",
+                orderId: selectedOrder.id,
+                fineFee: feeReport,
+                date: new Date().toISOString(),
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
+            .then(async (response) => {
+              console.log(response.data);
+
+              console.log(selectedOrderDetail);
+              await apiTransactionDetail.post(
+                "",
+                {
+                  receiveMoney: selectedOrderDetail.unitPrice,
+                  platformFee:
+                    selectedOrderDetail.rentPrice * platformFee[0].percent,
+                  ownerReceiveMoney: result4,
+                  depositBackMoney: result5,
+                  status: "Success",
+                  orderDetailId: selectedOrderDetail.id,
+                  transactionId: response.data.id,
+                  platformFeeId: 1,
+                  fineFee: feeReport,
+                  date: new Date().toISOString(),
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                }
+              );
+            });
+        } else {
+          const result6 = rentPrice * (1 - platformfee) + fee;
+          const result7 = unitPrice - (rentPrice + fee);
+          await apiTransaction
+            .put(
+              "/" + transactionTmp[0].id,
+              {
+                receiveMoney:
+                  transactionTmp[0].receiveMoney +
+                  selectedOrderDetail.unitPrice,
+                platformFee:
+                  transactionTmp[0].platformFee +
+                  selectedOrderDetail.rentPrice * platformFee[0].percent,
+                ownerReceiveMoney:
+                  transactionTmp[0].ownerReceiveMoney + result6,
+                depositBackMoney: transactionTmp[0].depositBackMoney + result7,
+                status: "Success",
+                orderId: selectedOrder.id,
+                fineFee: transactionTmp[0].fineFee + feeReport,
+                date: new Date().toISOString(),
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            )
+            .then(async (response) => {
+              console.log(response.data);
+
+              console.log(selectedOrderDetail);
+              await apiTransactionDetail.post(
+                "",
+                {
+                  receiveMoney: selectedOrderDetail.unitPrice,
+                  platformFee:
+                    selectedOrderDetail.rentPrice * platformFee[0].percent,
+                  ownerReceiveMoney: result6,
+                  depositBackMoney: result7,
+                  status: "Success",
+                  orderDetailId: selectedOrderDetail.id,
+                  transactionId: transactionTmp[0].id,
+                  platformFeeId: 1,
+                  fineFee: feeReport,
+                  date: new Date().toISOString(),
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                }
+              );
+            });
+        }
+      });
+    LoadOrder();
+  };
+
+  const handleLoadForm = async (order) => {
+    setSelectedReport(order);
+
+    await apiOrderDetail
+      .get("/" + order.orderDetailId, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
       })
       .then((response) => {
-        LoadOrder();
+        console.log(response.data);
+
+        setSelectedOrderDetail(response.data);
+
+        apiOrder
+          .get("/" + response.data.orderId, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then((response2) => {
+            setSelectedOrder(response2.data);
+            console.log(response2.data);
+
+            apiUser
+              .get("/" + response2.data.shopId, {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              })
+              .then((response3) => {
+                setSelectedOwnerToy(response3.data);
+                console.log(response3.data);
+              });
+          });
       });
-  };
 
-  const handleCheckingBroke = async (order) => {
-    console.log(newImage);
-    if (newImage != null && newImage != "") {
-      apiOrder
-        .get("/" + order.orderId, {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        })
-        .then((response) => {
-          apiNotifications.post(
-            "",
-            {
-              notify: `Đơn hàng ${response.data.id} đang giao đến bạn`,
-              isRead: false,
-              userId: response.data.userId,
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${Cookies.get("userToken")}`,
-              },
-            }
-          );
-        });
+    await apiUser
+      .get("/" + order.userId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        setSelectedOwnerReport(response.data);
+        console.log(response.data);
+      });
 
-      console.log(newImage);
-
-      var formData = new FormData();
-
-      formData.append(`checkImageUrls`, newImage);
-
-      var tmp = order;
-      tmp.status = "DeliveringToUser";
-      axios
-        .post(
-          "https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/OrderCheckImages?orderDetailId=" +
-            order.id,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("userToken")}`,
-            },
-          }
-        )
-        .then(async (response) => {
-          await apiOrderDetail
-            .put("/" + order.id, tmp, {
-              headers: {
-                Authorization: `Bearer ${Cookies.get("userToken")}`,
-              },
-            })
-            .then((response) => {
-              LoadOrder();
-            });
-        });
-    } else {
-      alert("Chưa chọn hình ảnh tình trạng đồ chơi");
-    }
-  };
-
-  const handleCheckingGood = async (order) => {
-    if (newImage != null && newImage != "") {
-      apiOrder
-        .get("/" + order.orderId, {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("userToken")}`,
-          },
-        })
-        .then((response) => {
-          apiNotifications.post(
-            "",
-            {
-              notify: `Đơn hàng ${response.data.id} đang giao đến bạn`,
-              isRead: false,
-              userId: response.data.shopId,
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${Cookies.get("userToken")}`,
-              },
-            }
-          );
-        });
-
-      var formData = new FormData();
-      formData.append(`checkImageUrls`, newImage);
-      var tmp = order;
-      tmp.status = "DeliveringToShop";
-      axios
-        .post(
-          "https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/api/OrderCheckImages?orderDetailId=" +
-            order.id,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("userToken")}`,
-            },
-          }
-        )
-        .then(async (response) => {
-          await apiOrderDetail
-            .put("/" + order.id, tmp, {
-              headers: {
-                Authorization: `Bearer ${Cookies.get("userToken")}`,
-              },
-            })
-            .then((response) => {
-              LoadOrder();
-            });
-        });
-    } else {
-      alert("Chưa chọn hình ảnh tình trạng đồ chơi");
-    }
+    setIsReportFormVisible(true);
   };
 
   const statusMapping = {
@@ -2594,72 +2837,173 @@ const StaffPage = () => {
                 className="bg-white shadow-lg rounded-lg overflow-hidden mt-4"
               >
                 <div className="flex items-center p-4 border-b">
-                  <img
+                  <video
+                    controls
+                    className="w-full h-auto max-h-40 object-contain"
                     src={
-                      order.toyImgUrls?.length > 0
-                        ? order.toyImgUrls[0]
+                      order.videoUrl?.length > 0
+                        ? order.videoUrl
                         : "default_image_url_here"
                     }
-                    alt={`Ảnh đồ chơi cho đơn hàng ${order.id}`}
-                    style={{ width: "100px", height: "100px", margin: "5px" }}
+                    style={{ width: "200px", height: "200px", margin: "5px" }}
                   />
+
                   <div className="ml-4 flex-1">
                     <h3 className="text-lg font-semibold">
-                      Đơn hàng mã số: {order.id}
+                      Người dùng: {order.user.fullName}
                     </h3>
                     <h3 className="text-lg font-semibold">
-                      Tên đồ chơi: {order.toyName}
+                      Khiếu nại: {order.description}
                     </h3>
-
-                    <p className="text-sm text-gray-600">
-                      Tổng giá: {order.unitPrice}₫
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end ml-4">
-                    <h1 className="text-lg font-bold text-gray-600">
-                      {statusMapping[order.status] ||
-                        "Trạng thái không xác định"}
-                    </h1>
-                    {order.status == "Checking" && (
-                      <label className="block mb-2">
-                        Hình ảnh tình trạng đồ chơi:
-                        <input
-                          type="file"
-                          onChange={handleImageChange}
-                          className="border border-gray-300 rounded p-1 w-full"
-                          accept="image/*"
-                        />
-                      </label>
-                    )}
                   </div>
                 </div>
                 <div className="flex justify-between p-4">
                   <div className="ml-auto flex gap-4">
-                    {order.status == "Delivering" && (
-                      <button
-                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                        onClick={() => handleChecking(order)}
-                      >
-                        Chờ đánh giá đồ chơi
-                      </button>
-                    )}
-                    {order.status == "Checking" && (
-                      <button
-                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                        onClick={() => handleCheckingBroke(order)}
-                      >
-                        Đồ chơi bị hỏng
-                      </button>
-                    )}
-                    {order.status == "Checking" && (
-                      <button
-                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-                        onClick={() => handleCheckingGood(order)}
-                      >
-                        Đồ chơi bình thường
-                      </button>
-                    )}
+                    <button
+                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                      onClick={() => handleLoadForm(order)}
+                    >
+                      Đánh giá đồ chơi
+                    </button>
                   </div>
+                </div>
+
+                <div>
+                  {isReportFormVisible && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                      <div className="bg-white p-6 rounded-md shadow-lg w-[80%] max-w-4xl relative">
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            handleChecking();
+                          }}
+                          className="space-y-4"
+                        >
+                          {/* Nút đóng (X) nằm bên trong form */}
+                          <button
+                            type="button" // Sử dụng type="button" để ngăn không gửi form
+                            onClick={() => {
+                              setIsReportFormVisible(false);
+                            }}
+                            className="absolute top-3 right-3 text-xl text-red-500 hover:text-red-700"
+                          >
+                            ✖
+                          </button>
+
+                          <div className="flex gap-6">
+                            {/* Phần bên trái */}
+                            <div className="w-1/2 space-y-4">
+                              <div>
+                                <p className="font-semibold">
+                                  Video bằng chứng của người cho thuê
+                                </p>
+                                <video
+                                  controls
+                                  className="w-full h-auto max-h-40 object-contain border border-gray-300 rounded"
+                                  src={
+                                    selectedOrderDetail.orderCheckImageUrl[1]
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <p className="font-semibold">
+                                  Tên người cho thuê:
+                                </p>
+                                <p>{selectedOwnerToy.fullName}</p>
+                              </div>
+                              <div>
+                                <p className="font-semibold">
+                                  Địa chỉ người cho thuê:
+                                </p>
+                                <p>{selectedOwnerToy.address}</p>
+                              </div>
+                              <div>
+                                <p className="font-semibold">
+                                  Số điện thoại người cho thuê:
+                                </p>
+                                <p>{selectedOwnerToy.phone}</p>
+                              </div>
+                              <div>
+                                <p className="font-semibold">
+                                  Số tiền phạt người cho thuê yêu cầu:
+                                </p>
+                                <p>
+                                  {selectedOrderDetail.fine.toLocaleString()}{" "}
+                                  VNĐ
+                                </p>
+                              </div>
+                              <div>
+                                <p className="font-semibold">
+                                  Lý do của người cho thuê:
+                                </p>
+                                <p>{selectedOrderDetail.orderCheckStatus[1]}</p>
+                              </div>
+                            </div>
+
+                            {/* Phần bên phải */}
+                            <div className="w-1/2 space-y-4">
+                              <div>
+                                <p className="font-semibold">
+                                  Video bằng chứng của người thuê
+                                </p>
+                                <video
+                                  controls
+                                  className="w-full h-auto max-h-40 object-contain border border-gray-300 rounded"
+                                  src={
+                                    selectedOrderDetail.orderCheckImageUrl[0]
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <p className="font-semibold">Tên người thuê:</p>
+                                <p>{selectedOwnerReport.fullName}</p>
+                              </div>
+
+                              <div>
+                                <p className="font-semibold">
+                                  Số điện thoại người thuê:
+                                </p>
+                                <p>{selectedOwnerReport.phone}</p>
+                              </div>
+
+                              <div>
+                                <div>
+                                  <p className="font-semibold">
+                                    Lý do khiếu nại của người thuê:
+                                  </p>
+                                  <p>{selectedReport.description}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Dưới cùng */}
+                          <div className="flex flex-col space-y-4 mt-6">
+                            <div>
+                              <label className="font-semibold block mb-2">
+                                Số tiền phạt:
+                              </label>
+                              <input
+                                onChange={(e) => {
+                                  setFeeReport(e.target.value);
+                                }}
+                                type="number"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                placeholder="Nhập số tiền phạt..."
+                                required
+                              />
+                            </div>
+                            <button
+                              type="submit"
+                              className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
+                            >
+                              Gửi đánh giá
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
