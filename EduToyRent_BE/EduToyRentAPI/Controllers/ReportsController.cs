@@ -3,11 +3,13 @@ using EduToyRentRepositories.DTO.Request;
 using EduToyRentRepositories.DTO.Response;
 using EduToyRentRepositories.Interface;
 using EduToyRentRepositories.Models;
+using Humanizer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Drawing.Printing;
 
 namespace EduToyRentAPI.Controllers
 {
@@ -29,24 +31,76 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<ReportResponse>> GetReports(int pageIndex = 1, int pageSize = 20)
         {
             var reports = _unitOfWork.ReportRepository.Get(
-                includeProperties: "OrderDetail.Order,User,OrderDetail.Toy",
+                includeProperties: "User,OrderDetail.Toy,User.Role",
                 pageIndex: pageIndex,
                 pageSize: pageSize)
-                .OrderByDescending(r => r.Id)
-                .Select(report => new ReportResponse
+                .OrderByDescending(r => r.Id);
+            var reportResponse = reports.Select(report => {
+                var mediaList = _unitOfWork.MediaRepository
+                    .GetV2(m => m.ToyId == report.OrderDetail.ToyId)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
+                var OrderCheckImageList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == report.OrderDetailId)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
+                var OrderCheckSatusList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == report.OrderDetail.OrderId)
+                    .Select(m => m.Status)
+                    .ToList();
+                return new ReportResponse
                 {
                     Id = report.Id,
                     VideoUrl = report.VideoUrl,
                     Description = report.Description,
                     Status = report.Status,
                     OrderDetailId = report.OrderDetailId,
-                    ToyId = report.OrderDetail.Toy.Id,
-                    ToyName = report.OrderDetail.Toy.Name,
+                    OrderDetail = new OrderDetailResponse
+                    {
+                        Id = report.OrderDetail.Id,
+                        OrderId = report.OrderDetail.OrderId,
+                        RentPrice = (int)report.OrderDetail.RentPrice,
+                        UnitPrice = report.OrderDetail.UnitPrice,
+                        Quantity = report.OrderDetail.Quantity,
+                        Deposit = (int)report.OrderDetail.Deposit,
+                        StartDate = report.OrderDetail.StartDate,
+                        EndDate = report.OrderDetail.EndDate,
+                        Fine = report.OrderDetail.Fine,
+                        RentCount = report.OrderDetail.RentCount,
+                        OrderTypeId = report.OrderDetail.OrderTypeId,
+                        RatingId = report.OrderDetail.RatingId,
+                        Status = report.OrderDetail.Status,
+                        ToyId = report.OrderDetail.ToyId,
+                        ToyName = report.OrderDetail.Toy.Name,
+                        ToyImgUrls = mediaList,
+                        OrderCheckImageUrl = OrderCheckImageList,
+                        OrderCheckStatus = OrderCheckSatusList
+                    },
                     UserId = report.UserId,
-                    UserName = report.User.FullName
-                }).ToList();
+                    User = new UserResponse
+                    {
+                        Id = report.UserId,
+                        FullName = report.User.FullName,
+                        Email = report.User.Email,
+                        CreateDate = report.User.CreateDate,
+                        Phone = report.User.Phone,
+                        Dob = report.User.Dob ?? DateTime.MinValue,
+                        Address = report.User.Address,
+                        AvatarUrl = report.User.AvatarUrl,
+                        Description = report.User.Description,
+                        Star = report.User.Star ?? 0,
+                        Status = report.User.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = report.User.Role.Id,
+                            Name = report.User.Role.Name
+                        },
+                        WalletId = report.User.WalletId,
+                    }
+                };
+        }).ToList();
 
-            return Ok(reports);
+            return Ok(reportResponse);
         }
 
         // GET: api/Reports/5
@@ -55,26 +109,75 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<ReportResponse> GetReport(int id)
         {
             var report = _unitOfWork.ReportRepository.Get(
-                includeProperties: "OrderDetail.Order,User,OrderDetail.Toy",
+                includeProperties: "User,OrderDetail.Toy,User.Role",
                 filter: r => r.Id == id)
                 .FirstOrDefault();
-
             if (report == null)
             {
                 return NotFound();
             }
 
-            var reportResponse = new ReportResponse
+            var mediaList = _unitOfWork.MediaRepository
+                     .GetV2(m => m.ToyId == report.OrderDetail.ToyId)
+                     .Select(m => m.MediaUrl)
+                     .ToList();
+            var OrderCheckImageList = _unitOfWork.OrderCheckImageRepository
+                .GetV2(m => m.OrderDetailId == report.OrderDetailId)
+                .Select(m => m.MediaUrl)
+                .ToList();
+            var OrderCheckSatusList = _unitOfWork.OrderCheckImageRepository
+                .GetV2(m => m.OrderDetailId == report.OrderDetail.OrderId)
+                .Select(m => m.Status)
+                .ToList();
+            var reportResponse =  new ReportResponse
             {
                 Id = report.Id,
                 VideoUrl = report.VideoUrl,
                 Description = report.Description,
                 Status = report.Status,
                 OrderDetailId = report.OrderDetailId,
-                ToyId = report.OrderDetail.Toy.Id,
-                ToyName = report.OrderDetail.Toy.Name,
+                OrderDetail = new OrderDetailResponse
+                {
+                    Id = report.OrderDetail.Id,
+                    OrderId = report.OrderDetail.OrderId,
+                    RentPrice = (int)report.OrderDetail.RentPrice,
+                    UnitPrice = report.OrderDetail.UnitPrice,
+                    Quantity = report.OrderDetail.Quantity,
+                    Deposit = (int)report.OrderDetail.Deposit,
+                    StartDate = report.OrderDetail.StartDate,
+                    EndDate = report.OrderDetail.EndDate,
+                    Fine = report.OrderDetail.Fine,
+                    RentCount = report.OrderDetail.RentCount,
+                    OrderTypeId = report.OrderDetail.OrderTypeId,
+                    RatingId = report.OrderDetail.RatingId,
+                    Status = report.OrderDetail.Status,
+                    ToyId = report.OrderDetail.ToyId,
+                    ToyName = report.OrderDetail.Toy.Name,
+                    ToyImgUrls = mediaList,
+                    OrderCheckImageUrl = OrderCheckImageList,
+                    OrderCheckStatus = OrderCheckSatusList
+                },
                 UserId = report.UserId,
-                UserName = report.User.FullName
+                User = new UserResponse
+                {
+                    Id = report.UserId,
+                    FullName = report.User.FullName,
+                    Email = report.User.Email,
+                    CreateDate = report.User.CreateDate,
+                    Phone = report.User.Phone,
+                    Dob = report.User.Dob ?? DateTime.MinValue,
+                    Address = report.User.Address,
+                    AvatarUrl = report.User.AvatarUrl,
+                    Description = report.User.Description,
+                    Star = report.User.Star ?? 0,
+                    Status = report.User.Status,
+                    Role = new RoleResponse
+                    {
+                        Id = report.User.Role.Id,
+                        Name = report.User.Role.Name
+                    },
+                    WalletId = report.User.WalletId,
+                }
             };
 
             return Ok(reportResponse);
@@ -192,17 +295,67 @@ namespace EduToyRentAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Failed to retrieve the created report" });
             }
 
+            var mediaList = _unitOfWork.MediaRepository
+                     .GetV2(m => m.ToyId == report.OrderDetail.ToyId)
+                     .Select(m => m.MediaUrl)
+                     .ToList();
+            var OrderCheckImageList = _unitOfWork.OrderCheckImageRepository
+                .GetV2(m => m.OrderDetailId == report.OrderDetailId)
+                .Select(m => m.MediaUrl)
+                .ToList();
+            var OrderCheckSatusList = _unitOfWork.OrderCheckImageRepository
+                .GetV2(m => m.OrderDetailId == report.OrderDetail.OrderId)
+                .Select(m => m.Status)
+                .ToList();
             var reportResponse = new ReportResponse
             {
-                Id = createdReport.Id,
-                VideoUrl = createdReport.VideoUrl,
-                Description = createdReport.Description,
-                Status = createdReport.Status,
-                OrderDetailId = createdReport.OrderDetailId,
-                ToyId = createdReport.OrderDetail.Toy.Id,
-                ToyName = createdReport.OrderDetail.Toy.Name,
-                UserId = createdReport.UserId,
-                UserName = createdReport.User.FullName
+                Id = report.Id,
+                VideoUrl = report.VideoUrl,
+                Description = report.Description,
+                Status = report.Status,
+                OrderDetailId = report.OrderDetailId,
+                OrderDetail = new OrderDetailResponse
+                {
+                    Id = report.OrderDetail.Id,
+                    OrderId = report.OrderDetail.OrderId,
+                    RentPrice = (int)report.OrderDetail.RentPrice,
+                    UnitPrice = report.OrderDetail.UnitPrice,
+                    Quantity = report.OrderDetail.Quantity,
+                    Deposit = (int)report.OrderDetail.Deposit,
+                    StartDate = report.OrderDetail.StartDate,
+                    EndDate = report.OrderDetail.EndDate,
+                    Fine = report.OrderDetail.Fine,
+                    RentCount = report.OrderDetail.RentCount,
+                    OrderTypeId = report.OrderDetail.OrderTypeId,
+                    RatingId = report.OrderDetail.RatingId,
+                    Status = report.OrderDetail.Status,
+                    ToyId = report.OrderDetail.ToyId,
+                    ToyName = report.OrderDetail.Toy.Name,
+                    ToyImgUrls = mediaList,
+                    OrderCheckImageUrl = OrderCheckImageList,
+                    OrderCheckStatus = OrderCheckSatusList
+                },
+                UserId = report.UserId,
+                User = new UserResponse
+                {
+                    Id = report.UserId,
+                    FullName = report.User.FullName,
+                    Email = report.User.Email,
+                    CreateDate = report.User.CreateDate,
+                    Phone = report.User.Phone,
+                    Dob = report.User.Dob ?? DateTime.MinValue,
+                    Address = report.User.Address,
+                    AvatarUrl = report.User.AvatarUrl,
+                    Description = report.User.Description,
+                    Star = report.User.Star ?? 0,
+                    Status = report.User.Status,
+                    Role = new RoleResponse
+                    {
+                        Id = report.User.Role.Id,
+                        Name = report.User.Role.Name
+                    },
+                    WalletId = report.User.WalletId,
+                }
             };
 
             return CreatedAtAction("GetReport", new { id = report.Id }, reportResponse);
@@ -231,55 +384,157 @@ namespace EduToyRentAPI.Controllers
         public ActionResult<IEnumerable<ReportResponse>> GetReportsByStatus(string status, int pageIndex = 1, int pageSize = 20)
         {
             var reports = _unitOfWork.ReportRepository.Get(
-                includeProperties: "OrderDetail.Order,User,OrderDetail.Toy",
+                includeProperties: "User,OrderDetail.Toy,User.Role",
                 filter: r => r.Status == status,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
-                .OrderByDescending(r => r.Id)
-                .Select(report => new ReportResponse
+                .OrderByDescending(r => r.Id);
+            var reportResponse = reports.Select(report => {
+                var mediaList = _unitOfWork.MediaRepository
+                    .GetV2(m => m.ToyId == report.OrderDetail.ToyId)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
+                var OrderCheckImageList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == report.OrderDetailId)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
+                var OrderCheckSatusList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == report.OrderDetail.OrderId)
+                    .Select(m => m.Status)
+                    .ToList();
+                return new ReportResponse
                 {
                     Id = report.Id,
                     VideoUrl = report.VideoUrl,
                     Description = report.Description,
                     Status = report.Status,
                     OrderDetailId = report.OrderDetailId,
-                    ToyId = report.OrderDetail.Toy.Id,
-                    ToyName = report.OrderDetail.Toy.Name,
+                    OrderDetail = new OrderDetailResponse
+                    {
+                        Id = report.OrderDetail.Id,
+                        OrderId = report.OrderDetail.OrderId,
+                        RentPrice = (int)report.OrderDetail.RentPrice,
+                        UnitPrice = report.OrderDetail.UnitPrice,
+                        Quantity = report.OrderDetail.Quantity,
+                        Deposit = (int)report.OrderDetail.Deposit,
+                        StartDate = report.OrderDetail.StartDate,
+                        EndDate = report.OrderDetail.EndDate,
+                        Fine = report.OrderDetail.Fine,
+                        RentCount = report.OrderDetail.RentCount,
+                        OrderTypeId = report.OrderDetail.OrderTypeId,
+                        RatingId = report.OrderDetail.RatingId,
+                        Status = report.OrderDetail.Status,
+                        ToyId = report.OrderDetail.ToyId,
+                        ToyName = report.OrderDetail.Toy.Name,
+                        ToyImgUrls = mediaList,
+                        OrderCheckImageUrl = OrderCheckImageList,
+                        OrderCheckStatus = OrderCheckSatusList
+                    },
                     UserId = report.UserId,
-                    UserName = report.User.FullName
-                }).ToList();
-
+                    User = new UserResponse
+                    {
+                        Id = report.UserId,
+                        FullName = report.User.FullName,
+                        Email = report.User.Email,
+                        CreateDate = report.User.CreateDate,
+                        Phone = report.User.Phone,
+                        Dob = report.User.Dob ?? DateTime.MinValue,
+                        Address = report.User.Address,
+                        AvatarUrl = report.User.AvatarUrl,
+                        Description = report.User.Description,
+                        Star = report.User.Star ?? 0,
+                        Status = report.User.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = report.User.Role.Id,
+                            Name = report.User.Role.Name
+                        },
+                        WalletId = report.User.WalletId,
+                    }
+                };
+            }).ToList();
             if (!reports.Any())
             {
                 return NotFound(new { Message = "No reports found with the specified status." });
             }
-
             return Ok(reports);
         }
-
+        // filter: r => r.OrderDetailId == orderDetailId
         // GET: api/Reports/OrderDetail/{orderDetailId}
         [HttpGet("OrderDetail/{orderDetailId}")]
         [EnableQuery]
         public ActionResult<IEnumerable<ReportResponse>> GetReportsByOrderDetailId(int orderDetailId, int pageIndex = 1, int pageSize = 20)
         {
             var reports = _unitOfWork.ReportRepository.Get(
-                includeProperties: "OrderDetail.Order,User,OrderDetail.Toy",
+                includeProperties: "User,OrderDetail.Toy,User.Role",
                 filter: r => r.OrderDetailId == orderDetailId,
                 pageIndex: pageIndex,
                 pageSize: pageSize)
-                .OrderByDescending(r => r.Id)
-                .Select(report => new ReportResponse
+                .OrderByDescending(r => r.Id);
+            var reportResponse = reports.Select(report => {
+                var mediaList = _unitOfWork.MediaRepository
+                    .GetV2(m => m.ToyId == report.OrderDetail.ToyId)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
+                var OrderCheckImageList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == report.OrderDetailId)
+                    .Select(m => m.MediaUrl)
+                    .ToList();
+                var OrderCheckSatusList = _unitOfWork.OrderCheckImageRepository
+                    .GetV2(m => m.OrderDetailId == report.OrderDetail.OrderId)
+                    .Select(m => m.Status)
+                    .ToList();
+                return new ReportResponse
                 {
                     Id = report.Id,
                     VideoUrl = report.VideoUrl,
                     Description = report.Description,
                     Status = report.Status,
                     OrderDetailId = report.OrderDetailId,
-                    ToyId = report.OrderDetail.Toy.Id,
-                    ToyName = report.OrderDetail.Toy.Name,
+                    OrderDetail = new OrderDetailResponse
+                    {
+                        Id = report.OrderDetail.Id,
+                        OrderId = report.OrderDetail.OrderId,
+                        RentPrice = (int)report.OrderDetail.RentPrice,
+                        UnitPrice = report.OrderDetail.UnitPrice,
+                        Quantity = report.OrderDetail.Quantity,
+                        Deposit = (int)report.OrderDetail.Deposit,
+                        StartDate = report.OrderDetail.StartDate,
+                        EndDate = report.OrderDetail.EndDate,
+                        Fine = report.OrderDetail.Fine,
+                        RentCount = report.OrderDetail.RentCount,
+                        OrderTypeId = report.OrderDetail.OrderTypeId,
+                        RatingId = report.OrderDetail.RatingId,
+                        Status = report.OrderDetail.Status,
+                        ToyId = report.OrderDetail.ToyId,
+                        ToyName = report.OrderDetail.Toy.Name,
+                        ToyImgUrls = mediaList,
+                        OrderCheckImageUrl = OrderCheckImageList,
+                        OrderCheckStatus = OrderCheckSatusList
+                    },
                     UserId = report.UserId,
-                    UserName = report.User.FullName
-                }).ToList();
+                    User = new UserResponse
+                    {
+                        Id = report.UserId,
+                        FullName = report.User.FullName,
+                        Email = report.User.Email,
+                        CreateDate = report.User.CreateDate,
+                        Phone = report.User.Phone,
+                        Dob = report.User.Dob ?? DateTime.MinValue,
+                        Address = report.User.Address,
+                        AvatarUrl = report.User.AvatarUrl,
+                        Description = report.User.Description,
+                        Star = report.User.Star ?? 0,
+                        Status = report.User.Status,
+                        Role = new RoleResponse
+                        {
+                            Id = report.User.Role.Id,
+                            Name = report.User.Role.Name
+                        },
+                        WalletId = report.User.WalletId,
+                    }
+                };
+            }).ToList();
 
             if (!reports.Any())
             {
