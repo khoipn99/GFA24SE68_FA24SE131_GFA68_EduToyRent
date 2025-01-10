@@ -9,7 +9,7 @@ namespace EduToyRentRepositories.DTO.Request
 {
     public class ReportRequest
     {
-        public IFormFile? VideoUrl { get; set; }
+        public string? VideoUrl { get; set; }
         public string Description { get; set; }
         public string Status { get; set; }
         public int OrderDetailId { get; set; }

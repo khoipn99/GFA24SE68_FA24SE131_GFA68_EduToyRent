@@ -185,42 +185,11 @@ namespace EduToyRentAPI.Controllers
 
         // PUT: api/Reports/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutReport([FromForm] ReportRequest reportRequest, int id)
+        public async Task<IActionResult> PutReport(ReportRequest reportRequest, int id)
         {
             var report = _unitOfWork.ReportRepository.GetByID(id);
-            if (report == null)
-            {
-                return NotFound(new { Message = "Report not found" });
-            }
 
-            if (reportRequest.VideoUrl == null || reportRequest.VideoUrl.Length == 0)
-            {
-                return BadRequest(new { Message = "No video file was uploaded" });
-            }
-
-            if (!string.IsNullOrEmpty(report.VideoUrl))
-            {
-                try
-                {
-                    await _fireBaseService.DeleteImageAsync(report.VideoUrl);
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"Failed to delete old video: {ex.Message}" });
-                }
-            }
-
-            string newVideoUrl;
-            try
-            {
-                newVideoUrl = await _fireBaseService.UploadImageAsync(reportRequest.VideoUrl);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"Failed to upload new video: {ex.Message}" });
-            }
-
-            report.VideoUrl = newVideoUrl;
+            report.VideoUrl = reportRequest.VideoUrl;
             report.Description = reportRequest.Description;
             report.Status = reportRequest.Status;
             report.OrderDetailId = reportRequest.OrderDetailId;
@@ -251,32 +220,12 @@ namespace EduToyRentAPI.Controllers
         // POST: api/Reports
         [HttpPost]
         [EnableQuery]
-        public async Task<ActionResult<ReportResponse>> PostReport([FromForm] ReportRequest reportRequest)
+        public async Task<ActionResult<ReportResponse>> PostReport(ReportRequest reportRequest)
         {
-            var orderDetail = _unitOfWork.OrderDetailRepository.GetByID(reportRequest.OrderDetailId);
-            if (orderDetail == null)
-            {
-                return NotFound(new { Message = "Order detail not found" });
-            }
-
-            if (reportRequest.VideoUrl == null || reportRequest.VideoUrl.Length == 0)
-            {
-                return BadRequest(new { Message = "No video file was uploaded" });
-            }
-
-            string uploadedVideoUrl;
-            try
-            {
-                uploadedVideoUrl = await _fireBaseService.UploadImageAsync(reportRequest.VideoUrl);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"Failed to upload video: {ex.Message}" });
-            }
-
+            
             var report = new Report
             {
-                VideoUrl = uploadedVideoUrl,
+                VideoUrl = reportRequest.VideoUrl,
                 Description = reportRequest.Description,
                 Status = reportRequest.Status,
                 OrderDetailId = reportRequest.OrderDetailId,
@@ -287,7 +236,7 @@ namespace EduToyRentAPI.Controllers
             _unitOfWork.Save();
 
             var createdReport = _unitOfWork.ReportRepository.Get(
-                includeProperties: "OrderDetail.Toy,User",
+                includeProperties: "User,OrderDetail.Toy,User.Role",
                 filter: r => r.Id == report.Id).FirstOrDefault();
 
             if (createdReport == null)
