@@ -29,7 +29,7 @@ namespace EduToyRentAPI.Controllers
         // GET: api/WalletTransaction
         [HttpGet]
         [EnableQuery]
-        public ActionResult<IEnumerable<WalletTransactionResponse>> GetWalletTransactions(int pageIndex = 1, int pageSize = 50)
+        public ActionResult<IEnumerable<WalletTransactionResponse>> GetWalletTransactions(int pageIndex = 1, int pageSize = 1000)
         {
             var walletTransactions = _unitOfWork.WalletTransactionRepository.Get(
                 includeProperties: "Wallet,PaymentType",
