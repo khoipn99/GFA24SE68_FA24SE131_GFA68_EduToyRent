@@ -252,7 +252,7 @@ const Payment = () => {
         throw new Error("Matching order not found");
       }
 
-      const rentalPrice = (price * (matchingOrder.percentPrice || 0)) / 100;
+      const rentalPrice = price * (matchingOrder.percentPrice || 0);
       console.log(matchingOrder.time); // Log giá trị `time`
       return rentalPrice; // Trả về rentalPrice
     } catch (error) {
@@ -368,8 +368,7 @@ const Payment = () => {
                   await groupedItems[shopId].map(async (item, index) => {
                     orderType.map((item2, index) => {
                       if (item.orderTypeId == item2.id) {
-                        totalRentPriceTmp +=
-                          (item.price * item2.percentPrice) / 100;
+                        totalRentPriceTmp += item.price * item2.percentPrice;
                       }
                     });
                   });
@@ -483,8 +482,7 @@ const Payment = () => {
                           var rentPriceTmp = 0;
                           orderType.map((item2, index) => {
                             if (item.orderTypeId == item2.id) {
-                              rentPriceTmp +=
-                                (item.price * item2.percentPrice) / 100;
+                              rentPriceTmp += item.price * item2.percentPrice;
                             }
                           });
                           await apiOrderDetail.post(
@@ -765,8 +763,7 @@ const Payment = () => {
                 await groupedItems[shopId].map((item, index) => {
                   orderType.map((item2, index) => {
                     if (item.orderTypeId == item2.id) {
-                      totalRentPriceTmp +=
-                        (item.price * item2.percentPrice) / 100;
+                      totalRentPriceTmp += item.price * item2.percentPrice;
                     }
                   });
                 });
@@ -870,8 +867,7 @@ const Payment = () => {
                         var rentPriceTmp = 0;
                         orderType.map((item2, index) => {
                           if (item.orderTypeId == item2.id) {
-                            rentPriceTmp +=
-                              (item.price * item2.percentPrice) / 100;
+                            rentPriceTmp += item.price * item2.percentPrice;
                           }
                         });
                         await apiOrderDetail.post(
@@ -1316,7 +1312,7 @@ const Payment = () => {
 
                   <p className="text-center">
                     {item.rentalPrice && item.rentalPrice
-                      ? item.rentalPrice
+                      ? item.rentalPrice.toLocaleString()
                       : 0}{" "}
                     ₫
                   </p>

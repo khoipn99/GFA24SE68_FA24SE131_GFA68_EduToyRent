@@ -17,6 +17,8 @@ import CardDataStats from "../../Component/DashBoard/CardDataStats";
 import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
 import apiNotifications from "../../service/ApiNotifications";
 import ChatForm from "../Chat/ChatForm";
+import apiPlatformFees from "../../service/ApiPlatfromFees";
+import apiOrderTypes from "../../service/ApiOrderTypes";
 
 const InformationLessor = () => {
   const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -36,7 +38,8 @@ const InformationLessor = () => {
   const [openVideoReturn, setOpenVideoReturn] = useState("");
   const [returnDescription, setReturnDescription] = useState("");
   const [returnFee, setReturnFee] = useState(0);
-
+  const [orderType, setOrderType] = useState([]);
+  const [platformFee, setPlatformFee] = useState({});
   const navigate = useNavigate();
 
   // Sample data for orders
@@ -120,6 +123,30 @@ const InformationLessor = () => {
     const userDataCookie = Cookies.get("userDataReal");
     const parsedUserData = JSON.parse(userDataCookie);
 
+    apiOrderTypes
+      .get("?pageIndex=1&pageSize=20", {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        setOrderType(response.data);
+
+        console.log(response.data);
+      });
+
+    apiPlatformFees
+      .get("?pageIndex=1&pageSize=20", {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        setPlatformFee(response.data);
+
+        console.log(response.data);
+      });
+
     apiOrder
       .get(
         "/ByShop?shopId=" + parsedUserData.id + "&pageIndex=1&pageSize=1000",
@@ -190,6 +217,8 @@ const InformationLessor = () => {
   };
 
   const handleViewDetails = (order) => {
+    console.log(order);
+
     setSelectedOrder(order);
 
     apiOrderDetail
@@ -262,13 +291,12 @@ const InformationLessor = () => {
       });
   };
 
-  const handleCheckingOrderDetail = async (order, index) => {
+  const handleCheckingOrderDetail = (order, index) => {
     if (
       (returnFee == 0 && returnDescription == "") ||
       (returnFee == "" && returnDescription == "")
     ) {
-      alert("xong");
-      //handleFinishOrderDetail(order);
+      handleFinishOrderDetail(order);
       return;
     }
     if (
@@ -280,6 +308,7 @@ const InformationLessor = () => {
       openVideoReturn.video[index] != null
     ) {
       handleFeeOrderDetail(order, index);
+      return;
       // Xử lý logic khi các điều kiện đúng
     } else {
       alert("Bạn chưa nhập đủ thông tin phí phạt");
@@ -311,9 +340,9 @@ const InformationLessor = () => {
           origin: response.data.origin || "Default Origin",
           age: response.data.age || "All Ages",
           brand: response.data.brand || "Default Brand",
-          categoryId: response.data.category.id || "1",
+          categoryId: response.data.category.id || "1", // Nếu không có selectedCategory thì dùng mặc định
 
-          rentCount: response.data.rentCount || "0",
+          rentCount: response.data.rentCount + 1 || "0",
           quantitySold: response.data.quantitySold || "0",
           status: "Active",
         };
@@ -324,30 +353,22 @@ const InformationLessor = () => {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
           },
         });
-      });
 
-    await apiUser
-      .get("/" + selectedOrder.userId, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      })
-      .then(async (response) => {
-        console.log(response.data);
-        const userTmp = response.data;
         await apiWallets
-          .get("/" + userTmp.walletId, {
+          .get("/" + customerInfo.walletId, {
             headers: {
               Authorization: `Bearer ${Cookies.get("userToken")}`,
             },
           })
-          .then(async (response2) => {
-            const walletTmp = response2.data;
-            console.log(walletTmp);
+          .then(async (response3) => {
+            const walletTmp = response3.data;
+            console.log(walletTmp.id);
             await apiWallets.put(
               "/" + walletTmp.id,
               {
-                balance: walletTmp.balance + (order.deposit - order.rentPrice),
+                balance:
+                  walletTmp.balance +
+                  order.rentPrice * (1 - platformFee[0].percent),
                 withdrawMethod: walletTmp.withdrawMethod,
                 withdrawInfo: walletTmp.withdrawInfo,
                 status: walletTmp.status,
@@ -362,8 +383,10 @@ const InformationLessor = () => {
             await apiWalletTransaction.post(
               "",
               {
-                transactionType: "Nhận lại tiền cọc",
-                amount: parseInt(order.deposit - order.rentPrice),
+                transactionType: "Nhận tiền từ đơn hàng",
+                amount: parseInt(
+                  order.rentPrice * (1 - platformFee[0].percent)
+                ),
                 date: new Date().toISOString(),
                 walletId: walletTmp.id,
                 paymentTypeId: 5,
@@ -377,50 +400,60 @@ const InformationLessor = () => {
               }
             );
           });
-      });
 
-    await apiWallets
-      .get("/" + customerInfo.walletId, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      })
-      .then(async (response2) => {
-        const walletTmp = response2.data;
-        console.log(walletTmp);
-        await apiWallets.put(
-          "/" + walletTmp.id,
-          {
-            balance: walletTmp.balance + order.rentPrice * 0.85,
-            withdrawMethod: walletTmp.withdrawMethod,
-            withdrawInfo: walletTmp.withdrawInfo,
-            status: walletTmp.status,
-            userId: walletTmp.userId,
-          },
-          {
+        await apiUser
+          .get("/" + selectedOrder.userId, {
             headers: {
               Authorization: `Bearer ${Cookies.get("userToken")}`,
             },
-          }
-        );
-
-        await apiWalletTransaction.post(
-          "",
-          {
-            transactionType: "Nhận tiền từ đơn hàng",
-            amount: parseInt(order.rentPrice * 0.85),
-            date: new Date().toISOString(),
-            walletId: customerInfo.walletId,
-            paymentTypeId: 5,
-            orderId: selectedOrder.id,
-            status: "Success",
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("userToken")}`,
-            },
-          }
-        );
+          })
+          .then(async (response1) => {
+            console.log(response1.data);
+            const userTmp = response1.data;
+            await apiWallets
+              .get("/" + userTmp.walletId, {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              })
+              .then(async (response2) => {
+                const walletTmp = response2.data;
+                console.log(walletTmp.id);
+                await apiWallets.put(
+                  "/" + walletTmp.id,
+                  {
+                    balance:
+                      walletTmp.balance + (order.deposit - order.rentPrice),
+                    withdrawMethod: walletTmp.withdrawMethod,
+                    withdrawInfo: walletTmp.withdrawInfo,
+                    status: walletTmp.status,
+                    userId: walletTmp.userId,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                );
+                await apiWalletTransaction.post(
+                  "",
+                  {
+                    transactionType: "Nhận lại tiền cọc",
+                    amount: parseInt(order.deposit - order.rentPrice),
+                    date: new Date().toISOString(),
+                    walletId: walletTmp.id,
+                    paymentTypeId: 5,
+                    orderId: selectedOrder.id,
+                    status: "Success",
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                );
+              });
+          });
       });
 
     await apiTransaction
@@ -430,7 +463,6 @@ const InformationLessor = () => {
         },
       })
       .then(async (response1) => {
-        ViewDetails();
         const transactionTmp = response1.data.filter(
           (transaction) => transaction.order.id == selectedOrder.id
         );
@@ -442,8 +474,9 @@ const InformationLessor = () => {
               "",
               {
                 receiveMoney: order.unitPrice,
-                platformFee: order.rentPrice * 0.15,
-                ownerReceiveMoney: order.rentPrice * 0.85,
+                platformFee: order.rentPrice * platformFee[0].percent,
+                ownerReceiveMoney:
+                  order.rentPrice * (1 - platformFee[0].percent),
                 depositBackMoney: order.unitPrice - order.rentPrice,
                 status: "Success",
                 orderId: selectedOrder.id,
@@ -464,10 +497,11 @@ const InformationLessor = () => {
                 "",
                 {
                   receiveMoney: order.unitPrice,
-                  platformFee: order.rentPrice * 0.15,
-                  ownerReceiveMoney: order.rentPrice * 0.85,
+                  platformFee: order.rentPrice * platformFee[0].percent,
+                  ownerReceiveMoney:
+                    order.rentPrice * (1 - platformFee[0].percent),
                   depositBackMoney: order.unitPrice - order.rentPrice,
-                  status: "ToyGood",
+                  status: "Success",
                   orderDetailId: order.id,
                   transactionId: response.data.id,
                   platformFeeId: 1,
@@ -488,15 +522,17 @@ const InformationLessor = () => {
               {
                 receiveMoney: transactionTmp[0].receiveMoney + order.unitPrice,
                 platformFee:
-                  transactionTmp[0].platformFee + order.rentPrice * 0.15,
+                  transactionTmp[0].platformFee +
+                  order.rentPrice * platformFee[0].percent,
                 ownerReceiveMoney:
-                  transactionTmp[0].ownerReceiveMoney + order.rentPrice * 0.85,
+                  transactionTmp[0].ownerReceiveMoney +
+                  order.rentPrice * (1 - platformFee[0].percent),
                 depositBackMoney:
                   transactionTmp[0].depositBackMoney +
                   (order.unitPrice - order.rentPrice),
                 status: "Success",
                 orderId: selectedOrder.id,
-                fineFee: 0,
+                fineFee: transactionTmp[0].fineFee,
                 date: new Date().toISOString(),
               },
               {
@@ -513,10 +549,11 @@ const InformationLessor = () => {
                 "",
                 {
                   receiveMoney: order.unitPrice,
-                  platformFee: order.rentPrice * 0.15,
-                  ownerReceiveMoney: order.rentPrice * 0.85,
+                  platformFee: order.rentPrice * platformFee[0].percent,
+                  ownerReceiveMoney:
+                    order.rentPrice * (1 - platformFee[0].percent),
                   depositBackMoney: order.unitPrice - order.rentPrice,
-                  status: "ToyGood",
+                  status: "Success",
                   orderDetailId: order.id,
                   transactionId: transactionTmp[0].id,
                   platformFeeId: 1,
@@ -532,6 +569,7 @@ const InformationLessor = () => {
             });
         }
       });
+    ViewDetails();
   };
 
   const handleFeeOrderDetail = async (order, index) => {
@@ -540,11 +578,15 @@ const InformationLessor = () => {
     formData.append(`checkImageUrls`, openVideoReturn.video[index]);
 
     await apiOrderCheckImages
-      .post("?orderDetailId=" + order.id, formData, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("userToken")}`,
-        },
-      })
+      .post(
+        "?orderDetailId=" + order.id + "&status=" + returnDescription,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      )
       .then((response) => {
         var tmp = order;
         tmp.status = "AcceptFee";
@@ -559,242 +601,6 @@ const InformationLessor = () => {
             ViewDetails();
           });
       });
-
-    // await apiToys
-    //   .get("/" + order.toyId, {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //     },
-    //   })
-    //   .then(async (response) => {
-    //     const updatedToy = {
-    //       name: response.data.name || "Default Toy Name",
-    //       description: response.data.description || "Default Description",
-    //       price: response.data.price || "0",
-    //       buyQuantity: response.data.buyQuantity || "0",
-    //       origin: response.data.origin || "Default Origin",
-    //       age: response.data.age || "All Ages",
-    //       brand: response.data.brand || "Default Brand",
-    //       categoryId: response.data.category.id || "1",
-    //       rentCount: response.data.rentCount || "0",
-    //       quantitySold: response.data.quantitySold || "0",
-    //       status: "Active",
-    //     };
-
-    //     await apiToys.put(`/${order.toyId}`, updatedToy, {
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //         Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //       },
-    //     });
-    //   });
-
-    // await apiUser
-    //   .get("/" + selectedOrder.userId, {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //     },
-    //   })
-    //   .then(async (response) => {
-    //     console.log(response.data);
-    //     const userTmp = response.data;
-    //     await apiWallets
-    //       .get("/" + userTmp.walletId, {
-    //         headers: {
-    //           Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //         },
-    //       })
-    //       .then(async (response2) => {
-    //         const walletTmp = response2.data;
-    //         console.log(walletTmp);
-    //         await apiWallets.put(
-    //           "/" + walletTmp.id,
-    //           {
-    //             balance: walletTmp.balance + (order.deposit - order.rentPrice),
-    //             withdrawMethod: walletTmp.withdrawMethod,
-    //             withdrawInfo: walletTmp.withdrawInfo,
-    //             status: walletTmp.status,
-    //             userId: walletTmp.userId,
-    //           },
-    //           {
-    //             headers: {
-    //               Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //             },
-    //           }
-    //         );
-    //         await apiWalletTransaction.post(
-    //           "",
-    //           {
-    //             transactionType: "Nhận lại tiền cọc",
-    //             amount: parseInt(order.deposit - order.rentPrice),
-    //             date: new Date().toISOString(),
-    //             walletId: walletTmp.id,
-    //             paymentTypeId: 5,
-    //             orderId: selectedOrder.id,
-    //             status: "Success",
-    //           },
-    //           {
-    //             headers: {
-    //               Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //             },
-    //           }
-    //         );
-    //       });
-    //   });
-
-    // await apiWallets
-    //   .get("/" + customerInfo.walletId, {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //     },
-    //   })
-    //   .then(async (response2) => {
-    //     const walletTmp = response2.data;
-    //     console.log(walletTmp);
-    //     await apiWallets.put(
-    //       "/" + walletTmp.id,
-    //       {
-    //         balance: walletTmp.balance + order.rentPrice * 0.85,
-    //         withdrawMethod: walletTmp.withdrawMethod,
-    //         withdrawInfo: walletTmp.withdrawInfo,
-    //         status: walletTmp.status,
-    //         userId: walletTmp.userId,
-    //       },
-    //       {
-    //         headers: {
-    //           Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //         },
-    //       }
-    //     );
-
-    //     await apiWalletTransaction.post(
-    //       "",
-    //       {
-    //         transactionType: "Nhận tiền từ đơn hàng",
-    //         amount: parseInt(order.rentPrice * 0.85),
-    //         date: new Date().toISOString(),
-    //         walletId: customerInfo.walletId,
-    //         paymentTypeId: 5,
-    //         orderId: selectedOrder.id,
-    //         status: "Success",
-    //       },
-    //       {
-    //         headers: {
-    //           Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //         },
-    //       }
-    //     );
-    //   });
-
-    // await apiTransaction
-    //   .get("?pageIndex=1&pageSize=1000", {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //     },
-    //   })
-    //   .then(async (response1) => {
-    //     ViewDetails();
-    //     const transactionTmp = response1.data.filter(
-    //       (transaction) => transaction.order.id == selectedOrder.id
-    //     );
-    //     console.log(transactionTmp);
-
-    //     if (transactionTmp == "") {
-    //       await apiTransaction
-    //         .post(
-    //           "",
-    //           {
-    //             receiveMoney: order.unitPrice,
-    //             platformFee: order.rentPrice * 0.15,
-    //             ownerReceiveMoney: order.rentPrice * 0.85,
-    //             depositBackMoney: order.unitPrice - order.rentPrice,
-    //             status: "Success",
-    //             orderId: selectedOrder.id,
-    //             fineFee: 0,
-    //             date: new Date().toISOString(),
-    //           },
-    //           {
-    //             headers: {
-    //               Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //             },
-    //           }
-    //         )
-    //         .then(async (response) => {
-    //           console.log(response.data);
-
-    //           console.log(order);
-    //           await apiTransactionDetail.post(
-    //             "",
-    //             {
-    //               receiveMoney: order.unitPrice,
-    //               platformFee: order.rentPrice * 0.15,
-    //               ownerReceiveMoney: order.rentPrice * 0.85,
-    //               depositBackMoney: order.unitPrice - order.rentPrice,
-    //               status: "ToyGood",
-    //               orderDetailId: order.id,
-    //               transactionId: response.data.id,
-    //               platformFeeId: 1,
-    //               fineFee: 0,
-    //               date: new Date().toISOString(),
-    //             },
-    //             {
-    //               headers: {
-    //                 Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //               },
-    //             }
-    //           );
-    //         });
-    //     } else {
-    //       await apiTransaction
-    //         .put(
-    //           "/" + transactionTmp[0].id,
-    //           {
-    //             receiveMoney: transactionTmp[0].receiveMoney + order.unitPrice,
-    //             platformFee:
-    //               transactionTmp[0].platformFee + order.rentPrice * 0.15,
-    //             ownerReceiveMoney:
-    //               transactionTmp[0].ownerReceiveMoney + order.rentPrice * 0.85,
-    //             depositBackMoney:
-    //               transactionTmp[0].depositBackMoney +
-    //               (order.unitPrice - order.rentPrice),
-    //             status: "Success",
-    //             orderId: selectedOrder.id,
-    //             fineFee: 0,
-    //             date: new Date().toISOString(),
-    //           },
-    //           {
-    //             headers: {
-    //               Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //             },
-    //           }
-    //         )
-    //         .then(async (response) => {
-    //           console.log(response.data);
-
-    //           console.log(order);
-    //           await apiTransactionDetail.post(
-    //             "",
-    //             {
-    //               receiveMoney: order.unitPrice,
-    //               platformFee: order.rentPrice * 0.15,
-    //               ownerReceiveMoney: order.rentPrice * 0.85,
-    //               depositBackMoney: order.unitPrice - order.rentPrice,
-    //               status: "ToyGood",
-    //               orderDetailId: order.id,
-    //               transactionId: transactionTmp[0].id,
-    //               platformFeeId: 1,
-    //               fineFee: 0,
-    //               date: new Date().toISOString(),
-    //             },
-    //             {
-    //               headers: {
-    //                 Authorization: `Bearer ${Cookies.get("userToken")}`,
-    //               },
-    //             }
-    //           );
-    //         });
-    //     }
-    //   });
   };
 
   const handleAcceptOrder = (order) => {
@@ -2042,6 +1848,7 @@ const InformationLessor = () => {
       "Delivering",
       "Checking",
       "AcceptFee",
+      "StaffCheck",
       "Complete",
     ];
     const getStatusIndex = (status) => stages.indexOf(status);
@@ -2154,6 +1961,13 @@ const InformationLessor = () => {
                                 <p className="text-red-500">
                                   Phí phạt yêu cầu :{" "}
                                   {item.fine.toLocaleString()} VNĐ
+                                </p>
+                              )}
+
+                            {item.orderCheckImageUrl[1] != null &&
+                              item.orderCheckImageUrl[1] != "" && (
+                                <p className="text-red-500">
+                                  Lý do phạt : {item.orderCheckStatus[index]}
                                 </p>
                               )}
                           </div>
@@ -2396,6 +2210,10 @@ const InformationLessor = () => {
                                   <div className="text-sm">
                                     Phí phạt (Nếu có)
                                   </div>
+                                )}
+
+                                {stage == "StaffCheck" && (
+                                  <div className="text-sm">Xử lý khiếu nại</div>
                                 )}
                                 {stage === "Complete" && (
                                   <div className="text-sm">Hoàn thành</div>
