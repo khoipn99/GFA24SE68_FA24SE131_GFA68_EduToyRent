@@ -13,9 +13,9 @@ namespace EduToyRentRepositories.DTO.Response
         public string Description { get; set; }
         public string Status { get; set; }
         public int OrderDetailId { get; set; }
-        public int ToyId { get; set; }
-        public string ToyName { get; set; }
+        public OrderDetailResponse OrderDetail { get; set; }
         public int UserId { get; set; }
-        public string UserName { get; set; }
+        public UserResponse User { get; set; } 
+
     }
 }
