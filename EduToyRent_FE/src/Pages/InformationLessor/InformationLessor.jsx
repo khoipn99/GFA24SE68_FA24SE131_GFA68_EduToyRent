@@ -1974,7 +1974,7 @@ const InformationLessor = () => {
                             {item.orderCheckImageUrl[1] != null &&
                               item.orderCheckImageUrl[1] != "" && (
                                 <p className="text-red-500">
-                                  Lý do phạt : {item.orderCheckStatus[index]}
+                                  Lý do phạt : {item.orderCheckStatus[1]}
                                 </p>
                               )}
                           </div>

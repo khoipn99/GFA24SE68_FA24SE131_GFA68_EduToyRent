@@ -14,15 +14,15 @@ namespace EduToyRentAPI.Controllers
         private string checksumKey = "aa60025cc4de8437f2ceffc8cce9ba108c6422f5812911586cb7b381828ebfd5";
 
         [HttpPost("create-payment-link")]
-        public async Task<IActionResult> CreatePaymentLink(int totalAmount, int orderId) 
+        public async Task<IActionResult> CreatePaymentLink(int totalAmount) 
         {   
             try
             {
                 var payOS = new PayOS(clientId, apiKey, checksumKey);
 
-                var domain = "https://edu-toy-rent.vercel.app";
+                //var domain = "https://edu-toy-rent.vercel.app";
 
-                //var domain = "https://localhost:3000";
+                var domain = "http://localhost:3000";
 
                 //string paymentCode = DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
 
@@ -30,7 +30,7 @@ namespace EduToyRentAPI.Controllers
                     orderCode: int.Parse(DateTimeOffset.Now.ToString("ffffff")),
                     amount: totalAmount,
                     description: "Nap vao vi EduToyRent",
-                    items: [new("" + orderId, 1, totalAmount)],
+                    items: [new("Nap tien vao vi EduToyRent", 1, totalAmount)],
                     //returnUrl: domain + "?success=true",
                     //cancelUrl: domain + "?canceled=true"
                     returnUrl: domain + "/top-up-success",

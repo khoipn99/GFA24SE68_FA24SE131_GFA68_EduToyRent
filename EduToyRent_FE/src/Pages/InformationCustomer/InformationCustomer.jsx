@@ -23,7 +23,7 @@ import apiRatingImage from "../../service/ApiRatingImage";
 
 const InformationCustomer = () => {
   const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
-  const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
+  const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 10MB
   const [selectedTab, setSelectedTab] = useState("info");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -1068,6 +1068,7 @@ const InformationCustomer = () => {
         },
       }
     );
+    ViewDetails();
   };
 
   const handleFinishOrderDetail = async (order) => {
@@ -1787,6 +1788,8 @@ const InformationCustomer = () => {
               quantity: item.quantity,
               startDate: item.startDate,
               endDate: item.endDate,
+              fine: item.fine,
+              rentCount: item.rentCount,
               status: item.status,
               orderId: item.orderId,
               toyId: item.toyId,
@@ -1800,6 +1803,7 @@ const InformationCustomer = () => {
             }
           )
           .then((response) => {
+            setIsReviewFormVisible(false);
             ViewDetails();
           });
       });
@@ -2688,7 +2692,7 @@ const InformationCustomer = () => {
                             {item.orderCheckImageUrl[1] != null &&
                               item.orderCheckImageUrl[1] != "" && (
                                 <p className="text-red-500">
-                                  Lý do phạt : {item.orderCheckStatus[index]}
+                                  Lý do phạt : {item.orderCheckStatus[1]}
                                 </p>
                               )}
                           </div>
@@ -2783,9 +2787,10 @@ const InformationCustomer = () => {
                                     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                                       <div className="bg-white p-6 rounded-md shadow-lg w-96 relative">
                                         <form
-                                          onSubmit={(e) =>
-                                            handleReport(item, index)
-                                          }
+                                          onSubmit={(e) => {
+                                            e.preventDefault();
+                                            handleReport(item, index);
+                                          }}
                                           className="flex flex-col space-y-4"
                                         >
                                           {/* Nút đóng (X) nằm bên trong form */}
