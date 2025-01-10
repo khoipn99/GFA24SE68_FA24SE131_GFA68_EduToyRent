@@ -83,6 +83,7 @@ const InformationLessor = () => {
             "?$filter=walletId eq " +
               parsedUserData.walletId +
               " and transactionType eq 'Nhận tiền từ đơn hàng'",
+
             {
               headers: {
                 Authorization: `Bearer ${Cookies.get("userToken")}`,
@@ -633,6 +634,12 @@ const InformationLessor = () => {
   };
 
   const handleCancelOrder = async (order) => {
+    const isConfirmed = window.confirm("Bạn có chắc muốn hủy đơn hàng này");
+
+    if (!isConfirmed) {
+      return;
+    }
+
     apiNotifications.post(
       "",
       {

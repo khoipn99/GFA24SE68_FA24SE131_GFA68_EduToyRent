@@ -60,10 +60,12 @@ const InformationCustomer = () => {
   const [openVideoReview, setOpenVideoReview] = useState([]);
   const [isReviewFormVisible, setIsReviewFormVisible] = useState(false);
   const [isReportFormVisible, setIsReportFormVisible] = useState(false);
+  const [isContinueFormVisible, setIsContinueFormVisible] = useState(false);
   const [reportDescription, setReportDescription] = useState("");
   const [orderType, setOrderType] = useState([]);
   const [platformFee, setPlatformFee] = useState([]);
-
+  const [continueRent, setContinueRent] = useState(0);
+  const [continueRentTime, setContinueRentTime] = useState(0);
   useEffect(() => {
     const userDataCookie1 = Cookies.get("userData");
     if (userDataCookie1) {
@@ -715,19 +717,84 @@ const InformationCustomer = () => {
     getUserInfo();
   };
 
-  const handleReturnOrderDetail = (order) => {
-    var tmp = order;
-    tmp.status = "Delivering";
+  const handleExtendRental = async (item) => {
+    console.log(continueRent);
+    console.log(continueRentTime);
 
-    apiOrderDetail
-      .put("/" + order.id, tmp, {
+    var tmp3 = item;
+    tmp3.status = "Processing";
+    tmp3.rentCount = item.rentCount + 1;
+
+    tmp3.rentPrice = item.rentPrice + continueRent;
+
+    const endDate = new Date(item.endDate);
+    const newEndDate = new Date(endDate);
+    newEndDate.setDate(endDate.getDate() + continueRentTime);
+    tmp3.endDate = newEndDate.toISOString();
+    console.log(tmp3);
+
+    await apiOrderDetail
+      .put("/" + item.id, tmp3, {
         headers: {
           Authorization: `Bearer ${Cookies.get("userToken")}`,
         },
       })
       .then((response) => {
+        setIsContinueFormVisible(false);
         ViewDetails();
       });
+  };
+
+  const handleContinueRent = async (price, time) => {
+    var totalRentPriceTmp = 0;
+    orderType.map((item2, index) => {
+      if (time == item2.id) {
+        totalRentPriceTmp += price * item2.percentPrice;
+      }
+    });
+    setContinueRent(totalRentPriceTmp);
+    if (time == 4) {
+      setContinueRentTime(7);
+    } else if (time == 5) {
+      setContinueRentTime(14);
+    } else if (time == 6) {
+      setContinueRentTime(30);
+    }
+  };
+
+  const handleReturnOrderDetail = (order, index) => {
+    if (
+      openVideoReturn &&
+      Array.isArray(openVideoReturn.video) &&
+      openVideoReturn.video[index] != null
+    ) {
+      var formData = new FormData();
+
+      formData.append(`checkImageUrls`, openVideoReturn.video[index]);
+
+      apiOrderCheckImages
+        .post("?orderDetailId=" + order.id + "&status=Success", formData, {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        })
+        .then((response) => {
+          var tmp = order;
+          tmp.status = "Delivering";
+          tmp.endDate = new Date().toISOString();
+          apiOrderDetail
+            .put("/" + order.id, tmp, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("userToken")}`,
+              },
+            })
+            .then((response) => {
+              ViewDetails();
+            });
+        });
+    } else {
+      alert("bạn chưa chọn video của đồ chơi trước khi trả hàng !");
+    }
   };
 
   const handleReturnSoon = (order, index) => {
@@ -741,7 +808,7 @@ const InformationCustomer = () => {
       formData.append(`checkImageUrls`, openVideoReturn.video[index]);
 
       apiOrderCheckImages
-        .post("?orderDetailId=" + order.id, formData, {
+        .post("?orderDetailId=" + order.id + "&status=Success", formData, {
           headers: {
             Authorization: `Bearer ${Cookies.get("userToken")}`,
           },
@@ -1266,6 +1333,12 @@ const InformationCustomer = () => {
   };
 
   const handleCancelOrder = async (order) => {
+    const isConfirmed = window.confirm("Bạn có chắc muốn hủy đơn hàng này");
+
+    if (!isConfirmed) {
+      return;
+    }
+
     var tmp = order;
     tmp.status = "Cancel";
 
@@ -1305,6 +1378,7 @@ const InformationCustomer = () => {
                 walletId: walletTmp.id,
                 paymentTypeId: 5,
                 orderId: order.id,
+                status: "Success",
               },
               {
                 headers: {
@@ -1330,14 +1404,92 @@ const InformationCustomer = () => {
                   }
                 )
                 .then((response) => {
-                  getOrderInfo();
+                  window.location.reload();
                 });
             });
           });
       });
   };
 
-  const handleReBuy = (order) => {};
+  const handleReBuy = async (order) => {
+    const isConfirmed = window.confirm("Bạn có chắc muốn đăt lại đơn hàng này");
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    var tmp = order;
+    tmp.status = "Pending";
+
+    console.log(order.userId);
+
+    await apiOrder.put("/" + order.id, tmp, {
+      headers: {
+        Authorization: `Bearer ${Cookies.get("userToken")}`,
+      },
+    });
+
+    await apiUser
+      .get("/" + order.userId, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        console.log(response.data);
+        const userTmp = response.data;
+        apiWallets
+          .get("/" + userTmp.walletId, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then((response2) => {
+            const walletTmp = response2.data;
+            console.log(walletTmp.id);
+
+            apiWalletTransaction.post(
+              "",
+              {
+                transactionType: "Thanh toán đơn hàng",
+                amount: -parseInt(order.totalPrice),
+                date: new Date().toISOString(),
+                walletId: walletTmp.id,
+                paymentTypeId: 5,
+                orderId: order.id,
+                status: "Success",
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              }
+            );
+            apiOrderDetail.get("/Order/" + order.id).then((response) => {
+              apiWallets
+                .put(
+                  "/" + walletTmp.id,
+                  {
+                    balance: walletTmp.balance - order.totalPrice,
+                    withdrawMethod: walletTmp.withdrawMethod,
+                    withdrawInfo: walletTmp.withdrawInfo,
+                    status: walletTmp.status,
+                    userId: walletTmp.userId,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  }
+                )
+                .then((response) => {
+                  //getOrderInfo();
+                  window.location.reload();
+                });
+            });
+          });
+      });
+  };
 
   const handleCompleteSaleOrder = async (orderToUpdate) => {
     try {
@@ -1938,6 +2090,8 @@ const InformationCustomer = () => {
                         ? "Đang giao hàng"
                         : order.status == "Processing"
                         ? "Đơn hàng đang thuê"
+                        : order.status == "Cancel"
+                        ? "Đã hủy"
                         : "Hoàn thành"}
                     </span>
                   </div>
@@ -2078,6 +2232,8 @@ const InformationCustomer = () => {
                         ? "Đang giao hàng"
                         : order.status == "Processing"
                         ? "Đơn hàng đang thuê"
+                        : order.status == "Cancel"
+                        ? "Đã hủy"
                         : "Hoàn thành"}
                     </span>
                   </div>
@@ -2536,28 +2692,7 @@ const InformationCustomer = () => {
                                 </p>
                               )}
                           </div>
-                          {item.status === "Expired" && (
-                            <div>
-                              <button
-                                className="flex items-center mb-2 px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
-                                onClick={() => handleBuyToy(item)}
-                              >
-                                Mua luôn
-                              </button>
-                              {/* <button
-                                className="flex items-center mb-2 px-4 py-2 bg-orange-500 text-white font-semibold rounded-md shadow hover:bg-orange-600 transition duration-200 ease-in-out"
-                                onClick={() => handleExtendRental(item)}
-                              >
-                                Thuê tiếp
-                              </button> */}
-                              <button
-                                className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
-                                onClick={() => handleReturnOrderDetail(item)}
-                              >
-                                Trả hàng
-                              </button>
-                            </div>
-                          )}
+
                           <div
                             style={{
                               display: "flex",
@@ -2708,7 +2843,8 @@ const InformationCustomer = () => {
                             )}
                           </div>
 
-                          {item.status === "Processing" && (
+                          {(item.status == "Processing" ||
+                            item.status == "Expired") && (
                             <div
                               className="border border border-gray-300 rounded p-4 mb-4 w-full text-center"
                               onDrop={(e) => handleDrop(e, "video", index)}
@@ -2746,16 +2882,144 @@ const InformationCustomer = () => {
                               </label>
                             </div>
                           )}
-                          {item.status === "Processing" && (
-                            <div>
+                          <div
+                            style={{
+                              marginLeft: "20px",
+                            }}
+                          >
+                            {item.status === "Processing" && (
+                              <div>
+                                <button
+                                  className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                                  onClick={() => handleReturnSoon(item, index)}
+                                >
+                                  Trả hàng sớm
+                                </button>
+                              </div>
+                            )}
+                            {item.status === "Expired" && (
+                              <button
+                                className="flex items-center mb-2 px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
+                                onClick={() => handleBuyToy(item)}
+                              >
+                                Mua luôn
+                              </button>
+                            )}
+                            {item.status === "Expired" &&
+                              item.rentCount < 3 && (
+                                <button
+                                  className="flex items-center mb-2 px-4 py-2 bg-orange-500 text-white font-semibold rounded-md shadow hover:bg-orange-600 transition duration-200 ease-in-out"
+                                  onClick={() => {
+                                    setIsContinueFormVisible(true);
+                                    orderType.map((item2, index) => {
+                                      if (4 == item2.id) {
+                                        setContinueRent(
+                                          item.toyPrice * item2.percentPrice
+                                        );
+                                      }
+                                    });
+                                  }}
+                                >
+                                  Thuê tiếp
+                                </button>
+                              )}
+                            {item.status === "Expired" && (
                               <button
                                 className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
-                                onClick={() => handleReturnSoon(item, index)}
+                                onClick={() =>
+                                  handleReturnOrderDetail(item, index)
+                                }
                               >
-                                Trả hàng sớm
+                                Trả hàng
                               </button>
-                            </div>
-                          )}
+                            )}
+                          </div>
+                          <div>
+                            {isContinueFormVisible && (
+                              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                                <div className="bg-white p-6 rounded-md shadow-lg w-96 relative">
+                                  <form
+                                    onSubmit={(e) => {
+                                      e.preventDefault(); // Ngăn form tự load lại trang
+                                      handleExtendRental(item); // Gọi hàm xử lý thuê tiếp
+                                    }}
+                                    className="flex flex-col space-y-4"
+                                  >
+                                    {/* Nút đóng (X) */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setIsContinueFormVisible(false);
+                                      }}
+                                      className="absolute top-3 right-3 text-xl text-red-500 hover:text-red-700"
+                                    >
+                                      ✖
+                                    </button>
+
+                                    {/* Hiển thị giá đồ chơi */}
+                                    <div>
+                                      <label className="block mb-2 font-medium">
+                                        Giá đồ chơi:
+                                      </label>
+                                      <p className="text-lg font-semibold">
+                                        {item.toyPrice.toLocaleString()} VND
+                                      </p>
+                                    </div>
+
+                                    {/* Hiển thị giá thuê */}
+                                    <div>
+                                      <label className="block mb-2 font-medium">
+                                        Giá thuê:
+                                      </label>
+                                      <p className="text-lg font-semibold">
+                                        {continueRent.toLocaleString()} VND
+                                      </p>
+                                    </div>
+
+                                    {/* Nút chọn số ngày thuê */}
+                                    <div className="flex justify-between">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleContinueRent(item.toyPrice, 4)
+                                        }
+                                        className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                                      >
+                                        7 ngày
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleContinueRent(item.toyPrice, 5)
+                                        }
+                                        className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                                      >
+                                        14 ngày
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleContinueRent(item.toyPrice, 6)
+                                        }
+                                        className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
+                                      >
+                                        1 tháng
+                                      </button>
+                                    </div>
+
+                                    {/* Nút gửi */}
+                                    <button
+                                      type="submit"
+                                      className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
+                                    >
+                                      Thuê tiếp
+                                    </button>
+                                  </form>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
                           {item.ratingId == null &&
                             item.status == "Complete" && (
                               <div>

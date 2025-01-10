@@ -62,6 +62,19 @@ const Payment = () => {
       }
     }
 
+    setShippingInfo({
+      ...shippingInfo,
+      city: 79,
+      district: "",
+      ward: "",
+    });
+    axios
+      .get(`https://provinces.open-api.vn/api/p/79?depth=2`)
+      .then((response) => {
+        setDistricts(response.data.districts);
+        console.log(response.data.districts);
+      });
+
     const userDataCookie = Cookies.get("userDataReal");
     if (userDataCookie) {
       const parsedUserData = JSON.parse(userDataCookie);
@@ -210,20 +223,7 @@ const Payment = () => {
     }
   };
 
-  const handleCityChange = (e) => {
-    const selectedCity = e.target.value;
-    setShippingInfo({
-      ...shippingInfo,
-      city: selectedCity,
-      district: "",
-      ward: "",
-    });
-    axios
-      .get(`https://provinces.open-api.vn/api/p/${selectedCity}?depth=2`)
-      .then((response) => {
-        setDistricts(response.data.districts);
-      });
-  };
+  const handleCityChange = (e) => {};
 
   const handleCheckboxChange2 = (e) => {
     setIsChecked(e.target.checked);
@@ -335,12 +335,9 @@ const Payment = () => {
             if (
               shippingInfo.detail != "" &&
               shippingInfo.ward != "" &&
-              shippingInfo.district != "" &&
-              shippingInfo.city != ""
+              shippingInfo.district != ""
             ) {
-              const city = cities.find(
-                (city) => city.code == shippingInfo.city
-              ).name;
+              const city = cities.find((city) => city.code == 79).name;
               const distric = districts.find(
                 (district) => district.code == shippingInfo.district
               ).name;
@@ -1207,17 +1204,15 @@ const Payment = () => {
                   Thành phố/Tỉnh:
                 </label>
                 <select
+                  readOnly
                   name="city"
                   value={shippingInfo.city}
                   onChange={handleCityChange}
                   className="w-full border border-gray-300 rounded-md p-2"
                 >
-                  <option value="">Chọn thành phố/tỉnh</option>
-                  {cities.map((city) => (
-                    <option key={city.code} value={city.code}>
-                      {city.name}
-                    </option>
-                  ))}
+                  <option key={79} value={79}>
+                    Thành phố Hồ Chí Minh
+                  </option>
                 </select>
               </div>
               <div>
@@ -1227,7 +1222,6 @@ const Payment = () => {
                   value={shippingInfo.district}
                   onChange={handleDistrictChange}
                   className="w-full border border-gray-300 rounded-md p-2"
-                  disabled={!shippingInfo.city}
                 >
                   <option value="">Chọn quận/huyện</option>
                   {districts.map((district) => (

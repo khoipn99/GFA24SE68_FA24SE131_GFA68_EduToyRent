@@ -22,6 +22,7 @@ import apiReport from "../../service/ApiReport";
 import apiPlatformFees from "../../service/ApiPlatfromFees";
 import apiTransaction from "../../service/ApiTransaction";
 import apiTransactionDetail from "../../service/ApiTransactionDetail";
+import apiOrderTypes from "../../service/ApiOrderTypes";
 
 const StaffPage = () => {
   const [userData, setUserData] = useState("");
@@ -73,6 +74,7 @@ const StaffPage = () => {
   const [selectedOwnerReport, setSelectedOwnerReport] = useState({});
   const [feeReport, setFeeReport] = useState(0);
   const [platformFee, setPlatformFee] = useState([]);
+  const [orderType, setOrderType] = useState([]);
 
   useEffect(() => {
     const userDataCookie = Cookies.get("userData");
@@ -147,6 +149,8 @@ const StaffPage = () => {
       LoadUserBan();
       LoadOrder("");
       LoadPayment();
+      LoadLateOrder();
+      LoadBuyLateOrder();
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
@@ -199,6 +203,326 @@ const StaffPage = () => {
     }
   };
   const [newImage, setNewImage] = useState("");
+
+  const LoadBuyLateOrder = async () => {
+    const currentDate = new Date();
+    var filterDate = new Date();
+    filterDate.setDate(currentDate.getDate() - 1);
+
+    await apiOrderDetail
+      .get(
+        `?&$filter=contains(tolower(status), 'expired') and endDate lt ${filterDate.toISOString()} and rentCount eq 3`,
+
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      )
+      .then(async (response2) => {
+        console.log(response2.data);
+        if (response2.data != "")
+          response2.data.map(async (order, index) => {
+            await apiPlatformFees
+              .get("?pageIndex=1&pageSize=20", {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("userToken")}`,
+                },
+              })
+              .then(async (response4) => {
+                var tmp3 = order;
+                tmp3.status = "Complete";
+
+                await apiOrderDetail.put("/" + order.id, tmp3, {
+                  headers: {
+                    Authorization: `Bearer ${Cookies.get("userToken")}`,
+                  },
+                });
+
+                await apiToys
+                  .get("/" + order.toyId, {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  })
+                  .then(async (response) => {
+                    const updatedToy = {
+                      name: response.data.name || "Default Toy Name",
+                      description:
+                        response.data.description || "Default Description",
+                      price: response.data.price || "0",
+                      buyQuantity: response.data.buyQuantity || "0",
+                      origin: response.data.origin || "Default Origin",
+                      age: response.data.age || "All Ages",
+                      brand: response.data.brand || "Default Brand",
+                      categoryId: response.data.category.id || "1", // Nếu không có selectedCategory thì dùng mặc định
+
+                      rentCount: response.data.rentCount || "0",
+                      quantitySold: response.data.quantitySold || "0",
+                      status: "Sold",
+                    };
+
+                    await apiToys.put(`/${order.toyId}`, updatedToy, {
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${Cookies.get("userToken")}`,
+                      },
+                    });
+
+                    await apiUser
+                      .get("/" + response.data.owner.id, {
+                        headers: {
+                          Authorization: `Bearer ${Cookies.get("userToken")}`,
+                        },
+                      })
+                      .then(async (response1) => {
+                        console.log(response1.data);
+                        const userTmp = response1.data;
+                        await apiWallets
+                          .get("/" + userTmp.walletId, {
+                            headers: {
+                              Authorization: `Bearer ${Cookies.get(
+                                "userToken"
+                              )}`,
+                            },
+                          })
+                          .then(async (response2) => {
+                            const walletTmp = response2.data;
+                            console.log(walletTmp.id);
+                            await apiWallets.put(
+                              "/" + walletTmp.id,
+                              {
+                                balance:
+                                  walletTmp.balance +
+                                  order.deposit *
+                                    (1 - response4.data[0].percent),
+                                withdrawMethod: walletTmp.withdrawMethod,
+                                withdrawInfo: walletTmp.withdrawInfo,
+                                status: walletTmp.status,
+                                userId: walletTmp.userId,
+                              },
+                              {
+                                headers: {
+                                  Authorization: `Bearer ${Cookies.get(
+                                    "userToken"
+                                  )}`,
+                                },
+                              }
+                            );
+                            await apiWalletTransaction.post(
+                              "",
+                              {
+                                transactionType: "Nhận tiền từ đơn hàng",
+                                amount: parseInt(
+                                  order.deposit *
+                                    (1 - response4.data[0].percent)
+                                ),
+                                date: new Date().toISOString(),
+                                walletId: walletTmp.id,
+                                paymentTypeId: 5,
+                                orderId: order.orderId,
+                                status: "Success",
+                              },
+                              {
+                                headers: {
+                                  Authorization: `Bearer ${Cookies.get(
+                                    "userToken"
+                                  )}`,
+                                },
+                              }
+                            );
+                          });
+                      });
+                  });
+
+                await apiTransaction
+                  .get("?pageIndex=1&pageSize=1000", {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  })
+                  .then(async (response1) => {
+                    const transactionTmp = response1.data.filter(
+                      (transaction) => transaction.order.id == order.orderId
+                    );
+                    console.log(transactionTmp);
+
+                    if (transactionTmp == "") {
+                      await apiTransaction
+                        .post(
+                          "",
+                          {
+                            receiveMoney: order.unitPrice,
+                            platformFee:
+                              order.unitPrice * response4.data[0].percent,
+                            ownerReceiveMoney:
+                              order.unitPrice * (1 - response4.data[0].percent),
+                            depositBackMoney: 0,
+                            status: "Success",
+                            orderId: order.orderId,
+                            fineFee: 0,
+                            date: new Date().toISOString(),
+                          },
+                          {
+                            headers: {
+                              Authorization: `Bearer ${Cookies.get(
+                                "userToken"
+                              )}`,
+                            },
+                          }
+                        )
+                        .then(async (response) => {
+                          console.log(response.data);
+
+                          console.log(order);
+                          await apiTransactionDetail.post(
+                            "",
+                            {
+                              receiveMoney: order.unitPrice,
+                              platformFee:
+                                order.unitPrice * response4.data[0].percent,
+                              ownerReceiveMoney:
+                                order.unitPrice *
+                                (1 - response4.data[0].percent),
+                              depositBackMoney: 0,
+                              status: "ToyBroke",
+                              orderDetailId: order.id,
+                              transactionId: response.data.id,
+                              platformFeeId: 1,
+                              fineFee: 0,
+                              date: new Date().toISOString(),
+                            },
+                            {
+                              headers: {
+                                Authorization: `Bearer ${Cookies.get(
+                                  "userToken"
+                                )}`,
+                              },
+                            }
+                          );
+                        });
+                    } else {
+                      await apiTransaction
+                        .put(
+                          "/" + transactionTmp[0].id,
+                          {
+                            receiveMoney:
+                              transactionTmp[0].receiveMoney + order.unitPrice,
+                            platformFee:
+                              transactionTmp[0].platformFee +
+                              order.unitPrice * response4.data[0].percent,
+                            ownerReceiveMoney:
+                              transactionTmp[0].ownerReceiveMoney +
+                              order.unitPrice * (1 - response4.data[0].percent),
+                            depositBackMoney:
+                              transactionTmp[0].depositBackMoney,
+                            status: "Success",
+                            orderId: order.orderId,
+                            fineFee: transactionTmp[0].fineFee,
+                            date: new Date().toISOString(),
+                          },
+                          {
+                            headers: {
+                              Authorization: `Bearer ${Cookies.get(
+                                "userToken"
+                              )}`,
+                            },
+                          }
+                        )
+                        .then(async (response) => {
+                          console.log(response.data);
+
+                          console.log(order);
+                          await apiTransactionDetail.post(
+                            "",
+                            {
+                              receiveMoney: order.unitPrice,
+                              platformFee:
+                                order.unitPrice * response4.data[0].percent,
+                              ownerReceiveMoney:
+                                order.unitPrice *
+                                (1 - response4.data[0].percent),
+                              depositBackMoney: 0,
+                              status: "ToyBroke",
+                              orderDetailId: order.id,
+                              transactionId: transactionTmp[0].id,
+                              platformFeeId: 1,
+                              fineFee: 0,
+                              date: new Date().toISOString(),
+                            },
+                            {
+                              headers: {
+                                Authorization: `Bearer ${Cookies.get(
+                                  "userToken"
+                                )}`,
+                              },
+                            }
+                          );
+                        });
+                    }
+                  });
+              });
+          });
+      });
+  };
+
+  const LoadLateOrder = async () => {
+    const currentDate = new Date();
+    var filterDate = new Date();
+    filterDate.setDate(currentDate.getDate() - 1);
+
+    await apiOrderDetail
+      .get(
+        `?&$filter=contains(tolower(status), 'expired') and endDate lt ${filterDate.toISOString()} and rentCount lt 3`,
+
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("userToken")}`,
+          },
+        }
+      )
+      .then(async (response) => {
+        await apiOrderTypes
+          .get(`?pageIndex=1&pageSize=2000`, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("userToken")}`,
+            },
+          })
+          .then(async (response2) => {
+            console.log(response.data);
+            if (response.data != "")
+              await Promise.all(
+                response.data.map(async (item, index) => {
+                  var tmp3 = item;
+                  tmp3.status = "Processing";
+                  tmp3.rentPrice = item.rentPrice;
+                  tmp3.rentCount = item.rentCount + 1;
+
+                  var rentPriceTmp = 0;
+                  response2.data.map((item2, index) => {
+                    if (4 == item2.id) {
+                      rentPriceTmp += item.deposit * item2.percentPrice;
+                    }
+                  });
+
+                  tmp3.rentPrice = item.rentPrice + rentPriceTmp;
+
+                  const endDate = new Date(item.endDate);
+                  const newEndDate = new Date(endDate);
+                  newEndDate.setDate(endDate.getDate() + 7);
+                  tmp3.endDate = newEndDate.toISOString();
+                  console.log(item);
+
+                  await apiOrderDetail.put("/" + item.id, tmp3, {
+                    headers: {
+                      Authorization: `Bearer ${Cookies.get("userToken")}`,
+                    },
+                  });
+                })
+              );
+          });
+      });
+  };
 
   const handleImageChange = (e) => {
     setNewImage(e.target.files[0]);
