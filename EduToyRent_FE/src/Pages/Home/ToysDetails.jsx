@@ -227,7 +227,7 @@ const ToysDetails = () => {
 
   useEffect(() => {
     LoadOrderTypes();
-  });
+  }, []);
   const LoadOrderTypes = async () => {
     try {
       const OrderTypesResponse = await apiOrderTypes.get(
