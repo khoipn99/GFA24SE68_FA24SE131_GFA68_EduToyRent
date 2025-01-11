@@ -64,8 +64,8 @@ const Notifications = ({ show }) => {
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(
-        //"https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/notificationHub"
-        "https://localhost:44350/notificationHub"
+        "https://edutoyrent-cngbg3hphsg2fdff.southeastasia-01.azurewebsites.net/notificationHub"
+        //"https://localhost:44350/notificationHub"
       )
       .withAutomaticReconnect()
       .build();

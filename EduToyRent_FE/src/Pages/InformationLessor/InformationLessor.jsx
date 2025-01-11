@@ -40,6 +40,10 @@ const InformationLessor = () => {
   const [returnFee, setReturnFee] = useState(0);
   const [orderType, setOrderType] = useState([]);
   const [platformFee, setPlatformFee] = useState({});
+  const [isReviewFormVisible, setIsReviewFormVisible] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // Trạng thái kiểm soát việc sửa phí phạt
+  const [fineAmount, setFineAmount] = useState(0); // Giá trị phí phạt nhập vào
+
   const navigate = useNavigate();
 
   // Sample data for orders
@@ -292,14 +296,36 @@ const InformationLessor = () => {
       });
   };
 
-  const handleCheckingOrderDetail = (order, index) => {
-    if (
-      (returnFee == 0 && returnDescription == "") ||
-      (returnFee == "" && returnDescription == "")
-    ) {
-      handleFinishOrderDetail(order);
+  const handleChangeFee = async (order) => {
+    if (fineAmount == "") {
       return;
     }
+
+    var tmp = order;
+    tmp.fine = fineAmount;
+
+    await apiOrderDetail
+      .put("/" + order.id, tmp, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("userToken")}`,
+        },
+      })
+      .then((response) => {
+        ViewDetails();
+      });
+  };
+
+  const handleCheckingOrderDetail = (order, index) => {
+    // if (
+    //   (returnFee == 0 && returnDescription == "") ||
+    //   (returnFee == "" && returnDescription == "")
+    // ) {
+    //   handleFinishOrderDetail(order);
+    //   return;
+    // }
+    console.log(returnFee);
+    console.log(returnDescription);
+    console.log(openVideoReturn.video);
     if (
       returnFee != 0 &&
       returnFee != "" &&
@@ -1963,13 +1989,86 @@ const InformationLessor = () => {
                                     .substring(9)
                                 : "Đang chờ"}
                             </p>
-                            {item.orderCheckImageUrl[1] != null &&
-                              item.orderCheckImageUrl[1] != "" && (
-                                <p className="text-red-500">
-                                  Phí phạt yêu cầu :{" "}
-                                  {item.fine.toLocaleString()} VNĐ
-                                </p>
+
+                            <div className="flex items-center space-x-4">
+                              {" "}
+                              {/* Flex container để các thẻ nằm ngang */}
+                              {!isEditing ? (
+                                <>
+                                  {/* Hiển thị thông tin phí phạt */}
+                                  {item.orderCheckImageUrl[1] != null &&
+                                    item.orderCheckImageUrl[1] !== "" && (
+                                      <p className="text-red-500">
+                                        Phí phạt yêu cầu:{" "}
+                                        {item.fine.toLocaleString()} VNĐ
+                                      </p>
+                                    )}
+
+                                  {/* Nút Sửa phí phạt */}
+                                  {item.status === "AcceptFee" && (
+                                    <button
+                                      onClick={() => {
+                                        setIsEditing(true);
+                                        setFineAmount(item.fine);
+                                      }} // Khi bấm nút, chuyển sang chế độ sửa
+                                      className="px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600"
+                                    >
+                                      Sửa phí phạt
+                                    </button>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {/* Input nhập số tiền phạt */}
+                                  {item.status === "AcceptFee" && (
+                                    <div className="flex items-center space-x-4">
+                                      <div>
+                                        <input
+                                          type="number"
+                                          value={fineAmount}
+                                          onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (
+                                              value >= 0 &&
+                                              value <
+                                                item.deposit - item.rentPrice
+                                            ) {
+                                              setFineAmount(e.target.value);
+                                            }
+                                          }}
+                                          placeholder="Nhập số tiền phạt"
+                                          className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                                        />
+                                      </div>
+                                      <button
+                                        onClick={() => setIsEditing(false)} // Đóng chế độ sửa mà không lưu
+                                        className="px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600"
+                                      >
+                                        Hủy
+                                      </button>
+
+                                      {/* Nút xác nhận */}
+                                      <button
+                                        onClick={() => {
+                                          handleChangeFee(item);
+
+                                          console.log(
+                                            "Phí phạt xác nhận:",
+                                            fineAmount
+                                          );
+                                          setIsEditing(false); // Đóng chế độ sửa
+                                        }}
+                                        className="px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600"
+                                      >
+                                        Xác nhận
+                                      </button>
+                                    </div>
+                                  )}
+
+                                  {/* Nút hủy */}
+                                </>
                               )}
+                            </div>
 
                             {item.orderCheckImageUrl[1] != null &&
                               item.orderCheckImageUrl[1] != "" && (
@@ -1978,195 +2077,222 @@ const InformationLessor = () => {
                                 </p>
                               )}
                           </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "flex-start",
-                              gap: "16px",
-                            }}
-                          >
-                            {item.orderCheckImageUrl[0] != null &&
-                              item.orderCheckImageUrl[0] != "" && (
+                          {item.orderCheckImageUrl[0] != null &&
+                            item.orderCheckImageUrl[0] != "" && (
+                              <div>
+                                <video
+                                  src={
+                                    item.orderCheckImageUrl[0] &&
+                                    item.orderCheckImageUrl[0]
+                                      ? item.orderCheckImageUrl[0]
+                                      : ""
+                                  }
+                                  style={{
+                                    width: "200px",
+                                    height: "160px",
+                                    objectFit: "cover",
+                                    marginRight: "16px",
+                                  }}
+                                  controls
+                                  muted
+                                >
+                                  Trình duyệt của bạn không hỗ trợ thẻ video.
+                                </video>
                                 <div>
-                                  <video
-                                    src={
-                                      item.orderCheckImageUrl[0] &&
-                                      item.orderCheckImageUrl[0]
-                                        ? item.orderCheckImageUrl[0]
-                                        : ""
-                                    }
-                                    style={{
-                                      width: "200px",
-                                      height: "160px",
-                                      objectFit: "cover",
-                                      marginRight: "16px",
-                                    }}
-                                    controls
-                                    muted
-                                  >
-                                    Trình duyệt của bạn không hỗ trợ thẻ video.
-                                  </video>
-                                  <div>
-                                    Video tình trạng đồ chơi người thuê gửi
+                                  Video tình trạng đồ chơi người thuê gửi
+                                </div>
+                              </div>
+                            )}
+                          {item.orderCheckImageUrl[1] != null &&
+                            item.orderCheckImageUrl[1] != "" && (
+                              <div>
+                                <video
+                                  src={
+                                    item.orderCheckImageUrl[1] &&
+                                    item.orderCheckImageUrl[1]
+                                      ? item.orderCheckImageUrl[1]
+                                      : ""
+                                  }
+                                  style={{
+                                    width: "200px",
+                                    height: "160px",
+                                    objectFit: "cover",
+                                    marginRight: "16px",
+                                  }}
+                                  controls
+                                  muted
+                                >
+                                  Trình duyệt của bạn không hỗ trợ thẻ video.
+                                </video>
+                                <div>Video tình trạng đồ chơi bị hỏng</div>
+                              </div>
+                            )}
+
+                          {item.status == "Checking" && (
+                            <div>
+                              {isReviewFormVisible && (
+                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                                  <div className="bg-white p-6 rounded-md shadow-lg w-96 relative">
+                                    <form
+                                      onSubmit={(e) => {
+                                        e.preventDefault();
+                                        handleCheckingOrderDetail(item, index);
+                                      }}
+                                      className="flex flex-col space-y-4"
+                                    >
+                                      {/* Nút đóng (X) nằm bên trong form */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setIsReviewFormVisible(false);
+                                        }}
+                                        className="absolute top-3 right-3 text-xl text-red-500 hover:text-red-700"
+                                      >
+                                        ✖
+                                      </button>
+
+                                      {/* Video ở trên cùng */}
+                                      <div
+                                        className="border border-gray-300 rounded p-4 w-full text-center mb-4"
+                                        onDrop={(e) =>
+                                          handleDrop2(e, "video", index)
+                                        }
+                                        onDragOver={(e) => e.preventDefault()}
+                                        style={{
+                                          height: "200px",
+                                          overflow: "hidden",
+                                        }}
+                                      >
+                                        {openVideoReturn?.video?.[index] ? (
+                                          <video
+                                            controls
+                                            className="w-full h-auto max-h-40 object-contain"
+                                            src={URL.createObjectURL(
+                                              openVideoReturn.video[index]
+                                            )}
+                                          />
+                                        ) : (
+                                          <p>
+                                            Kéo và thả video tại đây hoặc nhấp
+                                            vào
+                                          </p>
+                                        )}
+                                        <input
+                                          type="file"
+                                          onChange={(e) =>
+                                            handleFileChange2(e, "video", index)
+                                          }
+                                          className="hidden"
+                                          id={`video-input-${index}`}
+                                        />
+                                        <label
+                                          htmlFor={`video-input-${index}`}
+                                          className="text-blue-500 underline cursor-pointer"
+                                        >
+                                          Chọn tệp
+                                        </label>
+                                      </div>
+
+                                      {/* Các ô nhập nằm ngang */}
+                                      <div className="flex justify-between space-x-4">
+                                        <div className="flex-1">
+                                          <label
+                                            htmlFor="fineAmount"
+                                            className="block mb-2 font-medium text-sm"
+                                          >
+                                            Số tiền phạt:
+                                          </label>
+                                          <input
+                                            value={returnFee}
+                                            type="number"
+                                            id="fineAmount"
+                                            placeholder="Nhập số tiền phạt"
+                                            onChange={(e) => {
+                                              const value = e.target.value;
+                                              if (
+                                                value >= 0 &&
+                                                value <
+                                                  item.deposit - item.rentPrice
+                                              ) {
+                                                setReturnFee(value);
+                                              }
+                                            }}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                                          />
+
+                                          <label
+                                            htmlFor="fineAmount"
+                                            className="block mb-2 font-medium text-sm"
+                                          >
+                                            Tiền phạt không được vượt:{" "}
+                                            {(
+                                              item.deposit - item.rentPrice
+                                            ).toLocaleString()}{" "}
+                                            VNĐ
+                                          </label>
+                                        </div>
+
+                                        <div className="flex-1">
+                                          <label
+                                            htmlFor="fineReason"
+                                            className="block mb-2 font-medium text-sm"
+                                          >
+                                            Lý do phạt:
+                                          </label>
+                                          <textarea
+                                            value={returnDescription}
+                                            id="fineReason"
+                                            placeholder="Nhập lý do phạt"
+                                            rows="3"
+                                            onChange={(e) => {
+                                              setReturnDescription(
+                                                e.target.value
+                                              );
+                                              console.log(e.target.value);
+                                            }}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md resize-none"
+                                          ></textarea>
+                                        </div>
+                                      </div>
+
+                                      {/* Nút gửi đánh giá */}
+                                      <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-green-500 text-white font-semibold rounded-md shadow hover:bg-green-600 transition duration-200 ease-in-out"
+                                      >
+                                        Gửi đánh giá
+                                      </button>
+                                    </form>
                                   </div>
                                 </div>
                               )}
 
-                            {item.orderCheckImageUrl[1] != null &&
-                              item.orderCheckImageUrl[1] != "" && (
-                                <div>
-                                  <video
-                                    src={
-                                      item.orderCheckImageUrl[1] &&
-                                      item.orderCheckImageUrl[1]
-                                        ? item.orderCheckImageUrl[1]
-                                        : ""
-                                    }
-                                    style={{
-                                      width: "200px",
-                                      height: "160px",
-                                      objectFit: "cover",
-                                      marginRight: "16px",
-                                    }}
-                                    controls
-                                    muted
-                                  >
-                                    Trình duyệt của bạn không hỗ trợ thẻ video.
-                                  </video>
-                                  <div>Video tình trạng đồ chơi bị hỏng</div>
-                                </div>
-                              )}
-
-                            {item.status === "Checking" && (
-                              <div
+                              {/* Nút mở form đánh giá */}
+                              <button
+                                onClick={() => handleFinishOrderDetail(item)}
+                                className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
                                 style={{
-                                  width: "300px",
-                                  objectFit: "cover",
-                                  marginRight: "16px",
+                                  width: "140px",
+                                  gap: "16px",
                                 }}
                               >
-                                <div style={{ marginBottom: "12px" }}>
-                                  <label
-                                    htmlFor="fineAmount"
-                                    style={{
-                                      display: "block",
-                                      marginBottom: "4px",
-                                      fontWeight: "bold",
-                                      fontSize: "14px",
-                                    }}
-                                  >
-                                    Số tiền phạt (nếu có):
-                                  </label>
-                                  <input
-                                    type="number"
-                                    id="fineAmount"
-                                    placeholder="Nhập số tiền phạt"
-                                    onChange={(e) => {
-                                      setReturnFee(e.target.value);
-                                      console.log(e.target.value);
-                                    }}
-                                    style={{
-                                      width: "100%",
-                                      padding: "8px",
-                                      border: "1px solid #ccc",
-                                      borderRadius: "4px",
-                                    }}
-                                  />
-                                </div>
-
-                                <div>
-                                  <label
-                                    htmlFor="fineReason"
-                                    style={{
-                                      display: "block",
-                                      marginBottom: "4px",
-                                      fontWeight: "bold",
-                                      fontSize: "14px",
-                                    }}
-                                  >
-                                    Lý do phạt (nếu có):
-                                  </label>
-                                  <textarea
-                                    id="fineReason"
-                                    placeholder="Nhập lý do phạt"
-                                    rows="3"
-                                    onChange={(e) => {
-                                      setReturnDescription(e.target.value);
-                                      console.log(e.target.value);
-                                    }}
-                                    style={{
-                                      width: "100%",
-                                      padding: "8px",
-                                      border: "1px solid #ccc",
-                                      borderRadius: "4px",
-                                      resize: "none",
-                                    }}
-                                  ></textarea>
-                                </div>
-                              </div>
-                            )}
-                            <div
-                              style={{
-                                width: "300px",
-                                objectFit: "cover",
-                                marginRight: "16px",
-                              }}
-                            >
-                              {item.status === "Checking" && (
-                                <div
-                                  className="border border border-gray-300 rounded p-4 mb-4 w-full text-center"
-                                  onDrop={(e) => handleDrop2(e, "video", index)}
-                                  onDragOver={(e) => e.preventDefault()}
-                                  style={{
-                                    width: "200px", // Kích thước cố định (có thể tùy chỉnh)
-                                    height: "160px",
-                                    overflow: "hidden",
-                                  }}
-                                >
-                                  {openVideoReturn?.video?.[index] ? (
-                                    <video
-                                      controls
-                                      className="w-full h-auto max-h-40 object-contain"
-                                      src={URL.createObjectURL(
-                                        openVideoReturn.video[index]
-                                      )}
-                                    />
-                                  ) : (
-                                    <p>
-                                      Kéo và thả video tại đây hoặc nhấp vào
-                                    </p>
-                                  )}
-                                  <input
-                                    type="file"
-                                    onChange={(e) =>
-                                      handleFileChange2(e, "video", index)
-                                    }
-                                    className="hidden"
-                                    id={`video-input-${index}`}
-                                  />
-                                  <label
-                                    htmlFor={`video-input-${index}`}
-                                    className="text-blue-500 underline cursor-pointer"
-                                  >
-                                    chọn tệp
-                                  </label>
-                                </div>
-                              )}
-                              {item.status === "Checking" && (
-                                <div>
-                                  <button
-                                    className="flex items-center mb-2 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 transition duration-200 ease-in-out"
-                                    onClick={() =>
-                                      handleCheckingOrderDetail(item, index)
-                                    }
-                                  >
-                                    Xác nhận đánh giá
-                                  </button>
-                                </div>
-                              )}
+                                đồ chơi bình thường
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setIsReviewFormVisible(true);
+                                }}
+                                className="px-4 py-2 bg-red-500 text-white font-semibold rounded-md shadow hover:bg-red-600 transition duration-200 ease-in-out"
+                                style={{
+                                  marginTop: "10px",
+                                  width: "140px",
+                                  gap: "16px",
+                                }}
+                              >
+                                Đồ chơi bị hư hại
+                              </button>
                             </div>
-                          </div>
+                          )}
 
                           {item.status === "Delivering" && (
                             <div>
