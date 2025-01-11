@@ -100,13 +100,13 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
-    //options.AddPolicy("AllowProduction", policy =>
-    //{
-    //    policy.WithOrigins("https://edu-toy-rent.vercel.app/") 
-    //          .AllowAnyHeader()
-    //          .AllowAnyMethod()
-    //          .AllowCredentials();
-    //});
+    options.AddPolicy("AllowProduction", policy =>
+    {
+        policy.WithOrigins("https://edu-toy-rent.vercel.app/")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
 
     options.AddPolicy("AllowDevelopment", policy =>
     {
@@ -197,7 +197,7 @@ builder.Services.AddSwaggerGen(option =>
 
 
 var app = builder.Build();
-//app.UseCors("AllowProduction");
+app.UseCors("AllowProduction");
 app.UseCors("AllowDevelopment");
 app.UseSwagger();
 app.UseSwaggerUI();
