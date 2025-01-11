@@ -14,7 +14,7 @@ import apiToys from "../../service/ApiToys";
 import apiRatings from "../../service/ApiRatings";
 import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
 import ChatForm from "../Chat/ChatForm";
-import "react-image-lightbox/style.css";
+
 import apiPlatformFees from "../../service/ApiPlatfromFees";
 import apiOrderTypes from "../../service/ApiOrderTypes";
 import apiReport from "../../service/ApiReport";
