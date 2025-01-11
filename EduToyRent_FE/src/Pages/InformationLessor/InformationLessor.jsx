@@ -1498,7 +1498,7 @@ const InformationLessor = () => {
                     <h4 className="font-semibold">{product.name}</h4>
                     <p>Giá: {product.price.toLocaleString()} VNĐ</p>
                     <p>
-                      Trạng thái:
+                      Trạng thái:{" "}
                       {statusMapping[product.status] ||
                         "Trạng thái không xác định"}{" "}
                     </p>
