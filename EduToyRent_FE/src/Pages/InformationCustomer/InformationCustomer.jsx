@@ -66,6 +66,7 @@ const InformationCustomer = () => {
   const [platformFee, setPlatformFee] = useState([]);
   const [continueRent, setContinueRent] = useState(0);
   const [continueRentTime, setContinueRentTime] = useState(0);
+
   useEffect(() => {
     const userDataCookie1 = Cookies.get("userData");
     if (userDataCookie1) {
@@ -2277,16 +2278,6 @@ const InformationCustomer = () => {
                       Tổng tiền: {order.totalPrice.toLocaleString()} VNĐ
                     </p>
 
-                    {order.status === "Cancel" && (
-                      <div className="flex space-x-2 mt-2">
-                        <button
-                          onClick={() => handleReBuy(order)}
-                          className="p-2 bg-green-500 text-white rounded"
-                        >
-                          Đặt hàng lại
-                        </button>
-                      </div>
-                    )}
                     {order.status === "Delivering" && (
                       <div className="flex space-x-2 mt-2">
                         <button
@@ -2340,7 +2331,13 @@ const InformationCustomer = () => {
                   </div>
                 </>
               ) : (
-                <form onSubmit={handleSubmit2} className="mt-4">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSubmit2(e);
+                  }}
+                  className="mt-4"
+                >
                   <div className="flex items-center mb-2">
                     <label className="block font-semibold w-1/7">
                       Số tài khoản:
@@ -3032,9 +3029,10 @@ const InformationCustomer = () => {
                                   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                                     <div className="bg-white p-6 rounded-md shadow-lg w-96 relative">
                                       <form
-                                        onSubmit={(e) =>
-                                          handleSubmitReview(e, item.id, item)
-                                        }
+                                        onSubmit={(e) => {
+                                          e.preventDefault();
+                                          handleSubmitReview(e, item.id, item);
+                                        }}
                                         className="flex flex-col space-y-4"
                                       >
                                         {/* Nút đóng (X) nằm bên trong form */}
@@ -3264,9 +3262,10 @@ const InformationCustomer = () => {
                               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                                 <div className="bg-white p-6 rounded-md shadow-lg w-96 relative">
                                   <form
-                                    onSubmit={(e) =>
-                                      handleSubmitReview(e, item.id, item)
-                                    }
+                                    onSubmit={(e) => {
+                                      e.preventDefault();
+                                      handleSubmitReview(e, item.id, item);
+                                    }}
                                     className="flex flex-col space-y-4"
                                   >
                                     {/* Nút đóng (X) nằm bên trong form */}

@@ -773,26 +773,96 @@ const ToysSaleDetails = () => {
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-0.5">
-                        {Array(rating.star)
-                          .fill(0)
-                          .map((_, starIndex) => (
-                            <div key={starIndex} className="text-[#1980e6]">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20px"
-                                height="20px"
-                                fill="currentColor"
-                                viewBox="0 0 256 256"
-                              >
-                                <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z" />
-                              </svg>
-                            </div>
-                          ))}
+                      <div className="flex items-center gap-3">
+                        <div>
+                          {" "}
+                          {rating.ratingImgUrls && rating.ratingImgUrls[0] ? (
+                            (() => {
+                              // Lấy URL
+                              const url = rating.ratingImgUrls[0];
+
+                              // Loại bỏ tham số query (nếu có) bằng cách lấy phần trước dấu `?`
+                              const cleanUrl = url.split("?")[0];
+
+                              // Lấy phần mở rộng từ URL đã làm sạch
+                              const extension = cleanUrl
+                                .split(".")
+                                .pop()
+                                .toLowerCase();
+
+                              // Danh sách phần mở rộng video và hình ảnh
+                              const videoExtensions = [
+                                "mp4",
+                                "mov",
+                                "avi",
+                                "mkv",
+                                "webm",
+                              ];
+                              const imageExtensions = [
+                                "jpg",
+                                "jpeg",
+                                "png",
+                                "gif",
+                                "bmp",
+                                "svg",
+                                "webp",
+                              ];
+
+                              if (videoExtensions.includes(extension)) {
+                                return (
+                                  <video
+                                    controls
+                                    className="w-full h-auto max-h-40 object-contain"
+                                    src={url}
+                                    style={{
+                                      width: 200,
+                                      height: 200,
+                                    }}
+                                  />
+                                );
+                              } else if (imageExtensions.includes(extension)) {
+                                return (
+                                  <img
+                                    className="w-full h-auto max-h-40 object-contain"
+                                    src={url}
+                                    alt="Hình ảnh tải lên"
+                                    style={{
+                                      width: 200,
+                                      height: 200,
+                                    }}
+                                  />
+                                );
+                              } else {
+                                return <p>Định dạng không hợp lệ</p>;
+                              }
+                            })()
+                          ) : (
+                            <p></p>
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex gap-0.5">
+                            {Array(rating.star)
+                              .fill(0)
+                              .map((_, starIndex) => (
+                                <div key={starIndex} className="text-[#1980e6]">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20px"
+                                    height="20px"
+                                    fill="currentColor"
+                                    viewBox="0 0 256 256"
+                                  >
+                                    <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z" />
+                                  </svg>
+                                </div>
+                              ))}
+                          </div>
+                          <p className="text-[#0e141b] text-base font-normal leading-normal">
+                            {rating.comment}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-[#0e141b] text-base font-normal leading-normal">
-                        {rating.comment}
-                      </p>
                     </div>
                   ))}
                 {currentReviews == "" && (
