@@ -1072,7 +1072,7 @@ const InformationLessor = () => {
                     : "bg-gray-300"
                 }`}
               >
-                Đã hủy 
+                Đã hủy
               </button>
             </div>
             <ul className="space-y-4">
