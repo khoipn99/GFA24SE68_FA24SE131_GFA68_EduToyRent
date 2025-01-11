@@ -15,7 +15,6 @@ import apiRatings from "../../service/ApiRatings";
 import apiOrderCheckImages from "../../service/ApiOrderCheckImages";
 import ChatForm from "../Chat/ChatForm";
 import "react-image-lightbox/style.css";
-import Lightbox from "react-image-lightbox";
 import apiPlatformFees from "../../service/ApiPlatfromFees";
 import apiOrderTypes from "../../service/ApiOrderTypes";
 import apiReport from "../../service/ApiReport";
@@ -209,10 +208,6 @@ const InformationCustomer = () => {
       console.error("User data cookie is missing.");
     }
   };
-
-  const MemoizedLightbox = React.memo(({ openImage, onClose }) => (
-    <Lightbox mainSrc={openImage} onCloseRequest={onClose} />
-  ));
 
   const handleApiError = (error, customMessage) => {
     if (error.response) {
@@ -2643,12 +2638,6 @@ const InformationCustomer = () => {
                             className="w-20 h-20 object-cover mr-4"
                             onClick={() => setOpenImage(item.toyImgUrls[0])}
                           />
-                          {openImage && (
-                            <MemoizedLightbox
-                              openImage={openImage}
-                              onClose={() => setOpenImage("")}
-                            />
-                          )}
 
                           <div className="flex-grow">
                             <h4 className="font-semibold" style={{}}>
