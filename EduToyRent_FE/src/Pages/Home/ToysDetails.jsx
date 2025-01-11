@@ -218,12 +218,16 @@ const ToysDetails = () => {
           console.error("Lỗi khi lấy các mục trong giỏ hàng:", error);
         }
       };
-      LoadOrderTypes();
+      // LoadOrderTypes();
       fetchUserData();
     } else {
       console.error("Không tìm thấy thông tin người dùng trong cookie.");
     }
   }, []);
+
+  useEffect(() => {
+    LoadOrderTypes();
+  });
   const LoadOrderTypes = async () => {
     try {
       const OrderTypesResponse = await apiOrderTypes.get(
