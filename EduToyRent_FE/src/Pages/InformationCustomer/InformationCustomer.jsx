@@ -1827,7 +1827,7 @@ const InformationCustomer = () => {
                     />
                   </label>
                   <label className="flex justify-between items-center space-x-12 block">
-                    <p className="font-semibold w-4/10">Địa chỉ:</p>
+                    <p className="font-semibold w-4/10">Địa chỉ: </p>
                     <input
                       type="text"
                       name="address"
