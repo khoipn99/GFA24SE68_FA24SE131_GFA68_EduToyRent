@@ -151,18 +151,18 @@ const ChartOneSupplier = () => {
                 {
                   name: "Doanh thu",
                   data: [
-                    revenueData[11].totalRevenue,
-                    revenueData[10].totalRevenue,
-                    revenueData[9].totalRevenue,
-                    revenueData[8].totalRevenue,
-                    revenueData[7].totalRevenue,
-                    revenueData[6].totalRevenue,
-                    revenueData[5].totalRevenue,
-                    revenueData[4].totalRevenue,
-                    revenueData[3].totalRevenue,
-                    revenueData[2].totalRevenue,
-                    revenueData[1].totalRevenue,
                     revenueData[0].totalRevenue,
+                    revenueData[1].totalRevenue,
+                    revenueData[2].totalRevenue,
+                    revenueData[3].totalRevenue,
+                    revenueData[4].totalRevenue,
+                    revenueData[5].totalRevenue,
+                    revenueData[6].totalRevenue,
+                    revenueData[7].totalRevenue,
+                    revenueData[8].totalRevenue,
+                    revenueData[9].totalRevenue,
+                    revenueData[10].totalRevenue,
+                    revenueData[11].totalRevenue,
                   ],
                 },
               ],
@@ -291,7 +291,7 @@ const ChartOneSupplier = () => {
 
             <div className="w-100px" style={{ whiteSpace: "nowrap" }}>
               <p className="font-semibold text-primary">Tổng doanh thu</p>
-              <p className="text-sm font-medium">1/2024 - 12/2024</p>
+              <p className="text-sm font-medium">1/2025 - 12/2025</p>
             </div>
           </div>
 
